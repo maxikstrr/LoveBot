@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live-Status 💜 — LoveBot</title>
+<meta name="description" content="Läuft der LoveBot gerade? Live-Status, Nutzer, Gruppen und Heartbeat-Daten — alle 5 Sekunden aktualisiert.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html" class="active">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:6px">
+    <span class="badge">📡 Kein Login nötig · Live-Daten</span>
+    <h1>Bot <span class="grad">Status</span></h1>
+    <p class="sub">Echte Daten aus der Bot-Datenbank und dem Heartbeat — automatisch alle 5 Sekunden aktualisiert.</p>
+  </section>
+
+  <section style="padding-top:24px">
+    <div class="status-hero" id="statusHero"></div>
+    <div class="livebar" style="margin:26px auto 30px">
+      <div class="cell"><div class="num" id="sUsers">…</div><div class="lbl">Nutzer</div></div>
+      <div class="cell"><div class="num" id="sGroups">…</div><div class="lbl">Gruppen</div></div>
+      <div class="cell"><div class="num" id="sBans">…</div><div class="lbl">Bans</div></div>
+      <div class="cell"><div class="num" id="sCmds">…</div><div class="lbl">Befehle</div></div>
+    </div>
+    <div class="box reveal in" style="max-width:760px;margin:0 auto">
+      <h3>🤖 Letzte Bot-Meldung (Heartbeat)</h3>
+      <div class="kv" id="hbInfo">Lade …</div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Läuft gerade oder gerade nicht — hier siehst du es live. Keine Schönfärberei.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/faq.html">FAQ</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script src="/js/commands-data.js"></script>
+<script src="/js/status.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+/* Fallback, wenn keine API erreichbar ist (statische Vorschau) */
+setTimeout(async () => {
+  if (document.getElementById('sCmds').textContent === '…' && window.LOVEBOT_COMMANDS) {
+    document.getElementById('sCmds').textContent = window.LOVEBOT_COMMANDS.reduce((a, c) => a + c.cmds.length, 0);
+  }
+}, 1200);
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+{
+  "config": {
+    "spawn": {
+      "enabled": false,
+      "command": "node",
+      "args": [
+        "Love.js"
+      ]
+    }
+  },
+  "sessions": {
+    "main": {
+      "id": "main",
+      "name": "MainBot",
+      "status": "CONNECTED",
+      "source": "live",
+      "createdAt": 1788651061273,
+      "connectedAt": 1788716449514,
+      "lastSeen": 1788721229400,
+      "jid": "420721199654@s.whatsapp.net",
+      "lid": "155019043160306@lid",
+      "phone": "420721199654",
+      "messages": 899,
+      "commands": 55,
+      "groups": 4,
+      "reconnects": 1,
+      "errors": 5,
+      "memoryMb": 104.5,
+      "isDefault": true,
+      "pid": null,
+      "desiredState": "running",
+      "autoStart": true,
+      "tags": [],
+      "env": "production",
+      "connectedMs": 65376896
+    },
+    "test910": {
+      "id": "test910",
+      "name": "test910",
+      "status": "WAITING_FOR_AUTH",
+      "source": "external",
+      "createdAt": 1788651296878,
+      "connectedAt": null,
+      "lastSeen": null,
+      "jid": "",
+      "lid": "",
+      "phone": "",
+      "messages": 0,
+      "commands": 0,
+      "groups": 0,
+      "reconnects": 0,
+      "errors": 0,
+      "memoryMb": 0,
+      "isDefault": false,
+      "pid": null,
+      "desiredState": "running",
+      "autoStart": false,
+      "tags": [],
+      "env": "production"
+    }
+  },
+  "activity": [
+    {
+      "ts": 1788651061273,
+      "type": "session",
+      "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
+      "sid": "main"
+    },
+    {
+      "ts": 1788651296878,
+      "type": "session",
+      "text": "🆕 Session „test910“ angelegt (test910, external)"
+    },
+    {
+      "ts": 1788716438169,
+      "type": "session",
+      "text": "🟡 Session „MainBot“ → QR_REQUIRED",
+      "sid": "main"
+    },
+    {
+      "ts": 1788716443754,
+      "type": "session",
+      "text": "🔴 Session „MainBot“ → DISCONNECTED",
+      "sid": "main"
+    },
+    {
+      "ts": 1788716449514,
+      "type": "session",
+      "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
+      "sid": "main"
+    },
+    {
+      "ts": 1788717771047,
+      "type": "error",
+      "text": "🐞 Fehler in „MainBot“: rate-overlimit",
+      "sid": "main"
+    },
+    {
+      "ts": 1788718338795,
+      "type": "error",
+      "text": "🐞 Fehler in „MainBot“: rate-overlimit",
+      "sid": "main"
+    },
+    {
+      "ts": 1788720941696,
+      "type": "error",
+      "text": "🐞 Fehler in „MainBot“: Cannot access 'senderJid' before initialization",
+      "sid": "main"
+    },
+    {
+      "ts": 1788720963128,
+      "type": "error",
+      "text": "🐞 Fehler in „MainBot“: Cannot access 'senderJid' before initialization",
+      "sid": "main"
+    },
+    {
+      "ts": 1788720986493,
+      "type": "error",
+      "text": "🐞 Fehler in „MainBot“: Cannot access 'senderJid' before initialization",
+      "sid": "main"
+    }
+  ],
+  "locks": {},
+  "audit": [
+    {
+      "ts": 1788651296878,
+      "sid": "test910",
+      "actor": "owner",
+      "action": "CREATED",
+      "detail": ""
+    }
+  ]
+}

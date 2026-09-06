@@ -1,0 +1,89 @@
+{
+  "identity": {
+    "username": "",
+    "bid": "4915155894714jid269574108926096lid",
+    "phone": "+4915155894714",
+    "jid": "4915155894714@s.whatsapp.net",
+    "lid": "269574108926096@lid",
+    "cleanJid": "4915155894714",
+    "cleanLid": "269574108926096"
+  },
+  "status": {
+    "dsgvo": {
+      "accepted": true,
+      "acceptedAt": "2026-09-01T21:53:02.915Z",
+      "rejected": false,
+      "rejectedAt": null
+    },
+    "verified": true,
+    "verifiedAt": "2026-09-01T18:48:13.201Z",
+    "unverified": false,
+    "unverifiedAt": null,
+    "mappedAt": "2026-09-01T18:47:01.901Z"
+  },
+  "progression": {
+    "level": 0,
+    "prestige": 0,
+    "xp": 50,
+    "neededXpForLvOrPrestigeUp": 743,
+    "lastDaily": "2026-09-05"
+  },
+  "games": {
+    "gamesPlayed": 0,
+    "lastPlayedAt": null,
+    "lastWin": 0,
+    "lastWinAt": null,
+    "totalWin": 0,
+    "highestWin": 0,
+    "highestWinAt": null,
+    "winStreak": 0,
+    "highestWinStreak": 0,
+    "highestWinStreakAt": null,
+    "lastLoss": 0,
+    "lastLossAt": null,
+    "totalLoss": 0,
+    "highestLoss": 0,
+    "highestLossAt": null,
+    "lossStreak": 0,
+    "highestLossStreak": 0,
+    "highestLossStreakAt": null
+  },
+  "wallet": {
+    "copper": 110,
+    "silver": 0,
+    "gold": 0,
+    "platin": 0
+  },
+  "bank": {
+    "active": false,
+    "copper": 0,
+    "silver": 0,
+    "gold": 0,
+    "platin": 0
+  },
+  "rewards": {
+    "lastDailyAt": null,
+    "lastWeeklyAt": null,
+    "lastMonthlyAt": null,
+    "lastYearlyAt": null,
+    "lastWorkAt": "2026-09-05T23:32:36.894Z"
+  },
+  "registration": {
+    "registered": true,
+    "name": "maxichen",
+    "age": "16",
+    "status": "vergeben",
+    "city": "recklinghausen",
+    "value": "maxichen.16.vergeben.recklinghausen",
+    "registeredAt": "2026-09-01T19:58:11.534Z"
+  },
+  "love": {
+    "married": true,
+    "spouseName": "4915758256378",
+    "spouseKey": "57956708180043",
+    "spouseBid": "4915758256378jid57956708180043lid",
+    "marriedAt": "2026-04-01T00:00:00.000Z",
+    "divorcedAt": null,
+    "marriages": 2
+  }
+}

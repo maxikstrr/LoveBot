@@ -1,0 +1,52 @@
+{
+  "dcb0257ecd6147edb0ee6a35a8c0e61a791e3067f442d7ea": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-03T19:36:00.165Z"
+  },
+  "671b4e0cf2b26c7c2573e39abef2e401ec79a0406b3d60a2": {
+    "number": "4915679260192",
+    "role": "user",
+    "name": "tavrinox",
+    "createdAt": "2026-09-03T22:35:16.323Z",
+    "username": "tavrinox",
+    "accountId": "acc_46ede07a04470698",
+    "scope": {
+      "type": "global"
+    },
+    "mustChange": false
+  },
+  "1b0d8220434e08f2261c72e72c0402fc798e2ee08f9d5ef5": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "910maxi",
+    "createdAt": "2026-09-05T16:00:06.696Z",
+    "username": "910maxi",
+    "mustChange": false,
+    "scope": {
+      "type": "global"
+    },
+    "accountId": "acc_867efdf11ac19e00"
+  },
+  "e3e0b5c66b02e9f93374702487de5ae07cfcc2203f1772e5": {
+    "number": "491706148587",
+    "role": "user",
+    "name": "bambus_inlove",
+    "createdAt": "2026-09-05T18:09:49.203Z",
+    "username": "bambus_inlove",
+    "accountId": "acc_48661c524cbc2ac3"
+  },
+  "b9431b21589108008348fbae56e19d20da1c2e27d30e8dbd": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "910maxi",
+    "createdAt": "2026-09-05T23:34:23.104Z",
+    "username": "910maxi",
+    "mustChange": false,
+    "scope": {
+      "type": "global"
+    },
+    "accountId": "acc_867efdf11ac19e00"
+  }
+}

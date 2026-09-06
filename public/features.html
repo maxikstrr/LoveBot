@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Features 💜 — LoveBot</title>
+<meta name="description" content="Alle LoveBot-Features im Detail: Automod, Liebe & Ehe, Economy, Spiele, KI, Medien und das Live-Dashboard.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html" class="active">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:10px">
+    <span class="badge">⚡ Was der Bot wirklich kann</span>
+    <h1>Features im <span class="grad">Detail</span></h1>
+    <p class="sub">Alles echt, alles im Bot aktiv — von Automod bis Meta AI. Kein Mock, keine Versprechen.</p>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">🛡️ Schutz</div><h2>Automod &amp; Sicherheit</h2><p>Der Bot hält die Gruppe sauber — auch nachts, wenn kein Admin online ist.</p></div>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">🤬</div><h3>Badword-Filter</h3><p>Kette: Nachricht löschen → Warn → bei 3 Warns Kick + Bot-Ban. Mit LEET-Erkennung und Umgehungs-Schutz.</p></div>
+      <div class="card reveal"><div class="ico">🔗</div><h3>Anti-Link</h3><p>Gruppenlinks &amp; Invite-Links werden erkannt und entfernt — pro Gruppe mit $an/$aus schaltbar.</p></div>
+      <div class="card reveal"><div class="ico">👻</div><h3>Auto-Kick</h3><p>Fremde mit Link im Namen werden automatisch entfernt, bevor sie Spam posten können.</p></div>
+      <div class="card reveal"><div class="ico">🆔</div><h3>JID + LID überall</h3><p>Admin-Erkennung, Warns und Bans funktionieren mit beiden ID-Formaten — auch in LID-Gruppen.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">💜 Community</div><h2>Liebe, Profile &amp; Economy</h2><p>Der Grund, warum Leute bleiben — nicht nur schreiben, sondern dazugehören.</p></div>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">💍</div><h3>Heirats-System</h3><p>$marry mit echtem Antrag (Ja/Nein antworten), $divorce, $ship &amp; Love-o-Meter — Herzchen inklusive.</p><a class="card-link" href="/cmd.html">Befehle ansehen →</a></div>
+      <div class="card reveal"><div class="ico">📈</div><h3>Profile &amp; Level</h3><p>$register: eigenes Profil mit Level, Liebe und Verifizierung. $acheck prüft alle Admins.</p></div>
+      <div class="card reveal"><div class="ico">🪙</div><h3>Economy</h3><p>Kupfer, Silber &amp; Gold: $balance, $work, $daily, $gamble und die Top-10-Rangliste.</p></div>
+      <div class="card reveal"><div class="ico">🎰</div><h3>Spiele</h3><p>$slot mit Sound, $rps, $quiz, $truth, $dare, $8ball — gegen Langeweile.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">🧰 Technik</div><h2>Tools &amp; KI</h2><p>Das Werkzeugkästchen, das den ganzen Tag benutzt wird.</p></div>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">🤖</div><h3>Meta AI</h3><p>$addmeta holt Meta AI in die Gruppe, $kickmeta entfernt sie wieder. $imagine generiert Bilder.</p></div>
+      <div class="card reveal"><div class="ico">📥</div><h3>Auto-Download</h3><p>YouTube-, TikTok- &amp; Instagram-Links werden automatisch erkannt und heruntergeladen.</p></div>
+      <div class="card reveal"><div class="ico">🌍</div><h3>Internet</h3><p>$wiki Wikipedia, $catfact &amp; $dogfact Tier-Fakten, $github Repo-Infos, $remind Erinnerungen.</p></div>
+      <div class="card reveal"><div class="ico">🖥️</div><h3>Dashboard</h3><p>Diese Website: Owner verwaltet Gruppen, Badwords, Bans, Broadcasts — live verbunden mit dem Bot.</p><a class="card-link" href="/login.html">Zum Login →</a></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">💜 Bot &amp; Webseite arbeiten zusammen</div><h2>Live-Verbindung</h2><p>Website und Bot reden ständig miteinander — über Dateien im Projektordner.</p></div>
+    <div class="terminal reveal">
+      <div class="term-bar"><div class="term-dots"><i></i><i></i><i></i></div> lovebot ↔ dashboard</div>
+      <div class="term-body">
+        <div class="tl"><span class="ok">❯</span> heartbeat.json <span class="mu">→ alle 10 Sekunden vom Bot geschrieben</span></div>
+        <div class="tl"><span class="ok">❯</span> webmail.json <span class="mu">→ Dashboard legt Codes/Broadcasts rein, Bot sendet sie</span></div>
+        <div class="tl"><span class="ok">❯</span> creds.json <span class="mu">→ echte Session-Daten (JID/LID) auf der Session-Seite</span></div>
+        <div class="tl"><span class="ok">❯</span> lovebot.log <span class="mu">→ Live-Logs direkt im Dashboard</span> <span class="pk">💜</span></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Der WhatsApp-Bot mit Herz — gebaut von Maxichen. Liebe, Spiele, Economy, KI und ein Live-Dashboard in einem.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/faq.html">FAQ</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+makeHearts(14);
+document.getElementById('year').textContent = new Date().getFullYear();
+(async function () {
+  const site = await api('/api/siteinfo');
+  if (site) document.getElementById('socials').innerHTML = buildSocials(site.links);
+})();
+</script>
+</body>
+</html>

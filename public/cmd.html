@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Befehle 💜 — LoveBot</title>
+<meta name="description" content="Alle 240+ LoveBot-Befehle mit Suche, Kategorien und Erklärung — übersichtlich und klickbar. Präfix ist $.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html" class="active">Befehle</a>
+    <a href="/status.html">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:8px">
+    <span class="badge">📜 Kein Login nötig · live aus dem Bot</span>
+    <h1>Alle <span class="grad">Befehle</span></h1>
+    <p class="sub">Jeder Befehl aus LoveBot — nach Kategorie sortiert, mit Suche und Erklärung. Präfix ist <b>$</b>. Klick auf einen Befehl kopiert ihn. 💜</p>
+    <div class="cmdsearch-wrap">
+      <span class="search-ico">🔎</span>
+      <input type="search" id="cmdSearch" placeholder="Befehl suchen … z. B. marry, slot, ban" autocomplete="off">
+      <span class="kbd">/</span>
+      <button class="search-clear" id="searchClear" aria-label="Suche löschen">✕</button>
+    </div>
+    <p class="hint" id="cmdCount"></p>
+  </section>
+
+  <div class="catbar-sticky">
+    <div class="catbar" id="catbar"></div>
+  </div>
+
+  <section id="cmdPage" style="padding-top:16px">
+    <div class="cmdgrid" id="cmdFullGrid"></div>
+    <p class="hint" id="noResults" style="display:none">💔 Kein Befehl gefunden — probier ein anderes Wort.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Alle Befehle live aus Love.js — direkt aus dem Bot ausgelesen, nicht von Hand gepflegt.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/faq.html">FAQ</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p id="footOwner"></p>
+    <p style="margin-top:6px">© <span id="year">2026</span> LoveBot by Maxichen · Alle Befehle live aus Love.js 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script src="/js/commands-data.js"></script>
+<script src="/js/cmd.js"></script>
+<p class="hint center" style="padding:14px"><a href="/docs.html">📚 Vollständige Dokumentation (auto-generiert aus der Registry)</a></p>
+</body>
+</html>

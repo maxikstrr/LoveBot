@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Dokumentation — LoveBot</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+
+<div class="wrap" style="max-width:1150px">
+  <p class="crumb"><a href="/index.html">LoveBot</a> / 📚 Dokumentation</p>
+  <h1>📚 Befehls-Dokumentation</h1>
+  <p class="subline">Automatisch generiert aus der <b>Command Registry</b> (<span class="mono">registry/commands.json</span>) — Bot-Help, Befehle-Seite, Tester und diese Doku zeigen immer dieselben Daten.</p>
+
+  <div class="grid" id="stats"></div>
+
+  <div class="row" style="margin:18px 0;flex-wrap:wrap;gap:10px">
+    <input id="dq" placeholder="🔎 Befehl, Alias oder Beschreibung …" style="border-radius:999px;padding:13px 22px;flex:1;min-width:240px">
+  </div>
+  <div class="chips" id="catChips" style="margin-bottom:22px"></div>
+
+  <div id="content"><div class="box">Lade Registry …</div></div>
+
+  <p class="hint center" style="margin-top:26px">📖 Diese Seite wird live aus der Registry erzeugt · Quelle: <span class="mono">registry/commands.json</span> · Pflege: <span class="mono">node scripts/build-registry.mjs</span></p>
+  <p class="hint center">© <span id="year">2026</span> LoveBot by Maxichen · Made with 💜</p>
+</div>
+
+<script src="/js/commands-data.js"></script>
+<script>
+/* ═══ 📚 Auto-Doku aus der Command Registry ═══
+   Primär: /api/commands?rich=1 (live) · Fallback: window.LOVEBOT_COMMANDS
+   (eingebettete Kopie aus dem letzten Build — für statische Vorschau)      */
+
+let RICH = [];
+let CATS = [];
+let STAT = { commands: 0, aliases: 0, categories: 0 };
+let activeCat = '';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const permBadge = (p) => p === 'owner' ? '👑 Owner' : p === 'admin' ? '🛡️ Admin' : '🌐 Alle';
+
+function fromFallback() {
+  /* Fallback-Shape: [{emoji,title,cmds:[{cmd,usage,desc}]}] — Aliase stecken in usage */
+  const cats = window.LOVEBOT_COMMANDS || [];
+  let aliases = 0;
+  RICH = cats.flatMap((c) => c.cmds.map((x) => {
+    const parts = String(x.usage).split(' / ');
+    const al = parts.slice(1).map((p) => p.replace(/^\$/, '').split(' ')[0]);
+    aliases += al.length;
+    return { name: x.cmd, usage: parts[0] || x.usage, desc: x.desc, aliases: al, perms: 'all', cooldown: 3, categoryTitle: c.title, emoji: c.emoji };
+  }));
+  CATS = cats.map((c) => c.title);
+  STAT = { commands: RICH.length, aliases, categories: cats.length, offline: true };
+}
+
+async function boot() {
+  document.getElementById('year').textContent = new Date().getFullYear();
+  try {
+    const res = await fetch('/api/commands?rich=1');
+    if (!res.ok) throw new Error('api');
+    const d = await res.json();
+    RICH = d.rich || [];
+    CATS = [...new Set(RICH.map((c) => c.categoryTitle))];
+    STAT = d.stats || {};
+  } catch (e) {
+    fromFallback();
+  }
+  document.getElementById('stats').innerHTML =
+    stat(STAT.commands, 'Befehle') + stat(STAT.aliases, 'Aliase') + stat(STAT.categories, 'Kategorien') +
+    (STAT.offline ? '<div class="stat"><div class="s-v">📥</div><div class="s-l">Offline-Fallback (Build-Kopie)</div></div>' : stat(STAT.updated || '—', 'Registry-Stand'));
+  document.getElementById('catChips').innerHTML =
+    '<span class="chip' + (!activeCat ? ' on' : '') + '" style="cursor:pointer" data-cat="">Alle</span>' +
+    CATS.map((c, i) => '<span class="chip" style="cursor:pointer" data-cat="' + esc(c) + '">' + esc(c) + '</span>').join('');
+  document.getElementById('catChips').querySelectorAll('.chip').forEach((el) =>
+    el.addEventListener('click', () => { activeCat = el.dataset.cat; draw(); boot.chipsOnly = true; }));
+  draw();
+}
+
+function stat(v, l) { return '<div class="stat"><div class="s-v">' + esc(v) + '</div><div class="s-l">' + esc(l) + '</div></div>'; }
+
+function draw() {
+  const q = (document.getElementById('dq').value || '').toLowerCase().trim();
+  const needle = q.replace(/^\$/, '');
+  const list = RICH.filter((c) =>
+    (!activeCat || c.categoryTitle === activeCat) &&
+    (!needle || c.name.toLowerCase().includes(needle) || c.desc.toLowerCase().includes(needle) ||
+      c.aliases.some((a) => a.toLowerCase().includes(needle))));
+  const byCat = new Map();
+  for (const c of list) { if (!byCat.has(c.categoryTitle)) byCat.set(c.categoryTitle, []); byCat.get(c.categoryTitle).push(c); }
+  document.getElementById('catChips').querySelectorAll('.chip').forEach((el) =>
+    el.classList.toggle('on', el.dataset.cat === activeCat));
+  document.getElementById('content').innerHTML = list.length
+    ? [...byCat.entries()].map(([cat, cmds]) =>
+        '<div class="box" style="margin-bottom:22px"><h3>' + (cmds[0].emoji || '⚡') + ' ' + esc(cat) + ' <span class="pill">' + cmds.length + '</span></h3>' +
+        '<table><tr><th>Befehl</th><th>Usage</th><th>Beschreibung</th><th>Aliase</th><th>Rechte</th></tr>' +
+        cmds.map((c) =>
+          '<tr><td class="mono">$' + esc(c.name) + '</td><td class="mono">' + esc(c.usage) + '</td><td>' + esc(c.desc) + '</td>' +
+          '<td>' + (c.aliases.length ? c.aliases.map((a) => '<span class="chip">$' + esc(a) + '</span>').join(' ') : '—') + '</td>' +
+          '<td>' + permBadge(c.perms) + '</td></tr>').join('') + '</table></div>'
+      ).join('')
+    : '<div class="box"><p class="desc">Keine Treffer für „' + esc(q) + '“.</p></div>';
+}
+
+document.getElementById('dq').addEventListener('input', () => { clearTimeout(window._dqt); window._dqt = setTimeout(draw, 250); });
+boot();
+</script>
+</body>
+</html>

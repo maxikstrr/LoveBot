@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👑 Owner Panel — LoveBot</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+/* 👑 Owner Panel — Glass Control Center (nur diese Seite) */
+body { background: radial-gradient(1200px 600px at 80% -10%, rgba(167,139,250,.14), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgba(244,114,182,.10), transparent 55%); }
+#app .box, #uModal .box { background: linear-gradient(160deg, rgba(255,255,255,.055), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.09); border-radius: 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 10px 30px rgba(0,0,0,.35); max-width: 100%; overflow-x: auto; }
+#app .stat { background: linear-gradient(160deg, rgba(255,255,255,.055), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.09); border-radius: 16px; backdrop-filter: blur(14px); transition: transform .15s ease, border-color .15s ease; }
+#app .stat:hover { transform: translateY(-2px); border-color: rgba(167,139,250,.45); }
+.stat-delta { font-size: 11px; color: #4ade80; margin-top: 3px; font-weight: 600; }
+#hero { display: none; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 26px; margin-bottom: 18px; border-radius: 22px; background: linear-gradient(135deg, rgba(167,139,250,.16), rgba(244,114,182,.10)); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(16px); box-shadow: 0 14px 40px rgba(0,0,0,.35); }
+#hero.show { display: flex; }
+.hero-brand { font-size: 22px; font-weight: 800; letter-spacing: .04em; display: flex; align-items: center; gap: 10px; }
+.hero-hi { font-size: 15px; margin-top: 6px; }
+.hero-sub { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 2px; }
+.hero-clock { font-size: 13px; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fleet-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.fleet-card { background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 16px; backdrop-filter: blur(12px); }
+.media-bars { display: flex; align-items: flex-end; gap: 8px; height: 110px; margin: 10px 0 4px; }
+.media-bar { width: 100%; background: linear-gradient(180deg, #a78bfa, #f472b6); border-radius: 6px 6px 0 0; }
+@media (max-width: 900px) {
+  #app { display: flex; flex-direction: column; }
+  #app .sidebar { display: flex; flex-direction: row; align-items: center; overflow-x: auto; position: static; height: auto; gap: 4px; padding: 10px; }
+  #app .sidebar .nav-btn { white-space: nowrap; }
+  #app .side-label, #app .spacer { display: none; }
+  #hero { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+
+<div id="guard" class="auth-wrap" style="display:none">
+  <div class="auth-card" style="text-align:center">
+    <div style="font-size:46px">🔒</div>
+    <h1 style="font-size:20px;letter-spacing:.1em">OWNER PANEL</h1>
+    <p class="hint">Dieser Bereich ist nur für den Owner.<br><a href="/login.html">→ Zum Login</a></p>
+  </div>
+</div>
+
+<div id="app" class="app show" style="display:none">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div id="hero">
+    <div>
+      <div class="hero-brand">❤️ LoveBot <span class="pill on" id="heroStatus">🟢 …</span></div>
+      <div class="hero-hi" id="heroHi">Willkommen 👋</div>
+      <div class="hero-sub">Hier ist, was in deiner Bot-Fleet passiert.</div>
+    </div>
+    <div class="hero-clock" id="heroClock"></div>
+  </div>
+
+  <div class="crumb">LoveBot / Owner</div>
+    <h1>👑 Control Center</h1>
+    <p class="subline">Zentrale Verwaltung: Sessions, Nutzer, Gruppen, Moderation, Audit — alles live aus den echten Daten.</p>
+
+    <input id="globalSearch" placeholder="🔎 Alles durchsuchen … Nutzer, Gruppen, Sessions, Befehle, Audit" style="margin-bottom:18px;border-radius:999px;padding:13px 20px">
+    <div id="searchResults" class="chips" style="margin:-8px 0 18px"></div>
+
+    <div id="view"></div>
+  <div id="uModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'"></div>
+  </main>
+</div>
+
+<script src="/js/common.js"></script>
+<script>
+/* ═══ 👑 LoveBot Owner Panel v1 — client-seitige Single-Page-App ═══ */
+let ROLE = null;
+let NAME = '';
+let VIEW = 'overview';
+let CACHE = {};
+
+const PNAV = [
+  ['overview', '📊', 'Übersicht'],
+  ['sessions', '📡', 'Sessions & Fleet'],
+  ['users', '👤', 'Nutzer'],
+  ['groups', '👥', 'Gruppen'],
+  ['moderation', '🛡️', 'Moderation'],
+  ['media', '🎬', 'Media'],
+  ['commands', '⚡', 'Befehle'],
+  ['tester', '🧪', 'Command-Tester'],
+  ['audit', '📜', 'Audit'],
+  ['emergency', '🚨', 'Emergency']
+];
+
+function esc2(s){ return String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtN(n){ return Number(n||0).toLocaleString('de-DE'); }
+
+function buildSidebar() {
+  document.getElementById('sidebar').innerHTML =
+    '<div class="brand"><span class="h">💜</span><b>LOVEBOT</b></div>' +
+    '<div class="userchip"><div class="nm">👑 ' + esc2(NAME || 'Owner') + '</div><div class="rl">Owner Panel · volle Kontrolle</div></div>' +
+    '<div class="side-label">Owner</div>' +
+    PNAV.map(([id, ico, label]) =>
+      '<a class="nav-btn' + (VIEW === id ? ' active' : '') + '" href="#" onclick="go(\'' + id + '\');return false">' + ico + ' ' + label + '</a>'
+    ).join('') +
+    '<div class="side-label">Links</div>' +
+    '<a class="nav-btn" href="/sessions.html">📡 Session-Center (public)</a>' +
+    '<a class="nav-btn" href="/cmd.html">📜 Befehle</a>' +
+    '<div class="spacer"></div>' +
+    '<a class="nav-btn logout" href="#" onclick="doLogout();return false">🚪 Abmelden</a>';
+}
+
+function go(view) {
+  VIEW = view;
+  buildSidebar();
+  render();
+}
+
+/* ── Views ─────────────────────────────────────────────── */
+async function render() {
+  const v = document.getElementById('view');
+  if (VIEW === 'overview') return renderOverview(v);
+  if (VIEW === 'sessions') return renderSessions(v);
+  if (VIEW === 'users') return renderUsers(v);
+  if (VIEW === 'groups') return renderGroups(v);
+  if (VIEW === 'moderation') return renderModeration(v);
+  if (VIEW === 'media') return renderMedia(v);
+  if (VIEW === 'commands') return renderCommands(v);
+  if (VIEW === 'tester') return renderTester(v);
+  if (VIEW === 'audit') return renderAudit(v);
+  if (VIEW === 'emergency') return renderEmergency(v);
+}
+
+function statD(ico, num, lbl, delta) {
+  return '<div class="stat"><div class="ico">' + ico + '</div><div class="num">' + num + '</div><div class="lbl">' + lbl + '</div>' +
+    (delta > 0 ? '<div class="stat-delta">+' + delta + ' heute</div>' : '') + '</div>';
+}
+
+function initHero(name) {
+  const h = document.getElementById('hero');
+  if (!h) return;
+  const hr = new Date().getHours();
+  const greet = hr < 5 ? 'Gute Nacht' : hr < 11 ? 'Guten Morgen' : hr < 18 ? 'Guten Tag' : 'Guten Abend';
+  document.getElementById('heroHi').textContent = greet + ', ' + name + ' 👋';
+  const clk = document.getElementById('heroClock');
+  const tick = () => { clk.textContent = new Date().toLocaleTimeString('de-DE'); };
+  tick(); setInterval(tick, 30000);
+  h.classList.add('show');
+}
+
+function updateHeroStatus(fleet) {
+  const p = document.getElementById('heroStatus');
+  if (!p) return;
+  if (!fleet) { p.textContent = '🟡 Status unbekannt'; return; }
+  const bad = (fleet.error || 0) + (fleet.authRequired || 0);
+  p.textContent = bad ? '🟡 ' + bad + ' Session(s) prüfen' : '🟢 Operational';
+}
+
+async function appendFleetCards(v, d) {
+  try {
+    updateHeroStatus(d?.fleet);
+    const s = await api('/api/sessions');
+    const list = (s?.sessions || []).slice(0, 6);
+    if (!list.length) return;
+    const cards = list.map((x) =>
+      '<div class="fleet-card"><div style="display:flex;justify-content:space-between;align-items:center"><b>' + esc2(x.name || x.id) + '</b><span>' + (x.health?.emoji || '⚫') + '</span></div>' +
+      '<div class="desc" style="margin:6px 0">' + esc2(x.id) + ' · ' + esc2(x.health?.label || x.status || '—') + '</div>' +
+      '<div style="font-size:12px;color:rgba(255,255,255,.5)">⏱️ ' + (x.uptimePct ?? '—') + '% Uptime · 👥 ' + fmtN(x.groups) + ' Gruppen · 💬 ' + fmtN(x.messages) + '</div>' +
+      '<button class="mini" style="margin-top:10px;border-radius:999px" onclick="go(\'sessions\')">Öffnen</button></div>').join('');
+    v.insertAdjacentHTML('beforeend', '<div class="box" style="margin-top:16px"><h3>📡 Fleet</h3><div class="fleet-cards">' + cards + '</div></div>');
+  } catch (e) {}
+}
+
+async function renderMedia(v) {
+  v.innerHTML = '<div class="box">Lade Media-Daten …</div>';
+  const d = await api('/api/admin/media');
+  if (!d || d.error) { v.innerHTML = '<div class="box">⚠️ ' + esc2(d?.error || 'Kein Zugriff.') + '</div>'; return; }
+  const EM = { toimg: '🖼️', tomp3: '🎵', tomp4: '🎬', sticker: '🎨' };
+  const T = d.totals || { count: 0, successRate: 100, avgMs: 0, fail: 0 };
+  let h = '<div class="grid">' +
+    stat('🔁', fmtN(T.count), 'Konvertierungen gesamt') +
+    stat('✅', T.successRate + '%', 'Erfolgsrate') +
+    stat('⏱️', (T.avgMs / 1000).toFixed(2) + 's', 'Ø Dauer') +
+    stat('🔴', fmtN(T.fail), 'Fehlgeschlagen') + '</div>';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px">';
+  h += '<div class="box"><h3>📊 Media Statistics</h3><table><tr><th>Befehl</th><th>Anzahl</th><th>Erfolg</th><th>Ø Zeit</th></tr>' +
+    ((d.stats || []).length
+      ? d.stats.map((x) => '<tr><td>' + (EM[x.cmd] || '⚡') + ' <b>$' + esc2(x.cmd) + '</b></td><td class="mono">' + fmtN(x.count) + '</td><td>' + x.successRate + '%</td><td>' + (x.avgMs / 1000).toFixed(2) + 's</td></tr>').join('')
+      : '<tr><td colspan="4" class="desc">Noch keine Konvertierungen — die vier Befehle zählen automatisch mit.</td></tr>') + '</table></div>';
+  const days = Object.entries(d.byDay || {});
+  const max = Math.max(1, ...days.map((x) => x[1]));
+  const dayName = (iso) => ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(iso).getDay()];
+  h += '<div class="box"><h3>📈 Aktivität (7 Tage)</h3><div class="media-bars">' +
+    days.map(([iso, n]) => '<div style="flex:1;text-align:center"><div class="media-bar" style="height:' + Math.max(3, Math.round((n / max) * 100)) + 'px" title="' + n + '"></div><div style="font-size:10px;color:rgba(255,255,255,.45)">' + dayName(iso) + '</div></div>').join('') +
+    '</div><p class="desc">Echte Zählung aus den Media-Logs des Bots (Database/media.json).</p></div></div>';
+  h += '<div class="box" style="margin-top:16px"><h3>⚡ Live Processing</h3>' +
+    ((d.live || []).length
+      ? d.live.map((j) => '<div class="feed-row"><span class="t">' + new Date(j.ts).toLocaleTimeString('de-DE') + '</span><span class="x">' + esc2(j.user || '?') + ' · <b>$' + esc2(j.command) + '</b> · ' + esc2(j.status) + '</span></div>').join('')
+      : '<p class="desc">Gerade läuft keine Konvertierung.</p>') + '</div>';
+  h += '<div class="box" style="margin-top:16px"><h3>🧾 Media Logs <span class="pill">' + (d.logs || []).length + '</span></h3>' +
+    '<div style="max-height:420px;overflow:auto"><table><tr><th>Zeit</th><th>Nutzer</th><th>Chat</th><th>Befehl</th><th>Input</th><th>Output</th><th>Dauer</th><th>Result</th></tr>' +
+    ((d.logs || []).map((l) => '<tr><td>' + new Date(l.ts).toLocaleString('de-DE') + '</td><td>' + esc2(l.user || '—') + '</td><td class="mono" style="max-width:110px;overflow:hidden;text-overflow:ellipsis">' + esc2(String(l.group || '')) + '</td><td><b>$' + esc2(l.command) + '</b></td><td>' + esc2(l.input || '—') + '</td><td>' + esc2(l.output || '—') + '</td><td>' + ((l.ms || 0) / 1000).toFixed(1) + 's</td><td>' + (l.ok ? '<span class="pill on">SUCCESS</span>' : '<span class="pill off">' + esc2(String(l.error || 'Fehler').slice(0, 40)) + '</span>') + '</td></tr>').join('') || '<tr><td colspan="8" class="desc">Noch keine Logs.</td></tr>') +
+    '</table></div><p class="desc">🖼️ Standbild für $tomp4: <span class="mono">' + esc2(d.config?.staticImage || '—') + '</span></p></div>';
+  v.innerHTML = h;
+}
+
+async function renderOverview(v) {
+  v.innerHTML = '<div class="box">Lade echte Daten …</div>';
+  const d = await api('/api/admin/overview');
+  if (!d || d.error) { v.innerHTML = '<div class="box">⚠️ ' + esc2(d?.error || 'Kein Zugriff.') + '</div>'; return; }
+  CACHE.overview = d;
+  const c = d.counts, t = d.totals, f = d.fleet;
+  v.innerHTML =
+    '<div class="grid">' +
+    stat('📡', f.managed, 'Sessions (managed)') +
+    stat('🟢', f.running, 'Running') +
+    statD('👥', fmtN(c.groups), 'Gruppen (' + fmtN(c.activeGroups) + ' aktiv)', (d.deltas?.groups || 0)) +
+    statD('👤', fmtN(c.users), 'Nutzer', (d.deltas?.users || 0)) +
+    stat('💬', fmtN(t.messages), 'Nachrichten') +
+    stat('⚡', fmtN(t.commands), 'Befehle') +
+    stat('🐞', fmtN(t.errors), 'Fehler') +
+    stat('📈', f.avgUptimePct == null ? '—' : f.avgUptimePct + '%', 'Ø Uptime') +
+    stat('💎', fmtN(t.copper), 'Kupfer gesamt') +
+    stat('💞', fmtN(t.couples), 'Paare') +
+    stat('💗', fmtN(t.loveXp), 'Love-XP gesamt') +
+    stat('🐶', fmtN(t.pets), 'Haustiere') +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">' +
+    '<div class="box"><h3>🏆 Top Paare</h3>' + (d.topCouples.length ? '<table><tr><th>#</th><th>Paar</th><th>Love-XP</th></tr>' +
+      d.topCouples.map((x, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc2(x.n1) + ' 💞 ' + esc2(x.n2) + '</td><td class="mono">' + fmtN(x.loveXp) + '</td></tr>').join('') + '</table>' : '<p class="desc">Noch keine Paare.</p>') + '</div>' +
+    '<div class="box"><h3>💎 Reichste Nutzer</h3>' + (d.topRich.length ? '<table><tr><th>#</th><th>Name</th><th>Kupfer</th><th>Level</th></tr>' +
+      d.topRich.map((x, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc2(x.name) + '</td><td class="mono">' + fmtN(x.copper) + '</td><td>' + x.level + '</td></tr>').join('') + '</table>' : '<p class="desc">Noch keine Wallets.</p>') + '</div>' +
+    '<div class="box"><h3>📜 Live-Aktivität</h3><div class="feed">' +
+      (d.activity || []).map(a => '<div class="feed-row"><span class="t">' + new Date(a.ts).toLocaleTimeString('de-DE') + '</span><span class="x">' + esc2(a.text) + '</span></div>').join('') || '<p class="desc">Ruhig hier.</p>' +
+      '</div></div>' +
+    '</div>';
+  await appendFleetCards(v, d);
+}
+
+function stat(ico, num, lbl) {
+  return '<div class="stat"><div class="ico">' + ico + '</div><div class="num">' + num + '</div><div class="lbl">' + lbl + '</div></div>';
+}
+
+async function renderSessions(v) {
+  v.innerHTML = '<div class="box">Lade Fleet …</div>';
+  const d = await api('/api/sessions');
+  if (!d || !d.sessions) { v.innerHTML = '<div class="box">⚠️ Kein Zugriff.</div>'; return; }
+  const f = d.fleet;
+  v.innerHTML =
+    '<div class="chips" style="margin-bottom:16px">' +
+    '<span class="chip">🗄️ Managed ' + f.managed + '</span><span class="chip">🟢 Running ' + f.running + '</span>' +
+    '<span class="chip">⏸️ Paused ' + f.paused + '</span><span class="chip">🟣 Auth ' + f.authRequired + '</span>' +
+    '<span class="chip">⚫ Stopped ' + f.stopped + '</span><span class="chip">🔴 Error ' + f.error + '</span>' +
+    '<span class="chip more">📈 Ø ' + (f.avgUptimePct ?? '—') + '%</span></div>' +
+    '<div class="box"><h3>📡 Session Fleet — Aktionen</h3><div class="desc">Alle Aktionen laufen über Locks + Audit. Kill/Delete trennen niemals Credentials.</div>' +
+    '<div style="overflow-x:auto"><table><tr><th>Session</th><th>Status</th><th>Soll</th><th>Uptime</th><th>Env/Tags</th><th>Aktionen</th></tr>' +
+    d.sessions.map(s => {
+      const btn = (label, actionName, val, danger) =>
+        '<button class="mini' + (danger ? ' danger' : '') + '" onclick="act(\'' + esc2(s.id) + '\',\'' + actionName + '\'' + (val !== undefined ? ',' + val : '') + ')">' + label + '</button>';
+      return '<tr><td><b>' + esc2(s.name) + '</b>' + (s.isDefault ? ' ⭐' : '') + '<br><span style="color:var(--faint);font-size:11px">' + esc2(s.id) + ' · ' + esc2(s.phone) + '</span></td>' +
+        '<td>' + (s.health?.emoji || '') + ' ' + s.status + (s.maintenance ? ' 🛠️' : '') + '</td>' +
+        '<td>' + (s.desiredState === 'running' ? '▶️' : s.desiredState === 'paused' ? '⏸️' : '⚫') + ' ' + s.desiredState + '</td>' +
+        '<td>' + esc2(s.uptime) + ' · ' + (s.uptimePct ?? '—') + '%</td>' +
+        '<td>' + (s.env ? '<span class="chip" style="font-size:10px;padding:2px 8px">' + esc2(s.env) + '</span>' : '') + (s.tags || []).map(t => ' <span class="chip" style="font-size:10px;padding:2px 8px">🏷️' + esc2(t) + '</span>').join('') + '</td>' +
+        '<td style="white-space:nowrap">' +
+        (s.status === 'PAUSED' ? btn('▶️ Resume', 'resume') : btn('⏸️ Pause', 'pause', undefined, s.id === 'main')) +
+        ' ' + btn('🛑 Stop', 'stop', undefined, true) +
+        ' ' + btn('🔄 Restart', 'restart') +
+        ' ' + btn(s.maintenance ? '🛠️ Wartung AUS' : '🛠️ Wartung AN', 'maintenance', !s.maintenance) +
+        ' ' + btn(s.autoStart ? '⚡ Auto ✓' : '⚡ Auto ✗', 'autostart', !s.autoStart) +
+        ' ' + btn('✏️ Name', 'rename') +
+        ' ' + btn('🏷️ Tags', 'tags') +
+        ' ' + btn('🧪 Env', 'env') +
+        ' ' + btn('🗑️', 'delete', undefined, true) +
+        '</td></tr>';
+    }).join('') + '</table></div></div>' +
+    '<div class="box"><h3>🧾 Session-Audit (global)</h3><div class="feed">' +
+    (d.audit || []).map(a => '<div class="feed-row"><span class="t">' + new Date(a.ts).toLocaleTimeString('de-DE') + '</span><span class="x"><b>' + esc2(a.action) + '</b> — ' + esc2(a.sid) + ' <span style="color:var(--faint)">durch ' + esc2(a.actor) + '</span></span></div>').join('') || '<p class="desc">Noch keine Aktionen.</p>' +
+    '</div></div>';
+}
+
+
+async function act(id, action, boolValue) {
+  const body = { id, action };
+  if (action === 'rename') { const n = prompt('Neuer Name für ' + id + ':'); if (!n) return; body.value = n; }
+  if (action === 'tags') { const t = prompt('Tags (durch Leerzeichen getrennt):'); if (t === null) return; body.value = t; }
+  if (action === 'env') { const e = prompt('Environment (production | testing | development):'); if (!e) return; body.value = e; }
+  if (boolValue === true || boolValue === false) body.value = boolValue;
+  let confirmText = null;
+  if (action === 'delete') {
+    confirmText = 'DELETE ' + id;
+    if (prompt('⚠️ GEFÄHRLICHE AKTION\n\nSession ' + id + ' aus der Registry entfernen?\n(Credentials bleiben erhalten.)\n\nTippe zur Bestätigung exakt: ' + confirmText) !== confirmText) return;
+    body.confirm = confirmText;
+  } else if (['pause', 'stop', 'restart'].includes(action) && !confirm(action + ' von ' + id + '?')) return;
+  const r = await api('/api/admin/session-action', { method: 'POST', body });
+  if (r && r.ok !== false) { toast('✅ ' + action + ' ' + id + ' ausgeführt'); render(); }
+  else toast('⚠️ ' + (r?.error || 'Fehlgeschlagen'));
+}
+
+function showUser(i) {
+  const u = (window._USERS || [])[i];
+  if (!u) return;
+  const m = document.getElementById('uModal');
+  const sec = (t, rows) => '<div class="box" style="margin:0 0 14px;width:100%;max-width:560px"><h3>' + t + '</h3><table>' +
+    rows.map(([k, v]) => '<tr><td style="color:var(--faint)">' + k + '</td><td><b>' + v + '</b></td></tr>').join('') + '</table></div>';
+  m.innerHTML = '<div style="max-height:90vh;overflow:auto;display:flex;flex-direction:column;align-items:center">' +
+    '<div class="box" style="width:100%;max-width:560px;text-align:center"><div style="font-size:40px">👤</div><h2 style="margin:6px 0">' + esc2(u.name) + '</h2>' +
+    '<div class="chips">' + (u.registered ? '<span class="pill on">registriert</span>' : '<span class="pill off">unregistriert</span>') +
+    (u.married ? '<span class="pill on">💍 verheiratet</span>' : '<span class="pill">🕊️ single</span>') + '</div>' +
+    '<p class="desc" style="margin-top:8px">Registriert: ' + (u.registeredAt ? new Date(u.registeredAt).toLocaleDateString('de-DE') : '—') + ' · Dieselben Daten wie im Bot-Profil ($profile) — Alter & IDs nie öffentlich.</p></div>' +
+    sec('⭐ Level & XP', [['Level', u.level], ['XP', fmtN(u.xp || 0) + ' / ' + fmtN(u.neededXp || 0)], ['Prestige', u.prestige ?? 0]]) +
+    sec('💎 Economy', [['Kupfer', fmtN(u.copper)], ['Silber', fmtN(u.silver || 0)], ['Gold', fmtN(u.gold || 0)], ['Platin', fmtN(u.platin || 0)]]) +
+    sec('❤️ Love & Pet', [['Verheiratet', u.married ? '💍 ja' : 'nein'], ['Partner', u.spouse ? esc2(u.spouse) : '—'], ['Verheiratet seit', u.marriedAt ? new Date(u.marriedAt).toLocaleDateString('de-DE') : '—'], ['Pet', u.pet ? esc2(u.pet) : '—'], ['Streak', u.streak + ' Tag(e)']]) +
+    sec('🏆 Achievements', [['Anzahl', u.achievements]]) +
+    '<button class="mini" style="border-radius:999px;padding:10px 26px" onclick="document.getElementById(\'uModal\').style.display=\'none\'">Schließen</button></div>';
+  m.style.display = 'flex';
+}
+
+async function renderUsers(v) {
+  v.innerHTML = '<input id="uq" placeholder="🔎 Nutzer suchen (Name oder ID) …" style="border-radius:999px;padding:12px 20px;margin-bottom:14px"><div class="box" id="uList">Tippe zum Suchen …</div>';
+  const doSearch = async () => {
+    const q = document.getElementById('uq').value.trim();
+    const d = await api('/api/admin/users?q=' + encodeURIComponent(q));
+    const el = document.getElementById('uList');
+    if (!d?.users?.length) { el.innerHTML = '<p class="desc">Keine Treffer.</p>'; return; }
+    el.innerHTML = '<table><tr><th>Nutzer</th><th>Level</th><th>Kupfer</th><th>💕</th><th>🐶 Pet</th><th>🏆</th><th>🔥</th></tr>' +
+      d.users.map((u, i) => '<tr style="cursor:pointer" onclick="showUser(' + i + ')"><td><b>' + esc2(u.name) + '</b>' + (u.registered ? '' : ' <span style="color:var(--faint)">(unregistriert)</span>') + '<br><span style="color:var(--faint);font-size:11px">' + esc2(u.bid.slice(0, 26)) + '…</span></td>' +
+        '<td>' + u.level + '</td><td class="mono">' + fmtN(u.copper) + '</td><td>' + (u.married ? '💍' : '—') + '</td>' +
+        '<td>' + (u.pet ? esc2(u.pet) : '—') + '</td><td>' + u.achievements + '</td><td>' + u.streak + '</td></tr>').join('') + '</table>';
+    window._USERS = d.users;
+  };
+  document.getElementById('uq').addEventListener('input', () => doSearch());
+  doSearch();
+}
+
+async function renderGroups(v) {
+  v.innerHTML = '<div class="box">Lade Gruppen …</div>';
+  const d = await api('/api/admin/groups');
+  if (!d?.groups) { v.innerHTML = '<div class="box">⚠️ Kein Zugriff.</div>'; return; }
+  v.innerHTML = '<div class="box"><h3>👥 Gruppen (' + fmtN(d.total) + ')</h3>' +
+    '<div class="desc">Gruppen-Namen liefert nur WhatsApp live — hier die Registry-Ansicht.</div>' +
+    '<div style="max-height:520px;overflow:auto"><table><tr><th>Gruppen-ID</th><th>Aktiv</th><th>Setup</th></tr>' +
+    d.groups.map(g => '<tr><td class="mono">' + esc2(g.gid) + '</td><td>' + (g.active ? '<span class="pill on">aktiv</span>' : '<span class="pill off">aus</span>') + '</td><td>' + (g.setupAt ? new Date(g.setupAt).toLocaleDateString('de-DE') : '—') + '</td></tr>').join('') +
+    '</table></div></div>';
+}
+
+async function renderModeration(v) {
+  v.innerHTML = '<div class="box">Lade Moderation …</div>';
+  const d = await api('/api/admin/moderation');
+  if (!d) { v.innerHTML = '<div class="box">⚠️ Kein Zugriff.</div>'; return; }
+  v.innerHTML =
+    '<div class="grid">' + stat('🚫', d.bans.length, 'Bans') + stat('🧾', d.auditTail.length, 'Audit-Einträge (Tail)') + stat('🔒', d.securityTail.length, 'Security-Events (Tail)') + '</div>' +
+    '<div class="box"><h3>🚫 Bans</h3>' + (d.bans.length ? '<table><tr><th>ID</th><th>Grund</th><th>Von</th></tr>' +
+      d.bans.map(b => '<tr><td class="mono">' + esc2(String(b.id).slice(0, 26)) + '…</td><td>' + esc2(b.reason) + '</td><td>' + esc2(b.by) + '</td></tr>').join('') + '</table>' : '<p class="desc">Keine Bans. 🎉</p>') + '</div>' +
+    '<div class="box"><h3>🧾 System-Audit (audit.jsonl)</h3><div class="feed" style="max-height:320px">' +
+      d.auditTail.map(a => '<div class="feed-row"><span class="t">' + (a.time ? new Date(a.time).toLocaleTimeString('de-DE') : (a.ts || '')) + '</span><span class="x">' + esc2(JSON.stringify(a).slice(0, 160)) + '</span></div>').join('') || '<p class="desc">Leer.</p>' + '</div></div>';
+}
+
+async function renderCommands(v) {
+  v.innerHTML = '<div class="box">Lade Registry …</div>';
+  const d = await api('/api/commands?rich=1');
+  const rich = d?.rich || [];
+  const st = d?.stats || {};
+  const cats = [...new Set(rich.map((c) => c.categoryTitle))];
+  let q = '', cat = '';
+  const draw = () => {
+    const needle = q.toLowerCase();
+    const list = rich.filter((c) => (!cat || c.categoryTitle === cat) &&
+      (!needle || c.name.includes(needle) || c.desc.toLowerCase().includes(needle) ||
+       c.aliases.some((a) => a.toLowerCase().includes(needle))));
+    v.innerHTML =
+      '<div class="grid">' +
+      '<div class="stat"><div class="s-v">' + st.commands + '</div><div class="s-l">Befehle</div></div>' +
+      '<div class="stat"><div class="s-v">' + st.aliases + '</div><div class="s-l">Aliase</div></div>' +
+      '<div class="stat"><div class="s-v">' + st.categories + '</div><div class="s-l">Kategorien</div></div>' +
+      '<div class="stat"><div class="s-v">' + (st.unresolvedAliases ?? '—') + '</div><div class="s-l">Offene Alias-Mappings</div></div>' +
+      '</div>' +
+      '<div class="row" style="margin:14px 0;flex-wrap:wrap;gap:8px">' +
+      '<input id="cmdq" placeholder="🔎 Befehl, Alias oder Beschreibung …" value="' + esc2(q) + '" style="border-radius:999px;padding:12px 18px;min-width:240px">' +
+      '<select id="cmdcat" style="border-radius:999px;padding:12px 18px;background:var(--bg2,#141024);color:inherit">' +
+      '<option value="">Alle Kategorien</option>' + cats.map((c) => '<option' + (c === cat ? ' selected' : '') + '>' + esc2(c) + '</option>').join('') + '</select></div>' +
+      '<div class="box"><h3>⚡ Registry (' + list.length + ' Treffer)</h3>' +
+      (list.length ? '<table><tr><th>Befehl</th><th>Usage</th><th>Kategorie</th><th>Rechte</th><th>Aliase</th></tr>' +
+        list.slice(0, 120).map((c) =>
+          '<tr><td class="mono">\$' + esc2(c.name) + '</td><td>' + esc2(c.usage) + '</td><td>' + c.emoji + ' ' + esc2(c.categoryTitle) + '</td><td>' +
+          (c.perms === 'owner' ? '👑 Owner' : c.perms === 'admin' ? '🛡️ Admin' : '🌐 Alle') + '</td>' +
+          '<td>' + (c.aliases.length ? c.aliases.map((a) => '<span class="chip">\$' + esc2(a) + '</span>').join(' ') : '—') + '</td></tr>'
+        ).join('') + '</table>' : '<p class="desc">Keine Treffer.</p>') +
+      '</div>' +
+      '<p class="desc">📚 Quelle: registry/commands.json — dieselben Daten speisen $help, die Befehle-Webseite, den Tester und die Doku.</p>';
+    const qi = document.getElementById('cmdq');
+    qi.addEventListener('input', (e) => { q = e.target.value; clearTimeout(window._ct); window._ct = setTimeout(draw, 250); });
+    document.getElementById('cmdcat').addEventListener('change', (e) => { cat = e.target.value; draw(); });
+  };
+  draw();
+}
+
+async function renderTester(v) {
+  v.innerHTML =
+    '<div class="box"><h3>🧪 Command Test Lab</h3>' +
+    '<div class="desc">Trockenlauf: validiert gegen die Registry — führt <b>keinen</b> Befehl wirklich aus, sendet nichts, ändert keine Daten.</div>' +
+    '<div class="row" style="margin:14px 0">' +
+    '<input id="tinput" placeholder="\$befehl argumente …  (z. B. \$marry @max)" style="flex:1;border-radius:999px;padding:13px 20px">' +
+    '<button class="mini" id="trun" style="border-radius:999px;padding:13px 26px">▶ RUN</button></div>' +
+    '<div id="tout"></div></div>' +
+    '<div class="box"><h3>💡 Beispiele</h3><div class="chips">' +
+    ['\$sessions', '\$kuss @lena', '\$marry', '\$sessionstats soul_02', '\$gibtsnicht', '\$cmdsuche love'].map((x) =>
+      '<span class="chip" style="cursor:pointer" onclick="document.getElementById(\'tinput\').value=this.textContent;document.getElementById(\'trun\').click()">' + x + '</span>').join('') +
+    '</div></div>';
+  const run = async () => {
+    const val = document.getElementById('tinput').value.trim();
+    const out = document.getElementById('tout');
+    if (!val) { out.innerHTML = '<p class="desc">Bitte Befehl eingeben.</p>'; return; }
+    out.innerHTML = '<p class="desc">⏳ Validiere …</p>';
+    const r = await api('/api/admin/command-test', { method: 'POST', body: { input: val } });
+    if (!r) { out.innerHTML = '<p class="desc">⚠️ Server nicht erreichbar.</p>'; return; }
+    const ok = r.valid;
+    out.innerHTML =
+      '<table><tr><th>Prüfung</th><th>Ergebnis</th></tr>' +
+      '<tr><td>Status</td><td>' + (ok ? '✅ Gültig' : '❌ Unbekannt') + '</td></tr>' +
+      (r.resolved ? '<tr><td>Befehl</td><td class="mono">' + r.resolved.emoji + ' \$' + esc2(r.resolved.name) + (r.resolved.viaAlias ? ' <span class="chip">via \$' + esc2(r.resolved.viaAlias) + '</span>' : '') + '</td></tr>' +
+        '<tr><td>Kategorie</td><td>' + esc2(r.resolved.category) + '</td></tr>' +
+        '<tr><td>Usage</td><td class="mono">' + esc2(r.resolved.usage) + '</td></tr>' +
+        '<tr><td>Rechte</td><td>' + esc2(r.permsNote) + '</td></tr>' +
+        '<tr><td>Aliase</td><td>' + (r.resolved.aliases.length ? r.resolved.aliases.map((a) => '<span class="chip">\$' + esc2(a) + '</span>').join(' ') : '—') + '</td></tr>' +
+        '<tr><td>Argumente</td><td>' + (r.argsCheck.ok ? '✅ ' : '⚠️ ') + esc2(r.argsCheck.hint) + ' (' + r.argCount + ' gegeben)</td></tr>' +
+        '<tr><td>Cooldown</td><td>' + r.resolved.cooldown + 's</td></tr>' : '') +
+      (r.suggestions?.length ? '<tr><td>Vorschläge</td><td>' + r.suggestions.map((x) => '<span class="chip">\$' + esc2(x) + '</span>').join(' ') + '</td></tr>' : '') +
+      '<tr><td>Dauer</td><td>' + Number(r.ms).toFixed(2) + ' ms</td></tr>' +
+      '<tr><td>Modus</td><td>🔒 Trockenlauf (keine Ausführung)</td></tr></table>';
+  };
+  document.getElementById('trun').addEventListener('click', run);
+  document.getElementById('tinput').addEventListener('keydown', (e) => { if (e.key === 'Enter') run(); });
+}
+
+async function renderAudit(v) {
+  const d = await api('/api/sessions');
+  v.innerHTML = '<div class="box"><h3>📜 Session-Audit-Trail</h3><div class="feed" style="max-height:560px">' +
+    (d?.audit || []).map(a => '<div class="feed-row"><span class="t">' + new Date(a.ts).toLocaleString('de-DE') + '</span><span class="x"><b>' + esc2(a.action) + '</b> — ' + esc2(a.sid) + ' <span style="color:var(--faint)">durch ' + esc2(a.actor) + '</span></span></div>').join('') || '<p class="desc">Noch keine Aktionen.</p>' +
+    '</div></div>';
+}
+
+async function renderEmergency(v) {
+  v.innerHTML =
+    '<div class="box" style="border-color:rgba(251,113,133,.5)"><h3>🚨 Emergency Panel</h3>' +
+    '<div class="desc">Doppelte Bestätigung + Audit. Die Main-Session und externe Instanzen sind geschützt.</div>' +
+    '<div class="row">' +
+    '<button class="mini" onclick="emergency(\'restartFailed\')">🔄 Fehlgeschlagene Sessions neu starten</button>' +
+    '<button class="mini danger" onclick="emergency(\'stopAllSpawned\')">🛑 ALLE gespawnten Sessions stoppen</button>' +
+    '</div></div>';
+}
+
+async function emergency(action) {
+  const expected = 'STOP ALL';
+  if (action === 'stopAllSpawned' && prompt('⚠️ STOP ALL — wirklich?\nTippe zur Bestätigung: ' + expected) !== expected) return;
+  if (action === 'restartFailed' && !confirm('Alle fehlgeschlagenen Sessions (desiredState: running) neu starten?')) return;
+  const body = { action };
+  if (action === 'stopAllSpawned') body.confirm = expected;
+  const r = await api('/api/admin/emergency', { method: 'POST', body });
+  toast(r?.ok ? '✅ Emergency-Aktion ausgeführt' : '⚠️ ' + (r?.error || 'Fehlgeschlagen'));
+}
+
+/* ── Suche ─────────────────────────────────────────────── */
+let searchTimer;
+document.getElementById('globalSearch').addEventListener('input', (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (q.length < 2) { document.getElementById('searchResults').innerHTML = ''; return; }
+  searchTimer = setTimeout(async () => {
+    const d = await api('/api/admin/search?q=' + encodeURIComponent(q));
+    document.getElementById('searchResults').innerHTML = (d?.results || []).slice(0, 20).map(r =>
+      '<span class="chip" style="cursor:default">' + ({ session: '📡', user: '👤', group: '👥', audit: '🧾', command: '⚡' }[r.type] || '•') + ' ' + esc2(r.label) + ' <span style="color:var(--faint)">' + esc2(r.sub) + '</span></span>'
+    ).join('') || '<span class="chip">Keine Treffer</span>';
+  }, 300);
+});
+
+/* ── Start ─────────────────────────────────────────────── */
+(async function () {
+  if (!getToken()) { document.getElementById('guard').style.display = ''; return; }
+  const me = await api('/api/me');
+  if (!me || !me.ok || me.role !== 'owner') { document.getElementById('guard').style.display = ''; return; }
+  ROLE = me.role; NAME = me.name || 'Owner';
+  document.getElementById('app').style.display = '';
+  initHero(me.name || me.username || 'Owner');
+  buildSidebar();
+  render();
+  setInterval(() => { if (VIEW === 'overview' && !document.hidden) render(); }, 8000);
+})();
+</script>
+</body>
+</html>

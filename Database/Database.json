@@ -1,0 +1,892 @@
+{
+  "users": {
+    "a": {
+      "registration": {
+        "registered": true,
+        "registeredAt": "2026-09-04T15:49:57.626Z"
+      },
+      "status": {
+        "verified": true
+      }
+    },
+    "b": {},
+    "c": {},
+    "4935189669769jid57995698401408lid": {
+      "identity": {
+        "username": "",
+        "bid": "4935189669769jid57995698401408lid",
+        "phone": "+4935189669769",
+        "jid": "4935189669769@s.whatsapp.net",
+        "lid": "57995698401408@lid",
+        "cleanJid": "4935189669769",
+        "cleanLid": "57995698401408"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-03T20:18:31.354Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "4915206959811jid245161749663894lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915206959811jid245161749663894lid",
+        "phone": "+4915206959811",
+        "jid": "4915206959811@s.whatsapp.net",
+        "lid": "245161749663894@lid",
+        "cleanJid": "4915206959811",
+        "cleanLid": "245161749663894"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-05T16:01:08.793Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      },
+      "love": {
+        "married": true,
+        "spouseName": "maxichen",
+        "spouseKey": "269574108926096",
+        "spouseBid": "4915155894714jid269574108926096lid",
+        "marriedAt": "2026-04-01T00:00:00.000Z",
+        "divorcedAt": null,
+        "marriages": 1
+      }
+    },
+    "4915155894714jid269574108926096lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915155894714jid269574108926096lid",
+        "phone": "+4915155894714",
+        "jid": "4915155894714@s.whatsapp.net",
+        "lid": "269574108926096@lid",
+        "cleanJid": "4915155894714",
+        "cleanLid": "269574108926096"
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": "2026-09-01T21:53:02.915Z",
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": true,
+        "verifiedAt": "2026-09-01T18:48:13.201Z",
+        "unverified": false,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-01T18:47:01.901Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 50,
+        "neededXpForLvOrPrestigeUp": 743,
+        "lastDaily": "2026-09-05"
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 110,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null,
+        "lastWorkAt": "2026-09-05T23:32:36.894Z"
+      },
+      "registration": {
+        "registered": true,
+        "name": "maxichen",
+        "age": "16",
+        "status": "vergeben",
+        "city": "recklinghausen",
+        "value": "maxichen.16.vergeben.recklinghausen",
+        "registeredAt": "2026-09-01T19:58:11.534Z"
+      },
+      "love": {
+        "married": true,
+        "spouseName": "4915758256378",
+        "spouseKey": "57956708180043",
+        "spouseBid": "4915758256378jid57956708180043lid",
+        "marriedAt": "2026-04-01T00:00:00.000Z",
+        "divorcedAt": null,
+        "marriages": 2
+      }
+    },
+    "245161749663894jid245161749663894lid": {
+      "identity": {
+        "username": "",
+        "bid": "245161749663894jid245161749663894lid",
+        "phone": "+245161749663894",
+        "jid": "245161749663894@s.whatsapp.net",
+        "lid": "245161749663894@lid",
+        "cleanJid": "245161749663894",
+        "cleanLid": "245161749663894"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-05T16:02:18.842Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "4915758256378jid57956708180043lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915758256378jid57956708180043lid",
+        "phone": "+4915758256378",
+        "jid": "4915758256378@s.whatsapp.net",
+        "lid": "57956708180043@lid",
+        "cleanJid": "4915758256378",
+        "cleanLid": "57956708180043"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-05T16:07:43.906Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      },
+      "love": {
+        "married": true,
+        "spouseName": "maxichen",
+        "spouseKey": "269574108926096",
+        "spouseBid": "4915155894714jid269574108926096lid",
+        "marriedAt": "2026-04-01T00:00:00.000Z",
+        "divorcedAt": null,
+        "marriages": 1
+      }
+    },
+    "4915678413793jid257466679955665lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915678413793jid257466679955665lid",
+        "phone": "+4915678413793",
+        "jid": "4915678413793@s.whatsapp.net",
+        "lid": "257466679955665@lid",
+        "cleanJid": "4915678413793",
+        "cleanLid": "257466679955665"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-05T16:31:38.384Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "33745315607jid42392065442006lid": {
+      "identity": {
+        "username": "",
+        "bid": "33745315607jid42392065442006lid",
+        "phone": "+33745315607",
+        "jid": "33745315607@s.whatsapp.net",
+        "lid": "42392065442006@lid",
+        "cleanJid": "33745315607",
+        "cleanLid": "42392065442006"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-05T23:36:29.635Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "4916322223411jid157205181517834lid": {
+      "identity": {
+        "username": "",
+        "bid": "4916322223411jid157205181517834lid",
+        "phone": "+4916322223411",
+        "jid": "4916322223411@s.whatsapp.net",
+        "lid": "157205181517834@lid",
+        "cleanJid": "4916322223411",
+        "cleanLid": "157205181517834"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-05T23:39:13.211Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "491793904099jid269724751503435lid": {
+      "identity": {
+        "username": "",
+        "bid": "491793904099jid269724751503435lid",
+        "phone": "+491793904099",
+        "jid": "491793904099@s.whatsapp.net",
+        "lid": "269724751503435@lid",
+        "cleanJid": "491793904099",
+        "cleanLid": "269724751503435"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": true,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-06T18:02:28.563Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    }
+  },
+  "groups": {
+    "g1": {
+      "active": true,
+      "setupAt": "2026-09-01T22:50:06.608Z"
+    },
+    "g2": {
+      "active": false
+    },
+    "120363411386930403": {
+      "groupId": "120363411386930403",
+      "groupJid": "120363411386930403@g.us",
+      "subject": "𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe",
+      "creator": "269574108926096@lid",
+      "owner": "269574108926096@lid",
+      "ownerUsername": null,
+      "active": true,
+      "activatedAt": "2026-09-03T22:13:34.333Z",
+      "activatedBy": "4915155894714@s.whatsapp.net",
+      "createdAt": "2026-09-02T00:01:11.825Z",
+      "setupAt": "2026-09-03T22:13:34.333Z",
+      "setupBy": "4915155894714@s.whatsapp.net",
+      "setupByName": "269574108926096",
+      "setupDescription": "🖤 *LoveBot* ist in @Maxichen Dev gruppe aktiv 🤖\nNutze *$dsgvo* / *$verify* für weitere Infos.\n\n⏱️ *Setup gesetzt:* Fr., 04.09.2026, 00:13:34\n🎮 *von:* 269574108926096",
+      "warns": {},
+      "autodl": true,
+      "welcome": true,
+      "goodbye": true,
+      "kick": true,
+      "promote": true,
+      "demote": true,
+      "liebe": true,
+      "fun": true,
+      "media": true,
+      "tools": true,
+      "badwords": true,
+      "antilink": true,
+      "night": true,
+      "afk": true
+    },
+    "120363412203277917": {
+      "groupId": "120363412203277917",
+      "groupJid": "120363412203277917@g.us",
+      "subject": "𓆩♡𓆪 𝟗𝟏𝟎𝓶𝓪𝔁𝓲 𓆩♡𓆪 & 𓆩♡𓆪 𝟗𝟏𝟎𝓵𝓲𝓵𝓵𝔂 𓆩♡𓆪",
+      "creator": "269574108926096@lid",
+      "owner": "269574108926096@lid",
+      "ownerUsername": null,
+      "active": true,
+      "activatedAt": "2026-09-02T12:12:43.329Z",
+      "activatedBy": "4915155894714@s.whatsapp.net",
+      "createdAt": "2026-09-02T12:12:43.325Z"
+    },
+    "120363430199290638": {
+      "groupId": "120363430199290638",
+      "groupJid": "120363430199290638@g.us",
+      "subject": "✨Best Friends ✨",
+      "creator": "51260870918164@lid",
+      "owner": "51260870918164@lid",
+      "ownerUsername": null,
+      "active": true,
+      "activatedAt": "2026-09-05T18:32:38.207Z",
+      "activatedBy": "4915155894714@s.whatsapp.net",
+      "createdAt": "2026-09-05T18:32:26.016Z",
+      "setupAt": "2026-09-05T18:32:26.032Z",
+      "setupBy": "4915155894714@s.whatsapp.net",
+      "setupByName": "269574108926096",
+      "setupDescription": "🖤 *LoveBot* ist in @✨Best Friends ✨ aktiv 🤖\nNutze *$dsgvo* / *$verify* für weitere Infos.\n\n⏱️ *Setup gesetzt:* Sa., 05.09.2026, 20:32:26\n🎮 *von:* 269574108926096"
+    },
+    "120363412594496818": {
+      "groupId": "120363412594496818",
+      "groupJid": "120363412594496818@g.us",
+      "subject": "𓆩♡𓆪 910maxi 𓆩♡𓆪",
+      "creator": "269574108926096@lid",
+      "owner": "269574108926096@lid",
+      "ownerUsername": null,
+      "active": false,
+      "activatedAt": null,
+      "activatedBy": null,
+      "createdAt": "2026-09-06T17:41:17.410Z"
+    }
+  },
+  "afk": {},
+  "bans": {
+    "491625742124": {
+      "jid": "491625742124@s.whatsapp.net",
+      "lid": "491625742124@lid",
+      "reason": "schickt während bzh nudes an andere 💔",
+      "bannedAt": "2026-09-05T23:33:13.646Z",
+      "bannedBy": "4915155894714@s.whatsapp.net",
+      "bannedByLid": "269574108926096@lid",
+      "bannedByName": "269574108926096"
+    }
+  },
+  "meta": {
+    "owners": [
+      {
+        "name": "Maxichen1",
+        "jid": "491758824187@s.whatsapp.net",
+        "lid": "164038407397485@lid",
+        "addedAt": "2026-09-03T22:35:47.167Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      },
+      {
+        "name": "Maxichen2",
+        "jid": "4915161545499@s.whatsapp.net",
+        "lid": "201030977470655@lid",
+        "addedAt": "2026-09-03T22:35:55.136Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      },
+      {
+        "name": "maxichen3",
+        "jid": "491793904099@s.whatsapp.net",
+        "lid": "269724751503435@lid",
+        "addedAt": "2026-09-03T22:36:01.218Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      },
+      {
+        "name": "maxichen4",
+        "jid": "4915233886711@s.whatsapp.net",
+        "lid": "112236974600254@lid",
+        "addedAt": "2026-09-03T22:36:10.975Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      },
+      {
+        "name": "maxichen5",
+        "jid": "4915206959811@s.whatsapp.net",
+        "lid": "245161749663894@lid",
+        "addedAt": "2026-09-03T22:36:27.845Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      },
+      {
+        "name": "bot",
+        "jid": "420721199654@s.whatsapp.net",
+        "lid": "155019043160306@lid",
+        "addedAt": "2026-09-03T22:36:38.081Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      },
+      {
+        "name": "⁹¹⁰ 𝐋͢𝚰⃕𝐋͢𝐋𝐈ꫂ🩸💍",
+        "jid": "4915758256378@s.whatsapp.net",
+        "lid": "57956708180043@lid",
+        "addedAt": "2026-09-05T17:01:03.793Z",
+        "addedBy": "4915155894714@s.whatsapp.net"
+      }
+    ],
+    "marryProposals": {}
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "users": {
+    "4915155894714jid269574108926096lid": {
+      "achievements": {
+        "couple_7": 1788689092241,
+        "married": 1788689092241
+      },
+      "counters": {},
+      "lovebonus": {
+        "lastAt": "2026-9-6",
+        "streak": 1
+      },
+      "pet": null,
+      "inventory": {},
+      "cooldowns": {}
+    }
+  },
+  "couples": {
+    "269574108926096|57956708180043": {
+      "loveXp": 40,
+      "streak": 1,
+      "lastDay": "2026-9-6",
+      "memories": 0,
+      "n1": "maxichen",
+      "n2": "4915758256378"
+    }
+  },
+  "games": {}
+}

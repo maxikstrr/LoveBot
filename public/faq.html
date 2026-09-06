@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ 💜 — LoveBot</title>
+<meta name="description" content="Häufige Fragen zu LoveBot: Bot in die Gruppe, Präfix, JID & LID, Badwords, Dashboard-Login und mehr.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/faq.html" class="active">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:12px">
+    <span class="badge">❓ Häufige Fragen</span>
+    <h1>F<span class="grad">A</span>Q</h1>
+    <p class="sub">Die wichtigsten Fragen rund um LoveBot — kurz und ehrlich beantwortet.</p>
+  </section>
+
+  <section style="padding-top:20px">
+    <div class="faq-list">
+      <details class="faq-item"><summary><span class="q">Q</span> Wie bekomme ich den Bot in meine Gruppe?</summary><div class="a">Über den Owner: Schreib Maxichen in der <b>Dev-Gruppe</b> (Link im Footer) mit deinem Gruppen-Link. Der Bot tritt dann bei — danach genügt <code>$setup</code>.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Was ist das Präfix?</summary><div class="a">Alle Befehle starten mit <code>$</code> — z.&nbsp;B. <code>$ping</code>, <code>$menu</code>, <code>$marry</code>. Alle Aliase funktionieren genauso.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Was bedeutet JID und LID?</summary><div class="a"><b>JID</b> ist deine Nummer als ID (<code>49…@s.whatsapp.net</code>), <b>LID</b> die interne WhatsApp-ID (<code>…@lid</code>). Der Bot erkennt beide überall — Admins, Warns und Bans funktionieren mit beiden Formaten.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Wie funktioniert die Badword-Strafe?</summary><div class="a">Nachricht löschen → Warn → bei 3 Warns wirst du gekickt und im Bot gebannt. Mit LEET-Erkennung (z.&nbsp;B. „sch*ße“) und Umgehungs-Schutz.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Wie bekomme ich ein Profil?</summary><div class="a">Mit <code>$register Name.Alter.Status.Stadt</code> — danach hast du Level, Liebe und eine Wallet (<code>$balance</code>).</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Was macht $addmeta?</summary><div class="a">Holt Meta AI in die Gruppe. <code>$kickmeta</code> entfernt sie wieder. Nur Owner/Admins dürfen das.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Wie logge ich mich ins Dashboard ein?</summary><div class="a">Drei Schritte: Nummer eingeben → WhatsApp-Code (2FA) bestätigen → Passwort. Der Owner nutzt seine Owner-Nummer, normale Nutzer registrieren sich einmalig per WhatsApp-Code.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Ich bin gebannt — was jetzt?</summary><div class="a">Beim Login siehst du, wer dich wann und warum gebannt hat. Wende dich an die angezeigten Owner und bitte um Hilfe.</div></details>
+      <details class="faq-item"><summary><span class="q">Q</span> Bleibe ich eingeloggt?</summary><div class="a">Ja — bis du selbst auf „Abmelden“ drückst. Auch Server-Neustarts loggen dich nicht aus.</div></details>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Noch Fragen? Die Dev-Gruppe im Footer ist der schnellste Weg zu einer Antwort.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/faq.html">FAQ</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+makeHearts(12);
+document.getElementById('year').textContent = new Date().getFullYear();
+(async function () {
+  const site = await api('/api/siteinfo');
+  if (site) document.getElementById('socials').innerHTML = buildSocials(site.links);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session-Center 💜 — LoveBot</title>
+<meta name="description" content="LoveBot Session-Center: alle WhatsApp-Sessions live — Status, Uptime, Gruppen, Nachrichten und Aktivitäts-Feed.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html">Status</a>
+    <a href="/sessions.html" class="active">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:8px">
+    <span class="badge">📡 Multi-Session · Live · ohne Login</span>
+    <h1>Session <span class="grad">Center</span></h1>
+    <p class="sub">Jede WhatsApp-Verbindung des Bots auf einen Blick: Status, Uptime, Gruppen und Nachrichten — mit Live-Aktivitäts-Feed. Aktualisiert alle 5 Sekunden.</p>
+  </section>
+
+  <section style="padding-top:22px">
+    <div class="livebar" style="margin:0 auto 30px">
+      <div class="cell"><div class="num" id="sTotal">…</div><div class="lbl">Sessions</div></div>
+      <div class="cell"><div class="num" id="sOnline">…</div><div class="lbl">Online</div></div>
+      <div class="cell"><div class="num" id="sGroups">…</div><div class="lbl">Gruppen</div></div>
+      <div class="cell"><div class="num" id="sMsgs">…</div><div class="lbl">Nachrichten</div></div>
+    </div>
+
+    <div class="fleet-chips" id="fleetChips"></div>
+
+    <div class="sec-head" style="margin-bottom:14px">
+      <div class="kicker">Verbindungen</div>
+      <h2 style="font-size:clamp(22px,3.4vw,32px)">Alle Sessions</h2>
+    </div>
+    <div class="chips" id="tagFilter" style="justify-content:center;margin-bottom:18px"></div>
+    <div class="sess-grid" id="sessGrid"></div>
+
+    <div class="sec-head" style="margin:44px 0 22px">
+      <div class="kicker">Verfügbarkeit</div>
+      <h2 style="font-size:clamp(22px,3.4vw,32px)">Uptime-Monitor</h2>
+    </div>
+    <div class="box" style="max-width:860px;margin:0 auto 44px">
+      <div class="mon" id="monitor"></div>
+    </div>
+
+    <div class="sec-head" style="margin-bottom:22px">
+      <div class="kicker">Live</div>
+      <h2 style="font-size:clamp(22px,3.4vw,32px)">Aktivitäts-Feed</h2>
+    </div>
+    <div class="box" style="max-width:860px;margin:0 auto">
+      <div class="feed" id="feed"></div>
+    </div>
+  </section>
+
+  <!-- Session Launcher (Anleitung) -->
+  <section style="padding-top:0">
+    <div class="sec-head">
+      <div class="kicker">Session Launcher</div>
+      <h2 style="font-size:clamp(22px,3.4vw,32px)">Neue Session <span class="grad-text">starten</span></h2>
+      <p>Der komplette Lebenszyklus — vom Anlegen bis zum Löschenschutz.</p>
+    </div>
+    <div class="steps-grid" style="max-width:1000px;margin:0 auto">
+      <div class="step-card"><div class="nr">01</div><h3>Anlegen</h3><p>Im Chat: <b>$newsession SoulEcho_09</b> — legt ID, Registry-Eintrag und Profil an. Klonen einer bestehenden Konfiguration: <b>$sessionclone</b>.</p></div>
+      <div class="step-card"><div class="nr">02</div><h3>Verbinden</h3><p>Zweite Instanz mit eigener ID starten:<br><b>LOVEBOT_SESSION_ID=soulecho_09 LOVEBOT_SESSION_DIR=Sessions/soulecho_09 node Love.js</b> — dann QR scannen (Terminal).</p></div>
+      <div class="step-card"><div class="nr">03</div><h3>Live dabei</h3><p>Die Session erscheint automatisch hier und in <b>$sessions</b> — mit Health, Logs, Uptime-% und eigenem Profil (Präfix, Features).</p></div>
+      <div class="step-card"><div class="nr">04</div><h3>Steuern</h3><p><b>$killsession</b> stoppt (Credentials bleiben), <b>$delsession</b> entfernt nur den Registry-Eintrag, <b>$sessionmaintenance</b> setzt Wartungsmodus. 🛡️</p></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Session-Detail Modal -->
+<div class="modal-back" id="modalBack" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="mTitle">Session</h3>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Session-Verwaltung per Chat: <b>$sessions</b>, <b>$newsession</b>, <b>$sessionhealth</b>, <b>$sessionclone</b> — Owner-only, sicher über den Bot geschützt.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/sessions.html">Session-Center</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen · Nummern zum Schutz maskiert · Made with 💜 · <a href="/admin.html">👑 Owner-Panel</a></p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+makeHearts(10);
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const PILL = {
+  CONNECTED:   ['p-CONNECTED', '🟢', 'ONLINE'],
+  DISCONNECTED:['p-OFF', '🔴', 'OFFLINE'],
+  ERROR:       ['p-OFF', '🔴', 'FEHLER'],
+  QR_REQUIRED: ['p-AUTH', '🟡', 'QR NÖTIG'],
+  WAITING_FOR_AUTH: ['p-AUTH', '🟣', 'AUTH NÖTIG'],
+  CONNECTING:  ['p-AUTH', '🕸️', 'VERBINDET'],
+  STOPPED:     ['p-STOP', '⚫', 'GESTOPPT']
+};
+const SRC = { live: 'dieser Bot-Prozess', spawned: 'Kind-Prozess', external: 'externe Instanz', 'spawned-candidate': 'extern geplant' };
+
+function esc2(s){ return String(s??'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtN(n){ return Number(n||0).toLocaleString('de-DE'); }
+
+function render(data) {
+  const list = data.sessions || [];
+  LAST = list;
+  window._FEED = data.activity || [];
+  renderFleet(data.fleet, list);
+  window._AUDIT = data.audit || [];
+  const shown = list.filter(matchesFilter);
+  const grid = document.getElementById('sessGrid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="sess-empty" style="grid-column:1/-1"><div class="big">💤</div>Keine Sessions registriert.<br>Der Bot trägt sich beim nächsten Verbinden automatisch ein.</div>';
+  } else if (!shown.length) {
+    grid.innerHTML = '<div class="sess-empty" style="grid-column:1/-1"><div class="big">🔎</div>Keine Sessions für Filter „' + esc2(ACTIVE_FILTER) + '“.</div>';
+  } else {
+    grid.innerHTML = shown.map(s => {
+      const p = PILL[s.status] || PILL.STOPPED;
+      return '<div class="sess-card st-' + esc2(s.status) + '" data-id="' + esc2(s.id) + '" style="cursor:pointer">' +
+        '<div class="sess-head"><span class="em">' + (s.health?.emoji || '⚪') + '</span><h3>' + esc2(s.name) + '</h3>' +
+        (s.isDefault ? '<span class="def">⭐ STANDARD</span>' : '') + '</div>' +
+        '<span class="sess-pill ' + p[0] + '"><span class="dot"></span>' + p[2] + '</span>' +
+        '<div class="sess-kv">' +
+        '<div><div class="k">ID</div><div class="v" style="font-family:var(--mono);font-size:12px">' + esc2(s.id) + '</div></div>' +
+        '<div><div class="k">Nummer</div><div class="v">' + esc2(s.phone) + '</div></div>' +
+        '<div><div class="k">Uptime</div><div class="v">' + esc2(s.uptime) + '</div></div>' +
+        '<div><div class="k">Gruppen</div><div class="v">' + fmtN(s.groups) + '</div></div>' +
+        '<div><div class="k">Nachrichten</div><div class="v">' + fmtN(s.messages) + '</div></div>' +
+        '<div><div class="k">Befehle</div><div class="v">' + fmtN(s.commands) + '</div></div>' +
+        '</div>' +
+        '<div class="sess-src">📡 ' + (SRC[s.source] || s.source) + ' · 👀 ' + (s.lastSeen ? new Date(s.lastSeen).toLocaleTimeString('de-DE') : '—') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  const online = list.filter(s => s.status === 'CONNECTED').length;
+  document.getElementById('sTotal').textContent = list.length;
+  document.getElementById('sOnline').textContent = online + '/' + list.length;
+  document.getElementById('sGroups').textContent = fmtN(list.reduce((a, s) => a + (s.groups || 0), 0));
+  document.getElementById('sMsgs').textContent = fmtN(list.reduce((a, s) => a + (s.messages || 0), 0));
+
+  renderMonitor(list.filter(matchesFilter));
+
+  const feed = document.getElementById('feed');
+  const acts = data.activity || [];
+  feed.innerHTML = acts.length ? acts.map(a => {
+    const t = a.ts ? new Date(a.ts).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
+    return '<div class="feed-row f-' + esc2(a.type) + '"><span class="t">' + t + '</span><span class="x">' + esc2(a.text) + '</span></div>';
+  }).join('') : '<div class="sess-empty"><div class="big">📜</div>Noch keine Aktivität protokolliert.</div>';
+
+  wireCards();
+}
+
+/* ── Fleet-Chips + Tag-Filter ── */
+let ACTIVE_FILTER = 'alle';
+function renderFleet(f, list) {
+  if (!f) return;
+  const items = [
+    ['🗄️ Managed', f.managed, 'var(--brand-1)'],
+    ['🟢 Running', f.running, 'var(--ok)'],
+    ['⏸️ Paused', f.paused, 'var(--warn)'],
+    ['🟣 Auth nötig', f.authRequired, '#c4b5fd'],
+    ['⚫ Stopped', f.stopped, 'var(--muted)'],
+    ['🔴 Error/Offline', f.error, 'var(--err)'],
+    ['📈 Ø Uptime', f.avgUptimePct == null ? '—' : f.avgUptimePct + '%', 'var(--brand-2)']
+  ];
+  document.getElementById('fleetChips').innerHTML = items.map(([l, v, c]) =>
+    '<div class="fleet-chip"><span class="fc-l">' + l + '</span><span class="fc-v" style="color:' + c + '">' + v + '</span></div>'
+  ).join('');
+
+  /* Filter-Chips: alle + envs + tags */
+  const tags = new Set();
+  for (const x of list) { if (x.env) tags.add(x.env); (x.tags || []).forEach((t) => tags.add(t)); }
+  const fEl = document.getElementById('tagFilter');
+  fEl.innerHTML = ['alle', ...tags].map((t) =>
+    '<button class="chip' + (ACTIVE_FILTER === t ? ' more' : '') + '" data-f="' + esc2(t) + '" style="cursor:pointer">' + esc2(t) + '</button>'
+  ).join('');
+  fEl.querySelectorAll('[data-f]').forEach((b) => {
+    b.onclick = () => { ACTIVE_FILTER = b.dataset.f; render({ sessions: LAST, activity: window._FEED, audit: window._AUDIT }); };
+  });
+}
+
+function matchesFilter(s) {
+  if (ACTIVE_FILTER === 'alle') return true;
+  return s.env === ACTIVE_FILTER || (s.tags || []).includes(ACTIVE_FILTER);
+}
+
+/* ── Uptime-Monitor ── */
+function renderMonitor(list) {
+  const mon = document.getElementById('monitor');
+  mon.innerHTML = list.map(s => {
+    const pct = s.uptimePct == null ? 0 : s.uptimePct;
+    const col = pct >= 95 ? 'var(--ok)' : pct >= 60 ? 'var(--warn)' : 'var(--err)';
+    return '<div class="mon-row" data-id="' + esc2(s.id) + '">' +
+      '<span class="mon-name">' + (s.health?.emoji || '⚪') + ' ' + esc2(s.name) + (s.maintenance ? ' 🛠️' : '') + '</span>' +
+      '<span class="mon-bar"><span class="mon-fill" style="width:' + Math.min(100, pct) + '%;background:' + col + ';box-shadow:0 0 12px ' + col + '"></span></span>' +
+      '<span class="mon-pct" style="color:' + col + '">' + (s.uptimePct == null ? '—' : pct.toFixed(1) + '%') + '</span>' +
+      '</div>';
+  }).join('') || '<div class="sess-empty">Noch keine Daten.</div>';
+}
+
+/* ── Detail-Modal ── */
+let LAST = [];
+function openModal(id) {
+  const s = LAST.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('mTitle').innerHTML = (s.health?.emoji || '') + ' ' + esc2(s.name) + (s.isDefault ? ' <span class="def" style="font-size:10px;color:#fcd34d">⭐ STANDARD</span>' : '');
+  const prof = s.profile;
+  document.getElementById('mBody').innerHTML =
+    '<span class="sess-pill ' + pillClass(s.status) + '"><span class="dot"></span>' + (PILL[s.status] ? PILL[s.status][2] : s.status) + '</span>' +
+    (s.maintenance ? '<span class="sess-pill p-STOP" style="margin-left:6px">🛠️ WARTUNG</span>' : '') +
+    '<div class="sess-kv" style="margin-top:14px">' +
+    kv('ID', s.id) + kv('Nummer', s.phone) + kv('Uptime', s.uptime) +
+    kv('Verfügbarkeit', s.uptimePct == null ? '—' : s.uptimePct.toFixed(2) + '%') +
+    kv('Lifecycle', s.lifecycle) + kv('Soll-Zustand', s.desiredState === 'running' ? '▶️ running' : s.desiredState === 'paused' ? '⏸️ paused' : '⚫ stopped') +
+    kv('Auto-Start', s.autoStart ? '⚡ an' : '— aus') +
+    kv('Getrennt seit Registrierung', s.downSec != null ? Math.floor(s.downSec / 3600) + 'h ' + Math.floor((s.downSec % 3600) / 60) + 'm' : '—') +
+    kv('Gruppen', fmtN(s.groups)) + kv('Nachrichten', fmtN(s.messages)) +
+    kv('Befehle', fmtN(s.commands)) + kv('Reconnects', s.reconnects) +
+    kv('Fehler', s.errors) + kv('RAM', s.memoryMb + ' MB') +
+    '</div>' +
+    ((s.tags && s.tags.length) || s.env ? '<div style="margin-top:12px"><div class="chips">' +
+      (s.env ? '<span class="chip">🧪 ' + esc2(s.env) + '</span>' : '') +
+      (s.tags || []).map((t) => '<span class="chip">🏷️ ' + esc2(t) + '</span>').join('') +
+      '</div></div>' : '') +
+    '<div style="margin-top:16px"><div class="k" style="color:var(--faint);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">🧾 Audit-Trail</div><div class="feed" style="max-height:140px">' +
+    ((window._AUDIT || []).filter(a => a.sid === s.id).slice(0, 8).map(a =>
+      '<div class="feed-row"><span class="t">' + new Date(a.ts).toLocaleTimeString('de-DE') + '</span><span class="x"><b>' + esc2(a.action) + '</b> — ' + esc2(a.actor) + (a.detail ? ' (' + esc2(a.detail) + ')' : '') + '</span></div>'
+    ).join('') || '<div class="sess-empty" style="padding:12px">Noch keine Aktionen protokolliert.</div>') +
+    '</div></div>' +
+    (prof ? '<div style="margin-top:16px"><div class="k" style="color:var(--faint);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">⚙️ Profil</div>' +
+      '<div class="chips">' +
+      '<span class="chip">Präfix ' + esc2(prof.prefix) + '</span>' +
+      '<span class="chip">' + esc2(prof.language) + '</span>' +
+      '<span class="chip">' + esc2(prof.theme) + '</span>' +
+      '<span class="chip">' + esc2(prof.mode) + '</span>' +
+      Object.entries(prof.features || {}).map(([f, v]) => '<span class="chip">' + f + ': ' + (v === 'inherit' ? '🌐' : v === 'on' ? '✅' : '❌') + '</span>').join('') +
+      '</div></div>' : '') +
+    '<div style="margin-top:18px"><div class="k" style="color:var(--faint);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">📜 Letzte Events</div>' +
+    '<div class="feed" style="max-height:180px">' +
+    (window._FEED || []).filter(a => a.sid === id).slice(0, 8).map(a =>
+      '<div class="feed-row"><span class="t">' + new Date(a.ts).toLocaleTimeString('de-DE') + '</span><span class="x">' + esc2(a.text) + '</span></div>'
+    ).join('') || '<div class="sess-empty" style="padding:14px">Keine Events protokolliert.</div>' +
+    '</div></div>';
+  document.getElementById('modalBack').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBack').classList.remove('open'); }
+function kv(k, v) { return '<div><div class="k">' + k + '</div><div class="v">' + esc2(v) + '</div></div>'; }
+function pillClass(st) { return (PILL[st] || PILL.STOPPED)[0]; }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+function wireCards() {
+  document.querySelectorAll('.sess-card').forEach((c) => {
+    c.onclick = () => openModal(c.dataset.id);
+  });
+  document.querySelectorAll('.mon-row').forEach((r) => {
+    r.onclick = () => openModal(r.dataset.id);
+    r.style.cursor = 'pointer';
+  });
+}
+
+function setLiveBadge(on) {
+  const el = document.querySelector('.hero .badge');
+  if (!el) return;
+  el.innerHTML = on
+    ? '<span class="dot"></span> Multi-Session · <b>Live-Stream aktiv</b> · ohne Login'
+    : '<span class="dot"></span> Multi-Session · Live · ohne Login';
+}
+
+async function tick() {
+  const data = await api('/api/sessions');
+  if (data && data.sessions) render(data);
+}
+
+(async function () {
+  /* ⚡ Erst SSE versuchen (Live-Stream ohne Reload), sonst Polling */
+  let live = false;
+  try {
+    const es = new EventSource('/api/live');
+    es.onmessage = (ev) => {
+      try {
+        const data = JSON.parse(ev.data);
+        if (data && data.sessions) { render(data); setLiveBadge(true); live = true; }
+      } catch (e) {}
+    };
+    es.onerror = () => { if (!live) startPolling(); es.close(); };
+  } catch (e) { startPolling(); }
+  function startPolling() {
+    if (startPolling.done) return; startPolling.done = true;
+    setInterval(tick, 5000);
+  }
+
+  const data = await api('/api/sessions');
+  if (data && data.sessions) {
+    if (!live) render(data);
+    setInterval(() => { if (!live) tick(); }, 5000);
+  } else {
+    document.getElementById('sessGrid').innerHTML =
+      '<div class="sess-empty" style="grid-column:1/-1"><div class="big">📡</div>Kein Live-Zugriff auf die Session-API.<br>Starte den Bot-Server (<b>node server.js</b>) für Echtzeitdaten.</div>';
+    ['sTotal','sOnline','sGroups','sMsgs'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('feed').innerHTML = '<div class="sess-empty"><div class="big">📜</div>Feed benötigt den laufenden Server.</div>';
+  }
+  const site = await api('/api/siteinfo');
+  if (site) document.getElementById('socials').innerHTML = buildSocials(site.links);
+})();
+</script>
+</body>
+</html>

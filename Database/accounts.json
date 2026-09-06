@@ -1,0 +1,100 @@
+{
+  "accounts": {
+    "acc_867efdf11ac19e00": {
+      "id": "acc_867efdf11ac19e00",
+      "username": "910maxi",
+      "number": "4915155894714",
+      "role": "owner",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "96bf7472a2d16b8ec0641d65316c5184",
+      "hash": "31baae0fcb9b39b797fe626301abf64221d6642cb687175031f969a2e1d18e23",
+      "status": "active",
+      "mustChange": false,
+      "createdAt": "2026-09-03T21:49:46.724Z",
+      "lastLoginAt": "2026-09-05T23:34:23.103Z",
+      "roleHistory": [
+        {
+          "role": "owner",
+          "at": "2026-09-03T21:49:46.724Z",
+          "by": "system"
+        }
+      ],
+      "passwordChangedAt": "2026-09-03T22:01:39.163Z"
+    },
+    "acc_602d9c6366fbfc2e": {
+      "id": "acc_602d9c6366fbfc2e",
+      "username": "support_test",
+      "number": "1",
+      "role": "supporter",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "f0b406bc6e2aee1d0a076556edf96381",
+      "hash": "41884b6d62c4b822e285f3193363bb4f32b2c8c06ba3aef01178c185d5d4af23",
+      "status": "locked",
+      "mustChange": true,
+      "createdAt": "2026-09-03T22:28:09.588Z",
+      "lastLoginAt": null,
+      "roleHistory": [
+        {
+          "role": "supporter",
+          "at": "2026-09-03T22:28:09.588Z",
+          "by": "system"
+        }
+      ]
+    },
+    "acc_46ede07a04470698": {
+      "id": "acc_46ede07a04470698",
+      "username": "tavrinox",
+      "number": "4915679260192",
+      "role": "user",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "7ccb447d071dc54669105450691eaea0",
+      "hash": "3783ed0816de6ca64ce66f5e96a9bf42f9aa27d652c6ab0bce6c762ed39750df",
+      "status": "active",
+      "mustChange": false,
+      "createdAt": "2026-09-03T22:35:16.321Z",
+      "lastLoginAt": null,
+      "roleHistory": [
+        {
+          "role": "user",
+          "at": "2026-09-03T22:35:16.321Z",
+          "by": "system"
+        },
+        {
+          "role": "user",
+          "at": "2026-09-03T22:43:49.347Z",
+          "by": "910maxi",
+          "from": "user"
+        }
+      ]
+    },
+    "acc_48661c524cbc2ac3": {
+      "id": "acc_48661c524cbc2ac3",
+      "username": "bambus_inlove",
+      "number": "491706148587",
+      "role": "user",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "8cf979f798db94e7d32cf95329bea3a8",
+      "hash": "670020c1360c14cd687ddc5b1c12265a4f0d8ff93955bb1ce9fad768f8fcab40",
+      "status": "active",
+      "mustChange": false,
+      "createdAt": "2026-09-05T18:09:49.202Z",
+      "lastLoginAt": null,
+      "roleHistory": [
+        {
+          "role": "user",
+          "at": "2026-09-05T18:09:49.202Z",
+          "by": "system"
+        }
+      ]
+    }
+  },
+  "history": []
+}

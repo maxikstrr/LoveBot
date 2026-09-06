@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login 💜 — LoveBot</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+  </nav>
+  <a href="/index.html" class="cta">← Zurück zur Startseite</a>
+</header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo"><img src="/assets/img/logo.png" alt="LoveBot"></div>
+    <h1>LOVEBOT</h1>
+    <p class="tagline">nobody is awake anymore… but you.</p>
+
+    <!-- Schritte: 1 Nummer · 2 Code (2FA) · 3 Passwort -->
+    <div class="steps">
+      <div class="s act" id="s1">1</div><div class="bar" id="b1"></div>
+      <div class="s" id="s2">2</div><div class="bar" id="b2"></div>
+      <div class="s" id="s3">3</div>
+    </div>
+    <div class="steps-lbl"><span>Nummer</span><span>WhatsApp-Code</span><span>Passwort</span></div>
+
+    <!-- SCHRITT 1 -->
+    <div id="step1">
+      <label class="fld" for="loginNumber">Deine Nummer oder JID</label>
+      <input id="loginNumber" placeholder="49151… oder 49151…@s.whatsapp.net"
+             onkeydown="if(event.key==='Enter')step1Go()">
+      <div class="row mt"><button class="btn full" id="btn1" onclick="step1Go()">💜 Weiter</button></div>
+      <div class="msg" id="msg1"></div>
+    </div>
+
+    <!-- SCHRITT 2: 2FA-Code -->
+    <div id="step2" style="display:none">
+      <label class="fld" for="loginCode">📱 Code aus WhatsApp</label>
+      <input id="loginCode" class="code-input" maxlength="6" inputmode="numeric" placeholder="••••••"
+             onkeydown="if(event.key==='Enter')step2Go()">
+      <p class="hint">Der Bot sendet dir einen 6-stelligen Code per WhatsApp.<br>Er ist <b>5 Minuten</b> gültig. Ohne Code kein Login — auch nicht mit Passwort.</p>
+      <div class="row mt">
+        <button class="btn full" id="btn2" onclick="step2Go()">🔐 Code bestätigen</button>
+      </div>
+      <div class="row mt-s">
+        <button class="btn ghost sm" onclick="backTo(1)">← Andere Nummer</button>
+        <button class="btn ghost sm" id="resendBtn" onclick="requestCode()" style="margin-left:auto">↻ Code erneut senden</button>
+      </div>
+      <div class="msg" id="msg2"></div>
+    </div>
+
+    <!-- SCHRITT 3: Passwort -->
+    <div id="step3" style="display:none">
+      <label class="fld" id="pwLabel" for="loginPassword">Passwort</label>
+      <input id="loginPassword" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')step3Go()">
+      <div class="row mt"><button class="btn full" id="btn3" onclick="step3Go()">💜 Einloggen</button></div>
+      <div class="row mt-s"><button class="btn ghost sm" onclick="backTo(2)">← Zurück zum Code</button></div>
+      <div class="msg" id="msg3"></div>
+    </div>
+
+    <div id="banBox" class="banbox" style="display:none"></div>
+
+    <div class="sep"></div>
+    <div class="row center">
+      <button class="btn ghost sm full" id="regToggle" onclick="toggleReg()">+ Konto erstellen (jeder → USER)</button>
+    </div>
+    <div id="regWrap" style="display:none">
+      <label class="fld" for="regUsername">Username</label>
+      <input id="regUsername" placeholder="z. B. night_owl" maxlength="18">
+      <label class="fld" for="regNumber">Deine Nummer (für WhatsApp-Code)</label>
+      <input id="regNumber" placeholder="4915123456789">
+      <div class="row mt"><button class="btn cyan full" id="regBtn1" onclick="regStart()">📱 Code anfordern</button></div>
+      <div id="regCodeWrap" style="display:none">
+        <label class="fld" for="regCode">Code aus WhatsApp</label>
+        <input id="regCode" class="code-input" maxlength="6" placeholder="••••••">
+        <label class="fld" for="regPassword">Passwort (mind. 8 Zeichen)</label>
+        <input id="regPassword" type="password" placeholder="••••••••">
+        <div class="row mt"><button class="btn full" onclick="regFinish()">♡ Konto erstellen</button></div>
+      </div>
+      <div class="msg" id="regMsg"></div>
+    </div>
+
+    <p class="hint center mt" style="font-style:italic">„stay a little longer.“</p>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script src="/js/night/api.js"></script>
+<script src="/js/night/login.js"></script>
+<script>makeHearts(14);</script>
+</body>
+</html>

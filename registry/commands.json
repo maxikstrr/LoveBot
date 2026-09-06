@@ -1,0 +1,2628 @@
+{
+  "version": 2,
+  "updated": "2026-09-06",
+  "meta": {
+    "description": "LoveBot Command Registry — die eine Quelle für Bot-Help, Website, Tester & Doku.",
+    "permsNote": "perms = abgeleitet: (Owner)-Marker + Whitelists (OWNER_EXTRA/GROUP_ADMIN) — manuell in dieser Datei korrigierbar.",
+    "aliasResolution": {
+      "aliasCategoryEntries": 106,
+      "resolved": 75,
+      "resolvedByCuratedMap": 53,
+      "unresolved": 31,
+      "unresolvedList": [
+        "alleowner",
+        "automaten",
+        "base64",
+        "blank",
+        "broadcast",
+        "cektype",
+        "cleantmp",
+        "cleartmp",
+        "erinnere",
+        "gruppencheck",
+        "idscheck",
+        "info",
+        "kaset",
+        "lowercase",
+        "marryaccept",
+        "marrydeny",
+        "marryja",
+        "marrynein",
+        "marryno",
+        "marryyes",
+        "metaforward",
+        "metafw",
+        "removeowner",
+        "render",
+        "setnamebot",
+        "statusdl",
+        "time",
+        "toy",
+        "uppercase",
+        "upside",
+        "wikipedia"
+      ],
+      "unresolvedNote": "Unresolved = eigene Cases oder unklare Zuordnung — funktionieren im Bot, sind nur registry-seitig nicht zugeordnet. Sync-Script listet sie als „implemented, nicht in Registry“."
+    },
+    "codeAliasesAdded": 49,
+    "mergedDuplicates": [
+      {
+        "name": "blocklist",
+        "keptIn": "admin",
+        "droppedFrom": "ownertools"
+      },
+      {
+        "name": "autodl",
+        "keptIn": "gruppe",
+        "droppedFrom": "ownertools"
+      },
+      {
+        "name": "kickall",
+        "keptIn": "gruppe",
+        "droppedFrom": "ownertools"
+      },
+      {
+        "name": "setup",
+        "keptIn": "gruppe",
+        "droppedFrom": "ownertools"
+      },
+      {
+        "name": "reverse",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "flip",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "random",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "dice",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "coin",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "truth",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "dare",
+        "keptIn": "spass",
+        "droppedFrom": "tools"
+      },
+      {
+        "name": "leave",
+        "keptIn": "ownertools",
+        "droppedFrom": "tools"
+      }
+    ]
+  },
+  "categories": [
+    {
+      "id": "start",
+      "slug": "start",
+      "emoji": "🐣",
+      "title": "Start & Hilfe",
+      "web": "START",
+      "cmds": [
+        {
+          "name": "menu",
+          "usage": "$menu",
+          "desc": "Komplettes Befehls-Informationsmenü",
+          "aliases": [
+            "help"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "menunew",
+          "usage": "$menunew",
+          "desc": "Interaktives Single-Select-Menü",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "me",
+          "usage": "$me / $me info",
+          "desc": "Dein Profil — kompakt, mit Buttons; „info“ zeigt alles 🪪",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "register",
+          "usage": "$register",
+          "desc": "Anmeldung Name.Alter.Status.Stadt",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "owner",
+          "usage": "$owner",
+          "desc": "Owner-Kontakt + Visitenkarte",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "love",
+          "usage": "$love",
+          "desc": "Dein Beziehungs-Panel ❤️",
+          "aliases": [
+            "loveprofile",
+            "liebe"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "socials",
+          "usage": "$socials / $links",
+          "desc": "Love- & Social-Links 🔗",
+          "aliases": [
+            "links"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "privacy",
+          "usage": "$privacy [stadt|alter|profil an|aus]",
+          "desc": "Privatsphäre steuern 🔒",
+          "aliases": [
+            "datenschutz"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "allgemein",
+      "slug": "allgemein",
+      "emoji": "🧰",
+      "title": "Allgemein",
+      "web": "ALLGEMEIN",
+      "cmds": [
+        {
+          "name": "ping",
+          "usage": "$ping [url | full | nospeed]",
+          "desc": "Echte Live-Messung: Bot-, Netzwerk- & Webseiten-Ping 🏓",
+          "aliases": [
+            "pong",
+            "latenz"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "speed",
+          "usage": "$speed",
+          "desc": "Großer Internet-Speedtest 🚀",
+          "aliases": [
+            "speedtest",
+            "internetspeed"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "system",
+          "usage": "$system",
+          "desc": "Uptime, Nutzer, Gruppen, RAM",
+          "aliases": [
+            "stats",
+            "botinfo",
+            "sys"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "id",
+          "usage": "$id",
+          "desc": "Chat-/Gruppen-/Deine IDs",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "username",
+          "usage": "$username",
+          "desc": "Sender- & Host-Username",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "bio",
+          "usage": "$bio",
+          "desc": "Bio / Status",
+          "aliases": [
+            "status"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "devices",
+          "usage": "$devices",
+          "desc": "Geräte des Kontakts",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "url",
+          "usage": "$url",
+          "desc": "Link-Analyse",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "hash",
+          "usage": "$hash",
+          "desc": "Hash berechnen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "i3",
+          "usage": "$i3",
+          "desc": "Nachrichten-Debug-Tabelle",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "i4",
+          "usage": "$i4",
+          "desc": "Komplette Nachricht inklusive Sender-, Kanal- und Newsletter-ID als Code",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "i2",
+          "usage": "$i2",
+          "desc": "Code einer zitierten Nachricht",
+          "aliases": [
+            "fetch",
+            "i2output"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "profile",
+          "usage": "$profile [@user]",
+          "desc": "Profil ansehen — anderer oder dein eigenes 👤 (kein Alter, keine IDs)",
+          "aliases": [
+            "profil"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Love.js (neu)"
+        }
+      ]
+    },
+    {
+      "id": "liebe",
+      "slug": "liebe",
+      "emoji": "💍",
+      "title": "Liebe & Herzen",
+      "web": "LIEBE & HERZEN",
+      "cmds": [
+        {
+          "name": "marry",
+          "usage": "$marry @user",
+          "desc": "Antrag mit Buttons — 2 Min. gültig, nur der Adressat darf antworten 💍",
+          "aliases": [
+            "heiraten",
+            "propose"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "divorce",
+          "usage": "$divorce",
+          "desc": "Scheidung einreichen 💔",
+          "aliases": [
+            "scheidung"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "ship",
+          "usage": "$ship @user @user",
+          "desc": "Love-o-Meter 💘",
+          "aliases": [
+            "lovetest",
+            "loveometer"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kiss",
+          "usage": "$kiss @user",
+          "desc": "Küssen 💋",
+          "aliases": [
+            "kuss"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "hug",
+          "usage": "$hug @user",
+          "desc": "Umarmen 🤗",
+          "aliases": [
+            "umarmen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "slap",
+          "usage": "$slap @user",
+          "desc": "Ohrfeigen 🖐️",
+          "aliases": [
+            "ohrfeige"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "compliment",
+          "usage": "$compliment @user",
+          "desc": "Kompliment 🌹",
+          "aliases": [
+            "lob",
+            "kompliment"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "flirt",
+          "usage": "$flirt @user",
+          "desc": "Flirt-Spruch funken 😘",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "anmachen",
+          "usage": "$anmachen @user",
+          "desc": "Jemanden anmachen 😏",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "compat",
+          "usage": "$compat @user",
+          "desc": "Kompatibilität checken 💯",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "confess",
+          "usage": "$confess <text>",
+          "desc": "Anonymes Geständnis 🤫",
+          "aliases": [
+            "geständnis"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "confesslove",
+          "usage": "$confesslove @user <text>",
+          "desc": "Liebe gestehen 💌",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "dateidee",
+          "usage": "$dateidee",
+          "desc": "Idee für ein Date 💡",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "lovecalc",
+          "usage": "$lovecalc @user",
+          "desc": "Love-Calculator 💕",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "romantic",
+          "usage": "$romantic",
+          "desc": "Romantik-Modus 💐",
+          "aliases": [
+            "romantisch"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "breakup",
+          "usage": "$breakup @user",
+          "desc": "Trennung einreichen 💔",
+          "aliases": [
+            "trennung"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "marryaccept",
+          "usage": "$marryaccept",
+          "desc": "Heiratsantrag annehmen ✅",
+          "aliases": [
+            "marryyes"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "marrydeny",
+          "usage": "$marrydeny",
+          "desc": "Heiratsantrag ablehnen ❌",
+          "aliases": [
+            "marryno"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "goodmorning",
+          "usage": "$goodmorning",
+          "desc": "Guten-Morgen-Gruß 🌅",
+          "aliases": [
+            "gutenmorgen",
+            "morgen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "goodnight",
+          "usage": "$goodnight",
+          "desc": "Gute-Nacht-Gruß 🌙",
+          "aliases": [
+            "gutenacht",
+            "nacht"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "nachtzitat",
+          "usage": "$nachtzitat",
+          "desc": "Nächtliches Zitat ✨",
+          "aliases": [
+            "nightquote",
+            "nq"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "mood",
+          "usage": "$mood [stimmung]",
+          "desc": "Deine Stimmung 🎭",
+          "aliases": [
+            "stimmung"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "partner",
+          "usage": "$partner",
+          "desc": "Kurzinfo zu deinem Partner 💞",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "dailylove",
+          "usage": "$dailylove",
+          "desc": "Täglicher Love-Impuls 🌹",
+          "aliases": [
+            "tagesliebe",
+            "liebeimpuls"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "afk",
+      "slug": "afk",
+      "emoji": "💤",
+      "title": "AFK & Profil",
+      "web": "AFK & PROFIL",
+      "cmds": [
+        {
+          "name": "afk",
+          "usage": "$afk <grund>",
+          "desc": "AFK-Status setzen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "afk off",
+          "usage": "$afk off",
+          "desc": "AFK beenden",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "afklist",
+          "usage": "$afklist",
+          "desc": "Alle aktuell AFK",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "check",
+          "usage": "$check",
+          "desc": "ID/JID/LID prüfen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "check2",
+          "usage": "$check2",
+          "desc": "WhatsApp-Ban-Check",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "jid",
+          "usage": "$jid @user",
+          "desc": "JID auflösen 🆔",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "lid",
+          "usage": "$lid @user",
+          "desc": "LID auflösen 🆔",
+          "aliases": [
+            "jidlid"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "ids",
+          "usage": "$ids @user",
+          "desc": "JID + LID zusammen 🆔",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "gruppe",
+      "slug": "gruppe",
+      "emoji": "👥",
+      "title": "Gruppe & Moderation",
+      "web": "GRUPPE & MODERATION",
+      "cmds": [
+        {
+          "name": "tagall",
+          "usage": "$tagall",
+          "desc": "Alle Mitglieder erwähnen",
+          "aliases": [
+            "all"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "hidetag",
+          "usage": "$hidetag <text>",
+          "desc": "Unsichtbar alle taggen 🫥",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "poll",
+          "usage": "$poll Frage|A|B",
+          "desc": "WhatsApp-Umfrage 📊",
+          "aliases": [
+            "umfrage",
+            "abstimmung"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "see",
+          "usage": "$see",
+          "desc": "Status reposten 📲",
+          "aliases": [
+            "seestatus",
+            "viewstatus"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "tagadmin",
+          "usage": "$tagadmin",
+          "desc": "Admins erwähnen",
+          "aliases": [
+            "admins"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "groups",
+          "usage": "$groups",
+          "desc": "Gruppen-Tabelle",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "groupinfo",
+          "usage": "$groupinfo",
+          "desc": "Infos zu dieser Gruppe",
+          "aliases": [
+            "admins",
+            "gcinfo"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "acheck",
+          "usage": "$acheck",
+          "desc": "Rollen-Check: alle + Bot 🔍",
+          "aliases": [
+            "admincheck",
+            "allcheck"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "rules",
+          "usage": "$rules <text>",
+          "desc": "Regeln anzeigen / setzen",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "gi",
+          "usage": "$gi",
+          "desc": "Alle Features + Status 🎛️",
+          "aliases": [
+            "features",
+            "featurelist",
+            "gruppenfeatures"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "an",
+          "usage": "$an <feature>",
+          "desc": "Feature einschalten ✅",
+          "aliases": [
+            "anschalten",
+            "einschalten",
+            "enable"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "aus",
+          "usage": "$aus <feature>",
+          "desc": "Feature ausschalten ❌",
+          "aliases": [
+            "abschalten",
+            "ausschalten",
+            "disable"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "autodl",
+          "usage": "$autodl on|off",
+          "desc": "Auto-Download (YT/TikTok/IG) 📥",
+          "aliases": [
+            "autodownload"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "setup",
+          "usage": "$setup",
+          "desc": "Owner: Bot aktivieren + Beschreibung",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "activate",
+          "usage": "$activate",
+          "desc": "Bot aktivieren",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "deactivate",
+          "usage": "$deactivate",
+          "desc": "Bot deaktivieren",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kickall",
+          "usage": "$kickall",
+          "desc": "Nicht-Admins entfernen (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "demoteall",
+          "usage": "$demoteall",
+          "desc": "Alle Admins in der Gruppe entadminen (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "promoteall",
+          "usage": "$promoteall",
+          "desc": "Alle Mitglieder in der Gruppe zu Admins machen (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sss",
+          "usage": "$sss <name>",
+          "desc": "Neue Community-Gruppe erstellen (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "welcome",
+          "usage": "$welcome on|off",
+          "desc": "Willkommensnachricht",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "goodbye",
+          "usage": "$goodbye on|off",
+          "desc": "Abschiedsnachricht",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kick",
+          "usage": "$kick <on|off|@user>",
+          "desc": "Kick-Nachricht / Nutzer kicken",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "promote",
+          "usage": "$promote <on|off|@user>",
+          "desc": "Befördern / Nachricht",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "demote",
+          "usage": "$demote <on|off|@user>",
+          "desc": "De-adminen / Nachricht",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "warn",
+          "usage": "$warn @user <grund>",
+          "desc": "Verwarnen",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "unwarn",
+          "usage": "$unwarn @user",
+          "desc": "Verwarnung entfernen",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "warns",
+          "usage": "$warns @user",
+          "desc": "Verwarnungen anzeigen",
+          "aliases": [
+            "warnings"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "add",
+          "usage": "$add <nummer>",
+          "desc": "Nutzer hinzufügen",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "link",
+          "usage": "$link",
+          "desc": "Gruppen-Einladungslink",
+          "aliases": [
+            "grouplink"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "revoke",
+          "usage": "$revoke",
+          "desc": "Einladungslink zurückziehen",
+          "aliases": [
+            "revokelink"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "setname",
+          "usage": "$setname <name>",
+          "desc": "Gruppenname ändern",
+          "aliases": [
+            "gname"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "setdesc",
+          "usage": "$setdesc <text>",
+          "desc": "Beschreibung ändern",
+          "aliases": [
+            "gdesc"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "mute",
+          "usage": "$mute",
+          "desc": "Gruppe stummschalten",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "unmute",
+          "usage": "$unmute",
+          "desc": "Gruppe entsperren",
+          "aliases": [],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "delete",
+          "usage": "$delete",
+          "desc": "Zitierte Nachricht löschen",
+          "aliases": [
+            "del"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "lock",
+          "usage": "$lock",
+          "desc": "Gruppe sperren 🔒 (Admin)",
+          "aliases": [
+            "unlock"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "slug": "admin",
+      "emoji": "🛡️",
+      "title": "Admin & Verifizierung",
+      "web": "ADMIN & VERIFIKATION",
+      "cmds": [
+        {
+          "name": "dsgvo",
+          "usage": "$dsgvo accept/reject",
+          "desc": "DSGVO-Zustimmung",
+          "aliases": [
+            "dsgvo✅",
+            "dsgvo❌"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "verify",
+          "usage": "$verify accept/reject",
+          "desc": "Verifizierung",
+          "aliases": [
+            "verify✅",
+            "verify❌"
+          ],
+          "perms": "admin",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "ban",
+          "usage": "$ban <id|@user> <grund>",
+          "desc": "Ban (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "unban",
+          "usage": "$unban <id|@user> <grund>",
+          "desc": "Entbannen (Owner)",
+          "aliases": [
+            "unbann"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "banlist",
+          "usage": "$banlist",
+          "desc": "Alle Bans (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "block",
+          "usage": "$block <nr|@user>",
+          "desc": "Blockieren (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "unblock",
+          "usage": "$unblock <nr|@user>",
+          "desc": "Entblockieren (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "blocklist",
+          "usage": "$blocklist",
+          "desc": "Blocklist anzeigen (Owner)",
+          "aliases": [
+            "blocked"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "badword",
+          "usage": "$badword add|remove|list|on|off",
+          "desc": "Badword-Filter (Owner) 🤬",
+          "aliases": [
+            "badwords"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "fp",
+          "usage": "$fp",
+          "desc": "Fake Payment",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "medien",
+      "slug": "medien",
+      "emoji": "🎨",
+      "title": "Medien & KI",
+      "web": "MEDIEN & AI",
+      "cmds": [
+        {
+          "name": "audio",
+          "usage": "$audio <modul>",
+          "desc": "Audio-Effekte",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "play",
+          "usage": "$play <link|song>",
+          "desc": "Media / Song laden",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "loadingaiimg",
+          "usage": "$loadingaiimg",
+          "desc": "AI Image Loading",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "loadingaivid",
+          "usage": "$loadingaivid",
+          "desc": "AI Video Loading",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "imagine",
+          "usage": "$imagine <prompt>",
+          "desc": "AI Bild-Generierung (App-Look)",
+          "aliases": [
+            "genimg"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "animate",
+          "usage": "$animate <prompt>",
+          "desc": "AI Video-Generierung (App-Look)",
+          "aliases": [
+            "genavid"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "typing",
+          "usage": "$typing <text>",
+          "desc": "AI Lade-Animation",
+          "aliases": [
+            "loading",
+            "loadingnow"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "addmeta",
+          "usage": "$addmeta",
+          "desc": "Meta AI hinzufügen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kickmeta",
+          "usage": "$kickmeta",
+          "desc": "Meta AI entfernen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "metaforward",
+          "usage": "$metaforward",
+          "desc": "Nachrichten an Meta AI weiterleiten 🤖",
+          "aliases": [
+            "metafw"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "toimg",
+          "usage": "$toimg",
+          "desc": "Zitierten Sticker als Bild ausgeben 🖼️",
+          "aliases": [
+            "sticker2img"
+          ],
+          "perms": "all",
+          "cooldown": 5,
+          "source": "mediacmds.js (neu)"
+        },
+        {
+          "name": "tomp3",
+          "usage": "$tomp3",
+          "desc": "Zitiertes Video als MP3 ausgeben 🎵",
+          "aliases": [
+            "toaudio",
+            "mp3"
+          ],
+          "perms": "all",
+          "cooldown": 5,
+          "source": "mediacmds.js (neu)"
+        },
+        {
+          "name": "tomp4",
+          "usage": "$tomp4",
+          "desc": "Zitierte Audio als MP4 mit Standbild ausgeben 🎬",
+          "aliases": [
+            "video",
+            "audio2video"
+          ],
+          "perms": "all",
+          "cooldown": 5,
+          "source": "mediacmds.js (neu)"
+        },
+        {
+          "name": "sticker",
+          "usage": "$sticker",
+          "desc": "Zitiertes Bild als Sticker erstellen 🎨 (Pack: LoveBot)",
+          "aliases": [
+            "stiker",
+            "s"
+          ],
+          "perms": "all",
+          "cooldown": 5,
+          "source": "mediacmds.js (neu)"
+        }
+      ]
+    },
+    {
+      "id": "spass",
+      "slug": "spass",
+      "emoji": "🎰",
+      "title": "Slot & Spaß",
+      "web": "SLOT & SPASS",
+      "cmds": [
+        {
+          "name": "slot",
+          "usage": "$slot",
+          "desc": "Slot-Machine (App-Look mit Sound)",
+          "aliases": [
+            "spin"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "slotmini",
+          "usage": "$slotmini",
+          "desc": "Mini-Slot",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "dice",
+          "usage": "$dice",
+          "desc": "Würfeln",
+          "aliases": [
+            "dice2"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "coin",
+          "usage": "$coin",
+          "desc": "Münzwurf",
+          "aliases": [
+            "münze"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "random",
+          "usage": "$random <a-b>",
+          "desc": "Zufallszahl",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "truth",
+          "usage": "$truth",
+          "desc": "Wahrheit oder…",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "dare",
+          "usage": "$dare",
+          "desc": "Pflicht…",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "8ball",
+          "usage": "$8ball <frage>",
+          "desc": "Magic 8-Ball 🎱",
+          "aliases": [
+            "achtball",
+            "frage",
+            "magie"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "rps",
+          "usage": "$rps stein|papier|schere",
+          "desc": "Schere-Stein-Papier ✊✋✌️",
+          "aliases": [
+            "schere"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "witz",
+          "usage": "$witz",
+          "desc": "Zufälliger Witz 😂",
+          "aliases": [
+            "joke"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "fakt",
+          "usage": "$fakt",
+          "desc": "Zufälliger Fakt 🧠",
+          "aliases": [
+            "fact",
+            "hundefakt",
+            "katzenfakt"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "roast",
+          "usage": "$roast @user",
+          "desc": "Roasten 🔥",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "eod",
+          "usage": "$eod",
+          "desc": "Entweder-oder 🤔",
+          "aliases": [
+            "entwederoder"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "nie",
+          "usage": "$nie",
+          "desc": "Nie habe ich … 🙊",
+          "aliases": [
+            "niehabeich",
+            "neverhaveiever"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "quiz",
+          "usage": "$quiz",
+          "desc": "Quiz-Frage 🧠",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "reverse",
+          "usage": "$reverse <text>",
+          "desc": "Text umkehren",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "flip",
+          "usage": "$flip <text>",
+          "desc": "Text auf den Kopf",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kaset",
+          "usage": "$kaset",
+          "desc": "Mini-Slot-Variante 🎰",
+          "aliases": [
+            "toy"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        }
+      ]
+    },
+    {
+      "id": "economy",
+      "slug": "economy",
+      "emoji": "💰",
+      "title": "Economy",
+      "web": "ECONOMY",
+      "cmds": [
+        {
+          "name": "daily",
+          "usage": "$daily",
+          "desc": "Tägliche Belohnung 🎁",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "work",
+          "usage": "$work",
+          "desc": "Arbeiten gehen 💼",
+          "aliases": [
+            "arbeiten"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "gamble",
+          "usage": "$gamble <einsatz|all>",
+          "desc": "Kupfer wetten 🎰",
+          "aliases": [
+            "bet",
+            "wetten"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "balance",
+          "usage": "$balance",
+          "desc": "Wallet anzeigen 💰",
+          "aliases": [
+            "coins",
+            "wallet",
+            "geld"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "top",
+          "usage": "$top",
+          "desc": "Top 10 Level 🏆",
+          "aliases": [
+            "leaderboard",
+            "rangliste",
+            "lb"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "level",
+          "usage": "$level",
+          "desc": "Dein Level + XP-Fortschritt 📈",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "slug": "session",
+      "emoji": "📡",
+      "title": "Session-Center (Owner)",
+      "web": "SESSION-CENTER (OWNER)",
+      "cmds": [
+        {
+          "name": "sessions",
+          "usage": "$sessions",
+          "desc": "Alle Sessions mit Status & Uptime 📡 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "session",
+          "usage": "$session <id>",
+          "desc": "Details einer Session (Owner)",
+          "aliases": [
+            "sessioninfo",
+            "sessionstatus"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionstats",
+          "usage": "$sessionstats <id>",
+          "desc": "Nachrichten/Befehle pro Min, RAM, Reconnects (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionhealth",
+          "usage": "$sessionhealth",
+          "desc": "Health-Check aller Sessions 🩺 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionlogs",
+          "usage": "$sessionlogs",
+          "desc": "Letzte Session-Aktivität 📜 (Owner)",
+          "aliases": [
+            "sessionactivity"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "newsession",
+          "usage": "$newsession <name>",
+          "desc": "Neue Session anlegen 🆕 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "startsession",
+          "usage": "$startsession <id>",
+          "desc": "Gespawnte Session starten 🚀 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "restartsession",
+          "usage": "$restartsession <id>",
+          "desc": "Session neu starten 🔄 (Owner)",
+          "aliases": [
+            "reloadsession",
+            "reconnectsession"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "killsession",
+          "usage": "$killsession <id>",
+          "desc": "Verbindung stoppen — Credentials bleiben 🛑 (Owner)",
+          "aliases": [
+            "stopsession"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "delsession",
+          "usage": "$delsession <id>",
+          "desc": "Aus Registry entfernen 🗑️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionname",
+          "usage": "$sessionname <id> <name>",
+          "desc": "Session umbenennen ✏️ (Owner)",
+          "aliases": [
+            "sessionrename"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessiondefault",
+          "usage": "$sessiondefault <id>",
+          "desc": "Standard-Session setzen ⭐ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionqr",
+          "usage": "$sessionqr",
+          "desc": "Wo QR/Pairing-Code erscheinen 📱 (Owner)",
+          "aliases": [
+            "sessioncode",
+            "sessionpair"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionprofile",
+          "usage": "$sessionprofile <id>",
+          "desc": "Profil: Präfix, Theme, Feature-Overrides ⚙️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionset",
+          "usage": "$sessionset <id> <key> <wert>",
+          "desc": "prefix/language/theme/mode setzen (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionfeature",
+          "usage": "$sessionfeature <id> <f> <on|off|inherit>",
+          "desc": "Feature-Override pro Session 🧩 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionclone",
+          "usage": "$sessionclone <id> <name>",
+          "desc": "Session klonen — nur Profil, nie Credentials 🧬 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionexport",
+          "usage": "$sessionexport <id>",
+          "desc": "Registry-Export als JSON 📦 (Owner)",
+          "aliases": [
+            "sessionbackup"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionmaintenance",
+          "usage": "$sessionmaintenance <id> <on|off>",
+          "desc": "Wartungsmodus 🛠️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionevents",
+          "usage": "$sessionevents <id>",
+          "desc": "Events einer Session 📜 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionerrors",
+          "usage": "$sessionerrors <id>",
+          "desc": "Fehler einer Session 🐞 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessiongroups",
+          "usage": "$sessiongroups <id>",
+          "desc": "Gruppen-Zähler 👥 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionmessages",
+          "usage": "$sessionmessages <id>",
+          "desc": "Nachrichten-Zähler 💬 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessioncommands",
+          "usage": "$sessioncommands <id>",
+          "desc": "Befehls-Zähler ⚡ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pausesession",
+          "usage": "$pausesession <id>",
+          "desc": "Pausieren ⏸️ — Credentials bleiben (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "resumesession",
+          "usage": "$resumesession <id>",
+          "desc": "Session reaktivieren ▶️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionautostart",
+          "usage": "$sessionautostart <id> <on|off>",
+          "desc": "Auto-Start nach Neustart ⚡ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessiontags",
+          "usage": "$sessiontags <id> <tags…>",
+          "desc": "Tags setzen 🏷️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sessionenv",
+          "usage": "$sessionenv <id> <prod|test|dev>",
+          "desc": "Environment setzen 🧪 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "fleet",
+          "usage": "$fleet",
+          "desc": "Fleet: Managed vs Running vs Paused 📡 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "restartfailed",
+          "usage": "$restartfailed",
+          "desc": "Fehlgeschlagene Sessions neu starten 🔄 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "orphansessions",
+          "usage": "$orphansessions",
+          "desc": "Phantom-Ordner finden 👻 (Owner)",
+          "aliases": [
+            "sessionorphans"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "cmdinfo",
+          "usage": "$cmdinfo <befehl>",
+          "desc": "Registry-Info zu einem Befehl (Aliase, Rechte, Usage) 📚 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "sessioncmds.js"
+        },
+        {
+          "name": "cmdsuche",
+          "usage": "$cmdsuche <begriff>",
+          "desc": "Befehle in der Registry durchsuchen 🔎 (Owner)",
+          "aliases": [
+            "cmdsearch"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "sessioncmds.js"
+        },
+        {
+          "name": "pairing",
+          "usage": "$pairing",
+          "desc": "Wo Pairing-Codes erscheinen (nur Terminal/Dashboard — nie im Chat) 🔐 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "sessionusers",
+          "usage": "$sessionusers <id>",
+          "desc": "Nutzer-Übersicht einer Session 👥 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        }
+      ]
+    },
+    {
+      "id": "loveplus",
+      "slug": "loveplus",
+      "emoji": "💖",
+      "title": "LovePlus",
+      "web": "LOVEPLUS (NEU)",
+      "cmds": [
+        {
+          "name": "relationship",
+          "usage": "$relationship",
+          "desc": "Eure Beziehung: Tage, Love-XP, Treue, Jahrestag ❤️",
+          "aliases": [
+            "beziehung",
+            "partner",
+            "couple",
+            "paare",
+            "ehe"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "lovebonus",
+          "usage": "$lovebonus",
+          "desc": "Täglicher Love-Bonus + Streak 🔥 (Paare: doppel!)",
+          "aliases": [
+            "hearts"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "coupletop",
+          "usage": "$coupletop",
+          "desc": "Die stärksten Paare des Bots 💞",
+          "aliases": [
+            "lovetop"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pet",
+          "usage": "$pet create <name>",
+          "desc": "Haustier adoptieren 🐶 (kostenlos!)",
+          "aliases": [
+            "haustier"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pet status",
+          "usage": "$pet",
+          "desc": "Wie geht es deinem Haustier? 🐾",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pet feed",
+          "usage": "$pet feed",
+          "desc": "Füttern 🍖 · Spielen 🎾 · Schlafen 😴",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pet name",
+          "usage": "$pet name <name>",
+          "desc": "Haustier umbenennen ✏️",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "shop",
+          "usage": "$shop",
+          "desc": "Love-Shop: Rosen, Teddys, Ringe 🛍️",
+          "aliases": [
+            "laden"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "buy",
+          "usage": "$buy <item>",
+          "desc": "Item kaufen (z. B. $buy rose) 🛒",
+          "aliases": [
+            "kaufen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "inv",
+          "usage": "$inv",
+          "desc": "Dein Inventar 📦",
+          "aliases": [
+            "inventory",
+            "inventar"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "gift",
+          "usage": "$gift @user <item>",
+          "desc": "Geschenk verschenken 🎁",
+          "aliases": [
+            "schenken"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pay",
+          "usage": "$pay @user <betrag>",
+          "desc": "Kupfer überweisen 🪙",
+          "aliases": [
+            "transfer",
+            "überweisen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "rob",
+          "usage": "$rob @user",
+          "desc": "Kupfer rauben (40% Chance, 1h Cooldown) 😈",
+          "aliases": [
+            "raub"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "letter",
+          "usage": "$letter @user [stil]",
+          "desc": "Liebesbrief 💌 (romantisch/suess/lustig)",
+          "aliases": [
+            "liebesbrief"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "achievements",
+          "usage": "$achievements",
+          "desc": "Deine Erfolge 🏆 (13 Achievements!)",
+          "aliases": [
+            "badges",
+            "erfolge"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "hangman",
+          "usage": "$hangman [wort|stop]",
+          "desc": "Galgenmännchen rund um die Liebe 🪢",
+          "aliases": [
+            "galgen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "riddle",
+          "usage": "$riddle [antwort|tipp]",
+          "desc": "Rätsel-Runde mit Kupfer-Belohnung 🧠",
+          "aliases": [
+            "raetsel"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "wouldyou",
+          "usage": "$wouldyou",
+          "desc": "Würdest du eher …? 🤔",
+          "aliases": [
+            "wuerdestdu",
+            "würdestdu"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "horoskop",
+          "usage": "$horoskop <zeichen>",
+          "desc": "Tageshoroskop 🔮",
+          "aliases": [
+            "horoscope"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "couplestats",
+          "usage": "$couplestats",
+          "desc": "Couple-Stats: Love-XP, Level, Streak 💑",
+          "aliases": [
+            "paarestats"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "loveplus.js (neu)"
+        },
+        {
+          "name": "anniversary",
+          "usage": "$anniversary",
+          "desc": "Jahrestag + Meilensteine 📅",
+          "aliases": [
+            "jahrestag"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "loveplus.js (neu)"
+        }
+      ]
+    },
+    {
+      "id": "fakten",
+      "slug": "fakten",
+      "emoji": "🌐",
+      "title": "Internet & Fakten",
+      "web": "INTERNET & FAKTEN",
+      "cmds": [
+        {
+          "name": "wiki",
+          "usage": "$wiki <begriff>",
+          "desc": "Wikipedia (de) 📖",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "catfact",
+          "usage": "$catfact",
+          "desc": "Katzen-Fakt 🐱",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "dogfact",
+          "usage": "$dogfact",
+          "desc": "Hunde-Fakt 🐶",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "github",
+          "usage": "$github owner/repo",
+          "desc": "Repo-Infos 🐙",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "remind",
+          "usage": "$remind <zeit> <text>",
+          "desc": "Erinnerung ⏰",
+          "aliases": [
+            "erinnerung"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "ownertools",
+      "slug": "ownertools",
+      "emoji": "👑",
+      "title": "Owner-Tools",
+      "web": "OWNER TOOLS",
+      "cmds": [
+        {
+          "name": "addowner",
+          "usage": "$addowner @user <name>",
+          "desc": "Zusatz-Owner eintragen 👑",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "delowner",
+          "usage": "$delowner @user",
+          "desc": "Zusatz-Owner entfernen",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "ownerlist",
+          "usage": "$ownerlist",
+          "desc": "Alle Owner anzeigen",
+          "aliases": [
+            "ownerliste"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "bc",
+          "usage": "$bc <text>",
+          "desc": "Broadcast an alle Gruppen 📢",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "setppbot",
+          "usage": "$setppbot",
+          "desc": "Bot-Profilbild setzen 🖼️",
+          "aliases": [
+            "setbotpp",
+            "setpp"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "setbotname",
+          "usage": "$setbotname <name>",
+          "desc": "Bot-Namen ändern 🏷️",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "leave",
+          "usage": "$leave",
+          "desc": "Gruppe verlassen 🚪",
+          "aliases": [
+            "out",
+            "botleave"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "setrang",
+          "usage": "$setrang @user <rang>",
+          "desc": "Rang vergeben 👑 (Owner)",
+          "aliases": [
+            "setrank"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "getrang",
+          "usage": "$getrang @user",
+          "desc": "Rang abfragen 🔎 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "delrang",
+          "usage": "$delrang @user",
+          "desc": "Rang entfernen 🗑️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "removerang",
+          "usage": "$removerang @user",
+          "desc": "Rang entfernen (alternative Variante) 🗑️ (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "rangs",
+          "usage": "$rangs",
+          "desc": "Alle Ränge anzeigen 🏅 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "cleartmp",
+          "usage": "$cleartmp",
+          "desc": "Temp-Dateien aufräumen 🧹 (Owner)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "code-entdeckt (registry-sync)"
+        }
+      ]
+    },
+    {
+      "id": "alltag",
+      "slug": "alltag",
+      "emoji": "🧭",
+      "title": "Alltag & Web",
+      "web": "ALLTAG & WEB",
+      "cmds": [
+        {
+          "name": "wetter",
+          "usage": "$wetter <stadt>",
+          "desc": "Wetter live (Open-Meteo) 🌤️",
+          "aliases": [
+            "weather"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "währung",
+          "usage": "$währung <betrag> <von> [nach]",
+          "desc": "Währungen umrechnen (EZB-Kurse) 💱",
+          "aliases": [
+            "waehrung",
+            "currency",
+            "cur",
+            "wechselkurs"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "übersetze",
+          "usage": "$übersetze <sprache> <text>",
+          "desc": "Text übersetzen (MyMemory) 🌍",
+          "aliases": [
+            "uebersetze",
+            "translate",
+            "tr"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "qr",
+          "usage": "$qr <text>",
+          "desc": "QR-Code erzeugen (goqr.me) 🔳",
+          "aliases": [
+            "qrcode"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kurz",
+          "usage": "$kurz <url>",
+          "desc": "Link kürzen (TinyURL/is.gd) 🔗",
+          "aliases": [
+            "kuerz",
+            "short",
+            "shorten",
+            "tiny"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "passwort",
+          "usage": "$passwort [länge]",
+          "desc": "Sicheres Zufalls-Passwort 🔐",
+          "aliases": [
+            "password",
+            "pw",
+            "pwd"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "slug": "tools",
+      "emoji": "🧰",
+      "title": "Werkzeuge & Utilities",
+      "web": "WERKZEUGE & UTILITIES",
+      "cmds": [
+        {
+          "name": "date",
+          "usage": "$date",
+          "desc": "Datum & Uhrzeit",
+          "aliases": [
+            "today"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "calc",
+          "usage": "$calc <ausdruck>",
+          "desc": "Rechner",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "b64",
+          "usage": "$b64 <text>",
+          "desc": "Base64 en-/dekodieren",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "upper",
+          "usage": "$upper <text>",
+          "desc": "GROSSBUCHSTABEN",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "lower",
+          "usage": "$lower <text>",
+          "desc": "kleinbuchstaben",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "length",
+          "usage": "$length <text>",
+          "desc": "Zeichen-/Wortanzahl",
+          "aliases": [
+            "len"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "invisible",
+          "usage": "$invisible",
+          "desc": "Unsichtbare Zeile",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "quote",
+          "usage": "$quote",
+          "desc": "Zitat des Tages",
+          "aliases": [
+            "zitat"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "say",
+          "usage": "$say <text>",
+          "desc": "Bot spricht für dich",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "pfp",
+          "usage": "$pfp @user",
+          "desc": "Profilbild anzeigen",
+          "aliases": [
+            "profilepic"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "type",
+          "usage": "$type <jid>",
+          "desc": "JID-Typ prüfen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "gits",
+          "usage": "$gits",
+          "desc": "Nützliche GitHub-Repos",
+          "aliases": [
+            "repo"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "join",
+          "usage": "$join <link>",
+          "desc": "Gruppe beitreten",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        }
+      ]
+    }
+  ]
+}
