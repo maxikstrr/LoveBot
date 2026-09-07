@@ -14,6 +14,11 @@ function paint(site) {
   document.getElementById('sUsers').textContent = site.counts.users;
   document.getElementById('sGroups').textContent = site.counts.groups;
   document.getElementById('sBans').textContent = site.counts.bans;
+  const lp = site.loveplus || {};
+  document.getElementById('sCouples').textContent = lp.couples ?? '—';
+  document.getElementById('sLoveXp').textContent = (lp.loveXpTotal ?? 0).toLocaleString('de-DE');
+  document.getElementById('sPets').textContent = lp.pets ?? '—';
+  document.getElementById('sAch').textContent = lp.achievementsUnlocked ?? '—';
   document.getElementById('hbInfo').innerHTML =
     '<div class="k">Bot-Name</div><div class="v">' + esc(hb.name || site.name) + '</div>' +
     '<div class="k">JID</div><div class="v">' + esc(hb.jid || '—') + '</div>' +
@@ -39,7 +44,7 @@ async function tick() {
     document.getElementById('statusHero').innerHTML =
       '<div class="status-pill off"><span class="dot"></span> STATUS UNBEKANNT 💤</div>' +
       '<p class="hint">Kein Live-Zugriff — starte den Bot-Server für Echtzeitdaten.</p>';
-    ['sUsers', 'sGroups', 'sBans'].forEach((id) => { const e = document.getElementById(id); if (e) e.textContent = '—'; });
+    ['sUsers', 'sGroups', 'sBans', 'sCouples', 'sLoveXp', 'sPets', 'sAch'].forEach((id) => { const e = document.getElementById(id); if (e) e.textContent = '—'; });
     document.getElementById('hbInfo').innerHTML = '<div class="k">Hinweis</div><div class="v">Live-Daten brauchen den laufenden server.js</div>';
   }
   const cmds = await api('/api/commands');

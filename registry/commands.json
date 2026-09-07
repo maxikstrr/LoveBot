@@ -318,6 +318,15 @@
           "source": "Bot-Code"
         },
         {
+          "name": "m7",
+          "usage": "$m7",
+          "desc": "Sendet eine Newsletter-Admin-Einladung für den LoveBot-Kanal inkl. Live-Infos (Abonnenten, Verifizierung, Erstellungsdatum) in den aktuellen Chat",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
           "name": "i2",
           "usage": "$i2",
           "desc": "Code einer zitierten Nachricht",
@@ -602,6 +611,33 @@
             "tagesliebe",
             "liebeimpuls"
           ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "liebescheck",
+          "usage": "$liebescheck @user",
+          "desc": "Süßer Zufalls-Kompatibilitäts-Report des Tages",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kuschelvorschlag",
+          "usage": "$kuschelvorschlag",
+          "desc": "Zufallsvorschlag für ein Kuschel-/Date-Ritual",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "komplimentgenerator",
+          "usage": "$komplimentgenerator @user",
+          "desc": "Generiert ein zufälliges Kompliment",
+          "aliases": [],
           "perms": "all",
           "cooldown": 3,
           "source": "Bot-Code"
@@ -1097,6 +1133,15 @@
           "source": "Bot-Code"
         },
         {
+          "name": "cookie",
+          "usage": "$cookie accept/necessary/reject",
+          "desc": "Cookie-/Speicher-Zustimmung (Tabelle wie im Web-Cookie-Banner)",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
           "name": "verify",
           "usage": "$verify accept/reject",
           "desc": "Verifizierung",
@@ -1178,9 +1223,54 @@
           "source": "Bot-Code"
         },
         {
+          "name": "blockcase",
+          "usage": "$blockcase <befehl> <grund>",
+          "desc": "Sperrt einen Befehl bot-weit für alle außer den Owner (Owner) 🚫",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "opencase",
+          "usage": "$opencase <befehl>",
+          "desc": "Entsperrt einen zuvor mit $blockcase gesperrten Befehl (Owner) 🔓",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "listbc",
+          "usage": "$listbc",
+          "desc": "Listet alle aktuell gesperrten Befehle mit Grund & Details auf (Owner) 📋",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
           "name": "fp",
           "usage": "$fp",
           "desc": "Fake Payment",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "offline",
+          "usage": "$offline <grund>",
+          "desc": "Aktiviert den globalen Wartungsmodus — Bot nur noch für den Owner, Website für alle gesperrt mit Grund-Anzeige (Owner) 🛠️",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "online",
+          "usage": "$online",
+          "desc": "Beendet den globalen Wartungsmodus — Bot & Website wieder für alle offen (Owner) ✅",
           "aliases": [],
           "perms": "owner",
           "cooldown": 3,
@@ -1536,6 +1626,98 @@
           "perms": "all",
           "cooldown": 3,
           "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "tarot",
+          "usage": "$tarot",
+          "desc": "Zieht eine zufällige Tarotkarte mit Deutung",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "wortkette",
+          "usage": "$wortkette <wort>",
+          "desc": "Findet ein Folgewort für das Wortketten-Spiel",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "anagram",
+          "usage": "$anagram <wort>",
+          "desc": "Mischt die Buchstaben eines Wortes zum Rätseln",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "palindrom",
+          "usage": "$palindrom <text>",
+          "desc": "Prüft, ob ein Text ein Palindrom ist",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "mathequiz",
+          "usage": "$mathequiz",
+          "desc": "Kleine Kopfrechenaufgabe zum Mitraten",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "duell",
+          "usage": "$duell @user",
+          "desc": "Zufalls-Duell zwischen dir und einer anderen Person",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "wuerfelduell",
+          "usage": "$wuerfelduell @user",
+          "desc": "Würfelduell 1-6 gegen eine andere Person",
+          "aliases": [
+            "würfelduell"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "sternzeichen",
+          "usage": "$sternzeichen TT.MM.[JJJJ]",
+          "desc": "Berechnet das Sternzeichen aus einem Geburtsdatum",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "emoji",
+          "usage": "$emoji <text>",
+          "desc": "Übersetzt einzelne Wörter in passende Emojis",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "shipname",
+          "usage": "$shipname <name1> & <name2>",
+          "desc": "Spaßiger Kompatibilitäts-Prozentrechner für zwei Namen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
         }
       ]
     },
@@ -1982,7 +2164,6 @@
           "desc": "Eure Beziehung: Tage, Love-XP, Treue, Jahrestag ❤️",
           "aliases": [
             "beziehung",
-            "partner",
             "couple",
             "paare",
             "ehe"
@@ -2261,6 +2442,75 @@
           "aliases": [
             "erinnerung"
           ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "advice",
+          "usage": "$advice",
+          "desc": "Zufälliger Lebensrat (adviceslip.com)",
+          "aliases": [
+            "lebensrat"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "chucknorris",
+          "usage": "$chucknorris",
+          "desc": "Zufälliger Chuck-Norris-Witz (api.chucknorris.io)",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "kanye",
+          "usage": "$kanye",
+          "desc": "Zufälliges Zitat (api.kanye.rest)",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "activity",
+          "usage": "$activity",
+          "desc": "Zufällige Aktivität gegen Langeweile",
+          "aliases": [
+            "langeweile"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "iss",
+          "usage": "$iss",
+          "desc": "Aktuelle Live-Position der ISS im Orbit",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "meineip",
+          "usage": "$meineip",
+          "desc": "Öffentliche IP-Adresse des Bot-Servers",
+          "aliases": [
+            "meinip"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "githubzen",
+          "usage": "$githubzen",
+          "desc": "Zufälliger GitHub-Design-Leitsatz",
+          "aliases": [],
           "perms": "all",
           "cooldown": 3,
           "source": "Bot-Code"
@@ -2619,6 +2869,42 @@
           "desc": "Gruppe beitreten",
           "aliases": [],
           "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "bmi",
+          "usage": "$bmi <kg> <cm>",
+          "desc": "Berechnet deinen Body-Mass-Index",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "countdown",
+          "usage": "$countdown TT.MM.JJJJ",
+          "desc": "Zeigt die Tage bis zu einem Datum",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "tagderwoche",
+          "usage": "$tagderwoche TT.MM.JJJJ",
+          "desc": "Berechnet den Wochentag eines Datums",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "zeitzone",
+          "usage": "$zeitzone <stadt>",
+          "desc": "Zeigt die aktuelle Uhrzeit in einer Zeitzone",
+          "aliases": [],
+          "perms": "all",
           "cooldown": 3,
           "source": "Bot-Code"
         }

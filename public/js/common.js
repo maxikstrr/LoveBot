@@ -149,9 +149,13 @@ function buildSidebar(activePage) {
   html += '<div class="side-label">LINKS</div>' +
     '<a class="nav-btn" href="/">🏠 Website</a>' +
     '<a class="nav-btn" href="/cmd.html">📜 Alle Befehle</a>' +
-    '<a class="nav-btn" href="/status.html">📡 Live-Status</a>';
+    '<a class="nav-btn" href="/statistics.html">📊 Statistiken</a>' +
+    '<a class="nav-btn" href="/leaderboard.html">🏆 Bestenliste</a>' +
+    '<a class="nav-btn" href="/status.html">📡 Live-Status</a>' +
+    '<a class="nav-btn" href="/datenschutz.html">🔐 Datenschutz</a>';
   html += '<div class="spacer"></div>' +
-    '<a class="nav-btn logout" href="#" onclick="doLogout();return false;">🚪 Abmelden</a>';
+    '<a class="nav-btn logout" href="#" onclick="doLogout();return false;">🚪 Abmelden</a>' +
+    '<div class="footline">💜 LoveBot by Maxichen 2026</div>';
   const el = document.getElementById('sidebar');
   if (el) el.innerHTML = html;
 }
@@ -170,6 +174,11 @@ function buildSocials(l) {
 
 function doLogout() {
   api('/api/logout', { method: 'POST' });
+  /* 🍪 Die Cookie-/DSGVO-Entscheidung liegt in sessionStorage (nicht
+     localStorage) und bleibt davon unberührt — ein Logout beendet die
+     Login-Sitzung, aber nicht die Browser-Sitzung/den Consent, darum
+     muss hier nichts extra behandelt werden. Nur die Login-/App-Daten
+     in localStorage (Token etc.) werden entfernt. */
   localStorage.clear();
   location.href = '/login.html';
 }
@@ -178,3 +187,169 @@ function guardApp() {
   if (!getToken()) { location.href = '/login.html'; return false; }
   return true;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   🍪 DSGVO- / COOKIE-CONSENT-GATE (Website)
+   Verhalten (Stand: einmal pro Browser-SITZUNG, nicht mehr pro
+   Seitenaufruf): Beim allerersten Seitenaufruf eines neuen Tabs/einer
+   neuen Sitzung erscheint das Consent-Gate. Sobald zugestimmt (oder
+   bewusst nur "Notwendige" gewählt) wurde, gilt diese Entscheidung für
+   ALLE weiteren Seiten dieser Sitzung (z. B. login.html, dashboard.html,
+   …) — es taucht NICHT bei jedem einzelnen Klick/Seitenwechsel neu auf.
+   Erst wenn der Tab/das Fenster komplett geschlossen und die Website
+   danach neu geöffnet wird (= neue Sitzung), wird erneut gefragt.
+   Technisch: sessionStorage (statt localStorage) — lebt nur so lange
+   wie der Browser-Tab offen ist, wird beim Schließen automatisch
+   gelöscht. Vor einer Entscheidung werden ausschließlich technisch
+   notwendige Daten gespeichert (gar keine, bis geklickt wird) — keine
+   Analytics/Tracking ohne aktive Zustimmung. */
+const CONSENT_KEY = 'love_consent';
+const CONSENT_VERSION = 2; /* hochzählen, wenn sich die Richtlinie ändert → erneute Zustimmung nötig */
+
+function getConsent() {
+  try {
+    const raw = sessionStorage.getItem(CONSENT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.version !== CONSENT_VERSION) return null;
+    return parsed;
+  } catch (e) { return null; }
+}
+
+function setConsent(choice) {
+  const payload = {
+    version: CONSENT_VERSION,
+    necessary: true,
+    analytics: !!choice.analytics,
+    functional: !!choice.functional,
+    decidedAt: new Date().toISOString(),
+    mode: choice.mode || 'custom' /* 'all' | 'necessary' | 'custom' */
+  };
+  sessionStorage.setItem(CONSENT_KEY, JSON.stringify(payload));
+  return payload;
+}
+
+function renderConsentGate() {
+  if (document.getElementById('consentGate')) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'consent-gate';
+  wrap.id = 'consentGate';
+  wrap.innerHTML =
+    '<div class="consent-card">' +
+      '<div class="consent-icon">🍪💜</div>' +
+      '<h2>Deine Privatsphäre ist uns wichtig</h2>' +
+      '<p>Willkommen bei <b>LoveBot</b>! Bevor es losgeht, möchten wir dir transparent erklären, ' +
+      'welche Daten auf dieser Website gespeichert werden und dich um deine Zustimmung bitten — ' +
+      'ganz im Sinne der <b>DSGVO</b> (Datenschutz-Grundverordnung).</p>' +
+      '<p>Wir unterscheiden drei Kategorien von Speicherzugriffen. Du entscheidest selbst, welche ' +
+      'du zusätzlich zu den technisch notwendigen erlaubst:</p>' +
+      '<div class="consent-opts">' +
+        '<label class="consent-opt locked">' +
+          '<input type="checkbox" checked disabled>' +
+          '<span class="consent-opt-txt"><b>🔒 Technisch notwendig</b>' +
+            '<span>Login-Sitzungen (Dashboard/Owner-Bereich), Sicherheitsfunktionen (z.\u202fB. Schutz vor Angriffen), ' +
+            'Grundeinstellungen wie Sprache/Theme. Ohne diese Daten funktioniert die Seite nicht — ' +
+            'sie können deshalb nicht abgewählt werden.</span></span>' +
+        '</label>' +
+        '<label class="consent-opt">' +
+          '<input type="checkbox" id="consentFunctional">' +
+          '<span class="consent-opt-txt"><b>⚙️ Funktional</b>' +
+            '<span>Merkt sich Komfort-Einstellungen (z.\u202fB. zuletzt gewählte Ansicht, Mood/Farbschema im Dashboard), ' +
+            'damit du sie nicht bei jedem Besuch neu einstellen musst.</span></span>' +
+        '</label>' +
+        '<label class="consent-opt">' +
+          '<input type="checkbox" id="consentAnalytics">' +
+          '<span class="consent-opt-txt"><b>📊 Anonyme Statistiken</b>' +
+            '<span>Hilft uns zu verstehen, welche Seiten/Befehle genutzt werden — komplett anonymisiert, ' +
+            'ohne IP-Speicherung und ohne personenbezogene Auswertung.</span></span>' +
+        '</label>' +
+      '</div>' +
+      '<details class="consent-details">' +
+        '<summary>ℹ️ Mehr Details zur Speicherung &amp; deinen Rechten</summary>' +
+        '<ul>' +
+          '<li>Gespeichert wird ausschließlich <b>lokal in deinem Browser</b> (sessionStorage) — ' +
+          'nichts davon wird an Dritte weitergegeben oder verkauft.</li>' +
+          '<li>Deine Wahl gilt für <b>diese Browser-Sitzung</b> (also für alle Seiten der Website, solange ' +
+          'der Tab geöffnet bleibt) und wird beim Schließen des Tabs automatisch gelöscht.</li>' +
+          '<li>Du kannst deine Entscheidung jederzeit über den 🍪-Button unten links ändern.</li>' +
+          '<li>Mehr Infos, welche Daten wie lange gespeichert werden und wie du deine Löschung/Auskunft ' +
+          'nach Art.\u202f15\u202fDSGVO beantragst, findest du in unserer ' +
+          '<a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a>.</li>' +
+        '</ul>' +
+      '</details>' +
+      '<div class="consent-actions">' +
+        '<button class="btn ghost" id="consentNecessaryBtn">Nur Notwendige</button>' +
+        '<button class="btn" id="consentAllBtn">💜 Alle akzeptieren</button>' +
+      '</div>' +
+      '<div class="consent-actions" style="margin-top:6px">' +
+        '<button class="btn ghost sm full" id="consentSaveBtn">✓ Auswahl speichern</button>' +
+      '</div>' +
+      '<p class="consent-fine">Diese Wahl gilt für deine aktuelle Browser-Sitzung. ' +
+      '<a href="/datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a></p>' +
+    '</div>';
+  document.body.appendChild(wrap);
+
+  /* Falls bereits eine Wahl existiert (z. B. Gate erneut über den
+     🍪-Button geöffnet), Checkboxen entsprechend vorausfüllen. */
+  const prev = getConsent();
+  if (prev) {
+    document.getElementById('consentAnalytics').checked = !!prev.analytics;
+    document.getElementById('consentFunctional').checked = !!prev.functional;
+  }
+
+  document.getElementById('consentAllBtn').onclick = () => {
+    setConsent({ analytics: true, functional: true, mode: 'all' });
+    closeConsentGate();
+  };
+  document.getElementById('consentNecessaryBtn').onclick = () => {
+    setConsent({ analytics: false, functional: false, mode: 'necessary' });
+    closeConsentGate();
+  };
+  document.getElementById('consentSaveBtn').onclick = () => {
+    const analytics = document.getElementById('consentAnalytics').checked;
+    const functional = document.getElementById('consentFunctional').checked;
+    setConsent({ analytics, functional, mode: 'custom' });
+    closeConsentGate();
+  };
+}
+
+function closeConsentGate() {
+  const el = document.getElementById('consentGate');
+  if (el) el.remove();
+  ensureConsentRelaunch();
+}
+
+function ensureConsentRelaunch() {
+  if (document.getElementById('consentRelaunch')) return;
+  const btn = document.createElement('div');
+  btn.className = 'consent-relaunch';
+  btn.id = 'consentRelaunch';
+  btn.title = 'Cookie-/Datenschutz-Einstellungen ändern';
+  btn.textContent = '🍪';
+  btn.onclick = () => {
+    const gate = document.getElementById('consentGate');
+    if (gate) { gate.remove(); }
+    renderConsentGate();
+  };
+  document.body.appendChild(btn);
+}
+
+/* Beim Laden jeder Seite, die common.js einbindet: Prüft die für DIESE
+   Sitzung (sessionStorage) gespeicherte Wahl. Existiert noch keine
+   (neuer Tab / neue Sitzung / erster Besuch), wird das Gate gezeigt.
+   Wurde in dieser Sitzung bereits entschieden (egal auf welcher Seite),
+   bleibt das Gate auf allen weiteren Seiten (z. B. login.html) zu und
+   nur der kleine 🍪-Wiedereinstiegsknopf erscheint. */
+function initConsentGate() {
+  if (getConsent()) {
+    ensureConsentRelaunch();
+  } else {
+    renderConsentGate();
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initConsentGate);
+} else {
+  initConsentGate();
+}
+

@@ -741,6 +741,91 @@
         "lastMonthlyAt": null,
         "lastYearlyAt": null
       }
+    },
+    "4915199999999jid111222333lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915199999999jid111222333lid",
+        "phone": "+4915199999999",
+        "jid": "4915199999999@s.whatsapp.net",
+        "lid": "111222333@lid",
+        "cleanJid": "4915199999999",
+        "cleanLid": "111222333"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "cookie": {
+          "accepted": true,
+          "acceptedAt": "2026-09-06T22:53:18.099Z",
+          "rejected": false,
+          "rejectedAt": null,
+          "analytics": false
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-06T22:53:18.083Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
     }
   },
   "groups": {
@@ -849,13 +934,6 @@
         "jid": "4915161545499@s.whatsapp.net",
         "lid": "201030977470655@lid",
         "addedAt": "2026-09-03T22:35:55.136Z",
-        "addedBy": "4915155894714@s.whatsapp.net"
-      },
-      {
-        "name": "maxichen3",
-        "jid": "491793904099@s.whatsapp.net",
-        "lid": "269724751503435@lid",
-        "addedAt": "2026-09-03T22:36:01.218Z",
         "addedBy": "4915155894714@s.whatsapp.net"
       },
       {

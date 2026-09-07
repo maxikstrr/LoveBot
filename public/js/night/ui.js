@@ -68,6 +68,30 @@
     return { el: bg, close };
   }
 
+  /* ---------- Step-up-Reauth-Modal ---------------------------------------------
+     Für kritische Aktionen (permanenter IP-Bann, Owner-Rechte, Passwort, Security
+     deaktivieren, Wartungsmodus, DB löschen, alle Sessions killen): verlangt die
+     erneute Eingabe des aktuellen Dashboard-Passworts, bevor die Aktion läuft. */
+  function reauthModal(actionLabel, why) {
+    return new Promise((resolve) => {
+      const m = modal(
+        '<h3>🔐 Sicherheitsbestätigung</h3>' +
+        '<p class="small dim">' + fmt.esc(why || 'Diese Aktion ist kritisch — bitte bestätige sie mit deinem aktuellen Passwort.') + '</p>' +
+        '<label class="fld">Passwort</label><input id="reauthPw" type="password" autocomplete="current-password" placeholder="Aktuelles Passwort">' +
+        '<div class="msg" id="reauthMsg"></div>',
+        [
+          { label: 'Abbrechen', cls: 'ghost', onClick: (bg, close) => { close(); resolve(null); } },
+          { label: '🔓 Bestätigen', cls: 'danger', onClick: (bg, close) => {
+              const pw = bg.querySelector('#reauthPw').value || '';
+              if (!pw) { bg.querySelector('#reauthMsg').className = 'msg error'; bg.querySelector('#reauthMsg').textContent = 'Bitte Passwort eingeben.'; return; }
+              close(); resolve(pw);
+            } }
+        ]
+      );
+      setTimeout(() => { const i = m.el.querySelector('#reauthPw'); if (i) { i.focus(); i.onkeydown = (e) => { if (e.key === 'Enter') m.el.querySelectorAll('.actions button')[1]?.click(); }; } }, 30);
+    });
+  }
+
   function confirmBox(title, text, dangerLabel) {
     return new Promise((resolve) => {
       modal(
@@ -128,6 +152,7 @@
     { id: 'logs',     icon: '📝', label: 'Logs' },
     { id: 'terminal', icon: '🖥️', label: 'Terminal' },
     { id: 'security', icon: '🛡️', label: 'Security' },
+    { id: 'websessions', icon: '🖥️', label: 'Login-Sessions', perm: 'sessions.view' },
     { id: 'audit',    icon: '🧾', label: 'Audit' },
     { id: 'database', icon: '🗄️', label: 'Database' },
     { id: 'bans',     icon: '⛔', label: 'Bans' },
@@ -204,5 +229,5 @@
     $('#side').classList.remove('open');
   }
 
-  window.UI = { $, $$, fmt, toast, modal, confirmBox, stat, pill, table, panel, chrome, setActiveNav, NAV };
+  window.UI = { $, $$, fmt, toast, modal, confirmBox, reauthModal, stat, pill, table, panel, chrome, setActiveNav, NAV };
 })();

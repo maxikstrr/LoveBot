@@ -1,9 +1,60 @@
 # 🚀 LOVEBOT — PLATTFORM-ROADMAP (Vision → Phasen)
 
-> Stand: 2026-09-04 · Ziel: aus LoveBot ein **Bot-Management-System mit eigener
+> Stand: 2026-09-06 · Ziel: aus LoveBot ein **Bot-Management-System mit eigener
 > Plattform** machen — Multi-Session-Fleet, Owner-Control-Center, Gruppen- &
 > Userverwaltung, Automationen, Monitoring, Analytics, LovePlus und eine
 > komplette öffentliche Webseite.
+
+## ✅ Neu gebaut (2026-09-06)
+
+| Bereich | Status |
+|---|---|
+| **Pro-Befehl-Tracking** | `sessionManager.js`: `commandStats`/`commandStatsDaily` (30-Tage-Fenster) → `topCommands()`, `totalCommandCalls()`, `commandActivityByDay()` |
+| **`/api/statistics`** (öffentlich, kein Login) | Nutzer/Gruppen/Sessions, Registry-Zahlen (Befehle/Kategorien/Aliase), LovePlus-Summen, meistgenutzte Befehle, 14-Tage-Aktivität |
+| **`/api/leaderboard`** (öffentlich, kein Login) | Top-Level/XP, Top-Reichste (Copper), Top-Paare (Love-XP) — Namen konsequent maskiert |
+| **`public/statistics.html`** | Öffentliche Statistik-Seite mit Balken-Chart Top-Befehle + Aktivitäts-Verlauf |
+| **`public/leaderboard.html`** | Öffentliche Bestenliste mit 3 Tabs (Level/Reichste/Paare) |
+| **Datenschutz-Fix** | `safeDisplayName()` in server.js: verhindert, dass rohe Telefonnummern (statt Usernamen) unmaskiert in Paar-/Ranglisten-Ausgaben landen (betraf vorher `loveplusLiveSnapshot()` und damit `/api/siteinfo`, `/api/stats`) |
+
+> Diese Bausteine sind bewusst zuerst gebaut, weil sie (a) auf bereits echten
+> Daten in der laufenden Datenbank basieren, (b) ohne neue Infrastruktur
+> auskommen und (c) direkt Nutzen stiften (Community-Wettbewerb,
+> Transparenz), statt nur Mockups zu sein.
+
+## 🗺️ Große Vision — „Maxichen-Plattform" (Einordnung)
+
+Es gibt eine sehr weitreichende Vision, LoveBot zu einer kompletten
+Bot-/Developer-Plattform auszubauen: Multi-Bot-Hosting, Plugin-Marktplatz,
+Developer-Portal mit API-Keys/Webhooks/SDK, Community-Forum mit
+Feature-Voting, Bot-Sandbox, Automation-Engine, Premium/Teams, PWA usw.
+
+**Ehrlich eingeordnet:** Das ist im Umfang ein eigenständiges SaaS-Produkt,
+keine Erweiterung, die in ein paar Arbeitssitzungen entsteht — realistisch
+Wochen bis Monate Team-Arbeit. Bevor einzelne Teile davon gebaut werden,
+sollte jeweils konkret entschieden werden, was *jetzt* echten Nutzen hat
+(reale Daten, reale Nutzer) vs. was nur als UI-Mockup ohne Backend enden
+würde. Nicht jeder Punkt unten passt zu einem Ein-Personen-WhatsApp-Bot-Projekt
+— manche (Multi-Tenant-Hosting, Payment/Premium, eigenes Plugin-Ökosystem)
+ergeben erst Sinn, wenn es mehrere Bots/Entwickler auf der Plattform gibt.
+
+Grobe Priorisierung nach Aufwand/Nutzen-Verhältnis für den aktuellen
+Ein-Bot-Stand:
+
+1. **Sofort sinnvoll, kleiner Aufwand** (baut auf echten Daten auf):
+   Public Statistics ✅, Public Leaderboard ✅, Command-Analytics ✅,
+   Aktivitätskalender ✅, Changelog-Seite, Incident-Historie auf status.html.
+2. **Mittelfristig sinnvoll** (braucht neue, aber überschaubare Backend-Logik):
+   Event Explorer (Detailansicht pro Audit-Eintrag), Feature Requests /
+   Community-Voting, striktere Rollen-/Permission-Granularität, Webhook für
+   eigene Automationen (z. B. „Session disconnected" → eigener Alert).
+3. **Großprojekt, nur mit klarem Bedarf** (SaaS-artig, hoher Aufwand):
+   Multi-Bot-Hosting/Bot-Hub, Plugin-Marktplatz mit Downloads/Reviews,
+   Developer-API mit Keys/Rate-Limits, Payment/Premium, Discord/Telegram-
+   Bridge, eigenes Browser-Spiel („Couple Home"), Multi-Tenant-Architektur.
+
+Punkt 3 wird hier bewusst **nicht** als fertige Oberfläche vorgebaut, weil
+das ohne echtes Backend nur Fake-Buttons wären. Wenn eines dieser Systeme
+gebraucht wird, sollte es gezielt und einzeln beauftragt werden.
 
 ## ✅ Bereits gebaut (Fundament)
 

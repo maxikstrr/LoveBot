@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutzerklärung 💜 — LoveBot by Maxichen 2026</title>
+<meta name="description" content="Datenschutzerklärung von LoveBot by Maxichen 2026 — welche Daten der WhatsApp-Bot und das Web-Dashboard speichern, warum, wie lange, und welche Rechte du hast (DSGVO).">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+<style>
+  .legal { max-width: 880px; margin: 0 auto; padding-bottom: 60px; }
+  .legal h2 { margin: 34px 0 12px; font-size: 20px; font-weight: 800; display:flex; align-items:center; gap:8px; }
+  .legal h3 { margin: 20px 0 8px; font-size: 15.5px; font-weight: 800; color: var(--brand-2); }
+  .legal p, .legal li { color: var(--muted); font-size: 14px; line-height: 1.75; }
+  .legal ul { padding-left: 20px; margin: 8px 0 12px; }
+  .legal table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 13px; }
+  .legal th, .legal td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); color: var(--muted); }
+  .legal th { color: var(--text); font-weight: 700; }
+  .legal .box { margin: 18px 0; }
+  .legal a { color: var(--brand-2); }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 6px; }
+  .toc a { font-size: 12.5px; padding: 7px 13px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
+  .toc a:hover { color: var(--text); border-color: rgba(167,139,250,.5); }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/faq.html">FAQ</a>
+    <a href="/datenschutz.html" class="active">Datenschutz</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:12px">
+    <span class="badge">🔐 Datenschutz</span>
+    <h1>D<span class="grad">a</span>tenschutzerklärung</h1>
+    <p class="sub">Ehrlich, verständlich, ohne Juristen-Kauderwelsch — was LoveBot speichert, warum, und wie lange.</p>
+  </section>
+
+  <div class="legal">
+    <div class="box">
+      <p><b>Stand:</b> September 2026 · Betreiber/Verantwortlicher: <b>Maxichen</b> („der Betreiber“), Betreiber von LoveBot (WhatsApp-Bot) und des zugehörigen Web-Dashboards.</p>
+      <p>Diese Erklärung gilt sowohl für den <b>WhatsApp-Bot „LoveBot“</b> als auch für <b>diese Website und das Web-Dashboard</b> (maxichen.gamebot.me / maxichen.de).</p>
+    </div>
+
+    <div class="toc">
+      <a href="#bot">🤖 Der Bot</a>
+      <a href="#web">🌐 Die Website</a>
+      <a href="#cookies">🍪 Cookies &amp; Speicher</a>
+      <a href="#rechte">⚖️ Deine Rechte</a>
+      <a href="#loeschung">🗑️ Löschung</a>
+      <a href="#kontakt">✉️ Kontakt</a>
+    </div>
+
+    <h2 id="bot">🤖 1. Datenverarbeitung durch den WhatsApp-Bot</h2>
+    <p>LoveBot verarbeitet ausschließlich Daten, die für seinen Betrieb notwendig sind. Ohne deine Zustimmung (per <span class="mono">$dsgvo accept</span>) funktioniert der Bot für dich nicht — außer dem Zustimmungs-Befehl selbst wird kein anderer Befehl ausgeführt.</p>
+
+    <h3>Welche Daten werden gespeichert?</h3>
+    <table>
+      <tr><th>Daten</th><th>Zweck</th><th>Speicherort</th></tr>
+      <tr><td>WhatsApp-ID (JID) &amp; Geräte-ID (LID)</td><td>Zuordnung deines Profils, Rechteverwaltung</td><td><span class="mono">Database/LoveUser/</span></td></tr>
+      <tr><td>Anzeigename / Username (falls gesetzt)</td><td>persönliche Ansprache, Anzeige in Ranglisten</td><td>lokale Bot-Datenbank</td></tr>
+      <tr><td>Freiwillige Profildaten (Name, Alter, Status, Stadt via <span class="mono">$register</span>)</td><td>Liebes-/Community-Features (Matches, Ehe-System)</td><td>lokale Bot-Datenbank</td></tr>
+      <tr><td>Nutzungsstatistiken (Level, XP, Wallet, Achievements)</td><td>Spiel-/Fortschrittsfunktionen</td><td>lokale Bot-Datenbank</td></tr>
+      <tr><td>DSGVO- &amp; Verifizierungsstatus + Zeitstempel</td><td>Nachweis deiner Zustimmung</td><td>lokale Bot-Datenbank</td></tr>
+      <tr><td>Gruppen-Metadaten (Gruppenname, Mitgliederliste über WhatsApp)</td><td>Moderations-Funktionen (falls vom Gruppen-Admin aktiviert)</td><td>lokale Bot-Datenbank</td></tr>
+    </table>
+
+    <h3>Was wird NICHT gespeichert?</h3>
+    <ul>
+      <li>Keine privaten Chat-Inhalte, die nicht an den Bot gerichtet sind</li>
+      <li>Kein Standort, keine Kontaktliste, keine Medien ohne expliziten Befehl</li>
+      <li>Bei Minderjährigen (unter 18, laut Selbstangabe) kein exaktes Alter — nur „unter 18“</li>
+    </ul>
+
+    <h3>Zustimmungspflicht</h3>
+    <p>Bevor du irgendeinen Befehl außer <span class="mono">$dsgvo</span> nutzen kannst, musst du aktiv zustimmen:</p>
+    <ul>
+      <li><span class="mono">$dsgvo</span> — zeigt dir diese Infos direkt im Chat</li>
+      <li><span class="mono">$dsgvo accept</span> — du stimmst zu, der Bot ist sofort nutzbar</li>
+      <li><span class="mono">$dsgvo reject</span> — du lehnst ab, deine Daten werden nicht weiter verarbeitet und der Bot bleibt für dich gesperrt</li>
+    </ul>
+    <p>Du kannst deine Zustimmung jederzeit mit <span class="mono">$dsgvo reject</span> widerrufen.</p>
+
+    <h2 id="web">🌐 2. Datenverarbeitung durch die Website &amp; das Dashboard</h2>
+    <p>Für die Registrierung/Login im Web-Dashboard verarbeiten wir:</p>
+    <ul>
+      <li>WhatsApp-Nummer (zur 2FA-Verifizierung per Code)</li>
+      <li>Gewählter Username &amp; verschlüsseltes Passwort (gehasht, niemals im Klartext gespeichert)</li>
+      <li>Login-Sitzung (Session-Token, technisch notwendig)</li>
+      <li>IP-Adresse temporär zur Rate-Limit-/Missbrauchsprävention</li>
+    </ul>
+    <p>Bei der Kontoerstellung musst du dieser Datenschutzerklärung aktiv per Checkbox zustimmen — ohne Zustimmung ist keine Registrierung möglich.</p>
+
+    <h2 id="cookies">🍪 3. Cookies &amp; lokaler Speicher</h2>
+    <p>Diese Website setzt <b>keine Third-Party-Tracking-Cookies</b>. Für den Betrieb nutzen wir <span class="mono">localStorage</span> in deinem Browser:</p>
+    <table>
+      <tr><th>Kategorie</th><th>Zweck</th><th>Optional?</th></tr>
+      <tr><td>Technisch notwendig</td><td>Login-Sitzung (Token), Anzeige-Einstellungen</td><td>Nein — sonst funktioniert das Dashboard nicht</td></tr>
+      <tr><td>Anonyme Statistiken</td><td>Aggregierte, nicht-personenbezogene Nutzungszahlen (welche Seiten/Befehle genutzt werden)</td><td>Ja — per Cookie-Banner wählbar</td></tr>
+    </table>
+    <p>Deine Wahl beim Cookie-Banner wird lokal gespeichert und kann jederzeit über das 🍪-Symbol unten links auf jeder Seite geändert werden.</p>
+
+    <h2 id="rechte">⚖️ 4. Deine Rechte (DSGVO)</h2>
+    <ul>
+      <li><b>Auskunft</b> — welche Daten wir über dich gespeichert haben ($me info im Bot, oder per Anfrage)</li>
+      <li><b>Berichtigung</b> — falsche Daten korrigieren lassen</li>
+      <li><b>Löschung</b> — deine Daten vollständig entfernen lassen</li>
+      <li><b>Widerruf</b> — deine Zustimmung jederzeit zurückziehen ($dsgvo reject)</li>
+      <li><b>Datenübertragbarkeit</b> — deine Daten in einem gängigen Format erhalten</li>
+      <li><b>Beschwerde</b> — bei der zuständigen Datenschutz-Aufsichtsbehörde</li>
+    </ul>
+
+    <h2 id="loeschung">🗑️ 5. Löschung deiner Daten</h2>
+    <p>Schreib dem Bot <span class="mono">$dsgvo reject</span> um deine Zustimmung zu widerrufen, oder wende dich direkt an den Betreiber (siehe Kontakt), um eine vollständige Löschung deines Profils zu beantragen. Wir löschen deine Daten dann ohne unnötige Verzögerung, sofern keine gesetzliche Aufbewahrungspflicht entgegensteht.</p>
+
+    <h2 id="kontakt">✉️ 6. Kontakt</h2>
+    <p>Bei Fragen zum Datenschutz erreichst du den Betreiber über die im Bot hinterlegten Owner-Kontaktdaten (<span class="mono">$owner</span>) oder über die auf der <a href="/">Startseite</a> verlinkten Kanäle.</p>
+
+    <div class="box" style="margin-top:30px; padding:16px 18px; border:1px solid var(--line); border-radius:14px; background:var(--surface)">
+      <p style="margin:0"><b>💜 Kurzfassung:</b> Wir speichern nur, was für den Bot-Betrieb nötig ist, fragen aktiv nach deiner Zustimmung, und du kannst diese jederzeit widerrufen und deine Daten löschen lassen.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Der WhatsApp-Bot mit Herz — gebaut von Maxichen. Liebe, Spiele, Economy, KI und ein Live-Dashboard in einem.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p style="margin-top:6px">© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+  makeHearts(10);
+  document.getElementById('year').textContent = new Date().getFullYear();
+  api('/api/siteinfo').then((d) => {
+    if (d && d.links) document.getElementById('socials').innerHTML = buildSocials(d.links);
+  });
+</script>
+</body>
+</html>

@@ -186,7 +186,11 @@
       for (let i = start; i < 200; i++) out.push(demoLogLine(i));
       return { ok: true, lines: out };
     }
-    if (p === '/api/security') return { ok: true, events: D.security, threat: 'LOW', alerts: 2, blocked: 17, failedLogins: 6 };
+    if (p === '/api/security') return {
+      ok: true, events: D.security, threat: 'LOW', alerts: 2, failedLogins: 6,
+      blocked: 1, blockedTotal: 17,
+      blockedIps: [{ ip: '203.0.113.•', reason: '2FA fehlt/ungültig', blockedAt: new Date(Date.now() - 40000).toISOString(), fails: 6, remainingSec: 80 }]
+    };
     if (p === '/api/audit') return { ok: true, entries: D.audit };
     if (p === '/api/commands') return { ok: true, commands: (window.LOVE_COMMANDS || []) };
     if (p === '/api/features') return { ok: true, features: (window.LOVE_FEATURES || []) };

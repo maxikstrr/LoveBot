@@ -368,10 +368,13 @@ body.nightmode-low #bgRain, body.nightmode-low #bgStars { opacity: .35; }
   color: var(--text-dim); text-shadow: none;
 }
 .btn.ghost:hover { border-color: var(--accent); color: #fff; box-shadow: var(--accent-glow); }
+.akte-tab-btn.active { border-color: var(--pink); color: #fff; box-shadow: var(--glow-pink); background: linear-gradient(135deg, rgba(255,45,149,.22), rgba(168,85,247,.12)); }
 .btn.cyan { border-color: rgba(0,240,255,.45); background: linear-gradient(135deg, rgba(0,240,255,.15), rgba(0,240,255,.05)); text-shadow: 0 0 8px rgba(0,240,255,.35); }
 .btn.cyan:hover { box-shadow: var(--glow-cyan); border-color: var(--cyan); }
 .btn.danger { border-color: rgba(248,113,113,.5); background: linear-gradient(135deg, rgba(248,113,113,.18), rgba(248,113,113,.06)); text-shadow: 0 0 8px rgba(248,113,113,.4); }
 .btn.danger:hover { box-shadow: 0 0 14px rgba(248,113,113,.5); border-color: var(--danger); }
+.btn.ok { border-color: rgba(52,211,153,.5); background: linear-gradient(135deg, rgba(52,211,153,.18), rgba(52,211,153,.06)); text-shadow: 0 0 8px rgba(52,211,153,.4); }
+.btn.ok:hover { box-shadow: 0 0 14px rgba(52,211,153,.5); border-color: var(--ok); }
 .btn.sm { padding: 4px 11px; font-size: 12px; }
 .btn.full { width: 100%; }
 .btn.icon { padding: 6px 9px; }

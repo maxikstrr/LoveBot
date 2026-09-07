@@ -1,8 +1,12 @@
 /* ============================================================================
    LoveBot — LOGIN mit 2FA
-   🔐 Ablauf:  1) Nummer prüfen  →  2) WhatsApp-Code (2FA)  →  3) Passwort
-   Der Owner-Login läuft genauso: ohne gültigen Code gibt es KEIN Login,
-   auch mit richtigem Passwort nicht.
+   🔐 Ablauf für alle NICHT-Owner-Konten: 1) Nummer prüfen → 2) WhatsApp-Code
+   (2FA) → 3) Passwort. Ohne gültigen Code gibt es kein Login, auch mit
+   richtigem Passwort nicht.
+   👑 AUSNAHME Owner: Schritt 2 (2FA) entfällt komplett — die Owner-Nummer
+   springt direkt von Schritt 1 zu Schritt 3 (Passwort). Serverseitig
+   ebenso durchgesetzt (server.js /api/login), das Frontend hier bildet das
+   nur visuell ab.
    ==========================================================================*/
 (function () {
   'use strict';
@@ -53,7 +57,17 @@
       if (data.status === 'unknown') { msg('msg1', '❌ Kein Konto für diese Nummer. Registrierte Konten können sich einloggen — der Owner nutzt seine Owner-Nummer.', 'error'); $('btn1').disabled = false; return; }
       number = raw.replace(/@.*$/, '').replace(/\D/g, '');
       role = data.status;
-      msg('msg1', (role === 'owner' ? '👑 Owner erkannt. ' : '✅ Konto gefunden: ' + (data.name || '') + '. ') + 'Sende WhatsApp-Code …', 'ok');
+      /* 👑 Owner-Ausnahme: KEIN WhatsApp-2FA-Code — direkt zum Passwort.
+         Alle anderen Rollen (user/admin/deputy/…) durchlaufen weiterhin
+         zwingend den 2FA-Schritt. */
+      if (role === 'owner') {
+        msg('msg1', '👑 Owner erkannt — kein 2FA-Code nötig, bitte direkt das Passwort eingeben.', 'ok');
+        $('pwLabel').textContent = '👑 Owner-Passwort';
+        setStep(3);
+        $('btn1').disabled = false;
+        return;
+      }
+      msg('msg1', '✅ Konto gefunden: ' + (data.name || '') + '. Sende WhatsApp-Code …', 'ok');
       await requestCode();
     } catch (e) {
       msg('msg1', 'Server nicht erreichbar.', 'error');
@@ -169,10 +183,14 @@
     const code = $('regCode').value.trim();
     const password = $('regPassword').value;
     const username = $('regUsername').value.trim();
+    /* 🔐 Ohne Zustimmung zur Datenschutzerklärung keine Kontoerstellung —
+       serverseitig wird das in /api/register nochmal geprüft. */
+    const privacyOk = $('regPrivacyOk') && $('regPrivacyOk').checked;
+    if (!privacyOk) return msg('regMsg', '☾ Bitte zuerst der Datenschutzerklärung zustimmen (Häkchen setzen).', 'warn');
     const v = await API.post('/api/verify-code', { number: regNumberForReg, code, purpose: 'register' });
     if (!v.data.ok) return msg('regMsg', v.data.error || 'Code falsch.', 'error');
     regSetupToken = v.data.setupToken;
-    const r = await API.post('/api/register', { setupToken: regSetupToken, username, password });
+    const r = await API.post('/api/register', { setupToken: regSetupToken, username, password, privacyAccepted: true });
     if (r.data.ok) {
       API.setToken(r.data.token);
       localStorage.setItem('love_name', r.data.name || '');

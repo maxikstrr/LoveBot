@@ -1,0 +1,91 @@
+/* ══════════════════════════════════════════════════════════════════════
+   🍪  L O V E B O T   —   D S G V O -  /  C O O K I E - C O N S E N T
+   ─────────────────────────────────────────────────────────────────────
+   Eigenständiges Stylesheet (keine Abhängigkeit von style.css/night.css
+   Variablen), damit das Consent-Gate auf JEDER Seite funktioniert —
+   egal welches Haupt-Theme sie sonst lädt.
+   Blockiert die ganze Seite, bis der Besucher zugestimmt oder bewusst
+   nur „Notwendige“ akzeptiert hat. Kein Klick-Außerhalb-Dismiss, kein X.
+   ══════════════════════════════════════════════════════════════════════ */
+.consent-gate {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+  background: rgba(4,2,10,.86); backdrop-filter: blur(10px);
+  animation: consentRiseIn .25s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+@keyframes consentRiseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.consent-gate[hidden] { display: none !important; }
+.consent-card {
+  width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto;
+  background: linear-gradient(180deg, rgba(20,13,38,.98), rgba(10,7,20,.99));
+  border: 1px solid rgba(255,255,255,.16); border-radius: 22px;
+  padding: 28px 26px 24px; box-shadow: 0 24px 70px -20px rgba(0,0,0,.8), 0 0 60px -20px rgba(167,139,250,.35);
+  position: relative; color: #f2eefc;
+}
+.consent-card::before {
+  content: ''; position: absolute; inset: -1px; border-radius: 22px; padding: 1px;
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 55%, #fb7185 100%); opacity: .35;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+}
+.consent-icon { font-size: 34px; margin-bottom: 8px; }
+.consent-card h2 { font-size: 21px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; color: #f2eefc; }
+.consent-card p { color: #a79fc2; font-size: 13.5px; line-height: 1.65; margin-bottom: 12px; }
+.consent-card a { color: #f472b6; text-decoration: underline; }
+.consent-opts { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+.consent-opt {
+  display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,.09); border-radius: 14px; background: rgba(255,255,255,.035);
+}
+.consent-opt.locked { opacity: .7; }
+.consent-opt input[type="checkbox"] { margin-top: 3px; width: 18px; height: 18px; accent-color: #f472b6; flex-shrink: 0; cursor: pointer; }
+.consent-opt.locked input[type="checkbox"] { cursor: not-allowed; }
+.consent-opt-txt b { font-size: 13.5px; display: block; margin-bottom: 2px; color: #f2eefc; }
+.consent-opt-txt span { font-size: 12px; color: #6f6791; line-height: 1.5; }
+.consent-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.consent-actions button {
+  flex: 1; min-width: 140px; justify-content: center; display: flex; align-items: center;
+  padding: 12px 18px; border-radius: 999px; border: none; cursor: pointer;
+  font-size: 14px; font-weight: 700; font-family: inherit; transition: all .15s ease;
+}
+#consentAllBtn {
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 55%, #fb7185 100%); color: #fff;
+  box-shadow: 0 12px 30px -12px rgba(244,114,182,.6);
+}
+#consentAllBtn:hover { transform: translateY(-2px); filter: brightness(1.07); }
+#consentNecessaryBtn, #consentSaveBtn {
+  background: rgba(255,255,255,.06); color: #f2eefc; border: 1px solid rgba(255,255,255,.16);
+}
+#consentNecessaryBtn:hover, #consentSaveBtn:hover { background: rgba(255,255,255,.1); border-color: rgba(167,139,250,.5); }
+.consent-fine { margin-top: 14px; font-size: 11px; color: #6f6791; text-align: center; }
+.consent-fine a { color: #6f6791; }
+
+.consent-details {
+  margin: 4px 0 6px; border: 1px solid rgba(255,255,255,.09); border-radius: 12px;
+  background: rgba(255,255,255,.03); padding: 2px 14px;
+}
+.consent-details summary {
+  cursor: pointer; padding: 10px 0; font-size: 12.5px; font-weight: 700; color: #cbb8f0;
+  list-style: none; display: flex; align-items: center; gap: 6px; user-select: none;
+}
+.consent-details summary::-webkit-details-marker { display: none; }
+.consent-details[open] summary { color: #f472b6; }
+.consent-details ul { margin: 0 0 12px; padding-left: 18px; }
+.consent-details li { font-size: 12px; color: #a79fc2; line-height: 1.6; margin-bottom: 6px; }
+.consent-details li:last-child { margin-bottom: 0; }
+.consent-details a { color: #f472b6; }
+
+/* Kleiner Wiedereinstieg unten links, falls jemand seine Einstellungen später ändern will */
+.consent-relaunch {
+  position: fixed; left: 16px; bottom: 16px; z-index: 9998;
+  width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #0e0a1d; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 18px 40px -18px rgba(0,0,0,.65);
+  font-size: 19px; cursor: pointer; transition: transform .15s ease;
+}
+.consent-relaunch:hover { transform: scale(1.08); }
+
+@media (max-width: 480px) {
+  .consent-card { padding: 22px 18px 18px; }
+  .consent-actions .btn, .consent-actions button { min-width: 100%; }
+}

@@ -44,6 +44,7 @@ import makeWASocket, {
   checkCommandAccess,
   announceGroupProcess,
   handleDsgvoCommand,
+  handleCookieCommand,
   handleVerifyCommand,
   pinoModule,
   logger,
@@ -74,9 +75,12 @@ import { handleMediaCommand } from './mediacmds.js';
 /* ═══ 🏓 PING (echte Messwerte) + 🧭 ALLTAGS-TOOLS ═══ */
 import { handlePingCommand } from './pingcmd.js';
 import { handleToolCommand } from './toolcmds.js';
+import { handleExtraCommand } from './extracmds.js';
 
 /* ═══ ❤️ LOVE CORE 2.0 · 🔒 PRIVACY · 🛡️ RATE-LIMIT ═══ */
 import * as rateLimit from './ratelimit.js';
+import { securityEvent as botSecurityEvent } from './night/security-log.js';
+import { getMaintenance, setMaintenanceOn, setMaintenanceOff } from './night/maintenance.js';
 import {
   normalizeRegistration, migrateRegistration, handlePrivacyCommand,
   ageLabel, cityLabel, maskCity
@@ -156,6 +160,49 @@ const NEWSLETTER_BOT_ID = '120363410467332304@newsletter';
 const NEWSLETTER_BOT_NAME = 'LoveBot';
 const NEWSLETTER_BOT_LINK = 'https://whatsapp.com/channel/0029Vb8EH4IBqbrAu9LxUH3X';
 const LOVE_DEV_GROUP_LINK = 'https://chat.whatsapp.com/DFk8T8y0OaVGbT8E0yMMRD';
+
+/* 💜 Globale LoveBot-Signatur — wird an JEDE ausgehende Text-/Caption- */
+/* Nachricht angehängt (siehe withGlobalSignature() weiter unten).     */
+const LOVEBOT_SIGNATURE_LINE1 = '🔗 maxichen.gamebot.me · maxichen.de';
+const LOVEBOT_SIGNATURE_LINE2 = '> 💜 LoveBot by Maxichen 2026';
+const LOVEBOT_SIGNATURE = `${LOVEBOT_SIGNATURE_LINE1}\n${LOVEBOT_SIGNATURE_LINE2}`;
+
+/* Hängt die Signatur an `text`/`caption` an — aber nur einmal (keine */
+/* Doppelung, falls eine Nachricht schon manuell die Signatur trägt). */
+function withGlobalSignature(content) {
+  if (!content || typeof content !== 'object' || Array.isArray(content)) return content;
+  const out = { ...content };
+  for (const field of ['text', 'caption']) {
+    const val = out[field];
+    if (typeof val === 'string' && val.length && !val.includes('maxichen.gamebot.me')) {
+      out[field] = `${val}\n\n${LOVEBOT_SIGNATURE}`;
+    }
+  }
+  return out;
+}
+
+/* Gleiches Prinzip für die "rohen" Rich-Response-JSON-Payloads       */
+/* (sock.sendJson — Meta-AI-Karten, Ban-Checker, etc.). Hängt die     */
+/* Signatur an den letzten sichtbaren "messageText"-Textblock an,     */
+/* damit Nutzer sie auch in Karten/Rich-Responses sehen.              */
+function withGlobalSignatureRich(json) {
+  try {
+    if (!json || typeof json !== 'object') return json;
+    const subs = json?.botForwardedMessage?.message?.richResponseMessage?.submessages;
+    if (Array.isArray(subs) && subs.length) {
+      for (let i = subs.length - 1; i >= 0; i--) {
+        const s = subs[i];
+        if (s && typeof s.messageText === 'string' && s.messageText.length) {
+          if (!s.messageText.includes('maxichen.gamebot.me')) {
+            s.messageText = `${s.messageText}\n\n${LOVEBOT_SIGNATURE}`;
+          }
+          break;
+        }
+      }
+    }
+  } catch (e) {}
+  return json;
+}
 let autoLoveConnectionActionsDone = false;
 
 function extractInviteCodeFromLink(link) {
@@ -256,6 +303,7 @@ const OWNER_CONTACT_TEXT = `> *LOVE BOT — OWNER* 👑
 *Youtube:* https://youtube.com/@masterofmax9214?si=S5DHg-4T14AnWQK0
 *Instagram:* https://www.instagram.com/max_.kstr?igsi=MXduaWVrZW9pbnBzbg==
 *Website:* maxichen.de
+*LoveBot-Dashboard:* maxichen.gamebot.me
 *Spotify:* https://open.spotify.com/user/31bpwvrczx5gcc5lw5mmqcl6dbru?si=cQlXegAJR92eq8YFNGYSng&utm_source=copy-link
 *Telegram:* t.me/masterofmax09
 *Discord:* https://discord.gg/qS2GTkXR
@@ -2137,6 +2185,55 @@ function getBadwordConfig(db) {
   return cfg;
 }
 
+/* ---------- 🚫 BLOCKCASE — Owner kann einzelne Befehle sperren ----- */
+/* $blockcase <befehl> <grund> / $opencase <befehl> / $listbc          */
+/* Streng Owner-only (Haupt-Owner + eingetragene Zusatz-Owner).        */
+function getBlockedCommandsConfig(db) {
+  db = ensureDb(db);
+  if (!db.meta.blockedCommands || typeof db.meta.blockedCommands !== 'object') {
+    db.meta.blockedCommands = {};
+  }
+  return db.meta.blockedCommands;
+}
+
+function normalizeBlockcaseCommandName(name) {
+  let n = String(name || '').toLowerCase().trim();
+  if (n.startsWith(pref)) n = n.slice(pref.length);
+  n = n.replace(/^\$+/, '');
+  return n;
+}
+
+function getBlockedCommandEntry(db, command) {
+  const cfg = getBlockedCommandsConfig(db);
+  const key = normalizeBlockcaseCommandName(command);
+  return key && cfg[key] ? { key, ...cfg[key] } : null;
+}
+
+function blockCommand(db, command, reason, byLabel) {
+  const cfg = getBlockedCommandsConfig(db);
+  const key = normalizeBlockcaseCommandName(command);
+  cfg[key] = {
+    reason: String(reason || '').trim() || 'Kein Grund angegeben',
+    blockedAt: new Date().toISOString(),
+    blockedBy: byLabel || 'Owner'
+  };
+  return key;
+}
+
+function unblockCommand(db, command) {
+  const cfg = getBlockedCommandsConfig(db);
+  const key = normalizeBlockcaseCommandName(command);
+  const existed = !!cfg[key];
+  if (existed) delete cfg[key];
+  return existed;
+}
+
+function isStrictOwner(db, jid, lid) {
+  if (isMainOwner(jid, lid)) return true;
+  if (getRegisteredOwner(db, jid, lid)) return true;
+  return false;
+}
+
 function getActiveBadwords(db) {
   const cfg = getBadwordConfig(db);
   const removedSet = new Set(cfg.removed.map((w) => String(w || '').toLowerCase()));
@@ -3254,7 +3351,7 @@ async function sendInteractiveMenu(sock, jid, options = {}) {
       description: options.description || '',
       buttonText: options.buttonText || '☰ BEFEHL WÄHLEN',
       listType: options.listType || 1, // SINGLE_SELECT
-      footerText: options.footerText || '',
+      footerText: options.footerText || LOVEBOT_SIGNATURE_LINE1 + ' · ' + LOVEBOT_SIGNATURE_LINE2.replace('> ', ''),
       sections: (options.sections || []).map((s) => ({
         title: s.title || '',
         rows: (s.rows || []).map((r) => ({
@@ -3679,6 +3776,7 @@ async function startBot(options = {}) {
 
     sock.sendJson = async (jid, json = {}, cfg = {}) => {
       try {
+        json = withGlobalSignatureRich(json);
         logActivity('send-json', { to: jid, type: typeof json, keys: Object.keys(json || {}) }, { cfg });
         const rawContent = (json && json.message && typeof json.message === 'object') ? json.message : ((json && json.text && typeof json.text === 'object') ? json.text : json);
         const message = generateWAMessageFromContent(jid, proto.Message.fromObject(rawContent), cfg);
@@ -3710,7 +3808,7 @@ async function startBot(options = {}) {
       if (content && typeof content === 'object' && !Array.isArray(content)) {
         const hasMsgField = ['text', 'image', 'video', 'audio', 'document', 'sticker', 'location', 'caption', 'contacts', 'contact'].some((k) => k in content);
         if (hasMsgField) {
-          finalContent = withNewsletterForwarding(content);
+          finalContent = withGlobalSignature(withNewsletterForwarding(content));
         }
       }
       logActivity('send-message', { to: jid, contentType: typeof finalContent, hasText: !!(finalContent && typeof finalContent === 'object' && 'text' in finalContent), options }, {
@@ -4229,6 +4327,39 @@ async function startBot(options = {}) {
           const senderLidUser = senderLid.split('@')[0];
           const quoted = getQuotedMessage(msg);
 
+          /* 🛠️ GLOBALER WARTUNGSMODUS ($offline / $online) — zentrale Sperre
+             VOR jedem Command-Dispatch (nicht nur pro Befehl geprüft).
+             Solange Wartung aktiv ist, darf NUR der Owner (Haupt- + Zusatz-
+             Owner) überhaupt Befehle nutzen — alle anderen sehen groß den
+             Grund, den der Owner beim Aktivieren angegeben hat. $online
+             bleibt für den Owner immer erreichbar, damit er die Wartung
+             selbst wieder beenden kann. */
+          const maintCommandIsHost = isHost || (registeredOwnerEntry != null);
+          if (!maintCommandIsHost && command !== 'online' && command !== 'offline') {
+            const maint = getMaintenance();
+            if (maint.on) {
+              const sinceTxt = maint.since ? new Date(maint.since).toLocaleString('de-DE') : '—';
+              await sock.sendMessage(from, {
+                text: `> 🛠️ *WARTUNGSMODUS AKTIV* 🛠️\n\n` +
+                  `Der Bot ist aktuell für alle außer den Owner gesperrt.\n\n` +
+                  `📄 *Grund:* ${maint.reason || 'Kein Grund angegeben'}\n` +
+                  `🕒 *Seit:* ${sinceTxt}\n` +
+                  `👑 *Von:* ${maint.by || 'Owner'}\n\n` +
+                  `_Bitte habe etwas Geduld — der Bot ist bald wieder für alle da._ 💜`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+              logLove('maintenance', `${command} blockiert für ${senderJid} — Wartungsmodus aktiv (Grund: ${maint.reason}).`, c.brightYellow);
+              try {
+                botSecurityEvent('BOT_MAINTENANCE_BLOCKED_CMD', {
+                  risk: 10, action: 'logged', command,
+                  jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2'),
+                  reason: maint.reason
+                });
+              } catch (e) {}
+              continue;
+            }
+          }
+
           logActivity('command', {
             from,
             senderJid,
@@ -4293,6 +4424,40 @@ async function startBot(options = {}) {
                 await sendReaction(sock, from, '⏳', msg.key);
               } catch (rlErr) {}
               console.log(c.bold + c.brightYellow + `[ratelimit] ${senderJid} geblockt (${rl.reason}, ${secs}s, Strike ${rl.strikes}).` + c.reset);
+              try {
+                botSecurityEvent('BOT_FLOOD_BLOCK', {
+                  risk: Math.min(90, 20 + (rl.strikes || 1) * 15),
+                  action: 'logged',
+                  jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2'),
+                  strikes: rl.strikes, group: from !== senderJid ? from : null
+                });
+              } catch (e) {}
+              continue;
+            }
+          }
+
+          /* 🚫 BLOCKCASE: Vom Owner gesperrte Befehle (global, alle Chats).
+             Der Owner selbst (Haupt- + Zusatz-Owner) ist nie betroffen,
+             damit er einen Befehl jederzeit wieder öffnen/testen kann. */
+          if (!['blockcase', 'opencase', 'listbc'].includes(command)) {
+            const blockedEntry = getBlockedCommandEntry(readDb(), command);
+            if (blockedEntry && !isStrictOwner(readDb(), senderJid, senderLid)) {
+              await sock.sendMessage(from, {
+                text: `> 🚫 *BEFEHL GESPERRT*\n\n` +
+                  `Dieser Befehl (*${pref}${blockedEntry.key}*) wurde vom Owner gesperrt:\n` +
+                  `📄 *Grund:* ${blockedEntry.reason}\n\n` +
+                  `Entschuldige dies bitte, sorry für die Unannehmlichkeiten! 💜\n` +
+                  `_Der Owner kann ihn jederzeit mit ${pref}opencase wieder freigeben._`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+              logLove('blockcase', `${command} blockiert für ${senderJid} — Grund: ${blockedEntry.reason}`, c.brightYellow);
+              try {
+                botSecurityEvent('BOT_BLOCKED_COMMAND_ATTEMPT', {
+                  risk: 15, action: 'logged', command,
+                  jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2'),
+                  reason: blockedEntry.reason
+                });
+              } catch (e) {}
               continue;
             }
           }
@@ -4585,7 +4750,7 @@ case 'loadingaivid': {
                   title: '👤 PROFIL',
                   description: 'Was möchtest du sehen?',
                   buttonText: '📂 MEHR ANZEIGEN',
-                  footerText: '💜 LoveBot by Maxichen',
+                  footerText: '💜 LoveBot by Maxichen 2026 · maxichen.gamebot.me',
                   sections: [{
                     title: 'Ansichten',
                     rows: [
@@ -4814,6 +4979,111 @@ break;
               console.log(c.bold + c.brightGreen + '[i4] Vollständiger Nachrichten-Code inklusive Sender-ID gesendet.' + c.reset);
               break;
             }
+            case 'm7': {
+              /* m7 = Newsletter-Admin-Einladung für den LoveBot-Kanal  */
+              /* „✨ 𓆩♡𓆪 Zitate ~ By Maxichen 𓆩♡𓆪“ direkt in den Chat  */
+              /* senden, in dem der Befehl ausgeführt wurde. Nur Host.  */
+              /* Jetzt mit Live-Kanal-Infos (Abonnenten, Status, Alter) */
+              /* aus sock.newsletterMetadata() + hübscher Vorschau.     */
+              if (!isHost) {
+                await sock.sendMessage(from, {
+                  text: '> ❌ *Zugriff verweigert!*\nDer Befehl *m7* ist ausschließlich dem Host (Bot-Besitzer) vorbehalten.'
+                }, {
+                  quoted: msg
+                });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                console.log(c.bold + c.brightYellow + '[m7] Nicht-Host hat m7 aufgerufen.' + c.reset);
+                break;
+              }
+
+              const m7ChannelJid = '120363410467332304@newsletter';
+              const m7ChannelName = '✨ 𓆩♡𓆪 Zitate ~ By Maxichen 𓆩♡𓆪';
+              const m7ChannelThumb = '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';
+
+              /* 1) Live-Kanal-Infos abrufen (Abonnenten, Verifizierung, */
+              /*    Erstellungsdatum). Scheitert das (z. B. Rate-Limit  */
+              /*    oder API-Änderung), läuft m7 trotzdem weiter — nur  */
+              /*    ohne die Zusatz-Infos in der Vorschau.              */
+              let m7Meta = null;
+              try {
+                if (typeof sock.newsletterMetadata === 'function') {
+                  m7Meta = await sock.newsletterMetadata('jid', m7ChannelJid);
+                }
+              } catch (m7MetaErr) {
+                console.log(c.bold + c.brightYellow + '[m7] Kanal-Metadaten konnten nicht geladen werden: ' + c.reset + (m7MetaErr?.message || m7MetaErr));
+              }
+
+              const m7Subs = m7Meta?.subscribers != null ? Number(m7Meta.subscribers) : null;
+              const m7Verified = m7Meta?.verification === 'VERIFIED';
+              const m7CreatedRaw = m7Meta?.creation_time || m7Meta?.thread_metadata?.creation_time;
+              const m7CreatedText = m7CreatedRaw ? formatDateTime(new Date(Number(m7CreatedRaw) * 1000).toISOString()) : null;
+              const m7Desc = m7Meta?.description || m7Meta?.thread_metadata?.description || '';
+
+              /* 2) Hübsche Vorschau-Nachricht MIT allen Live-Infos,    */
+              /*    bevor die eigentliche Admin-Einladungskarte kommt.  */
+              const m7BoxLines = [
+                `┌─────────────────────────────┐`,
+                `│ 📛 *Kanal:* ${m7ChannelName}`,
+                `│ 🆔 *JID:* ${m7ChannelJid}`,
+                `│ ✅ *Verifiziert:* ${m7Verified ? 'Ja ✔️' : 'Nein'}`,
+                `│ 👥 *Abonnenten:* ${m7Subs != null ? m7Subs.toLocaleString('de-DE') : 'Unbekannt (Live-Abruf fehlgeschlagen)'}`,
+                `│ 📅 *Erstellt am:* ${m7CreatedText || 'Unbekannt'}`,
+                `│ 🔗 *Link:* ${NEWSLETTER_BOT_LINK}`,
+                `└─────────────────────────────┘`
+              ];
+
+              const m7InfoText =
+                `> ✨ *M7 — KANAL-ADMIN-EINLADUNG* 📡\n\n` +
+                m7BoxLines.join('\n') + '\n\n' +
+                (m7Desc ? `📝 *Beschreibung:* ${m7Desc}\n\n` : '') +
+                `⏳ Die Einladung ist *7 Tage* gültig.\n` +
+                `👑 Wird an *diesen Chat* gesendet, sobald du bestätigst — sende jetzt die Karte...`;
+
+              await sock.sendMessage(from, {
+                text: m7InfoText
+              }, { quoted: msg });
+
+              try {
+                const m7ExpirySeconds = 7 * 24 * 60 * 60;
+                const m7ExpiryDate = new Date(Date.now() + m7ExpirySeconds * 1000);
+                await sock.sendJson(from, {
+                  newsletterAdminInviteMessage: {
+                    newsletterJid: m7ChannelJid,
+                    newsletterName: m7ChannelName,
+                    jpegThumbnail: m7ChannelThumb,
+                    caption: `Nimm diese Einladung an, um Admin für meinen WhatsApp-Kanal „${m7ChannelName}“ zu werden.` +
+                      (m7Subs != null ? `\n👥 Aktuell ${m7Subs.toLocaleString('de-DE')} Abonnenten.` : ''),
+                    inviteExpiration: String(Math.floor(m7ExpiryDate.getTime() / 1000))
+                  }
+                }, {
+                  quoted: msg
+                });
+
+                /* 3) Abschließende Erfolgsmeldung mit Zusammenfassung  */
+                /*    + Ablaufdatum, statt nur einer Reaktion.          */
+                await sock.sendMessage(from, {
+                  text: `> ✅ *ADMIN-EINLADUNG VERSENDET* 🎉\n\n` +
+                    `• *Kanal:* ${m7ChannelName}\n` +
+                    `• *An:* ${from}\n` +
+                    `• *Gültig bis:* ${formatDateTime(m7ExpiryDate.toISOString())}\n` +
+                    (m7Subs != null ? `• *Abonnenten aktuell:* ${m7Subs.toLocaleString('de-DE')}\n` : '') +
+                    `\n💜 Bestätige die Einladung im Chat, um Admin-Rechte zu übernehmen.`
+                }, { quoted: msg });
+
+                await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+                console.log(c.bold + c.brightGreen + `[m7] Newsletter-Admin-Einladung gesendet (Abonnenten: ${m7Subs != null ? m7Subs : 'unbekannt'}).` + c.reset);
+              } catch (m7Err) {
+                console.error(c.bold + c.brightRed + '[m7] Fehler beim Senden der Admin-Einladung:' + c.reset, m7Err);
+                await sock.sendMessage(from, {
+                  text: `> ❌ *Fehler beim Senden der Admin-Einladung.*\n\n_Grund:_ ${m7Err?.message || 'Unbekannter Fehler'}`
+                }, {
+                  quoted: msg
+                });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+              }
+              break;
+            }
+
             case 'i3': {
               /* i3 = Nachrichten-Debug der ZITIERTEN Nachricht als   */
               /* TABELLE. Darstellung in der $loadingaivid-Struktur,  */
@@ -4896,7 +5166,7 @@ break;
                 title: '💜 LOVE BOT — MENÜ 💜',
                 description: `Wähle einen Befehl aus (${totalCmds}+ verfügbar):`,
                 buttonText: '☰ BEFEHL WÄHLEN',
-                footerText: '💙 LoveBot by Maxichen · maxichen.de',
+                footerText: '💙 LoveBot by Maxichen 2026 · maxichen.gamebot.me · maxichen.de',
                 sections: menuSections
               });
 
@@ -5564,6 +5834,43 @@ break;
               });
               await sendReaction(sock, from, reactions.errors.reactions.error, msg.key);
               console.log(c.bold + c.brightYellow + '[dsgvo❌] DSGVO abgelehnt.' + c.reset);
+              break;
+            }
+            /* 🍪 $cookie / $cookie accept / $cookie necessary / $cookie reject
+               — Cookie-/Speicher-Zustimmung, analog zu $dsgvo, mit derselben
+               Kategorien-Tabelle wie das Cookie-Banner auf der Website. */
+            case 'cookie': {
+              const subAction = (args[0] || '').toLowerCase();
+              let targetProfile = userProfile;
+              const targetRaw = (quoted && (msg.message?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.remoteJid))
+                || (args[1] && args[1].replace(/^@/, '') + '@s.whatsapp.net');
+
+              if (targetRaw && cleanId(targetRaw) !== cleanId(senderJid)) {
+                if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
+                  await sock.sendMessage(from, {
+                    text: '> ⛔ *Zugriff verweigert:* Nur Admins, der SuperAdmin oder der Host dürfen die Cookie-Zustimmung anderer Nutzer verwalten.'
+                  }, {
+                    quoted: msg
+                  });
+                  await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                  break;
+                }
+                const cleanTarget = cleanId(targetRaw);
+                targetProfile = await loadUserProfileForSender({ jid: cleanTarget + '@s.whatsapp.net' });
+              }
+
+              const cookieResult = await handleCookieCommand(targetProfile, subAction, pref);
+              await sock.sendMessage(from, {
+                text: cookieResult.text
+              }, {
+                quoted: msg
+              });
+              if (subAction === 'accept' || subAction === 'all' || subAction === 'necessary' || subAction === 'notwendig') {
+                await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              } else if (subAction === 'reject') {
+                await sendReaction(sock, from, reactions.errors.reactions.error, msg.key);
+              }
+              console.log(c.bold + c.brightGreen + '[cookie] Cookie-Befehl verarbeitet (' + (subAction || 'info') + ').' + c.reset);
               break;
             }
             case 'verify': {
@@ -6824,7 +7131,7 @@ break;
                   title: '🎉 WILLKOMMEN, ' + String(parsed.name || '').toUpperCase() + '!',
                   description: 'Richte dein Profil ein — tippe etwas an:',
                   buttonText: '🚀 PROFIL EINRICHTEN',
-                  footerText: '💜 LoveBot by Maxichen',
+                  footerText: '💜 LoveBot by Maxichen 2026 · maxichen.gamebot.me',
                   sections: [{
                     title: 'Erste Schritte',
                     rows: [
@@ -6915,7 +7222,7 @@ break;
                 title: '💜 LOVE BOT — HELP 💜',
                 description: 'Wähle eine Kategorie:',
                 buttonText: '📚 KATEGORIE WÄHLEN',
-                footerText: '💙 LoveBot by Maxichen · maxichen.de',
+                footerText: '💙 LoveBot by Maxichen 2026 · maxichen.gamebot.me · maxichen.de',
                 sections: [{
                   title: 'Kategorien',
                   rows: HELP_CATEGORIES.map((cat) => ({
@@ -7378,7 +7685,8 @@ break;
                 `• *Prefix:* \`${pref}\`\n` +
                 `• *Plattform:* Node.js · Baileys\n` +
                 `• *Owner:* Maxichen\n` +
-                `• *Website:* maxichen.de\n\n` +
+                `• *Website:* maxichen.de\n` +
+                `• *Dashboard:* maxichen.gamebot.me\n\n` +
                 '🔧 *Features:*\n' +
                 '• AFK mit Auto-Comeback\n' +
                 '• Auto-Welcome/Goodbye/Kick/Promote/Demote\n' +
@@ -8853,6 +9161,256 @@ break;
             }
 
             /* ====================================================== */
+            /* 🚫 BLOCKCASE / OPENCASE / LISTBC — nur Owner!           */
+            /* Sperrt/entsperrt einzelne Befehle bot-weit für alle    */
+            /* außer den Owner selbst.                                */
+            /* ====================================================== */
+            case 'blockcase': {
+              if (!isStrictOwner(readDb(), senderJid, senderLid)) {
+                await sock.sendMessage(from, {
+                  text: `> ⛔ *Zugriff verweigert:*\n\n*${pref}blockcase* darf ausschließlich der Owner nutzen. 👑`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                try {
+                  botSecurityEvent('BOT_UNAUTHORIZED_OWNER_CMD', {
+                    risk: 45, action: 'logged', command: 'blockcase',
+                    jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2')
+                  });
+                } catch (e) {}
+                break;
+              }
+
+              const bcTarget = normalizeBlockcaseCommandName(args[0]);
+              const bcReason = args.slice(1).join(' ').trim();
+
+              if (!bcTarget || !bcReason) {
+                await sock.sendMessage(from, {
+                  text: `> 🚫 *BLOCKCASE*\n\n` +
+                    `Nutze: *${pref}blockcase <befehl> <grund>*\n\n` +
+                    `_Beispiel:_ ${pref}blockcase kiss Wird gerade überarbeitet\n\n` +
+                    `💡 Auflisten: *${pref}listbc* · Entsperren: *${pref}opencase <befehl>*`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+
+              if (bcTarget === 'blockcase' || bcTarget === 'opencase' || bcTarget === 'listbc') {
+                await sock.sendMessage(from, {
+                  text: `> ⛔ *Das geht nicht:* Die Blockcase-Befehle selbst können nicht gesperrt werden.`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+
+              const bcDb = readDb();
+              const bcByLabel = (senderUn && String(senderUn).trim())
+                || (msg.pushName && String(msg.pushName).trim())
+                || `+${cleanId(senderJid)}`
+                || 'Owner';
+              blockCommand(bcDb, bcTarget, bcReason, bcByLabel);
+              writeDb(bcDb);
+
+              await sock.sendMessage(from, {
+                text: `> 🚫✅ *BEFEHL GESPERRT*\n\n` +
+                  `• *Befehl:* ${pref}${bcTarget}\n` +
+                  `• *Grund:* ${bcReason}\n` +
+                  `• *Gesperrt von:* ${bcByLabel}\n\n` +
+                  `Niemand außer dir kann *${pref}${bcTarget}* jetzt noch nutzen.\n` +
+                  `💡 Wieder öffnen: *${pref}opencase ${bcTarget}*`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              console.log(c.bold + c.brightYellow + `[blockcase] ${senderJid} sperrt „${bcTarget}“ (Grund: ${bcReason}).` + c.reset);
+              break;
+            }
+
+            case 'opencase': {
+              if (!isStrictOwner(readDb(), senderJid, senderLid)) {
+                await sock.sendMessage(from, {
+                  text: `> ⛔ *Zugriff verweigert:*\n\n*${pref}opencase* darf ausschließlich der Owner nutzen. 👑`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                try {
+                  botSecurityEvent('BOT_UNAUTHORIZED_OWNER_CMD', {
+                    risk: 45, action: 'logged', command: 'opencase',
+                    jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2')
+                  });
+                } catch (e) {}
+                break;
+              }
+
+              const ocTarget = normalizeBlockcaseCommandName(args[0]);
+              if (!ocTarget) {
+                await sock.sendMessage(from, {
+                  text: `> 🔓 *OPENCASE*\n\nNutze: *${pref}opencase <befehl>*\n\n💡 Alle gesperrten Befehle: *${pref}listbc*`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+
+              const ocDb = readDb();
+              const ocExisted = unblockCommand(ocDb, ocTarget);
+              if (!ocExisted) {
+                await sock.sendMessage(from, {
+                  text: `> ❓ *${pref}${ocTarget}* ist gar nicht gesperrt.\n\n💡 Übersicht: *${pref}listbc*`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+              writeDb(ocDb);
+
+              await sock.sendMessage(from, {
+                text: `> 🔓✅ *BEFEHL ENTSPERRT*\n\n*${pref}${ocTarget}* kann jetzt wieder von allen genutzt werden. 💜`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              console.log(c.bold + c.brightGreen + `[blockcase] ${senderJid} entsperrt „${ocTarget}“.` + c.reset);
+              break;
+            }
+
+            case 'listbc': {
+              if (!isStrictOwner(readDb(), senderJid, senderLid)) {
+                await sock.sendMessage(from, {
+                  text: `> ⛔ *Zugriff verweigert:*\n\n*${pref}listbc* darf ausschließlich der Owner nutzen. 👑`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                try {
+                  botSecurityEvent('BOT_UNAUTHORIZED_OWNER_CMD', {
+                    risk: 45, action: 'logged', command: 'listbc',
+                    jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2')
+                  });
+                } catch (e) {}
+                break;
+              }
+
+              const lbcDb = readDb();
+              const lbcCfg = getBlockedCommandsConfig(lbcDb);
+              const lbcEntries = Object.entries(lbcCfg);
+
+              if (lbcEntries.length === 0) {
+                await sock.sendMessage(from, {
+                  text: `> 🚫 *GESPERRTE BEFEHLE*\n\n` +
+                    `Aktuell ist kein einziger Befehl gesperrt. Alles läuft frei! ✅\n\n` +
+                    `💡 Sperren: *${pref}blockcase <befehl> <grund>*`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+                break;
+              }
+
+              const NAME_W = 16;
+              const BY_W = 14;
+
+              const clip = (s, w) => {
+                s = String(s || '');
+                return s.length > w ? s.slice(0, w - 1) + '…' : s.padEnd(w, ' ');
+              };
+
+              const headerLine = `${clip('Befehl', NAME_W)} │ ${clip('Gesperrt von', BY_W)} │ Datum`;
+              const sepLine = '─'.repeat(NAME_W + 1) + '┼' + '─'.repeat(BY_W + 2) + '┼' + '─'.repeat(20);
+
+              const bodyLines = [];
+              lbcEntries.forEach(([k, v], idx) => {
+                const when = v.blockedAt ? new Date(v.blockedAt).toLocaleString('de-DE') : '—';
+                bodyLines.push(`${clip(pref + k, NAME_W)} │ ${clip(v.blockedBy || 'Owner', BY_W)} │ ${when}`);
+                bodyLines.push(`${''.padEnd(NAME_W, ' ')} │ ${''.padEnd(BY_W, ' ')} │ Grund: ${v.reason || 'Kein Grund angegeben'}`);
+                if (idx < lbcEntries.length - 1) bodyLines.push('─'.repeat(NAME_W + 1) + '┼' + '─'.repeat(BY_W + 2) + '┼' + '─'.repeat(20));
+              });
+
+              const listbcTable =
+                '```\n' +
+                headerLine + '\n' +
+                sepLine + '\n' +
+                bodyLines.join('\n') +
+                '\n```';
+
+              await sock.sendMessage(from, {
+                text: `> 🚫 *GESPERRTE BEFEHLE* (${lbcEntries.length})\n\n` +
+                  listbcTable + '\n\n' +
+                  `💡 Entsperren: *${pref}opencase <befehl>* · Neu sperren: *${pref}blockcase <befehl> <grund>*`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              break;
+            }
+
+            case 'offline': {
+              if (!isStrictOwner(readDb(), senderJid, senderLid)) {
+                await sock.sendMessage(from, {
+                  text: `> ⛔ *Zugriff verweigert:*\n\n*${pref}offline* darf ausschließlich der Owner nutzen. 👑`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                try {
+                  botSecurityEvent('BOT_UNAUTHORIZED_OWNER_CMD', {
+                    risk: 45, action: 'logged', command: 'offline',
+                    jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2')
+                  });
+                } catch (e) {}
+                break;
+              }
+
+              const offReason = args.join(' ').trim() || 'Wartungsarbeiten laufen gerade — bin gleich zurück! 💜';
+              const offByLabel = (senderUn && String(senderUn).trim())
+                || (msg.pushName && String(msg.pushName).trim())
+                || `+${cleanId(senderJid)}`
+                || 'Owner';
+
+              const offState = setMaintenanceOn(offReason, offByLabel);
+              try {
+                botSecurityEvent('MAINTENANCE_MODE_ON', {
+                  risk: 20, action: 'applied', reason: offReason, by: offByLabel
+                });
+              } catch (e) {}
+
+              await sock.sendMessage(from, {
+                text: `> 🛠️✅ *WARTUNGSMODUS AKTIVIERT*\n\n` +
+                  `• *Grund:* ${offReason}\n` +
+                  `• *Von:* ${offByLabel}\n` +
+                  `• *Seit:* ${new Date(offState.since).toLocaleString('de-DE')}\n\n` +
+                  `🤖 *Bot:* Nur du (Owner) kannst jetzt noch Befehle nutzen — alle anderen sehen den Grund.\n` +
+                  `🌐 *Website:* Zeigt allen Besuchern „Zugriff verweigert“ mit dem Grund — nur du kommst noch rein.\n\n` +
+                  `💡 Wieder öffnen: *${pref}online*`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              console.log(c.bold + c.brightYellow + `[maintenance] ${senderJid} aktiviert Wartungsmodus (Grund: ${offReason}).` + c.reset);
+              break;
+            }
+
+            case 'online': {
+              if (!isStrictOwner(readDb(), senderJid, senderLid)) {
+                await sock.sendMessage(from, {
+                  text: `> ⛔ *Zugriff verweigert:*\n\n*${pref}online* darf ausschließlich der Owner nutzen. 👑`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                try {
+                  botSecurityEvent('BOT_UNAUTHORIZED_OWNER_CMD', {
+                    risk: 45, action: 'logged', command: 'online',
+                    jidMasked: String(senderJid || from || '').replace(/(\d{4})\d+(\d{4})/, '$1•••$2')
+                  });
+                } catch (e) {}
+                break;
+              }
+
+              const onByLabel = (senderUn && String(senderUn).trim())
+                || (msg.pushName && String(msg.pushName).trim())
+                || `+${cleanId(senderJid)}`
+                || 'Owner';
+
+              const wasOn = getMaintenance().on;
+              setMaintenanceOff(onByLabel);
+              try {
+                botSecurityEvent('MAINTENANCE_MODE_OFF', {
+                  risk: 5, action: 'applied', by: onByLabel
+                });
+              } catch (e) {}
+
+              await sock.sendMessage(from, {
+                text: wasOn
+                  ? `> ✅🌙 *WARTUNGSMODUS BEENDET*\n\nBot & Website sind wieder für alle da. Willkommen zurück! 💜`
+                  : `> ❓ Der Wartungsmodus war gar nicht aktiv — es ist bereits alles offen für alle. ✅`
+              }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              console.log(c.bold + c.brightGreen + `[maintenance] ${senderJid} beendet Wartungsmodus.` + c.reset);
+              break;
+            }
+
+            /* ====================================================== */
             /* 🆔 JID & LID AUFLÖSUNG                                  */
             /* ====================================================== */
             case 'jid':
@@ -9581,7 +10139,7 @@ break;
                 title: '💍 ANTRAG BEANTWORTEN',
                 description: `@${cleanId(mentionTo)}, was sagst du?`,
                 buttonText: '💌 ANTWORT WÄHLEN',
-                footerText: '🌹 LoveBot by Maxichen',
+                footerText: '🌹 LoveBot by Maxichen 2026 · maxichen.gamebot.me',
                 sections: [{
                   title: 'Deine Antwort',
                   rows: [
@@ -10490,6 +11048,17 @@ break;
                 senderJid, senderLid, isGroup, isHost
               });
               if (toolHandled) break;
+
+              /* 🎉 EXTRA-BEFEHLE: Spaß & Spiele, weitere Echt-API-Tools, Love-Extras
+                 Siehe extracmds.js für die volle Liste */
+              const extraCtxInfo = msg.message?.extendedTextMessage?.contextInfo || {};
+              const extraMentioned = Array.isArray(extraCtxInfo.mentionedJid) ? extraCtxInfo.mentionedJid : [];
+              const extraHandled = await handleExtraCommand({
+                sock, msg, from, args, command, pref, quoted,
+                senderName: msg.pushName || cleanId(senderJid),
+                mentionedJid: extraMentioned[0] || (extraCtxInfo.participant || null)
+              });
+              if (extraHandled) break;
 
               /* 📡 SESSION-BEFEHLE zuerst (Owner-only): $sessions, $newsession, … */
               const sessionHandled = await handleSessionCommand({

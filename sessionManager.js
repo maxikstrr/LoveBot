@@ -268,7 +268,53 @@ export function trackCommand(id = 'main', command = '') {
   if (!s) return;
   s.commands++;
   s.lastSeen = Date.now();
+  const name = String(command || '').trim().toLowerCase().split(/\s+/)[0];
+  if (name) {
+    store.commandStats ||= {};
+    const day = new Date().toISOString().slice(0, 10);
+    store.commandStats[name] = (store.commandStats[name] || 0) + 1;
+    store.commandStatsDaily ||= {};
+    store.commandStatsDaily[day] ||= {};
+    store.commandStatsDaily[day][name] = (store.commandStatsDaily[day][name] || 0) + 1;
+    /* nur die letzten 30 Tage behalten, damit die Datei nicht unbegrenzt wächst */
+    const days = Object.keys(store.commandStatsDaily).sort();
+    while (days.length > 30) delete store.commandStatsDaily[days.shift()];
+  }
   saveStore(store);
+}
+
+/* Meistgenutzte Befehle über alle Sessions/Zeit hinweg (Basis für Analytics/Statistics) */
+export function topCommands(limit = 10) {
+  const store = loadStore();
+  const stats = store.commandStats || {};
+  return Object.entries(stats)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name, count]) => ({ name, count }));
+}
+
+/* Gesamtzahl aller getrackten Befehlsaufrufe (Summe commandStats) */
+export function totalCommandCalls() {
+  const store = loadStore();
+  const stats = store.commandStats || {};
+  return Object.values(stats).reduce((a, b) => a + b, 0);
+}
+
+/* Aktivität der letzten N Tage (für Aktivitätskalender) — Anzahl Befehle pro Tag */
+export function commandActivityByDay(days = 14) {
+  const store = loadStore();
+  const daily = store.commandStatsDaily || {};
+  const out = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const dayStats = daily[key] || {};
+    const total = Object.values(dayStats).reduce((a, b) => a + b, 0);
+    out.push({ date: key, total });
+  }
+  return out;
 }
 
 export function trackError(id = 'main', note = '') {

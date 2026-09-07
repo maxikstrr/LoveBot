@@ -464,89 +464,35 @@ function checkCommandAccess(senderProfile, groupProfile, role, isGroup, command,
     };
   }
 
-  /* Normale Bot-Befehle sind in jedem Chat und für jede WhatsApp-ID offen.
-     Administrative Befehle prüfen ihre Rechte weiterhin direkt im Handler. */
-  return {
-    allowed: true
-  };
-
-  const isOnboarding = ['dsgvo', 'dsgvo✅', 'dsgvo❌', 'verify', 'verify✅', 'verify❌', 'help', 'love', 'socials'].includes(command);
-
+  /* Host, Zusatz-Owner, SuperAdmins und Gruppen-Admins sind vom
+     DSGVO-Zwang ausgenommen (der Betreiber selbst braucht keine
+     Zustimmung zu seinem eigenen Bot). */
   if (role === 'host' || role === 'superadmin' || role === 'admin') {
     return {
       allowed: true
     };
   }
 
-  if (isGroup) {
-    if (!groupProfile || groupProfile.active !== true) {
-      if (isOnboarding) {
-        return {
-          allowed: true
-        };
-      }
-      return {
-        allowed: false,
-        message: `> ⛔ *Bot inaktiv:*\n` +
-          `Der Bot ist für diese Gruppe noch nicht freigeschaltet.\n` +
-          `Ein Admin oder der Host kann ihn mit *${pref}activate* aktivieren.`
-      };
-    }
+  /* 🔐 DSGVO-PFLICHT-ZUSTIMMUNG (verbindlich, vor jeder Bot-Nutzung):
+     Ein Nutzer, der der DSGVO noch nicht zugestimmt hat, darf AUSSER
+     dem Zustimmungs-Befehl selbst ($dsgvo) und den reinen
+     Info-/Hilfe-Befehlen keinen anderen Befehl ausführen. Das gilt
+     in Gruppen genauso wie im Privatchat. */
+  const DSGVO_ONBOARDING_COMMANDS = ['dsgvo', 'dsgvo✅', 'dsgvo❌', 'cookie', 'menu', 'help', 'ping'];
+  const isDsgvoOnboarding = DSGVO_ONBOARDING_COMMANDS.includes(command);
 
-    if (!senderProfile || !senderProfile.status || senderProfile.status.dsgvo.accepted !== true) {
-      if (['dsgvo', 'dsgvo✅', 'dsgvo❌', 'help'].includes(command)) {
-        return {
-          allowed: true
-        };
-      }
-      return {
-        allowed: false,
-        message: `> ⛔ *DSGVO erforderlich:*\n` +
-          `Du musst zuerst der DSGVO zustimmen mit *${pref}dsgvo accept*.`
-      };
-    }
+  const dsgvoAccepted = !!(senderProfile && senderProfile.status && senderProfile.status.dsgvo && senderProfile.status.dsgvo.accepted === true);
 
-    if (senderProfile.status.verified !== true) {
-      if (isOnboarding) {
-        return {
-          allowed: true
-        };
-      }
-      return {
-        allowed: false,
-        message: `> ⛔ *Verifizierung erforderlich:*\n` +
-          `Du bist noch nicht verifiziert. Nutze *${pref}verify accept* zur Freischaltung.`
-      };
-    }
-
-    return {
-      allowed: true
-    };
-  }
-
-  if (!senderProfile || !senderProfile.status || senderProfile.status.dsgvo.accepted !== true) {
-    if (['dsgvo', 'dsgvo✅', 'dsgvo❌', 'help'].includes(command)) {
-      return {
-        allowed: true
-      };
-    }
+  if (!dsgvoAccepted && !isDsgvoOnboarding) {
     return {
       allowed: false,
-      message: `> ⛔ *DSGVO erforderlich:*\n` +
-        `Du musst zuerst der DSGVO zustimmen mit *${pref}dsgvo accept*.`
-    };
-  }
-
-  if (senderProfile.status.verified !== true) {
-    if (isOnboarding) {
-      return {
-        allowed: true
-      };
-    }
-    return {
-      allowed: false,
-      message: `> ⛔ *Verifizierung erforderlich:*\n` +
-        `Du bist noch nicht verifiziert. Nutze *${pref}verify accept* zur Freischaltung.`
+      message: `> 🔐 *DATENSCHUTZ-ZUSTIMMUNG ERFORDERLICH*\n\n` +
+        `Bevor du LoveBot nutzen kannst, musst du einmalig der Datenschutzerklärung (DSGVO) zustimmen.\n\n` +
+        `📜 *So geht's:*\n` +
+        `• *${pref}dsgvo* — zeigt dir, welche Daten gespeichert werden\n` +
+        `• *${pref}dsgvo accept* — stimmst du zu, kannst du den Bot sofort nutzen\n` +
+        `• *${pref}dsgvo reject* — lehnst du ab, bleibt der Bot für dich gesperrt\n\n` +
+        `_Ohne Zustimmung werden außer diesem Hinweis keine weiteren Befehle ausgeführt._`
     };
   }
 
@@ -880,10 +826,22 @@ function createUserTemplate(jid, lid, bid, username = '') {
     },
     status: {
       dsgvo: {
-        accepted: true,
+        /* 🔐 Neue Profile starten OHNE Zustimmung — muss aktiv per
+           $dsgvo accept bestätigt werden, bevor der Bot nutzbar ist. */
+        accepted: false,
         acceptedAt: null,
         rejected: false,
         rejectedAt: null
+      },
+      cookie: {
+        /* 🍪 Analog zur DSGVO: eigener Zustimmungsstatus für den
+           „Cookie“-Hinweis des Bots (Speicherung von Session-/Profil-
+           daten in der lokalen Bot-Datenbank). */
+        accepted: false,
+        acceptedAt: null,
+        rejected: false,
+        rejectedAt: null,
+        analytics: false
       },
       verified: false,
       verifiedAt: null,
@@ -1106,6 +1064,95 @@ function handleDsgvoCommand(profile, subAction, pref = '¥') {
       `*Befehle:*\n` +
       `• *${pref}dsgvo accept* (oder *${pref}dsgvo✅*) — DSGVO akzeptieren\n` +
       `• *${pref}dsgvo reject* (oder *${pref}dsgvo❌*) — DSGVO ablehnen & zurückrufen`
+  };
+}
+
+/* 🍪 $cookie / $cookie accept / $cookie reject — analog zu $dsgvo, aber
+   für die „Cookie“-/Speicher-Zustimmung des Bots (technisch notwendiger
+   Speicher vs. optionale, anonyme Statistiken). Spiegelt das Cookie-
+   Banner der Website 1:1 im Chat. */
+function handleCookieCommand(profile, subAction, pref = '¥') {
+  if (!profile || !profile.status) {
+    return {
+      text: '> ❌ *Fehler beim Laden des User-Profils.*'
+    };
+  }
+
+  if (!profile.status.cookie) {
+    profile.status.cookie = { accepted: false, acceptedAt: null, rejected: false, rejectedAt: null, analytics: false };
+  }
+  const cookie = profile.status.cookie;
+
+  if (subAction === 'accept' || subAction === 'all') {
+    cookie.accepted = true;
+    cookie.rejected = false;
+    cookie.analytics = true;
+    cookie.acceptedAt = new Date().toISOString();
+    cookie.rejectedAt = null;
+    saveUserProfile(profile);
+    return {
+      text: `> *LoveBot — 🍪 COOKIE-ZUSTIMMUNG* ✅\n\n` +
+        `Danke! Du hast *alle* Kategorien akzeptiert (notwendig + anonyme Statistiken).\n` +
+        `• *Zeitstempel:* ${new Date(cookie.acceptedAt).toLocaleString('de-DE')}\n\n` +
+        `Nutze *${pref}cookie necessary* für „nur Notwendige“, oder *${pref}cookie reject* zum Widerrufen.`
+    };
+  }
+
+  if (subAction === 'necessary' || subAction === 'notwendig') {
+    cookie.accepted = true;
+    cookie.rejected = false;
+    cookie.analytics = false;
+    cookie.acceptedAt = new Date().toISOString();
+    cookie.rejectedAt = null;
+    saveUserProfile(profile);
+    return {
+      text: `> *LoveBot — 🍪 COOKIE-ZUSTIMMUNG* ✅\n\n` +
+        `Du nutzt nur *technisch notwendigen* Speicher — keine anonymen Statistiken.\n` +
+        `• *Zeitstempel:* ${new Date(cookie.acceptedAt).toLocaleString('de-DE')}`
+    };
+  }
+
+  if (subAction === 'reject') {
+    cookie.accepted = false;
+    cookie.rejected = true;
+    cookie.analytics = false;
+    cookie.acceptedAt = null;
+    cookie.rejectedAt = new Date().toISOString();
+    saveUserProfile(profile);
+
+    return {
+      text: `> *LoveBot — 🍪 COOKIE-WIDERRUF* ❌\n\n` +
+        `Deine Zustimmung wurde entzogen/abgelehnt.\n` +
+        `• *Zeitstempel:* ${new Date(cookie.rejectedAt).toLocaleString('de-DE')}\n\n` +
+        `_Ohne Zustimmung bleibt der Bot für dich gesperrt — außer $dsgvo/$cookie selbst._`
+    };
+  }
+
+  const cookieLabel = cookie.accepted ? (cookie.analytics ? 'Alle akzeptiert ✅' : 'Nur Notwendige ✅') : (cookie.rejected ? 'Abgelehnt ❌' : 'Offen ☑️');
+  const cookieDate = cookie.acceptedAt ? new Date(cookie.acceptedAt).toLocaleString('de-DE') : (cookie.rejectedAt ? new Date(cookie.rejectedAt).toLocaleString('de-DE') : 'Kein Datum hinterlegt');
+
+  const cookieTable =
+    '```\n' +
+    'Kategorie           │ Zweck                          │ Optional?\n' +
+    '────────────────────┼────────────────────────────────┼──────────\n' +
+    'Technisch notwendig │ Login-/Profil-Sitzung, DSGVO-  │ Nein\n' +
+    '                    │ & Verify-Status                │\n' +
+    '────────────────────┼────────────────────────────────┼──────────\n' +
+    'Anonyme Statistiken │ Aggregierte, nicht personen-   │ Ja\n' +
+    '                    │ bezogene Nutzungszahlen        │\n' +
+    '```';
+
+  return {
+    text: `> *LoveBot — 🍪 COOKIE- & SPEICHER-HINWEIS* 🍪\n\n` +
+      `Genau wie auf der Website nutzt auch der Bot lokalen Speicher für deine Sitzung/dein Profil. Hier die Kategorien:\n\n` +
+      cookieTable + '\n\n' +
+      `• *Aktueller Status:* ${cookieLabel}\n` +
+      `• *Datum:* ${cookieDate}\n\n` +
+      `*Befehle:*\n` +
+      `• *${pref}cookie accept* — alle Kategorien akzeptieren\n` +
+      `• *${pref}cookie necessary* — nur technisch notwendige\n` +
+      `• *${pref}cookie reject* — ablehnen & Zustimmung widerrufen\n\n` +
+      `📜 Mehr Details: *${pref}dsgvo* oder unsere Datenschutzerklärung auf der Website.`
   };
 }
 
@@ -2290,6 +2337,7 @@ const waApi = {
   saveUserProfile,
   addXp,
   handleDsgvoCommand,
+  handleCookieCommand,
   handleVerifyCommand,
   Database,
   LoveUser,
@@ -2428,6 +2476,7 @@ export {
   saveUserProfile,
   addXp,
   handleDsgvoCommand,
+  handleCookieCommand,
   handleVerifyCommand,
   Database,
   LoveUser,

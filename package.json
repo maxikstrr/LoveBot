@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node Love.js",
-    "watch": "node --watch Love.js"
+    "watch": "node --watch Love.js",
+    "web": "node server.js",
+    "web:watch": "node --watch server.js"
   },
   "keywords": [
     "whatsapp",

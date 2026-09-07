@@ -465,9 +465,20 @@ Das macht den Nutzer identifizierbar und gibt einen schnellen Überblick über s
 - `$url <link>` — Link analysieren
 - `$i2` / `$fetch` — zitierte Nachricht lesen
 - `$i3` — Debug-Info
+- `$m7` — *(nur Host)* Newsletter-Admin-Einladung für den LoveBot-Kanal in den aktuellen Chat senden — zeigt vorab eine Live-Info-Box (Abonnenten, Verifiziert-Status, Erstellungsdatum, Beschreibung) und danach eine Erfolgsmeldung mit Ablaufdatum der Einladung
 - `$owner` — Owner-Daten
 - `$love` / `$socials` — Love-/Socials-Links
 - `$gits` — GitHub-Links
+
+### 12.1a Extra-Befehle (Spaß, Tools, Love) — `extracmds.js`
+
+**Spaß & Spiele:** `$shipname <n1> & <n2>`, `$tarot`, `$wortkette <wort>`, `$anagram <wort>`, `$palindrom <text>`, `$mathequiz`, `$duell @user`, `$wuerfelduell @user` (Alias `$würfelduell`), `$sternzeichen TT.MM.[JJJJ]`, `$emoji <text>`
+
+**Nützliche Tools (echte APIs):** `$advice` (Alias `$lebensrat`), `$chucknorris`, `$kanye`, `$activity` (Alias `$langeweile`), `$iss`, `$meineip` (Alias `$meinip`), `$githubzen`, `$bmi <kg> <cm>`, `$countdown TT.MM.JJJJ`, `$tagderwoche TT.MM.JJJJ`, `$zeitzone <stadt>`
+
+**Love-Erweiterungen:** `$liebescheck @user`, `$kuschelvorschlag`, `$komplimentgenerator @user`
+
+_Insgesamt 24 neue Befehle, alle für jeden nutzbar, mit echten APIs (keine erfundenen Werte) und ehrlichen Fehlermeldungen bei nicht erreichbaren externen Diensten._
 
 ### 12.2 Profil & Info
 
@@ -490,7 +501,16 @@ Das macht den Nutzer identifizierbar und gibt einen schnellen Überblick über s
 
 - `$verify accept` / `$verify reject`
 - `$dsgvo accept` / `$dsgvo reject`
+- `$cookie accept` / `$cookie necessary` / `$cookie reject` — Cookie-/Speicher-Zustimmung im Chat, inkl. Kategorien-Tabelle (Technisch notwendig / Anonyme Statistiken), spiegelbildlich zum Cookie-Banner auf der Website
+- `$blockcase <befehl> <grund>` / `$opencase <befehl>` / `$listbc` — **nur Owner** (Haupt- + Zusatz-Owner): sperrt/entsperrt einzelne Befehle bot-weit für alle anderen Nutzer; wer einen gesperrten Befehl aufruft, bekommt eine freundliche Absage mit dem hinterlegten Grund; `$listbc` zeigt alle gesperrten Befehle als hübsche Tabelle
 - `$fp`
+
+**🔐 Wichtig — Zustimmungspflicht:** Ein neuer Nutzer wird automatisch OHNE DSGVO-Zustimmung angelegt.
+`checkCommandAccess()` in `waApi.js` blockiert dann jeden Befehl außer `$dsgvo`, `$menu`, `$help`, `$ping`,
+bis `$dsgvo accept` ausgeführt wurde. Host/Admin/SuperAdmin sind ausgenommen. Dieselbe Pflicht gilt
+spiegelbildlich auf der Website (Cookie-/DSGVO-Consent-Overlay auf jeder Seite + Pflicht-Checkbox bei
+der Dashboard-Registrierung, serverseitig in `/api/register` erzwungen). Siehe `public/datenschutz.html`
+für die vollständige Erklärung.
 
 ### 12.5 Media / AI
 

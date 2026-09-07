@@ -382,10 +382,45 @@ klickbaren Buttons (iOS **und** Android) anzeigt und **`Bilder/Menu.png`** als A
 - `$url <link>` – analysiert einen Link
 - `$i2` / `$fetch` – liest zitierte Nachrichten
 - `$i3` – zeigt Debug-Tabelle
+- `$m7` – *(nur Host)* sendet eine Newsletter-Admin-Einladung für den LoveBot-Kanal in den aktuellen Chat, inkl. hübscher Live-Info-Box (Abonnenten, Verifizierung, Erstellungsdatum, Beschreibung) davor und einer Erfolgs-Zusammenfassung mit Ablaufdatum danach
 - `$menunew` – **interaktives Single-Select-Menü** mit Bild (iOS + Android)
 - `$owner` – zeigt Owner-Kontakt
 - `$love` / `$socials` – zeigt Love-/Social-Links
 - `$gits` – zeigt GitHub-Repos
+
+### 11.1a Extra-Befehle (Spaß, Tools, Love) — `extracmds.js`
+
+**Spaß & Spiele**
+- `$shipname <name1> & <name2>` – Kompatibilitäts-Prozentrechner + Ship-Name für zwei Namen
+- `$tarot` – zieht eine Zufalls-Tarotkarte mit Deutung
+- `$wortkette <wort>` – findet ein Folgewort (Wortketten-Spiel)
+- `$anagram <wort>` – mischt die Buchstaben eines Wortes zum Rätseln
+- `$palindrom <text>` – prüft, ob ein Text ein Palindrom ist
+- `$mathequiz` – kleine Kopfrechenaufgabe
+- `$duell @user` – Zufalls-Duell zwischen dir und einer anderen Person
+- `$wuerfelduell @user` (Alias `$würfelduell`) – Würfelduell 1-6 gegen eine andere Person
+- `$sternzeichen TT.MM.[JJJJ]` – berechnet das Sternzeichen aus einem Geburtsdatum
+- `$emoji <text>` – übersetzt einzelne Wörter in passende Emojis
+
+**Nützliche Tools (echte APIs)**
+- `$advice` (Alias `$lebensrat`) – zufälliger Lebensrat (adviceslip.com)
+- `$chucknorris` – zufälliger Chuck-Norris-Witz (api.chucknorris.io)
+- `$kanye` – zufälliges Zitat (api.kanye.rest)
+- `$activity` (Alias `$langeweile`) – Zufalls-Aktivität gegen Langeweile
+- `$iss` – aktuelle Live-Position der ISS im Orbit (open-notify.org)
+- `$meineip` (Alias `$meinip`) – öffentliche IP-Adresse des Bot-Servers
+- `$githubzen` – zufälliger GitHub-Design-Leitsatz
+- `$bmi <kg> <cm>` – berechnet den Body-Mass-Index
+- `$countdown TT.MM.JJJJ` – zeigt die Tage bis zu einem Datum
+- `$tagderwoche TT.MM.JJJJ` – berechnet den Wochentag eines Datums
+- `$zeitzone <stadt>` – zeigt die aktuelle Uhrzeit in einer Zeitzone
+
+**Love-Erweiterungen**
+- `$liebescheck @user` – süßer Zufalls-Kompatibilitäts-Report des Tages
+- `$kuschelvorschlag` – Zufallsvorschlag für ein Kuschel-/Date-Ritual
+- `$komplimentgenerator @user` – generiert ein zufälliges Kompliment
+
+_Alle 24 Extra-Befehle sind für jeden nutzbar, nutzen echte APIs (keine erfundenen Werte) und melden Fehler ehrlich, falls eine externe API nicht erreichbar ist._
 
 ### 11.2 Profil & Info
 
@@ -421,6 +456,8 @@ klickbaren Buttons (iOS **und** Android) anzeigt und **`Bilder/Menu.png`** als A
 
 - `$verify [accept/reject]` – Verifizierung
 - `$dsgvo [accept/reject]` – DSGVO
+- `$cookie [accept/necessary/reject]` – Cookie-/Speicher-Zustimmung (eigene Kategorien-Tabelle, spiegelt das Web-Cookie-Banner)
+- `$blockcase <befehl> <grund>` / `$opencase <befehl>` / `$listbc` – Owner-only: einzelne Befehle bot-weit sperren/entsperren/auflisten
 - `$block <nr|@user>` / `$unblock <nr|@user>` – blockieren/entblockieren (Owner)
 - `$fp` – Fake Payment
 
@@ -614,6 +651,34 @@ Wenn du dieses Projekt öffentlich oder in einer Umgebung mit mehreren Personen 
 - personalisierten Daten
 - Gruppenmitgliedern
 - Tracking oder Profilierung
+
+### 13.2a DSGVO-Zustimmungspflicht (verbindlich, Bot & Website)
+
+Sowohl der Bot als auch die Website erzwingen aktiv eine Zustimmung, bevor personenbezogene Daten verarbeitet oder Funktionen genutzt werden können:
+
+**Im WhatsApp-Bot:**
+- Ein neuer Nutzer wird **ohne** DSGVO-Zustimmung angelegt (`dsgvo.accepted: false`).
+- `checkCommandAccess()` (in `waApi.js`) blockiert **jeden** Befehl außer `$dsgvo`, `$cookie`, `$menu`, `$help` und `$ping`, solange nicht per `$dsgvo accept` zugestimmt wurde.
+- Host/Owner/SuperAdmin/Admin sind vom Zwang ausgenommen (der Betreiber selbst).
+- `$dsgvo reject` widerruft die Zustimmung jederzeit und sperrt den Bot wieder für den Nutzer.
+- **`$cookie`** ist das direkte Bot-Pendant zum Website-Cookie-Banner: `$cookie` zeigt dieselbe Kategorien-Tabelle (Technisch notwendig / Anonyme Statistiken) wie auf der Website, `$cookie accept` akzeptiert alles, `$cookie necessary` nur die notwendigen, `$cookie reject` widerruft. Eigener Status `status.cookie` im Profil (`accepted`, `analytics`, Zeitstempel), unabhängig vom `dsgvo`-Status, aber gleiches Verhalten/gleiche Befehlsstruktur (`handleCookieCommand()` in `waApi.js`, `case 'cookie':` in `Love.js`).
+
+### 13.2b `$blockcase` / `$opencase` / `$listbc` — Owner-Befehlssperre
+
+Streng **Owner-only** (Haupt-Owner *und* per `$addowner` eingetragene Zusatz-Owner — kein Admin, kein Superadmin, kein Host über normale Gruppenrechte):
+
+- `$blockcase <befehl> <grund>` — sperrt den angegebenen Befehl bot-weit (in allen Chats, nicht nur einer Gruppe) für alle außer dem Owner selbst. Speichert `{reason, blockedAt, blockedBy}` in `db.meta.blockedCommands[<befehl>]` (Store: `features.js`/`readDb()`/`writeDb()`).
+- `$opencase <befehl>` — entfernt die Sperre wieder.
+- `$listbc` — listet alle aktuell gesperrten Befehle in einer box-drawing-formatierten Tabelle (Befehl / Gesperrt von / Datum / Grund) auf.
+- Die Prüfung läuft in `Love.js` direkt vor dem großen `switch(command)`-Dispatcher (vor den Gruppen-Feature-Toggles): Ist der aufgerufene Befehl in `db.meta.blockedCommands` gelistet und der Absender **kein** Owner, bekommt er eine freundliche Absage mit dem hinterlegten Grund und darf den Befehl nicht ausführen — die drei Blockcase-Befehle selbst sind von dieser Sperre ausgenommen (sonst könnte man sich aussperren) und können auch nicht selbst blockiert werden.
+- Owner-Prüfung nutzt `isStrictOwner()` (Kombination aus `isMainOwner()`/`OWNER_CONFIG` und `getRegisteredOwner()`/`db.meta.owners`), bewusst **nicht** dieselbe (großzügigere) Berechtigungslogik wie bei `$dsgvo`/`$cookie`, wo auch Admins/Superadmins Zugriff haben.
+
+**Auf der Website (öffentlich, `public/`):**
+- Ein blockierendes Cookie-/DSGVO-Consent-Overlay (`consent.css` + Logik in `common.js`) erscheint auf **jeder** Seite, bis der Besucher zustimmt (Alle akzeptieren / Nur Notwendige / individuelle Auswahl). Kein Klick-Außerhalb-Dismiss.
+- Zustimmung wird in `localStorage` gespeichert (`love_consent`, versioniert) und übersteht Logout.
+- Ein 🍪-Button unten links erlaubt jederzeit, die Auswahl zu ändern.
+- Neue Seite `public/datenschutz.html` mit vollständiger Datenschutzerklärung (was gespeichert wird, warum, Rechte, Löschung, Kontakt).
+- **Registrierung im Dashboard** (`login.html`) verlangt eine Pflicht-Checkbox „Ich stimme der Datenschutzerklärung zu“ — client- **und** serverseitig geprüft (`/api/register` lehnt ohne `privacyAccepted: true` ab, unabhängig vom Frontend).
 
 ### 13.3 Konformität mit Datenschutzgesetzen
 

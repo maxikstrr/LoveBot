@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="/js/maintgate.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live-Status 💜 — LoveBot</title>
@@ -9,6 +10,7 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta name="theme-color" content="#07050f">
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
 </head>
 <body>
 <div class="aurora"></div>
@@ -22,7 +24,7 @@
     <a href="/">Start</a>
     <a href="/features.html">Features</a>
     <a href="/cmd.html">Befehle</a>
-    <a href="/status.html" class="active">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/status.html" class="active">Status</a><a href="/statistics.html">Statistiken</a><a href="/leaderboard.html">Bestenliste</a><a href="/sessions.html">Sessions</a>
     <a href="/faq.html">FAQ</a>
     <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
   </nav>
@@ -45,9 +47,23 @@
       <div class="cell"><div class="num" id="sBans">…</div><div class="lbl">Bans</div></div>
       <div class="cell"><div class="num" id="sCmds">…</div><div class="lbl">Befehle</div></div>
     </div>
+    <div class="livebar" style="margin:0 auto 30px">
+      <div class="cell"><div class="num" id="sCouples">…</div><div class="lbl">💞 Paare</div></div>
+      <div class="cell"><div class="num" id="sLoveXp">…</div><div class="lbl">💗 Love-XP</div></div>
+      <div class="cell"><div class="num" id="sPets">…</div><div class="lbl">🐶 Haustiere</div></div>
+      <div class="cell"><div class="num" id="sAch">…</div><div class="lbl">🏆 Achievements</div></div>
+    </div>
     <div class="box reveal in" style="max-width:760px;margin:0 auto">
       <h3>🤖 Letzte Bot-Meldung (Heartbeat)</h3>
       <div class="kv" id="hbInfo">Lade …</div>
+    </div>
+    <div class="box reveal in" style="max-width:760px;margin:18px auto 0">
+      <h3>🔗 Erreichbar unter</h3>
+      <div class="kv">
+        <div class="k">Website</div><div class="v"><a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a></div>
+        <div class="k">Dashboard</div><div class="v"><a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a></div>
+        <div class="k">Version</div><div class="v">💜 LoveBot by Maxichen 2026</div>
+      </div>
     </div>
   </section>
 
@@ -66,7 +82,10 @@
         <a href="/features.html">Features</a>
         <a href="/cmd.html">Befehle</a>
         <a href="/status.html">Live-Status</a>
+        <a href="/statistics.html">Statistiken</a>
+        <a href="/leaderboard.html">Bestenliste</a>
         <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
       </div>
     </div>
     <div>
@@ -75,7 +94,7 @@
     </div>
   </div>
   <div class="foot-bottom">
-    <p>© <span id="year">2026</span> LoveBot by Maxichen · Made with 💜</p>
+    <p>© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
   </div>
 </footer>
 

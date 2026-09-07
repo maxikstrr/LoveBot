@@ -19,17 +19,58 @@ function setMsg(id, text, type) {
 }
 const view = document.getElementById('view');
 
-/* ═══════════ ÜBERSICHT ═══════════ */
+/* ═══════════ ÜBERSICHT (LovePlus-Style Dashboard) ═══════════ */
 async function loadOverview() {
   view.innerHTML =
+    '<div class="ov-hero" id="ovHero">' +
+      '<div class="ov-hero-left">' +
+        '<div class="ov-hero-brand">💜 LoveBot <span class="pill on" id="heroPill">🟢 …</span></div>' +
+        '<div class="ov-hero-hi" id="ovHi">Willkommen zurück 👋</div>' +
+        '<div class="ov-hero-sub" id="ovSub">Alles live aus deiner Bot-Datenbank &amp; dem Heartbeat — kein Mock.</div>' +
+        '<div class="ov-hero-by">💜 LoveBot by Maxichen 2026 · maxichen.gamebot.me · maxichen.de</div>' +
+      '</div>' +
+      '<div class="ov-hero-right">' +
+        '<a class="btn ghost sm" href="/cmd.html">📜 Befehle</a>' +
+        '<a class="btn ghost sm" href="/statistics.html">📊 Statistiken</a>' +
+        '<a class="btn ghost sm" href="https://maxichen.gamebot.me" target="_blank" rel="noopener">🔗 gamebot.me</a>' +
+      '</div>' +
+    '</div>' +
+    '<div class="quick-grid">' +
+    '<a class="quick-btn" href="/cmd.html"><span class="qi">📜</span>Alle Befehle</a>' +
+    '<a class="quick-btn" href="/statistics.html"><span class="qi">📊</span>Statistiken</a>' +
+    '<a class="quick-btn" href="/leaderboard.html"><span class="qi">🏆</span>Bestenliste</a>' +
+    '<a class="quick-btn" href="/status.html"><span class="qi">📡</span>Live-Status</a>' +
+    (getRole() === 'owner' ? '<a class="quick-btn" href="/broadcast.html"><span class="qi">📢</span>Broadcast</a><a class="quick-btn" href="/groups.html"><span class="qi">👥</span>Gruppen</a>' : '<a class="quick-btn" href="/profiles.html"><span class="qi">👤</span>Mein Profil</a>') +
+    '</div>' +
     '<div class="grid">' +
     '<div class="stat" id="botStat"><div class="ico">🤖</div><div class="num" id="botOnline">…</div><div class="lbl">Bot-Status</div></div>' +
     '<div class="stat"><div class="ico">👤</div><div class="num" id="statUsers">…</div><div class="lbl">Registrierte Nutzer</div></div>' +
     '<div class="stat"><div class="ico">👥</div><div class="num" id="statGroups">…</div><div class="lbl">Gruppen</div></div>' +
     '<div class="stat"><div class="ico">🚫</div><div class="num" id="statBans">…</div><div class="lbl">Bans</div></div>' +
-    '<div class="stat"><div class="ico">👑</div><div class="num" id="statOwners">…</div><div class="lbl">Zusatz-Owner</div></div>' +
+    '<div class="stat"><div class="ico">⚡</div><div class="num" id="statCmds">…</div><div class="lbl">Befehle im Bot</div></div>' +
     '<div class="stat"><div class="ico">🧠</div><div class="num" id="statRam">…</div><div class="lbl">Bot-RAM</div></div>' +
-    '</div><div class="box"><h3>🤖 Bot-Info (live vom Heartbeat)</h3><div id="botInfo" class="kv"></div></div>';
+    '<div class="stat"><div class="ico">💞</div><div class="num" id="statCouples">…</div><div class="lbl">Verliebte Paare</div></div>' +
+    '<div class="stat"><div class="ico">💗</div><div class="num" id="statLoveXp">…</div><div class="lbl">Love-XP gesamt</div></div>' +
+    '<div class="stat"><div class="ico">🐶</div><div class="num" id="statPets">…</div><div class="lbl">Haustiere</div></div>' +
+    '<div class="stat"><div class="ico">🏆</div><div class="num" id="statAch">…</div><div class="lbl">Achievements freigeschaltet</div></div>' +
+    '<div class="stat"><div class="ico">👑</div><div class="num" id="statOwners">…</div><div class="lbl">Zusatz-Owner</div></div>' +
+    '<div class="stat"><div class="ico">📡</div><div class="num" id="statFleet">…</div><div class="lbl">Aktive Sessions</div></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">' +
+    '<div class="box"><h3>🤖 Bot-Info (live vom Heartbeat)</h3><div id="botInfo" class="kv"></div></div>' +
+    '<div class="box"><h3>🏆 Top-Paare (Love-XP)</h3><div id="topCouples" class="kv"></div>' +
+    '<p class="desc" style="margin-top:10px">Anonymisierte Bestenliste — Namen wie im Chat sichtbar, keine Nummern.</p></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:16px">' +
+    '<div class="box"><h3>📅 Aktivität der letzten 14 Tage</h3><div class="mini-act" id="miniAct"></div></div>' +
+    '<div class="box"><h3>🔥 Meistgenutzte Befehle</h3><div class="mini-cmdbar" id="miniCmds"></div></div>' +
+    '</div>' +
+    '<div class="box" style="margin-top:16px"><h3>🔗 LoveBot überall erreichbar</h3>' +
+    '<div class="kv">' +
+    '<div class="k">Website</div><div class="v"><a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a></div>' +
+    '<div class="k">Dashboard</div><div class="v"><a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a></div>' +
+    '<div class="k">Version</div><div class="v">💜 LoveBot by Maxichen 2026</div>' +
+    '</div></div>';
   await refreshOverview();
 }
 async function refreshOverview() {
@@ -38,19 +79,77 @@ async function refreshOverview() {
   const hb = stats.heartbeat || {};
   const fresh = hb.time && Date.now() - new Date(hb.time).getTime() < 40000;
   const online = hb.online === true && fresh;
+  const lp = stats.loveplus || {};
+  const cmdStats = stats.commands || {};
+  const fleet = stats.fleet || {};
+
   document.getElementById('botStat').className = 'stat ' + (online ? 'online' : 'offline');
   document.getElementById('botOnline').textContent = online ? '🟢 Online' : '🔴 Offline';
+  const heroPill = document.getElementById('heroPill');
+  if (heroPill) { heroPill.textContent = online ? '🟢 Online' : '🔴 Offline'; heroPill.className = 'pill ' + (online ? 'on' : 'off'); }
+  const hr = new Date().getHours();
+  const greet = hr < 5 ? 'Gute Nacht' : hr < 11 ? 'Guten Morgen' : hr < 18 ? 'Guten Tag' : 'Guten Abend';
+  const ovHi = document.getElementById('ovHi');
+  if (ovHi) ovHi.textContent = greet + ', ' + (getName() || 'Nutzer') + ' 👋';
+  const ovSub = document.getElementById('ovSub');
+  if (ovSub && cmdStats.commands != null) ovSub.innerHTML = 'Alles live aus deiner Bot-Datenbank &amp; dem Heartbeat — kein Mock. ' + cmdStats.commands + '+ Befehle, ein Herz. 💜';
+
   document.getElementById('statUsers').textContent = stats.users;
   document.getElementById('statGroups').textContent = stats.groups;
   document.getElementById('statBans').textContent = stats.bans;
   document.getElementById('statOwners').textContent = stats.owners;
   document.getElementById('statRam').textContent = hb.ramMb ? hb.ramMb + ' MB' : '—';
+  document.getElementById('statCmds').textContent = cmdStats.commands != null ? cmdStats.commands + '+' : '—';
+  document.getElementById('statCouples').textContent = lp.couples ?? '—';
+  document.getElementById('statLoveXp').textContent = (lp.loveXpTotal ?? 0).toLocaleString('de-DE');
+  document.getElementById('statPets').textContent = lp.pets ?? '—';
+  document.getElementById('statAch').textContent = lp.achievementsUnlocked ?? '—';
+  document.getElementById('statFleet').textContent = fleet.running != null ? fleet.running + '/' + (fleet.managed ?? '—') : '—';
+
   document.getElementById('botInfo').innerHTML =
     '<div class="k">JID</div><div class="v">' + esc(hb.jid || '—') + '</div>' +
     '<div class="k">LID</div><div class="v">' + esc(hb.lid || '—') + '</div>' +
     '<div class="k">Uptime</div><div class="v">' + (hb.uptimeSec ? Math.floor(hb.uptimeSec / 3600) + ' Std. ' + Math.floor((hb.uptimeSec % 3600) / 60) + ' Min.' : '—') + '</div>' +
     '<div class="k">Node</div><div class="v">' + esc(hb.node || '—') + '</div>' +
     '<div class="k">Letzter Heartbeat</div><div class="v">' + (hb.time ? new Date(hb.time).toLocaleString('de-DE') : '—') + '</div>';
+
+  const tc = lp.topCouples || [];
+  document.getElementById('topCouples').innerHTML = tc.length
+    ? tc.map((c, i) => '<div class="k">#' + (i + 1) + '</div><div class="v">💞 ' + esc(c.n1) + ' &amp; ' + esc(c.n2) + ' — ' + Number(c.loveXp).toLocaleString('de-DE') + ' XP (Lv. ' + c.level + ')</div>').join('')
+    : '<div class="k">—</div><div class="v">Noch keine Paare registriert.</div>';
+
+  /* Aktivitäts-Chart + Top-Befehle stammen aus der öffentlichen Statistik-API,
+     da sie global (nicht pro Nutzer) getrackt werden. */
+  const publicStats = await api('/api/statistics');
+  const actEl = document.getElementById('miniAct');
+  if (actEl) {
+    const activity = (publicStats && publicStats.activity14d) || [];
+    if (activity.length) {
+      const maxA = Math.max(1, ...activity.map((a) => a.total));
+      actEl.innerHTML = activity.map((a) => {
+        const h = Math.max(3, Math.round((a.total / maxA) * 56));
+        const d = new Date(a.date);
+        const lbl = d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+        return '<div class="bar" style="height:' + h + 'px" title="' + lbl + ': ' + a.total + ' Befehle"></div>';
+      }).join('');
+    } else {
+      actEl.innerHTML = '<p class="hint" style="margin:0">Noch keine Aktivität erfasst.</p>';
+    }
+  }
+  const cmdsEl = document.getElementById('miniCmds');
+  if (cmdsEl) {
+    const top = (publicStats && publicStats.commandUsage && publicStats.commandUsage.top) || [];
+    if (top.length) {
+      const maxC = Math.max(...top.map((t) => t.count));
+      cmdsEl.innerHTML = top.slice(0, 6).map((t) =>
+        '<div class="row"><div class="nm">$' + esc(t.name) + '</div>' +
+        '<div class="track"><div class="fill" style="width:' + Math.max(4, Math.round((t.count / maxC) * 100)) + '%"></div></div>' +
+        '<div class="ct">' + t.count + '</div></div>'
+      ).join('');
+    } else {
+      cmdsEl.innerHTML = '<p class="hint" style="margin:0">Noch keine Befehlsaufrufe seit dem letzten Neustart.</p>';
+    }
+  }
 }
 
 /* ═══════════ SESSION ═══════════ */

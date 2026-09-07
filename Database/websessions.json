@@ -3,7 +3,17 @@
     "number": "4915155894714",
     "role": "owner",
     "name": "Maxichen 👑",
-    "createdAt": "2026-09-03T19:36:00.165Z"
+    "createdAt": "2026-09-03T19:36:00.165Z",
+    "lastIp": "127.0.0.1",
+    "userAgent": "curl/8.14.1",
+    "lastSeenAt": "2026-09-07T20:14:56.581Z",
+    "scope": {
+      "type": "global"
+    },
+    "username": "910maxi",
+    "mustChange": false,
+    "accountId": "acc_867efdf11ac19e00",
+    "restrictions": []
   },
   "671b4e0cf2b26c7c2573e39abef2e401ec79a0406b3d60a2": {
     "number": "4915679260192",
@@ -48,5 +58,179 @@
       "type": "global"
     },
     "accountId": "acc_867efdf11ac19e00"
+  },
+  "1dcfc78781c5c298d938374f350b71e69c7235d2dc9336ca": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T16:38:04.541Z"
+  },
+  "c13ec8221ae2e3710b2c05bad2e77aaa816819a171b397c2": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T16:46:47.790Z"
+  },
+  "627af6a6b9316e7709c4ca8fbd7f35c9a1d58cee2c620ff7": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T16:47:31.515Z",
+    "scope": {
+      "type": "global"
+    },
+    "username": "910maxi",
+    "mustChange": false,
+    "accountId": "acc_867efdf11ac19e00"
+  },
+  "d676473408ce72e8800fd35e3a362a544476d3191615c040": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T16:51:06.995Z"
+  },
+  "d90bb11bee05015749881e27e9159642503c93b998b915d8": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T16:51:14.835Z"
+  },
+  "c479262aee82a9f8905e59264ecfde1b23cecd6f35559bba": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:29:21.940Z"
+  },
+  "d986b99dde37ed73630cc984db83b52ba44c249b1d18debb": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:41:34.904Z"
+  },
+  "804ebf5b6e942d4c727ce89294e00f839bfd3578f1edb5b7": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:41:39.690Z",
+    "scope": {
+      "type": "global"
+    },
+    "username": "910maxi",
+    "mustChange": false,
+    "accountId": "acc_867efdf11ac19e00"
+  },
+  "69aa9bcaa9372037b5639f05f9411166aaf10eae77cae87c": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:41:46.154Z"
+  },
+  "e8e65c90b9c2a3e2e65ba01e51c4253b8e0a2a0330954aac": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:42:11.016Z",
+    "scope": {
+      "type": "global"
+    },
+    "username": "910maxi",
+    "mustChange": false,
+    "accountId": "acc_867efdf11ac19e00"
+  },
+  "d987e2ed411bc182f8d03a169e3c739113f9710c526a7a31": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:42:18.441Z"
+  },
+  "3f96cd5cf80f9d55a44fe6c81284530ec16b2513a3b11004": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:45:13.675Z",
+    "scope": {
+      "type": "global"
+    },
+    "username": "910maxi",
+    "mustChange": false,
+    "accountId": "acc_867efdf11ac19e00"
+  },
+  "96eaa91211a0e32eaa20e721ef69abc5bd46c50b30b994b0": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:46:23.414Z"
+  },
+  "e1ad1d53143657b9e54004bd63f7bccc1f8e572bd80a30db": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:47:16.443Z"
+  },
+  "619843e05cc4dfd0d81eb8187360319368bd809754059aac": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:50:23.202Z"
+  },
+  "e80d4411e16ecaeaed56d5c625a83848040b24aae55f87ee": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T17:51:10.283Z"
+  },
+  "399f1d75a37c04b887f86187e40d0e4bfcfa1e69c5e8f726": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T19:02:22.271Z",
+    "scope": {
+      "type": "global"
+    },
+    "username": "910maxi",
+    "mustChange": false,
+    "accountId": "acc_867efdf11ac19e00"
+  },
+  "20675db9e19f314e0acaf21eb94ba6e6d70df2ed0df6799a": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T19:02:28.232Z"
+  },
+  "fd060cd05109e48538f5e81e9a6936cf3d504710de2d4f7d": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T19:02:32.495Z"
+  },
+  "701edffedc67c04df4ecee35587418084c33d8a99fec476a": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T19:13:00.227Z"
+  },
+  "f552fca9154fa76e2a8681de2f34c65e34aa92e03f65bb64": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T20:15:04.535Z",
+    "lastIp": "127.0.0.1",
+    "userAgent": "curl/8.14.1"
+  },
+  "29ce39ca5a8474187ba73a5ec9e0f88c3441c259004061eb": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T20:43:24.533Z",
+    "lastIp": "193.111.249.39",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+  },
+  "46276dca7ae9268121d9ef05d0d7a0ad1f42ddfe918c4385": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-07T20:51:21.191Z",
+    "lastIp": "193.111.249.189",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
   }
 }

@@ -1,6 +1,6 @@
 /* LoveBot — eingebettete Befehlsdaten (Fallback).
    GENERIERT aus registry/commands.json — nicht von Hand editieren!
-   Build: node scripts/build-registry.mjs · 2026-09-05 */
+   Build: node scripts/build-registry.mjs · 2026-09-06 */
 window.LOVEBOT_COMMANDS = [
   {
     "emoji": "🐣",
@@ -33,8 +33,18 @@ window.LOVEBOT_COMMANDS = [
       },
       {
         "cmd": "love",
-        "usage": "$love / $socials",
-        "desc": "Alle Love-/Social-Links"
+        "usage": "$love / $loveprofile / $liebe",
+        "desc": "Dein Beziehungs-Panel ❤️"
+      },
+      {
+        "cmd": "socials",
+        "usage": "$socials / $links / $links",
+        "desc": "Love- & Social-Links 🔗"
+      },
+      {
+        "cmd": "privacy",
+        "usage": "$privacy [stadt|alter|profil an|aus] / $datenschutz",
+        "desc": "Privatsphäre steuern 🔒"
       }
     ]
   },
@@ -44,8 +54,8 @@ window.LOVEBOT_COMMANDS = [
     "cmds": [
       {
         "cmd": "ping",
-        "usage": "$ping",
-        "desc": "Latenz + Speedtest 🏓"
+        "usage": "$ping [url | full | nospeed] / $pong / $latenz",
+        "desc": "Echte Live-Messung: Bot-, Netzwerk- & Webseiten-Ping 🏓"
       },
       {
         "cmd": "speed",
@@ -91,6 +101,16 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "i3",
         "usage": "$i3",
         "desc": "Nachrichten-Debug-Tabelle"
+      },
+      {
+        "cmd": "i4",
+        "usage": "$i4",
+        "desc": "Komplette Nachricht inklusive Sender-, Kanal- und Newsletter-ID als Code"
+      },
+      {
+        "cmd": "m7",
+        "usage": "$m7",
+        "desc": "Sendet eine Newsletter-Admin-Einladung für den LoveBot-Kanal inkl. Live-Infos (Abonnenten, Verifizierung, Erstellungsdatum) in den aktuellen Chat"
       },
       {
         "cmd": "i2",
@@ -217,6 +237,31 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "mood",
         "usage": "$mood [stimmung] / $stimmung",
         "desc": "Deine Stimmung 🎭"
+      },
+      {
+        "cmd": "partner",
+        "usage": "$partner",
+        "desc": "Kurzinfo zu deinem Partner 💞"
+      },
+      {
+        "cmd": "dailylove",
+        "usage": "$dailylove / $tagesliebe / $liebeimpuls",
+        "desc": "Täglicher Love-Impuls 🌹"
+      },
+      {
+        "cmd": "liebescheck",
+        "usage": "$liebescheck @user",
+        "desc": "Süßer Zufalls-Kompatibilitäts-Report des Tages"
+      },
+      {
+        "cmd": "kuschelvorschlag",
+        "usage": "$kuschelvorschlag",
+        "desc": "Zufallsvorschlag für ein Kuschel-/Date-Ritual"
+      },
+      {
+        "cmd": "komplimentgenerator",
+        "usage": "$komplimentgenerator @user",
+        "desc": "Generiert ein zufälliges Kompliment"
       }
     ]
   },
@@ -467,6 +512,11 @@ window.LOVEBOT_COMMANDS = [
         "desc": "DSGVO-Zustimmung"
       },
       {
+        "cmd": "cookie",
+        "usage": "$cookie accept/necessary/reject",
+        "desc": "Cookie-/Speicher-Zustimmung (Tabelle wie im Web-Cookie-Banner)"
+      },
+      {
         "cmd": "verify",
         "usage": "$verify accept/reject / $verify✅ / $verify❌",
         "desc": "Verifizierung"
@@ -505,6 +555,21 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "badword",
         "usage": "$badword add|remove|list|on|off / $badwords",
         "desc": "Badword-Filter (Owner) 🤬"
+      },
+      {
+        "cmd": "blockcase",
+        "usage": "$blockcase <befehl> <grund>",
+        "desc": "Sperrt einen Befehl bot-weit für alle außer den Owner (Owner) 🚫"
+      },
+      {
+        "cmd": "opencase",
+        "usage": "$opencase <befehl>",
+        "desc": "Entsperrt einen zuvor mit $blockcase gesperrten Befehl (Owner) 🔓"
+      },
+      {
+        "cmd": "listbc",
+        "usage": "$listbc",
+        "desc": "Listet alle aktuell gesperrten Befehle mit Grund & Details auf (Owner) 📋"
       },
       {
         "cmd": "fp",
@@ -682,6 +747,56 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "kaset",
         "usage": "$kaset / $toy",
         "desc": "Mini-Slot-Variante 🎰"
+      },
+      {
+        "cmd": "tarot",
+        "usage": "$tarot",
+        "desc": "Zieht eine zufällige Tarotkarte mit Deutung"
+      },
+      {
+        "cmd": "wortkette",
+        "usage": "$wortkette <wort>",
+        "desc": "Findet ein Folgewort für das Wortketten-Spiel"
+      },
+      {
+        "cmd": "anagram",
+        "usage": "$anagram <wort>",
+        "desc": "Mischt die Buchstaben eines Wortes zum Rätseln"
+      },
+      {
+        "cmd": "palindrom",
+        "usage": "$palindrom <text>",
+        "desc": "Prüft, ob ein Text ein Palindrom ist"
+      },
+      {
+        "cmd": "mathequiz",
+        "usage": "$mathequiz",
+        "desc": "Kleine Kopfrechenaufgabe zum Mitraten"
+      },
+      {
+        "cmd": "duell",
+        "usage": "$duell @user",
+        "desc": "Zufalls-Duell zwischen dir und einer anderen Person"
+      },
+      {
+        "cmd": "wuerfelduell",
+        "usage": "$wuerfelduell @user / $würfelduell",
+        "desc": "Würfelduell 1-6 gegen eine andere Person"
+      },
+      {
+        "cmd": "sternzeichen",
+        "usage": "$sternzeichen TT.MM.[JJJJ]",
+        "desc": "Berechnet das Sternzeichen aus einem Geburtsdatum"
+      },
+      {
+        "cmd": "emoji",
+        "usage": "$emoji <text>",
+        "desc": "Übersetzt einzelne Wörter in passende Emojis"
+      },
+      {
+        "cmd": "shipname",
+        "usage": "$shipname <name1> & <name2>",
+        "desc": "Spaßiger Kompatibilitäts-Prozentrechner für zwei Namen"
       }
     ]
   },
@@ -913,7 +1028,7 @@ window.LOVEBOT_COMMANDS = [
     "cmds": [
       {
         "cmd": "relationship",
-        "usage": "$relationship / $beziehung / $partner / $couple / $paare / $ehe",
+        "usage": "$relationship / $beziehung / $couple / $paare / $ehe",
         "desc": "Eure Beziehung: Tage, Love-XP, Treue, Jahrestag ❤️"
       },
       {
@@ -1046,6 +1161,41 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "remind",
         "usage": "$remind <zeit> <text> / $erinnerung",
         "desc": "Erinnerung ⏰"
+      },
+      {
+        "cmd": "advice",
+        "usage": "$advice / $lebensrat",
+        "desc": "Zufälliger Lebensrat (adviceslip.com)"
+      },
+      {
+        "cmd": "chucknorris",
+        "usage": "$chucknorris",
+        "desc": "Zufälliger Chuck-Norris-Witz (api.chucknorris.io)"
+      },
+      {
+        "cmd": "kanye",
+        "usage": "$kanye",
+        "desc": "Zufälliges Zitat (api.kanye.rest)"
+      },
+      {
+        "cmd": "activity",
+        "usage": "$activity / $langeweile",
+        "desc": "Zufällige Aktivität gegen Langeweile"
+      },
+      {
+        "cmd": "iss",
+        "usage": "$iss",
+        "desc": "Aktuelle Live-Position der ISS im Orbit"
+      },
+      {
+        "cmd": "meineip",
+        "usage": "$meineip / $meinip",
+        "desc": "Öffentliche IP-Adresse des Bot-Servers"
+      },
+      {
+        "cmd": "githubzen",
+        "usage": "$githubzen",
+        "desc": "Zufälliger GitHub-Design-Leitsatz"
       }
     ]
   },
@@ -1121,6 +1271,42 @@ window.LOVEBOT_COMMANDS = [
     ]
   },
   {
+    "emoji": "🧭",
+    "title": "ALLTAG & WEB",
+    "cmds": [
+      {
+        "cmd": "wetter",
+        "usage": "$wetter <stadt> / $weather",
+        "desc": "Wetter live (Open-Meteo) 🌤️"
+      },
+      {
+        "cmd": "währung",
+        "usage": "$währung <betrag> <von> [nach] / $waehrung / $currency / $cur / $wechselkurs",
+        "desc": "Währungen umrechnen (EZB-Kurse) 💱"
+      },
+      {
+        "cmd": "übersetze",
+        "usage": "$übersetze <sprache> <text> / $uebersetze / $translate / $tr",
+        "desc": "Text übersetzen (MyMemory) 🌍"
+      },
+      {
+        "cmd": "qr",
+        "usage": "$qr <text> / $qrcode",
+        "desc": "QR-Code erzeugen (goqr.me) 🔳"
+      },
+      {
+        "cmd": "kurz",
+        "usage": "$kurz <url> / $kuerz / $short / $shorten / $tiny",
+        "desc": "Link kürzen (TinyURL/is.gd) 🔗"
+      },
+      {
+        "cmd": "passwort",
+        "usage": "$passwort [länge] / $password / $pw / $pwd",
+        "desc": "Sicheres Zufalls-Passwort 🔐"
+      }
+    ]
+  },
+  {
     "emoji": "🧰",
     "title": "WERKZEUGE & UTILITIES",
     "cmds": [
@@ -1188,6 +1374,26 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "join",
         "usage": "$join <link>",
         "desc": "Gruppe beitreten"
+      },
+      {
+        "cmd": "bmi",
+        "usage": "$bmi <kg> <cm>",
+        "desc": "Berechnet deinen Body-Mass-Index"
+      },
+      {
+        "cmd": "countdown",
+        "usage": "$countdown TT.MM.JJJJ",
+        "desc": "Zeigt die Tage bis zu einem Datum"
+      },
+      {
+        "cmd": "tagderwoche",
+        "usage": "$tagderwoche TT.MM.JJJJ",
+        "desc": "Berechnet den Wochentag eines Datums"
+      },
+      {
+        "cmd": "zeitzone",
+        "usage": "$zeitzone <stadt>",
+        "desc": "Zeigt die aktuelle Uhrzeit in einer Zeitzone"
       }
     ]
   }

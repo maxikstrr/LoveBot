@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistiken 💜 — LoveBot by Maxichen 2026</title>
+<meta name="description" content="Öffentliche Plattform-Statistiken von LoveBot by Maxichen 2026: Nutzer, Gruppen, Paare, Love-XP, Achievements und die meistgenutzten Befehle — alle Zahlen live und echt.">
+<meta property="og:title" content="Statistiken 💜 — LoveBot by Maxichen 2026">
+<meta property="og:description" content="Echte, live berechnete Zahlen aus der LoveBot-Datenbank — keine geschönten Werte.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+<style>
+  .barlist { display:flex; flex-direction:column; gap:10px; }
+  .barrow { display:grid; grid-template-columns: 90px 1fr 56px; align-items:center; gap:12px; }
+  .barrow .name { font-family: var(--mono); font-size:13px; color: var(--text); font-weight:700; }
+  .barrow .track { height:14px; border-radius:8px; background: rgba(255,255,255,.06); overflow:hidden; border:1px solid var(--line); }
+  .barrow .fill { height:100%; background: var(--grad); border-radius:8px; transition: width .6s ease; }
+  .barrow .cnt { text-align:right; font-family: var(--mono); font-size:12.5px; color: var(--faint); }
+  .actgrid { display:flex; gap:5px; align-items:flex-end; justify-content:center; flex-wrap:wrap; padding:10px 0; }
+  .actcol { display:flex; flex-direction:column; align-items:center; gap:6px; width:44px; }
+  .actbar { width:22px; border-radius:4px 4px 0 0; background: var(--grad); min-height:3px; }
+  .actday { font-size:9.5px; color: var(--faint); writing-mode: vertical-rl; text-orientation: mixed; }
+  .stat-note { color: var(--faint); font-size:12px; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html">Status</a>
+    <a href="/statistics.html" class="active">Statistiken</a>
+    <a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:6px">
+    <span class="badge">📊 Kein Login nötig · Echte Live-Zahlen</span>
+    <h1>Plattform <span class="grad">Statistiken</span></h1>
+    <p class="sub">Direkt aus der laufenden LoveBot-Datenbank berechnet — keine geschönten oder geschätzten Zahlen.</p>
+  </section>
+
+  <section style="padding-top:24px">
+    <div class="livebar" style="margin:0 auto 30px">
+      <div class="cell"><div class="num" id="stUsers">…</div><div class="lbl">Nutzer</div></div>
+      <div class="cell"><div class="num" id="stGroups">…</div><div class="lbl">Gruppen</div></div>
+      <div class="cell"><div class="num" id="stCommands">…</div><div class="lbl">Befehle im Bot</div></div>
+      <div class="cell"><div class="num" id="stCategories">…</div><div class="lbl">Kategorien</div></div>
+    </div>
+    <div class="livebar" style="margin:0 auto 30px">
+      <div class="cell"><div class="num" id="stCouples">…</div><div class="lbl">💞 Paare</div></div>
+      <div class="cell"><div class="num" id="stLoveXp">…</div><div class="lbl">💗 Love-XP gesamt</div></div>
+      <div class="cell"><div class="num" id="stPets">…</div><div class="lbl">🐶 Haustiere</div></div>
+      <div class="cell"><div class="num" id="stAch">…</div><div class="lbl">🏆 Achievements</div></div>
+    </div>
+
+    <div class="box reveal in" style="max-width:760px;margin:0 auto 18px">
+      <h3>🔥 Meistgenutzte Befehle</h3>
+      <p class="desc">Live gezählt seit dem letzten Server-Neustart — jeder Aufruf eines Befehls wird hier erfasst.</p>
+      <div class="barlist" id="topCmdsList">Lade …</div>
+      <p class="stat-note" id="totalCallsNote"></p>
+    </div>
+
+    <div class="box reveal in" style="max-width:760px;margin:0 auto 18px">
+      <h3>📅 Aktivität der letzten 14 Tage</h3>
+      <p class="desc">Anzahl ausgeführter Befehle pro Tag.</p>
+      <div class="actgrid" id="actChart">Lade …</div>
+    </div>
+
+    <div class="box reveal in" style="max-width:760px;margin:0 auto">
+      <h3>🤖 Sessions & Infrastruktur</h3>
+      <div class="kv" id="fleetInfo">Lade …</div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Zahlen, die wirklich stimmen — direkt aus der Datenbank, live berechnet.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/statistics.html">Statistiken</a>
+        <a href="/leaderboard.html">Bestenliste</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script src="/js/commands-data.js"></script>
+<script src="/js/statistics.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

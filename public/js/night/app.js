@@ -4,10 +4,24 @@
    ==========================================================================*/
 (function () {
   'use strict';
-  const { $, $$, fmt, toast, modal, confirmBox, stat, pill, table, panel } = UI;
+  const { $, $$, fmt, toast, modal, confirmBox, reauthModal, stat, pill, table, panel } = UI;
   let refreshTimer = null;
 
   function stopRefresh() { if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; } }
+
+  /* 🔐 Für kritische Aktionen: postet normal, aber wenn der Server
+     "needsReauth" zurückgibt, fragt es einmalig per Modal nach dem
+     aktuellen Passwort und wiederholt den Request mit body.reauth gesetzt.
+     Bricht sauber ab (null), wenn der Nutzer das Modal abbricht. */
+  async function postCritical(path, body, why) {
+    let r = await API.post(path, body || {});
+    if (r.data && r.data.needsReauth) {
+      const pw = await reauthModal(r.data.action, why);
+      if (!pw) return null;
+      r = await API.post(path, Object.assign({}, body || {}, { reauth: pw }));
+    }
+    return r;
+  }
   function every(ms, fn) { stopRefresh(); refreshTimer = setInterval(fn, ms); }
 
   /* ================================================================== */
@@ -378,8 +392,14 @@
 
   /* ---------- Security ---------- */
   V.security = async (el) => {
-    const r = await API.get('/api/security');
+    const [r, mr, ovR, casesR] = await Promise.all([
+      API.get('/api/security'), API.get('/api/maintenance'),
+      API.get('/api/security/overview'), API.get('/api/security/cases')
+    ]);
     const d = r.data || {};
+    const maint = mr.data || {};
+    const ov = ovR.data || {};
+    const cases = (casesR.data && casesR.data.cases) || [];
     const sevPill = (s) => ({ WATCH: pill('WATCH'), SUSPICIOUS: pill('SUSPICIOUS'), HIGH: pill('HIGH'), CRITICAL: pill('CRITICAL'), RESOLVED: pill('RESOLVED') }[s] || pill('INFO', s));
     const rows = (d.events || []).map((e) => [
       '<span class="mono t">' + fmt.esc(e.time) + '</span>', sevPill(e.sev),
@@ -388,23 +408,285 @@
       '<span class="mono num" style="color:' + (e.risk >= 70 ? 'var(--danger)' : e.risk >= 40 ? 'var(--warn)' : 'var(--muted)') + '">' + e.risk + '/100</span>',
       '<span class="dim small mono">' + fmt.esc(e.action) + '</span>'
     ]);
+    const blockedIps = d.blockedIps || [];
+    const manualBans = d.manualBans || [];
+    const knownClients = d.knownClients || [];
+    const canManage = (window.__lovePerms || []).includes('*') || (window.__lovePerms || []).includes('security.manage');
+    const blockRows = blockedIps.map((b) => [
+      '<span class="mono t">' + fmt.esc(b.ip) + '</span>',
+      '<span class="dim small">' + fmt.esc(b.reason || '—') + '</span>',
+      '<span class="mono num" style="color:var(--danger)">' + (b.fails || 0) + '</span>',
+      '<span class="dim small mono">' + fmt.dur(b.remainingSec || 0) + '</span>',
+      canManage ? '<button class="btn ghost sm" data-unblock-ip="' + fmt.esc(b.ip) + '">🔓 Entsperren</button>' : '<span class="dim small">—</span>'
+    ]);
+    const banRows = manualBans.map((b) => [
+      '<span class="mono t">' + fmt.esc(b.ip) + '</span>',
+      '<span class="dim small">' + fmt.esc(b.reason || '—') + '</span>',
+      '<span class="dim small mono">' + fmt.esc(b.bannedBy || '—') + '</span>',
+      '<span class="dim small mono">' + fmt.esc(new Date(b.bannedAt).toLocaleString('de-DE')) + '</span>',
+      canManage ? '<button class="btn ghost sm" data-unban-ip="' + fmt.esc(b.ip) + '">✓ Freigeben</button>' : '<span class="dim small">—</span>'
+    ]);
+    const deviceIcon = (dv) => dv === 'Smartphone' ? '📱' : dv === 'Tablet' ? '📟' : dv === 'Bot/Skript' ? '🤖' : '🖥️';
+    /* 🧮 Einfacher, transparenter Security-Score (0-100, höher = riskanter)
+       — komplett client-seitig aus den ohnehin gelieferten Live-Daten
+       berechnet, damit der Owner auf einen Blick sieht, welche IP genauer
+       angeschaut werden sollte (wie ein Risiko-Wert bei einer Fritzbox-
+       ähnlichen Geräteliste, nur eben sicherheitsbezogen). */
+    const riskScore = (c) => {
+      let s = 0;
+      if (c.banned) s += 60;
+      if (c.autoBlocked) s += 40;
+      if (c.isBot) s += 15;
+      if ((c.hits || 0) > 500) s += 20;
+      else if ((c.hits || 0) > 150) s += 10;
+      const ageMin = (Date.now() - new Date(c.firstSeen).getTime()) / 60000;
+      if (ageMin < 5 && (c.hits || 0) > 30) s += 15; /* viele Hits sehr kurz nach erstem Kontakt */
+      return Math.max(0, Math.min(100, s));
+    };
+    const riskColor = (s) => s >= 70 ? 'var(--danger)' : s >= 35 ? 'var(--warn)' : 'var(--ok)';
+    window.__clientDetailMap = window.__clientDetailMap || {};
+    const clientRows = knownClients.map((c) => {
+      const score = riskScore(c);
+      window.__clientDetailMap[c.ip] = c;
+      return [
+        '<span class="mono t">' + fmt.esc(c.ip) + '</span>',
+        '<span class="small">' + deviceIcon(c.device) + ' ' + fmt.esc(c.device) + '</span>',
+        '<span class="dim small">' + fmt.esc(c.browser) + ' · ' + fmt.esc(c.os) + '</span>',
+        '<span class="dim small mono">' + fmt.esc(c.lastPath || '—') + '</span>',
+        '<span class="mono num">' + fmt.num(c.hits || 0) + '</span>',
+        '<span class="mono num" style="color:' + riskColor(score) + '">' + score + '/100</span>',
+        '<span class="dim small mono">' + fmt.esc(new Date(c.lastSeen).toLocaleTimeString('de-DE')) + '</span>',
+        c.banned ? pill('BANNED', '🚫 gesperrt') : c.autoBlocked ? pill('WATCH', '⏳ auto-blockiert') : c.isBot ? pill('INFO', 'Bot') : pill('ONLINE', 'ok'),
+        '<div class="row" style="gap:5px">' +
+        '<button class="btn ghost sm" data-ip-detail="' + fmt.esc(c.ip) + '">🔍 Details</button>' +
+        (canManage ? (c.banned
+          ? '<button class="btn ghost sm" data-unban-ip="' + fmt.esc(c.ip) + '">✓</button>'
+          : '<button class="btn danger sm" data-ban-ip="' + fmt.esc(c.ip) + '">🚫</button>')
+          : '') +
+        '</div>'
+      ];
+    });
+
+    const isOwner = ((window.__loveRole || '') === 'owner') || (window.__lovePerms || []).includes('*');
+    const maintOn = !!maint.on;
     el.innerHTML =
+      (isOwner ? panel('🛠️ Wartungsmodus (Bot &amp; Website)',
+        '<div class="row" style="align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:' + (maintOn ? '14px' : '0') + '">' +
+          '<span class="' + (maintOn ? 'neon-pink' : 'neon-cyan') + '" style="font-weight:700;font-size:15px">' + (maintOn ? '🔴 AKTIV' : '🟢 AUS — alles offen') + '</span>' +
+          (maintOn ? '<span class="dim small">seit ' + fmt.esc(new Date(maint.since).toLocaleString('de-DE')) + ' · von ' + fmt.esc(maint.by || 'Owner') + '</span>' : '<span class="dim small">Bot &amp; Website für alle erreichbar.</span>') +
+        '</div>' +
+        (maintOn
+          ? ('<div class="reason-box" style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:12px 14px;margin-bottom:14px"><span class="dim small" style="text-transform:uppercase;letter-spacing:.06em;font-size:10.5px">Grund</span><br><span style="font-weight:600">' + fmt.esc(maint.reason || 'Kein Grund angegeben') + '</span></div>' +
+             '<button class="btn ok" id="maintOffBtn">✅ Wartungsmodus beenden</button>')
+          : ('<div class="row" style="gap:8px;flex-wrap:wrap">' +
+              '<input id="maintReason" placeholder="Grund (wird allen Besuchern angezeigt)" style="flex:1;min-width:260px">' +
+              '<button class="btn danger" id="maintOnBtn">🛠️ Wartungsmodus aktivieren</button></div>')
+        ) +
+        '<div class="sep"></div><span class="dim small" style="font-style:italic">💡 Entspricht genau <b>$offline &lt;grund&gt;</b> / <b>$online</b> im Bot-Chat — beide Wege steuern denselben Zustand.</span>'
+      ) : '') +
       '<div class="grid c4 mb">' +
-        stat('Threat Level', '🟢 ' + (d.threat || 'LOW'), 'nothing dangerous yet', 'ok') +
+        stat('Threat Level', (d.threat === 'HIGH' ? '🔴' : d.threat === 'WATCH' ? '🟡' : '🟢') + ' ' + (d.threat || 'LOW'), d.blocked ? d.blocked + ' IP(s) aktuell gesperrt' : 'nothing dangerous yet', d.threat === 'HIGH' ? 'danger' : d.threat === 'WATCH' ? 'warn' : 'ok') +
         stat('Alerts', fmt.num(d.alerts || 0), 'active', 'warn') +
-        stat('Failed Logins', fmt.num(d.failedLogins || 0), 'heute', 'danger') +
-        stat('Blocked', fmt.num(d.blocked || 0), 'requests', 'violet') +
+        stat('Failed Logins', fmt.num(d.failedLogins || 0), 'zuletzt', 'danger') +
+        stat('Bekannte Geräte/IPs', fmt.num(knownClients.length || 0), (d.manualBansTotal || 0) + ' dauerhaft gesperrt', 'violet') +
       '</div>' +
+      (isOwner ? panel('📊 Owner-Sicherheitsübersicht (letzte 24 Std.)', '<div class="grid c3">' +
+        stat('Login-Fehlversuche', fmt.num(ov.loginFailures || 0), 'letzte 24h', (ov.loginFailures || 0) > 10 ? 'danger' : 'violet') +
+        stat('Security-Ereignisse', fmt.num(ov.securityEvents || 0), 'letzte 24h', 'violet') +
+        stat('IP-Sperren', fmt.num(ov.ipBans || 0), 'automatisch + manuell', 'warn') +
+        stat('Nutzer-Bans', fmt.num(ov.userBans || 0), 'letzte 24h', 'danger') +
+        stat('Beendete Sessions', fmt.num(ov.sessionKills || 0), 'letzte 24h', 'violet') +
+        stat('Kritische Ereignisse', fmt.num(ov.criticalEvents || 0), 'Risk ≥ 70', (ov.criticalEvents || 0) > 0 ? 'danger' : 'ok') +
+      '</div>') : '') +
+      panel('🗂️ Security Cases (' + cases.filter((c) => c.status === 'open').length + ' offen)',
+        table(['IP', 'Score', 'Ereignisse', 'Typen', 'Von', 'Bis', 'Status', ''],
+          cases.slice(0, 30).map((c) => [
+            '<span class="mono t">' + fmt.esc(c.ip) + '</span>',
+            '<span class="mono num" style="color:' + (c.score >= 70 ? 'var(--danger)' : c.score >= 40 ? 'var(--warn)' : 'var(--ok)') + '">' + c.score + '/100</span>',
+            '<span class="mono num">' + c.eventCount + '</span>',
+            '<span class="dim small mono">' + c.eventTypes.slice(0, 2).map(fmt.esc).join(', ') + (c.eventTypes.length > 2 ? ' …' : '') + '</span>',
+            '<span class="dim small mono">' + fmt.esc(new Date(c.firstAt).toLocaleString('de-DE')) + '</span>',
+            '<span class="dim small mono">' + fmt.esc(new Date(c.lastAt).toLocaleString('de-DE')) + '</span>',
+            c.status === 'open' ? pill('WATCH', '🟡 offen') : pill('RESOLVED', '✅ gelöst'),
+            '<div class="row" style="gap:5px">' +
+              '<button class="btn ghost sm" data-case-detail="' + fmt.esc(c.id) + '">🔍 Details</button>' +
+              (canManage ? (c.status === 'open'
+                ? '<button class="btn ok sm" data-case-resolve="' + fmt.esc(c.id) + '">✅ Lösen</button>'
+                : '<button class="btn ghost sm" data-case-reopen="' + fmt.esc(c.id) + '">↺ Neu öffnen</button>') : '') +
+            '</div>'
+          ]), '☾ keine zusammenhängenden Sicherheitsfälle erkannt — alles ruhig.'),
+        '<span class="dim small" style="font-style:italic">Bündelt mehrere zusammenhängende Ereignisse derselben IP zu EINEM Vorgang (wie ein Ticket) statt vieler Einzelzeilen.</span>') +
+      (canManage ? panel('📡 Geräte- &amp; IP-Übersicht (live)', table(
+        ['IP', 'Gerät', 'Browser · OS', 'Zuletzt aufgerufen', 'Anfragen', 'Risk-Score', 'Zuletzt gesehen', 'Status', ''],
+        clientRows, '☾ noch keine Zugriffe erfasst.'),
+        '<span class="dim small" style="font-style:italic">Wie eine Fritzbox-Geräteliste — jede IP, die die Website je aufgerufen hat. Klick auf „Details“ für die volle Akte.</span>') : '') +
+      panel('🚫 Automatisch gesperrte IP-Adressen', table(['IP', 'Grund', 'Fehlversuche', 'Verbleibend', ''], blockRows, '☾ aktuell ist keine IP automatisch gesperrt — alles ruhig.'),
+        '<span class="dim small" style="font-style:italic">Automatisch nach zu vielen Fehlversuchen · läuft von selbst ab oder manuell entsperrbar.</span>') +
+      panel('🔒 Dauerhaft vom Owner gesperrte IP-Adressen', table(['IP', 'Grund', 'Gesperrt von', 'Gesperrt am', ''], banRows, '☾ keine dauerhaften Sperren aktiv.'),
+        '<span class="dim small" style="font-style:italic">Bleibt gesperrt, bis der Owner sie manuell wieder freigibt — übersteht Neustarts.</span>') +
+      (canManage ? panel('🚫 IP manuell sperren',
+        '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
+        '<input id="manBanIp" placeholder="IP-Adresse (z. B. 203.0.113.5)" style="flex:1;min-width:200px">' +
+        '<input id="manBanReason" placeholder="Grund (optional)" style="flex:2;min-width:220px">' +
+        '</div><div class="row" style="gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:10px">' +
+        '<label class="small dim" style="display:flex;align-items:center;gap:5px"><input type="radio" name="manBanDur" value="permanent" checked> Dauerhaft</label>' +
+        '<label class="small dim" style="display:flex;align-items:center;gap:5px"><input type="radio" name="manBanDur" value="temp"> Temporär, Minuten:</label>' +
+        '<input id="manBanMinutes" type="number" min="1" max="1440" value="60" style="width:80px">' +
+        '<label class="small dim" style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="manBanKillSessions"> Aktive Sessions dieser IP sofort beenden</label>' +
+        '</div><button class="btn danger" id="manBanBtn">🚫 Sperren</button>') : '') +
       panel('🛡️ Security Events', table(['Zeit', 'Severity', 'Event', 'Source', 'Risk', 'Action'], rows) ,
         '<span class="dim small" style="font-style:italic">☾ LoveBot is watching.</span>') +
       '<div class="grid c2 mt">' +
         panel('🔐 Schutzschichten', '<div class="kv">' +
-          [['HTTPS / Reverse Proxy', 1], ['Rate Limit', 1], ['2FA Owner-Login', 1], ['Passwort-Hashing (scrypt)', 1], ['Audit-Log (hash-chained)', 1], ['Risk-Scoring', 1], ['Session-Schutz', 1], ['IP-Monitoring', 0]]
+          [['HTTPS/HSTS + Security-Header (CSP etc.)', 1], ['Rate Limit (pro Nummer)', 1], ['Globales API-Rate-Limit (pro IP)', 1], ['IP-Blocking, automatisch (Brute-Force)', 1], ['Gestaffelte Auto-Abwehr (Reload-/Request-Flut)', 1], ['IP-Sperre, manuell/dauerhaft (Owner)', 1], ['Globaler Wartungsmodus ($offline/$online, Bot+Web geteilt)', 1], ['Owner-Login ohne 2FA (Passwort-only)', 1], ['2FA für alle anderen Konten', 1], ['Passwort-Hashing (scrypt) + Timing-Safe-Vergleich', 1], ['Audit-/Zugriffs-Log (hash-chained)', 1], ['Pfad-Traversal-Schutz', 1], ['Risk-Scoring', 1], ['Session-Schutz', 1]]
             .map(([k, on]) => '<span class="k">' + k + '</span><span class="v">' + (on ? '<span class="neon-cyan">🟢 aktiv</span>' : '<span class="dim">🟡 geplant</span>') + '</span>').join('') + '</div>') +
-        panel('🚨 Alert-Regeln', '<div class="kv">' +
-          [['failed_login ≥ 5 / 5 min', 'HIGH'], ['api_requests ≥ 100 / min', 'WATCH'], ['403 ≥ 20 / min', 'SUSPICIOUS'], ['reconnect loop ≥ 10 / 5 min', 'HIGH']]
-            .map(([k, v]) => '<span class="k mono small">' + k + '</span><span class="v">' + pill(v) + '</span>').join('') + '</div>') +
+        panel('🚨 Alert-Regeln &amp; gestaffelte Eskalation', '<div class="kv">' +
+          [['ip_fails ≥ 5 / 10 min (Login-Fehlversuche)', '⏳ 2 Min Sperre'], ['ip_fails ≥ 10 / 10 min', '⏳ 15 Min Sperre'], ['ip_fails ≥ 20 / 10 min', '⏳ 60 Min Sperre'], ['pw-Versuche ≥ 3 / 10 min (pro Nummer)', 'HIGH'], ['API-Anfragen ≥ 240 / Min (pro IP)', 'WATCH'], ['reconnect loop ≥ 10 / 5 min', 'HIGH'], ['Reload-/Request-Flut: 1. Verstoß (&gt;50 Anfragen/10s)', '📝 nur geloggt'], ['Reload-/Request-Flut: 2. Verstoß', '⏳ 5 Min Sperre'], ['Reload-/Request-Flut: 4. Verstoß', '⏳ 60 Min Sperre'], ['Reload-/Request-Flut: 6. Verstoß', '🚫 dauerhaft (Owner prüft)']]
+            .map(([k, v]) => '<span class="k mono small">' + k + '</span><span class="v">' + pill(v) + '</span>').join('') + '</div>' +
+          '<div class="sep"></div><span class="dim small" style="font-style:italic">💡 Kein naives „7. Reload = Bann“ — Verstöße verjähren nach 30 Min Ruhe, jede Stufe ist einzeln nachvollziehbar geloggt.</span>') +
       '</div>';
+
+    el.querySelectorAll('[data-ip-detail]').forEach((btn) => {
+      btn.onclick = () => {
+        const ip = btn.getAttribute('data-ip-detail');
+        const c = (window.__clientDetailMap || {})[ip] || {};
+        const score = riskScore(c);
+        const firstSeen = c.firstSeen ? new Date(c.firstSeen).toLocaleString('de-DE') : '—';
+        const lastSeen = c.lastSeen ? new Date(c.lastSeen).toLocaleString('de-DE') : '—';
+        const statusHtml = c.banned ? pill('BANNED', '🚫 dauerhaft gesperrt') : c.autoBlocked ? pill('WATCH', '⏳ automatisch blockiert') : c.isBot ? pill('INFO', '🤖 erkannt als Bot/Skript') : pill('ONLINE', '🟢 normal');
+        modal(
+          '<h3>🔍 IP-Akte — ' + fmt.esc(ip) + '</h3>' +
+          '<div class="kv" style="margin-top:10px">' +
+            '<span class="k">Status</span><span class="v">' + statusHtml + '</span>' +
+            '<span class="k">Security-Score</span><span class="v mono" style="color:' + riskColor(score) + '">' + score + ' / 100</span>' +
+            '<span class="k">Gerät</span><span class="v">' + deviceIcon(c.device) + ' ' + fmt.esc(c.device || '—') + '</span>' +
+            '<span class="k">Browser · OS</span><span class="v">' + fmt.esc(c.browser || '—') + ' · ' + fmt.esc(c.os || '—') + '</span>' +
+            '<span class="k">Erste Verbindung</span><span class="v mono small">' + fmt.esc(firstSeen) + '</span>' +
+            '<span class="k">Letzte Verbindung</span><span class="v mono small">' + fmt.esc(lastSeen) + '</span>' +
+            '<span class="k">Anfragen gesamt</span><span class="v mono">' + fmt.num(c.hits || 0) + '</span>' +
+            '<span class="k">Zuletzt aufgerufen</span><span class="v mono small">' + fmt.esc(c.lastPath || '—') + '</span>' +
+            '<span class="k">Verknüpfte Nummern</span><span class="v mono small">' + ((c.numbers || []).map(fmt.esc).join(', ') || '—') + '</span>' +
+          '</div>' +
+          '<div class="sep"></div><span class="dim small" style="font-style:italic">💡 Score ist heuristisch (Sperrstatus, Anfrage-Volumen, Bot-Erkennung, Verhalten kurz nach erstem Kontakt) — für eine belastbare Bewertung immer auch Ereignisse &amp; Kontext prüfen.</span>',
+          canManage ? [
+            { label: 'Schließen', cls: 'ghost' },
+            { label: '⏹️ Sessions dieser IP beenden', cls: 'ghost', onClick: async (bg, close) => { close(); const r = await API.post('/api/sessions/kill-ip', { ip }); if (r.data && r.data.ok) toast('⏹️ Sessions beendet', ip + ' · ' + (r.data.killed || 0), 'ok'); else toast('✕ Fehler', (r.data && r.data.error) || 'Fehler.', 'error'); } },
+            c.banned
+              ? { label: '✓ Entsperren', cls: 'ok', onClick: async (bg, close) => { close(); const r = await API.post('/api/security/unban-ip', { ip }); if (r.data && r.data.ok) { toast('✓ IP freigegeben', ip, 'ok'); V.security(el); } } }
+              : { label: '🚫 Dauerhaft sperren', cls: 'danger', onClick: async (bg, close) => { close(); const r = await postCritical('/api/security/ban-ip', { ip, reason: 'Manuell über IP-Akte gesperrt', duration: 'permanent' }, 'Eine dauerhafte IP-Sperre ist eine kritische Aktion.'); if (r && r.data && r.data.ok) { toast('🚫 IP gesperrt', ip, 'ok'); V.security(el); } } }
+          ] : [{ label: 'Schließen', cls: 'ghost' }]
+        );
+      };
+    });
+    el.querySelectorAll('[data-unblock-ip]').forEach((btn) => {
+      btn.onclick = async () => {
+        const ip = btn.getAttribute('data-unblock-ip');
+        if (!(await confirmBox('IP entsperren?', '☾ ' + ip + ' bekommt sofort wieder Zugriff.'))) return;
+        const res = await API.post('/api/security/unblock', { ip });
+        if (res.data && res.data.ok) { toast('🔓 IP entsperrt', ip, 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte IP nicht entsperren.', 'error');
+      };
+    });
+    el.querySelectorAll('[data-ban-ip]').forEach((btn) => {
+      btn.onclick = async () => {
+        const ip = btn.getAttribute('data-ban-ip');
+        if (!(await confirmBox('IP dauerhaft sperren?', '☾ ' + ip + ' bekommt keinen Zugriff mehr — bis du sie manuell wieder freigibst.', '🚫 Sperren'))) return;
+        const res = await API.post('/api/security/ban-ip', { ip, reason: 'Manuell über Dashboard gesperrt' });
+        if (res.data && res.data.ok) { toast('🚫 IP gesperrt', ip, 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte IP nicht sperren.', 'error');
+      };
+    });
+    el.querySelectorAll('[data-unban-ip]').forEach((btn) => {
+      btn.onclick = async () => {
+        const ip = btn.getAttribute('data-unban-ip');
+        if (!(await confirmBox('Sperre aufheben?', '☾ ' + ip + ' bekommt wieder Zugriff.'))) return;
+        const res = await API.post('/api/security/unban-ip', { ip });
+        if (res.data && res.data.ok) { toast('✓ IP freigegeben', ip, 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte IP nicht freigeben.', 'error');
+      };
+    });
+    const manBanBtn = $('#manBanBtn', el);
+    if (manBanBtn) {
+      manBanBtn.onclick = async () => {
+        const ip = ($('#manBanIp', el).value || '').trim();
+        const reason = ($('#manBanReason', el).value || '').trim();
+        const duration = (el.querySelector('input[name="manBanDur"]:checked') || {}).value || 'permanent';
+        const durationMinutes = Number(($('#manBanMinutes', el) || {}).value) || 60;
+        const killSessions = !!($('#manBanKillSessions', el) || {}).checked;
+        if (!ip) { toast('✕ IP fehlt', 'Bitte eine IP-Adresse eingeben.', 'error'); return; }
+        const res = await postCritical('/api/security/ban-ip', { ip, reason, duration, durationMinutes, killSessions }, 'Eine dauerhafte IP-Sperre ist eine kritische Aktion.');
+        if (!res) return;
+        if (res.data && res.data.ok) { toast('🚫 IP gesperrt', ip + (res.data.permanent ? ' · dauerhaft' : ' · temporär') + (res.data.killedSessions ? ' · ' + res.data.killedSessions + ' Sessions beendet' : ''), 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte IP nicht sperren.', 'error');
+      };
+    }
+    /* 🗂️ Security-Case-Aktionen: Details, Lösen (mit Notiz), Neu öffnen. */
+    el.querySelectorAll('[data-case-detail]').forEach((btn) => {
+      btn.onclick = () => {
+        const c = cases.find((x) => x.id === btn.getAttribute('data-case-detail'));
+        if (!c) return;
+        modal(
+          '<h3>🗂️ Security Case — ' + fmt.esc(c.ip) + '</h3>' +
+          '<div class="kv" style="margin-top:10px">' +
+            '<span class="k">Status</span><span class="v">' + (c.status === 'open' ? pill('WATCH', '🟡 offen') : pill('RESOLVED', '✅ gelöst')) + '</span>' +
+            '<span class="k">Score</span><span class="v mono">' + c.score + ' / 100</span>' +
+            '<span class="k">Ereignisse</span><span class="v mono">' + c.eventCount + '</span>' +
+            '<span class="k">Quelle(n)</span><span class="v mono small">' + c.sources.join(', ') + '</span>' +
+            '<span class="k">Von — Bis</span><span class="v mono small">' + fmt.esc(new Date(c.firstAt).toLocaleString('de-DE')) + ' — ' + fmt.esc(new Date(c.lastAt).toLocaleString('de-DE')) + '</span>' +
+            (c.note ? '<span class="k">Notiz</span><span class="v small">' + fmt.esc(c.note) + '</span>' : '') +
+          '</div><div class="sep"></div>' +
+          '<div style="max-height:220px;overflow:auto">' +
+          c.events.map((e) => '<div class="small" style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span class="mono dim">' + fmt.esc(new Date(e.time).toLocaleTimeString('de-DE')) + '</span> · <b>' + fmt.esc(e.event) + '</b> · <span class="mono" style="color:' + (e.risk >= 70 ? 'var(--danger)' : e.risk >= 40 ? 'var(--warn)' : 'var(--muted)') + '">' + e.risk + '/100</span>' + (e.reason ? ' · <span class="dim">' + fmt.esc(e.reason) + '</span>' : '') + '</div>').join('') +
+          '</div>',
+          [{ label: 'Schließen', cls: 'ghost' }]
+        );
+      };
+    });
+    el.querySelectorAll('[data-case-resolve]').forEach((btn) => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-case-resolve');
+        const m = modal('<h3>✅ Fall lösen</h3><label class="fld">Notiz / Begründung</label><textarea id="caseNote" rows="3" placeholder="z. B. false positive, Nutzer kontaktiert, IP war ein Freund…"></textarea><div class="msg" id="caseMsg"></div>',
+          [
+            { label: 'Abbrechen', cls: 'ghost' },
+            { label: '✅ Lösen', cls: 'ok', onClick: async (bg, close) => {
+                const note = (bg.querySelector('#caseNote').value || '').trim();
+                if (!note) { bg.querySelector('#caseMsg').className = 'msg error'; bg.querySelector('#caseMsg').textContent = 'Bitte eine Notiz angeben.'; return; }
+                close();
+                const res = await API.post('/api/security/cases/resolve', { id, note });
+                if (res.data && res.data.ok) { toast('✅ Fall gelöst', id, 'ok'); V.security(el); }
+                else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte Fall nicht lösen.', 'error');
+              } }
+          ]);
+      };
+    });
+    el.querySelectorAll('[data-case-reopen]').forEach((btn) => {
+      btn.onclick = async () => {
+        const id = btn.getAttribute('data-case-reopen');
+        if (!(await confirmBox('Fall neu öffnen?', '☾ Der Fall wird wieder als „offen" markiert.'))) return;
+        const res = await API.post('/api/security/cases/reopen', { id });
+        if (res.data && res.data.ok) { toast('↺ Fall wieder geöffnet', id, 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte Fall nicht öffnen.', 'error');
+      };
+    });
+    const maintOnBtn = $('#maintOnBtn', el);
+    if (maintOnBtn) {
+      maintOnBtn.onclick = async () => {
+        const reason = ($('#maintReason', el).value || '').trim();
+        if (!(await confirmBox('Wartungsmodus aktivieren?', '☾ Bot wird nur noch für den Owner nutzbar, Website zeigt allen anderen „Zugriff verweigert“ mit diesem Grund.', '🛠️ Aktivieren'))) return;
+        const res = await postCritical('/api/maintenance', { on: true, reason }, 'Wartungsmodus sperrt Website & Bot für alle außer dir.');
+        if (!res) return;
+        if (res.data && res.data.ok) { toast('🛠️ Wartungsmodus aktiv', reason || 'ohne Angabe', 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte nicht aktivieren.', 'error');
+      };
+    }
+    const maintOffBtn = $('#maintOffBtn', el);
+    if (maintOffBtn) {
+      maintOffBtn.onclick = async () => {
+        const res = await API.post('/api/maintenance', { on: false });
+        if (res.data && res.data.ok) { toast('✅ Wartungsmodus beendet', 'Bot & Website wieder für alle offen.', 'ok'); V.security(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte nicht beenden.', 'error');
+      };
+    }
   };
 
   /* ---------- Audit ---------- */
@@ -541,27 +823,192 @@
   };
 
   /* ---------- Accounts (Team) ---------- */
+  const STATUS_PILL = {
+    active: () => pill('ACTIVE', '✅ Aktiv'),
+    pending: () => pill('WAIT', '⏳ Ausstehend'),
+    restricted: () => pill('WATCH', '⚠️ Eingeschränkt'),
+    locked: () => pill('OFF', '⛔ Gesperrt'),
+    disabled: () => pill('OFF', '🚫 Deaktiviert')
+  };
   V.accounts = async (el) => {
     const r = await API.get('/api/accounts');
-    const rows = (r.data.accounts || []).map((x) => [
-      '<span class="n">' + fmt.esc(x.username) + '</span>',
-      '<span class="mono small dim">' + fmt.esc(x.number) + '</span>',
-      pill(x.role.toUpperCase()),
-      x.scope?.type === 'group' ? '<span class="pill vio">GROUP-SCOPE</span>' : '<span class="dim small">global</span>',
-      x.status === 'active' ? pill('ACTIVE') : pill('OFF', x.status),
-      x.mustChange ? pill('WAIT', 'PW wechseln') : '<span class="dim small">—</span>',
-      '<span class="dim small">' + (x.lastLoginAt ? new Date(x.lastLoginAt).toLocaleString('de-DE') : 'nie') + '</span>',
-      '<div class="row">' +
-        '<select id="role_' + x.id + '" style="width:auto;padding:3px 6px;font-size:11px">' +
-        ['user', 'supporter', 'groupadmin', 'admin', 'deputy', 'owner'].map((rl) => '<option ' + (rl === x.role ? 'selected' : '') + '>' + rl + '</option>').join('') +
-        '</select>' +
-        '<button class="btn ghost sm" onclick="APP.setRole(\'' + x.id + '\')">setzen</button>' +
-        '<button class="btn ' + (x.status === 'active' ? 'danger' : 'ghost') + ' sm" onclick="APP.setStatus(\'' + x.id + '\',\'' + (x.status === 'active' ? 'locked' : 'active') + '\')">' + (x.status === 'active' ? '⛔' : '✓') + '</button>' +
-      '</div>'
-    ]);
-    el.innerHTML = panel('👥 Dashboard-Accounts', table(['Username', 'Nummer', 'Rolle', 'Scope', 'Status', 'PW', 'Letzter Login', 'Aktionen'], rows),
-      '<button class="btn sm" onclick="APP.newAccount()">+ Account</button>');
+    window.__accountsMap = window.__accountsMap || {};
+    const rows = (r.data.accounts || []).map((x) => {
+      window.__accountsMap[x.id] = x;
+      return [
+        '<span class="n">' + fmt.esc(x.username) + '</span>',
+        '<span class="mono small dim">' + fmt.esc(x.number) + '</span>',
+        pill(x.role.toUpperCase()),
+        x.scope?.type === 'group' ? '<span class="pill vio">GROUP-SCOPE</span>' : '<span class="dim small">global</span>',
+        (STATUS_PILL[x.status] || STATUS_PILL.active)(),
+        x.mustChange ? pill('WAIT', 'PW wechseln') : '<span class="dim small">—</span>',
+        '<span class="dim small">' + (x.lastLoginAt ? new Date(x.lastLoginAt).toLocaleString('de-DE') : 'nie') + '</span>',
+        '<button class="btn ghost sm" data-akte="' + x.id + '">🗂️ Akte</button>'
+      ];
+    });
+    el.innerHTML = panel('👥 Dashboard-Accounts — Benutzerverwaltung', table(['Username', 'Nummer', 'Rolle', 'Scope', 'Status', 'PW', 'Letzter Login', 'Akte'], rows,
+      '☾ noch keine Accounts.'), '<button class="btn sm" onclick="APP.newAccount()">+ Account</button>');
+    el.querySelectorAll('[data-akte]').forEach((btn) => {
+      btn.onclick = () => APP.openAkte(btn.getAttribute('data-akte'), el);
+    });
   };
+
+  /* ---------- 🗂️ Benutzerakte: Profil / Zugang / Sicherheit / Aktivität ---------- */
+  async function renderAkte(id, refreshEl) {
+    const [dr, pr] = await Promise.all([API.get('/api/accounts/' + id + '/detail'), API.get('/api/permissions')]);
+    if (!dr.data || !dr.data.ok) { toast('✕ Fehler', (dr.data && dr.data.error) || 'Konnte Akte nicht laden.', 'error'); return; }
+    const a = dr.data.account;
+    const ref = pr.data || {};
+    const perms = ref.permissions || [];
+    const templates = ref.templates || {};
+    const statuses = ref.statuses || [];
+    const restrictable = ref.restrictableFeatures || [];
+    const isOwnerAcc = a.role === 'owner';
+    const canManage = (window.__lovePerms || []).includes('*') || (window.__lovePerms || []).includes('accounts.manage');
+    const canAssignRoles = (window.__lovePerms || []).includes('*') || (window.__lovePerms || []).includes('roles.assign');
+
+    const byCat = {};
+    perms.forEach((p) => { (byCat[p.cat] = byCat[p.cat] || []).push(p); });
+    const permsGrid = Object.keys(byCat).map((cat) => {
+      const items = byCat[cat].map((p) => {
+        const has = a.effectivePerms.includes(p.id);
+        const fromRole = !a.permsExtra.includes(p.id) && !a.permsRevoked.includes(p.id) && has;
+        return '<label class="small" style="display:flex;align-items:center;gap:6px;padding:2px 0" title="' + (p.critical ? 'Kritisches Recht' : '') + '">' +
+          '<input type="checkbox" data-perm-cb="' + p.id + '" ' + (has ? 'checked' : '') + ' ' + (isOwnerAcc || !canAssignRoles ? 'disabled' : '') + '>' +
+          fmt.esc(p.label) + (p.critical ? ' <span class="dim" style="font-size:10px">⚠️kritisch</span>' : '') + (fromRole ? ' <span class="dim" style="font-size:10px">(via Rolle)</span>' : '') +
+          '</label>';
+      }).join('');
+      return '<div style="margin-bottom:10px"><div class="dim small" style="text-transform:uppercase;letter-spacing:.06em;font-size:10px;margin-bottom:4px">' + fmt.esc(cat) + '</div>' + items + '</div>';
+    }).join('');
+
+    const tplButtons = Object.keys(templates).map((tid) =>
+      '<button class="btn ghost sm" data-apply-template="' + tid + '" ' + (isOwnerAcc || !canAssignRoles ? 'disabled' : '') + '>' + fmt.esc(templates[tid].label) + '</button>'
+    ).join(' ');
+
+    const restrictionsBoxes = restrictable.map((f) =>
+      '<label class="small" style="display:flex;align-items:center;gap:6px;padding:2px 0"><input type="checkbox" data-restr-cb="' + f.id + '" ' + ((a.restrictions || []).includes(f.id) ? 'checked' : '') + '> ' + fmt.esc(f.label) + '</label>'
+    ).join('');
+
+    const statusOptions = statuses.map((s) => '<option value="' + s.id + '" ' + (s.id === a.status ? 'selected' : '') + '>' + s.icon + ' ' + fmt.esc(s.label) + '</option>').join('');
+    const roleOptions = ['user', 'supporter', 'groupadmin', 'admin', 'deputy', 'owner'].map((rl) => '<option ' + (rl === a.role ? 'selected' : '') + '>' + rl + '</option>').join('');
+
+    const historyRows = (list, cols) => (list || []).slice().reverse().slice(0, 15).map(cols);
+
+    const html =
+      '<h3>🗂️ Benutzerakte — ' + fmt.esc(a.username) + '</h3>' +
+      '<div class="tabbar" style="display:flex;gap:6px;margin:10px 0;flex-wrap:wrap">' +
+        '<button class="btn ghost sm akte-tab-btn active" data-akte-tab="profil">👤 Profil</button>' +
+        '<button class="btn ghost sm akte-tab-btn" data-akte-tab="zugang">🔑 Zugang &amp; Rechte</button>' +
+        '<button class="btn ghost sm akte-tab-btn" data-akte-tab="sicherheit">🛡️ Sicherheit</button>' +
+        '<button class="btn ghost sm akte-tab-btn" data-akte-tab="aktivitaet">🧾 Aktivität</button>' +
+      '</div>' +
+      '<div data-akte-panel="profil">' +
+        '<div class="kv">' +
+          '<span class="k">Username</span><span class="v">' + fmt.esc(a.username) + '</span>' +
+          '<span class="k">Nummer</span><span class="v mono">' + fmt.esc(a.number) + '</span>' +
+          '<span class="k">Rolle</span><span class="v">' + pill(a.role.toUpperCase()) + '</span>' +
+          '<span class="k">Status</span><span class="v">' + (STATUS_PILL[a.status] || STATUS_PILL.active)() + '</span>' +
+          '<span class="k">Scope</span><span class="v mono small">' + (a.scope?.type === 'group' ? 'Gruppe: ' + fmt.esc(a.scope.groupJid || '') : 'global') + '</span>' +
+          '<span class="k">Erstellt</span><span class="v mono small">' + fmt.esc(new Date(a.createdAt).toLocaleString('de-DE')) + '</span>' +
+          '<span class="k">Letzter Login</span><span class="v mono small">' + (a.lastLoginAt ? fmt.esc(new Date(a.lastLoginAt).toLocaleString('de-DE')) : 'nie') + '</span>' +
+          (a.lockedReason ? '<span class="k">Grund (gesperrt)</span><span class="v small">' + fmt.esc(a.lockedReason) + '</span>' : '') +
+        '</div>' +
+        (canManage && !isOwnerAcc ? '<div class="sep"></div><label class="fld">Status ändern</label><div class="row" style="gap:8px;flex-wrap:wrap">' +
+          '<select id="akteStatus" style="width:auto">' + statusOptions + '</select>' +
+          '<input id="akteStatusReason" placeholder="Grund (Pflicht)" style="flex:1;min-width:180px">' +
+          '<button class="btn danger sm" id="akteStatusBtn">Status setzen</button></div>' : '') +
+        (a.status === 'restricted' ? '<div class="sep"></div><label class="fld">Eingeschränkte Funktionen</label>' + restrictionsBoxes +
+          (canManage ? '<input id="akteRestrReason" placeholder="Grund (Pflicht)" style="margin-top:6px"><button class="btn ghost sm" id="akteRestrBtn" style="margin-top:6px">Einschränkungen speichern</button>' : '') : '') +
+      '</div>' +
+      '<div data-akte-panel="zugang" style="display:none">' +
+        (canAssignRoles && !isOwnerAcc ? '<label class="fld">Rolle</label><div class="row" style="gap:8px"><select id="akteRole" style="width:auto">' + roleOptions + '</select>' +
+          '<input id="akteRoleReason" placeholder="Grund für Rollenänderung (Pflicht)" style="flex:1;min-width:180px"><button class="btn sm" id="akteRoleBtn">Rolle setzen</button></div><div class="sep"></div>' : '') +
+        '<label class="fld">Rechte-Vorlagen (additiv)</label><div class="row" style="gap:6px;flex-wrap:wrap;margin-bottom:10px">' + (tplButtons || '<span class="dim small">keine Vorlagen</span>') + '</div>' +
+        '<label class="fld">Einzelrechte (zusätzlich zur Rolle)</label>' +
+        (isOwnerAcc ? '<p class="dim small">🔒 Owner-Accounts sind gegen Einzelrechte-Änderungen geschützt.</p>' : '') +
+        '<div style="max-height:280px;overflow:auto;padding-right:6px">' + permsGrid + '</div>' +
+        (canAssignRoles && !isOwnerAcc ? '<input id="aktePermsReason" placeholder="Grund für Rechteänderung (Pflicht)" style="margin-top:8px"><button class="btn sm" id="aktePermsBtn" style="margin-top:6px">Rechte speichern</button>' : '') +
+      '</div>' +
+      '<div data-akte-panel="sicherheit" style="display:none">' +
+        '<div class="kv">' +
+          '<span class="k">Muss Passwort ändern</span><span class="v">' + (a.mustChange ? '✅ ja' : '— nein') + '</span>' +
+          '<span class="k">Passwort geändert am</span><span class="v mono small">' + (a.passwordChangedAt ? fmt.esc(new Date(a.passwordChangedAt).toLocaleString('de-DE')) : '—') + '</span>' +
+        '</div><div class="sep"></div>' +
+        '<label class="fld">Aktive Sessions dieses Accounts</label>' +
+        (a.activeSessions.length ? a.activeSessions.map((s) => '<div class="small mono dim" style="padding:3px 0">' + fmt.esc(s.tokenHint) + ' · seit ' + fmt.esc(new Date(s.createdAt).toLocaleString('de-DE')) + '</div>').join('') : '<p class="dim small">keine aktiven Sessions</p>') +
+      '</div>' +
+      '<div data-akte-panel="aktivitaet" style="display:none">' +
+        '<label class="fld">Rollen-Verlauf</label>' +
+        (a.roleHistory.length ? historyRows(a.roleHistory, (h) => '<div class="small" style="padding:3px 0"><span class="mono dim">' + fmt.esc(new Date(h.at).toLocaleString('de-DE')) + '</span> · ' + fmt.esc(h.from || '—') + ' → <b>' + fmt.esc(h.role) + '</b> · von ' + fmt.esc(h.by) + '</div>').join('') : '<p class="dim small">kein Verlauf</p>') +
+        '<div class="sep"></div><label class="fld">Status-Verlauf</label>' +
+        (a.statusHistory.length ? historyRows(a.statusHistory, (h) => '<div class="small" style="padding:3px 0"><span class="mono dim">' + fmt.esc(new Date(h.at).toLocaleString('de-DE')) + '</span> · ' + fmt.esc(h.from) + ' → <b>' + fmt.esc(h.to) + '</b> · ' + fmt.esc(h.reason || '') + ' · von ' + fmt.esc(h.by) + '</div>').join('') : '<p class="dim small">kein Verlauf</p>') +
+        '<div class="sep"></div><label class="fld">Rechte-Verlauf</label>' +
+        (a.permsHistory.length ? historyRows(a.permsHistory, (h) => '<div class="small" style="padding:3px 0"><span class="mono dim">' + fmt.esc(new Date(h.at).toLocaleString('de-DE')) + '</span> · ' + fmt.esc(h.reason || '') + ' · von ' + fmt.esc(h.by) + '</div>').join('') : '<p class="dim small">kein Verlauf</p>') +
+      '</div>';
+
+    const m = modal(html, [{ label: 'Schließen', cls: 'ghost' }]);
+    const bg = m.el;
+    bg.querySelectorAll('.akte-tab-btn').forEach((btn) => {
+      btn.onclick = () => {
+        bg.querySelectorAll('.akte-tab-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        bg.querySelectorAll('[data-akte-panel]').forEach((p) => { p.style.display = p.getAttribute('data-akte-panel') === btn.getAttribute('data-akte-tab') ? '' : 'none'; });
+      };
+    });
+    const statusBtn = bg.querySelector('#akteStatusBtn');
+    if (statusBtn) statusBtn.onclick = async () => {
+      const status = bg.querySelector('#akteStatus').value;
+      const reason = (bg.querySelector('#akteStatusReason').value || '').trim();
+      if (!reason) return toast('✕ Grund fehlt', 'Bitte einen Grund für die Statusänderung angeben.', 'error');
+      const res = await postCritical('/api/accounts/status', { id, status, reason }, 'Diese Statusänderung ist kritisch.');
+      if (!res) return;
+      if (res.data && res.data.ok) { toast('✓ Status geändert', res.data.before + ' → ' + res.data.after, 'ok'); m.close(); V.accounts(refreshEl); }
+      else toast('✕ Fehler', (res.data && res.data.error) || 'Fehler.', 'error');
+    };
+    const restrBtn = bg.querySelector('#akteRestrBtn');
+    if (restrBtn) restrBtn.onclick = async () => {
+      const restrictions = Array.from(bg.querySelectorAll('[data-restr-cb]:checked')).map((c) => c.getAttribute('data-restr-cb'));
+      const reason = (bg.querySelector('#akteRestrReason').value || '').trim();
+      if (!reason) return toast('✕ Grund fehlt', 'Bitte einen Grund angeben.', 'error');
+      const res = await API.post('/api/accounts/restrictions', { id, restrictions, reason });
+      if (res.data && res.data.ok) { toast('✓ Einschränkungen gespeichert', '', 'ok'); m.close(); V.accounts(refreshEl); }
+      else toast('✕ Fehler', (res.data && res.data.error) || 'Fehler.', 'error');
+    };
+    const roleBtn = bg.querySelector('#akteRoleBtn');
+    if (roleBtn) roleBtn.onclick = async () => {
+      const role = bg.querySelector('#akteRole').value;
+      const reason = (bg.querySelector('#akteRoleReason').value || '').trim();
+      if (!reason) return toast('✕ Grund fehlt', 'Bitte einen Grund für die Rollenänderung angeben.', 'error');
+      const res = await postCritical('/api/accounts/role', { id, role, reason }, 'Beförderung auf Admin-Ebene oder höher ist kritisch.');
+      if (!res) return;
+      if (res.data && res.data.ok) { toast('✓ Rolle geändert', res.data.old + ' → ' + res.data.role, 'ok'); m.close(); V.accounts(refreshEl); }
+      else toast('✕ Fehler', (res.data && res.data.error) || 'Fehler.', 'error');
+    };
+    const permsBtn = bg.querySelector('#aktePermsBtn');
+    if (permsBtn) permsBtn.onclick = async () => {
+      const reason = (bg.querySelector('#aktePermsReason').value || '').trim();
+      if (!reason) return toast('✕ Grund fehlt', 'Bitte einen Grund für die Rechteänderung angeben.', 'error');
+      const grant = [], revoke = [];
+      bg.querySelectorAll('[data-perm-cb]').forEach((cb) => {
+        const pid = cb.getAttribute('data-perm-cb');
+        if (cb.checked && !a.effectivePerms.includes(pid)) grant.push(pid);
+        if (!cb.checked && a.effectivePerms.includes(pid)) revoke.push(pid);
+      });
+      if (!grant.length && !revoke.length) return toast('ℹ️ Keine Änderung', 'Es wurde nichts geändert.', 'warn');
+      const res = await postCritical('/api/accounts/perms', { id, grant, revoke, reason }, 'Änderung kritischer Einzelrechte.');
+      if (!res) return;
+      if (res.data && res.data.ok) { toast('✓ Rechte gespeichert', grant.length + ' gewährt, ' + revoke.length + ' entzogen', 'ok'); m.close(); V.accounts(refreshEl); }
+      else toast('✕ Fehler', (res.data && res.data.error) || 'Fehler.', 'error');
+    };
+    bg.querySelectorAll('[data-apply-template]').forEach((btn) => {
+      btn.onclick = async () => {
+        const template = btn.getAttribute('data-apply-template');
+        const res = await API.post('/api/accounts/template', { id, template, reason: 'Vorlage angewendet: ' + template });
+        if (res.data && res.data.ok) { toast('✓ Vorlage angewendet', templates[template].label, 'ok'); m.close(); V.accounts(refreshEl); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Fehler.', 'error');
+      };
+    });
+  }
 
   /* ---------- Rollen & Rechte ---------- */
   V.roles = async (el) => {
@@ -576,6 +1023,63 @@
     }).join('');
     el.innerHTML = '<p class="dim small mb">Rollen werden per <span class="mono neon-pink">$setrang &lt;rang&gt; @user</span> im WhatsApp-Bot vergeben — Dashboard-Rechte wechseln <b>sofort</b> (live sync, aktive Sessions inklusive). <span class="mono neon-cyan">$delrang</span> entzieht alles.</p>' +
       '<div class="grid c3">' + cards + '</div>';
+  };
+
+  /* ---------- Login-Sessions (Fritzbox-Stil: IP/UA je aktiver Session) ---------- */
+  V.websessions = async (el) => {
+    const r = await API.get('/api/sessions/all');
+    const list = (r.data && r.data.sessions) || [];
+    const canControl = (window.__lovePerms || []).includes('*') || (window.__lovePerms || []).includes('sessions.control');
+    const isOwner = ((window.__loveRole || '') === 'owner');
+    const rows = list.map((s) => [
+      '<span class="n small">' + fmt.esc(s.username) + '</span>' + (s.current ? ' <span class="pill on">DU</span>' : ''),
+      '<span class="dim small mono">' + fmt.esc(s.number) + '</span>',
+      pill((s.role || '').toUpperCase()),
+      '<span class="mono small">' + fmt.esc(s.ip || '—') + '</span>' + (s.ipChanged ? ' <span class="pill wait" title="IP hat sich seit Login geändert">⚠</span>' : ''),
+      '<span class="dim small mono" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">' + fmt.esc(s.userAgent || '—') + '</span>',
+      '<span class="dim small mono">' + fmt.esc(new Date(s.createdAt).toLocaleString('de-DE')) + '</span>',
+      '<span class="dim small mono">' + fmt.esc(new Date(s.lastSeenAt).toLocaleString('de-DE')) + '</span>',
+      (canControl && !s.current) ? '<button class="btn danger sm" data-kill-session="' + fmt.esc(s.token || '') + '">⏹ Beenden</button>' : (s.current ? '<span class="dim small">aktuelle Session</span>' : '<span class="dim small">—</span>')
+    ]);
+    el.innerHTML =
+      '<div class="grid c3 mb">' +
+        stat('Aktive Sessions', fmt.num(list.length), 'systemweit', 'violet') +
+        stat('Verschiedene Nutzer', fmt.num(new Set(list.map((s) => s.number)).size), 'eingeloggt', 'pink') +
+        stat('IP-Wechsel erkannt', fmt.num(list.filter((s) => s.ipChanged).length), '⚠ evtl. Session-Hijack prüfen', list.some((s) => s.ipChanged) ? 'warn' : 'ok') +
+      '</div>' +
+      panel('🖥️ Alle aktiven Dashboard-Sessions', table(
+        ['Nutzer', 'Nummer', 'Rolle', 'IP', 'Gerät/Browser (User-Agent)', 'Erstellt', 'Zuletzt gesehen', ''],
+        rows, '☾ keine aktiven Sessions.'),
+        (isOwner ? '<button class="btn danger sm" id="killAllBtn">⛔ ALLE Sessions beenden (Notfall)</button>' : '') +
+        '<span class="dim small" style="font-style:italic;display:block;margin-top:6px">💡 „⚠“ bedeutet: die IP hat sich seit dem Login dieser Session geändert — möglicher Hinweis auf Session-Diebstahl.</span>');
+
+    el.querySelectorAll('[data-kill-session]').forEach((btn) => {
+      btn.onclick = async () => {
+        const token = btn.getAttribute('data-kill-session');
+        if (!(await confirmBox('Session beenden?', '☾ Dieser Nutzer wird sofort ausgeloggt.', '⏹ Beenden'))) return;
+        const res = await API.post('/api/sessions/kill', { token });
+        if (res.data && res.data.ok) { toast('⏹ Session beendet', '', 'ok'); V.websessions(el); }
+        else toast('✕ Fehler', (res.data && res.data.error) || 'Konnte Session nicht beenden.', 'error');
+      };
+    });
+    const killAllBtn = $('#killAllBtn', el);
+    if (killAllBtn) {
+      killAllBtn.onclick = async () => {
+        const m = modal('<h3>⛔ ALLE Sessions beenden</h3><p class="small dim">Jede eingeloggte Person (außer dir) wird sofort ausgeloggt. Tippe zur Bestätigung <b>ALLE SESSIONS</b> ein.</p><input id="killAllConfirm" placeholder="ALLE SESSIONS"><div class="msg" id="killAllMsg"></div>',
+          [
+            { label: 'Abbrechen', cls: 'ghost' },
+            { label: '⛔ Beenden', cls: 'danger', onClick: async (bg, close) => {
+                const confirmText = (bg.querySelector('#killAllConfirm').value || '').trim();
+                if (confirmText !== 'ALLE SESSIONS') { bg.querySelector('#killAllMsg').className = 'msg error'; bg.querySelector('#killAllMsg').textContent = 'Bestätigungstext stimmt nicht.'; return; }
+                close();
+                const res = await postCritical('/api/sessions/kill-all', { confirm: confirmText }, 'Beendet ALLE aktiven Dashboard-Sessions außer deiner eigenen.');
+                if (!res) return;
+                if (res.data && res.data.ok) { toast('⛔ Alle Sessions beendet', String(res.data.killed || 0), 'ok'); V.websessions(el); }
+                else toast('✕ Fehler', (res.data && res.data.error) || 'Fehler.', 'error');
+              } }
+          ]);
+      };
+    }
   };
 
   /* ================================================================== */
@@ -657,6 +1161,7 @@
       toast(status === 'locked' ? '⛔ locked' : '✓ active', 'sessions revoked · audit logged', 'ok');
       route();
     },
+    async openAkte(id, el) { await renderAkte(id, el); },
     async newAccount() {
       const m = UI.modal('<h3>+ Dashboard-Account</h3><label class="fld">Username</label><input id="naUser" placeholder="support_max">' +
         '<label class="fld">WhatsApp-Nummer</label><input id="naNumber" placeholder="49151…">' +
@@ -705,6 +1210,8 @@
     await API.probe();
     const meFirst = await API.get('/api/me');
     const perms = (meFirst.data || {}).perms || ['*'];
+    window.__lovePerms = perms;
+    window.__loveRole = (meFirst.data || {}).role || 'user';
     UI.chrome({ demoPill: API.isDemo(), perms });
     if ((meFirst.data || {}).mustChange) {
       UI.modal('<h3>🔑 FIRST LOGIN</h3><p class="small dim">Dein Temp-Passwort muss geändert werden, bevor es weitergeht.</p>' +

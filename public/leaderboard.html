@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bestenliste 💜 — LoveBot by Maxichen 2026</title>
+<meta name="description" content="Die öffentliche Bestenliste von LoveBot by Maxichen 2026: Top-Level-Nutzer, Top-Reichste und die stärksten Paare — live aus der echten Datenbank.">
+<meta property="og:title" content="Bestenliste 💜 — LoveBot by Maxichen 2026">
+<meta property="og:description" content="Wer führt gerade? Live-Rangliste aus Level, Copper und Love-XP.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+<style>
+  .lb-tabs { display:flex; gap:8px; justify-content:center; margin: 6px 0 22px; flex-wrap:wrap; }
+  .lb-tab { padding:9px 18px; border-radius:999px; border:1px solid var(--line); background: rgba(255,255,255,.04); color: var(--faint); font-size:13px; font-weight:750; cursor:pointer; transition: all .2s; }
+  .lb-tab.active { color:#fff; border-color: rgba(167,139,250,.55); background: rgba(167,139,250,.15); }
+  .lb-list { display:flex; flex-direction:column; gap:8px; max-width:640px; margin:0 auto; }
+  .lb-row { display:grid; grid-template-columns: 40px 1fr auto; align-items:center; gap:14px; padding:12px 16px; border:1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+  .lb-row:nth-child(1) .rank { color:#fbbf24; }
+  .lb-row:nth-child(2) .rank { color:#d1d5db; }
+  .lb-row:nth-child(3) .rank { color:#d97706; }
+  .rank { font-family: var(--mono); font-weight:900; font-size:16px; text-align:center; }
+  .lb-name { font-weight:750; font-size:14px; }
+  .lb-val { font-family: var(--mono); font-size:13px; color: var(--faint); text-align:right; }
+  .lb-val b { color: #7dd3fc; }
+  .lb-empty { text-align:center; color: var(--faint); padding: 30px 0; }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/status.html">Status</a>
+    <a href="/statistics.html">Statistiken</a>
+    <a href="/leaderboard.html" class="active">Bestenliste</a>
+    <a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:6px">
+    <span class="badge">🏆 Kein Login nötig · Live-Rangliste</span>
+    <h1>Die <span class="grad">Bestenliste</span></h1>
+    <p class="sub">Wer führt gerade? Echte Zahlen aus der Datenbank — Level, Copper und Love-XP.</p>
+  </section>
+
+  <section style="padding-top:10px">
+    <div class="lb-tabs">
+      <div class="lb-tab active" data-tab="level">⭐ Top-Level</div>
+      <div class="lb-tab" data-tab="rich">💰 Reichste</div>
+      <div class="lb-tab" data-tab="couples">💞 Top-Paare</div>
+    </div>
+    <div class="lb-list" id="lbList">Lade …</div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Ehrlicher Wettbewerb — jede Zahl hier ist echt und live berechnet.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/statistics.html">Statistiken</a>
+        <a href="/leaderboard.html">Bestenliste</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script src="/js/leaderboard.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>

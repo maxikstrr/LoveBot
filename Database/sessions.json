@@ -15,24 +15,24 @@
       "status": "CONNECTED",
       "source": "live",
       "createdAt": 1788651061273,
-      "connectedAt": 1788716449514,
-      "lastSeen": 1788721229400,
+      "connectedAt": 1788813580414,
+      "lastSeen": 1788814823744,
       "jid": "420721199654@s.whatsapp.net",
       "lid": "155019043160306@lid",
       "phone": "420721199654",
-      "messages": 899,
-      "commands": 55,
-      "groups": 4,
-      "reconnects": 1,
+      "messages": 958,
+      "commands": 64,
+      "groups": 7,
+      "reconnects": 2,
       "errors": 5,
-      "memoryMb": 104.5,
+      "memoryMb": 124.2,
       "isDefault": true,
       "pid": null,
       "desiredState": "running",
       "autoStart": true,
       "tags": [],
       "env": "production",
-      "connectedMs": 65376896
+      "connectedMs": 162495576
     },
     "test910": {
       "id": "test910",
@@ -118,6 +118,24 @@
       "type": "error",
       "text": "🐞 Fehler in „MainBot“: Cannot access 'senderJid' before initialization",
       "sid": "main"
+    },
+    {
+      "ts": 1788813568194,
+      "type": "session",
+      "text": "🟡 Session „MainBot“ → QR_REQUIRED",
+      "sid": "main"
+    },
+    {
+      "ts": 1788813574637,
+      "type": "session",
+      "text": "🔴 Session „MainBot“ → DISCONNECTED",
+      "sid": "main"
+    },
+    {
+      "ts": 1788813580414,
+      "type": "session",
+      "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
+      "sid": "main"
     }
   ],
   "locks": {},
@@ -129,5 +147,21 @@
       "action": "CREATED",
       "detail": ""
     }
-  ]
+  ],
+  "commandStats": {
+    "me": 2,
+    "offline": 1,
+    "help": 1,
+    "delowner": 1,
+    "online": 1
+  },
+  "commandStatsDaily": {
+    "2026-09-07": {
+      "me": 2,
+      "offline": 1,
+      "help": 1,
+      "delowner": 1,
+      "online": 1
+    }
+  }
 }

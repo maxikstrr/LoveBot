@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <meta name="theme-color" content="#07050f">
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
 </head>
 <body>
 <div class="aurora"></div>
@@ -21,7 +22,7 @@
     <a href="/">Start</a>
     <a href="/features.html">Features</a>
     <a href="/cmd.html">Befehle</a>
-    <a href="/status.html">Status</a><a href="/sessions.html">Sessions</a>
+    <a href="/status.html">Status</a><a href="/statistics.html">Statistiken</a><a href="/leaderboard.html">Bestenliste</a><a href="/sessions.html">Sessions</a>
     <a href="/faq.html">FAQ</a>
   </nav>
   <a href="/index.html" class="cta">← Zurück zur Startseite</a>
@@ -93,6 +94,10 @@
         <input id="regCode" class="code-input" maxlength="6" placeholder="••••••">
         <label class="fld" for="regPassword">Passwort (mind. 8 Zeichen)</label>
         <input id="regPassword" type="password" placeholder="••••••••">
+        <label class="fld" style="display:flex;align-items:flex-start;gap:9px;font-weight:400;cursor:pointer;margin-top:12px">
+          <input type="checkbox" id="regPrivacyOk" style="margin-top:3px;width:17px;height:17px;accent-color:#f472b6;flex-shrink:0">
+          <span>Ich habe die <a href="/datenschutz.html" target="_blank" rel="noopener" style="color:#f472b6;text-decoration:underline">Datenschutzerklärung</a> gelesen und stimme der Verarbeitung meiner Daten zu. <b>*</b></span>
+        </label>
         <div class="row mt"><button class="btn full" onclick="regFinish()">♡ Konto erstellen</button></div>
       </div>
       <div class="msg" id="regMsg"></div>
