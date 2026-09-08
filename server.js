@@ -50,6 +50,9 @@ const HOST = process.env.HOST || '0.0.0.0';
 const TRUST_PROXY = /^(1|true|yes)$/i.test(String(process.env.TRUST_PROXY || 'false'));
 const OWNER_NUMBER = process.env.OWNER_NUMBER || '4915155894714';
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || '';
+const SESSION_DIR = process.env.LOVEBOT_SESSION_DIR || './Sessions';
+const CREDS_PATH = path.join(SESSION_DIR, 'creds.json');
+const OWNER_JID = process.env.OWNER_JID || '';
 
 
 const DB_PATH = path.join('Database', 'Database.json');
@@ -151,6 +154,46 @@ function queueMailbox(item) {
   mail.queue.push(item);
   writeWebmail(mail);
   return item.id;
+}
+
+const ownerAlertCache = new Map();
+
+function ownerJidFromCreds() {
+  const configuredOwner = OWNER_JID || (cleanNumber(OWNER_NUMBER) ? `${cleanNumber(OWNER_NUMBER)}@s.whatsapp.net` : '');
+  if (configuredOwner) return configuredOwner;
+  try {
+    const creds = JSON.parse(fs.readFileSync(CREDS_PATH, 'utf8'));
+    const candidates = [creds?.me?.id, creds?.creds?.me?.id, creds?.account?.me?.id, creds?.account?.id];
+    const found = candidates.find((value) => /^\d+(?::\d+)?@(s\.whatsapp\.net|lid)$/.test(String(value || '')));
+    if (found) return String(found).replace(/:\d+(?=@)/, '');
+  } catch (e) {}
+  return '';
+}
+
+function queueOwnerSecurityAlert(event, details = {}) {
+  const ownerJid = ownerJidFromCreds();
+  if (!ownerJid) return '';
+  const fingerprint = `${event}|${details.ip || ''}|${details.target || ''}|${details.reason || ''}`;
+  const now = Date.now();
+  if (ownerAlertCache.get(fingerprint) > now) return '';
+  ownerAlertCache.set(fingerprint, now + 60_000);
+  for (const [key, expires] of ownerAlertCache) if (expires <= now) ownerAlertCache.delete(key);
+
+  const lines = [
+    '🛡️ LOVE BOT — SECURITY ALERT',
+    '',
+    `Ereignis: ${event}`,
+    `Zeit: ${new Date().toISOString()}`,
+    ...Object.entries(details)
+      .filter(([key, value]) => value !== undefined && value !== null && value !== '' && !/(password|passwort|code|token|secret|key|cookie|authorization)/i.test(key))
+      .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`),
+    '',
+    'Hinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.'
+  ];
+  return queueMailbox({
+    id: newToken(), type: 'security-owner-alert', to: ownerJid, jid: ownerJid,
+    status: 'pending', createdAt: new Date().toISOString(), event, text: lines.join('\n')
+  });
 }
 
 function queueModerationNotice(action, target, reason, session) {
@@ -257,6 +300,41 @@ function audit(actor, action, target, result) {
 }
 function securityEvent(event, extra) {
   chainAppend(SECURITY_FILE, Object.assign({ event }, extra || {}));
+}
+
+function latestDeviceSnapshots() {
+  const snapshots = {};
+  try {
+    const lines = fs.readFileSync(SECURITY_FILE, 'utf8').trim().split('\n').filter(Boolean).slice(-3000);
+    for (const line of lines) {
+      const event = JSON.parse(line);
+      if (!event.ip || !['DEVICE_LOCATION_GATE_GRANTED', 'LOCATION_CONSENT_GRANTED'].includes(event.event)) continue;
+      snapshots[event.ip] = {
+        recordedAt: event.time,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        accuracyMeters: event.accuracyMeters,
+        os: event.os,
+        platform: event.platform,
+        platformVersion: event.platformVersion,
+        browser: event.browser,
+        browserVersion: event.browserVersion,
+        device: event.device,
+        architecture: event.architecture,
+        language: event.language,
+        timezone: event.timezone,
+        screen: event.screen,
+        pixelRatio: event.pixelRatio,
+        touchPoints: event.touchPoints,
+        cpuCores: event.cpuCores,
+        memoryGb: event.memoryGb,
+        network: event.network,
+        online: event.online,
+        userAgent: event.userAgent
+      };
+    }
+  } catch (e) {}
+  return snapshots;
 }
 function perm(session, need) {
   if (!session) return false;
@@ -411,7 +489,9 @@ function recordIpFailure(ip, reason) {
     if (!already || already.until < until) {
       blockedIps.set(ip, { until, reason: reason || 'Zu viele Fehlversuche', blockedAt: new Date().toISOString(), fails: entry.count });
       totalIpBlocksEver++;
-      securityEvent('IP_BLOCKED', { ip, risk: Math.min(95, 40 + entry.count * 3), reason: reason || 'Zu viele Fehlversuche', fails: entry.count, blockMinutes: Math.round(hit.blockMs / 60000) });
+      const blockDetails = { ip, risk: Math.min(95, 40 + entry.count * 3), reason: reason || 'Zu viele Fehlversuche', fails: entry.count, blockMinutes: Math.round(hit.blockMs / 60000) };
+      securityEvent('IP_BLOCKED', blockDetails);
+      queueOwnerSecurityAlert('IP_BLOCKED', blockDetails);
     }
   }
 }
@@ -596,9 +676,12 @@ function isManuallyBanned(ip) {
   return manualIpBans.has(ip);
 }
 function manualBanIp(ip, reason, bannedBy) {
-  manualIpBans.set(ip, { reason: reason || 'Vom Owner gesperrt', bannedAt: new Date().toISOString(), bannedBy: bannedBy || 'owner' });
+  const banDetails = { ip, reason: reason || 'Vom Owner gesperrt', bannedAt: new Date().toISOString(), bannedBy: bannedBy || 'owner', permanent: true };
+  manualIpBans.set(ip, banDetails);
   saveManualIpBans();
-  securityEvent('IP_MANUALLY_BANNED', { ip, risk: 80, reason: reason || 'Vom Owner gesperrt', by: bannedBy });
+  const eventDetails = { ...banDetails, risk: 80, by: bannedBy };
+  securityEvent('IP_MANUALLY_BANNED', eventDetails);
+  queueOwnerSecurityAlert('IP_MANUALLY_BANNED', eventDetails);
 }
 function manualUnbanIp(ip) {
   const existed = manualIpBans.delete(ip);
@@ -696,6 +779,10 @@ function recordAbuseCheck(ip) {
       securityEvent('ABUSE_AUTO_ESCALATED_BLOCK', {
         ip, risk: Math.min(95, 50 + viol.count * 5), reason: `Eskalationsstufe ${hitTier.action}`,
         blockDuration: hitTier.label, violationCount: viol.count, action: hitTier.action
+      });
+      queueOwnerSecurityAlert('ABUSE_AUTO_ESCALATED_BLOCK', {
+        ip, reason: `Eskalationsstufe ${hitTier.action}`, blockDuration: hitTier.label,
+        violationCount: viol.count, action: hitTier.action, source: 'web-protection'
       });
     }
   }
@@ -827,6 +914,21 @@ function sendJson(res, code, obj) {
   res.end(body);
 }
 
+function sendSecurityBlock(res, code, title, detail, extra = {}) {
+  return sendJson(res, code, {
+    error: title,
+    securityBlock: true,
+    security: {
+      title,
+      detail,
+      action: code === 403 ? 'Wende dich an den Owner mit deiner IP und dem angezeigten Zeitpunkt.' : 'Warte bis die Sperre abläuft und versuche es danach erneut.',
+      code: code === 403 ? 'IP_PERMANENTLY_BLOCKED' : 'IP_TEMPORARILY_BLOCKED',
+      at: new Date().toISOString()
+    },
+    ...extra
+  });
+}
+
 function readBody(req) {
   return new Promise((resolve) => {
     let data = '';
@@ -867,13 +969,13 @@ function serveStatic(req, res, urlPath) {
   if (!staticBypass && isManuallyBanned(clientIpStatic)) {
     securityEvent('IP_MANUAL_BAN_STATIC_DENIED', { ip: clientIpStatic, risk: 65, path: urlPath });
     res.writeHead(403, Object.assign({ 'Content-Type': 'text/plain; charset=utf-8' }, SECURITY_HEADERS));
-    return res.end('403 — Deine IP-Adresse wurde vom Betreiber gesperrt.');
+    return res.end('403 — Zugriff gesperrt\n\nDeine IP-Adresse ist dauerhaft blockiert. Bitte wende dich mit dem Zeitpunkt und deiner IP an den Owner.');
   }
   const staticBlock = !staticBypass && isIpBlocked(clientIpStatic);
   if (staticBlock) {
     securityEvent('IP_BLOCKED_STATIC_DENIED', { ip: clientIpStatic, risk: 55, path: urlPath });
     res.writeHead(429, Object.assign({ 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': String(Math.max(1, Math.round((staticBlock.until - Date.now()) / 1000))) }, SECURITY_HEADERS));
-    return res.end('429 — Deine IP-Adresse wurde vorübergehend gesperrt: ' + (staticBlock.reason || 'Zu viele Anfragen') + '. Bitte später erneut versuchen.');
+    return res.end('429 — Schutzsperre aktiv\n\n' + (staticBlock.reason || 'Zu viele Anfragen') + '. Bitte später erneut versuchen.');
   }
 
   /* 🛡️ Doppelter Pfad-Traversal-Schutz: die WHATWG-URL-Klasse (siehe
@@ -917,7 +1019,7 @@ async function handleApi(req, res, pathname) {
     const canBypassMb = existingSessionMb && perm(existingSessionMb, 'security.manage');
     if (!canBypassMb) {
       securityEvent('IP_MANUAL_BAN_REQUEST_DENIED', { ip: clientIp, risk: 70, path: pathname });
-      return sendJson(res, 403, { error: 'Deine IP-Adresse wurde vom Betreiber gesperrt.', ipBanned: true });
+      return sendSecurityBlock(res, 403, 'Zugriff dauerhaft gesperrt', 'Diese IP-Adresse wurde vom Betreiber blockiert.', { ipBanned: true, ip: clientIp });
     }
   }
 
@@ -986,10 +1088,10 @@ async function handleApi(req, res, pathname) {
       const canBypass = existingSession && perm(existingSession, 'security.manage');
       if (!canBypass) {
         securityEvent('IP_BLOCKED_REQUEST_DENIED', { ip: clientIp, risk: 60, path: pathname });
-        return sendJson(res, 429, {
-          error: 'Deine IP-Adresse wurde wegen zu vieler Fehlversuche vorübergehend gesperrt.',
+        return sendSecurityBlock(res, 429, 'Vorübergehende Schutzsperre', 'Zu viele Fehlversuche von dieser IP-Adresse.', {
           ipBlocked: true,
-          retryAfterSec: Math.max(0, Math.round((blocked.until - Date.now()) / 1000))
+          retryAfterSec: Math.max(0, Math.round((blocked.until - Date.now()) / 1000)),
+          reason: blocked.reason || 'Zu viele Fehlversuche'
         });
       }
     }
@@ -1510,9 +1612,83 @@ async function handleApi(req, res, pathname) {
     }
   }
 
+  /* 📍 Geräte-Schutz-Gate: Die Website darf erst nach aktiver Standort-
+     freigabe genutzt werden. Standort wird serverseitig nur grob gerundet;
+     technische Gerätedaten dienen der Sicherheitsakte. */
+  if (pathname === '/api/device-info' && req.method === 'POST') {
+    const body = await readBody(req);
+    const latitude = Number(body.latitude);
+    const longitude = Number(body.longitude);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      return sendJson(res, 400, { error: 'Standortfreigabe fehlt oder ist ungültig.' });
+    }
+    const details = {
+      ip: clientIp,
+      latitude: Number(latitude.toFixed(2)),
+      longitude: Number(longitude.toFixed(2)),
+      accuracyMeters: Number.isFinite(Number(body.accuracy)) ? Math.min(10000, Math.round(Math.max(0, Number(body.accuracy)))) : null,
+      userAgent: String(body.userAgent || userAgent).slice(0, 300),
+      platform: String(body.platform || '').slice(0, 100),
+      os: String(body.os || '').slice(0, 100),
+      browser: String(body.browser || '').slice(0, 100),
+      browserVersion: String(body.browserVersion || '').slice(0, 60),
+      device: String(body.device || '').slice(0, 60),
+      platformVersion: String(body.platformVersion || '').slice(0, 60),
+      architecture: String(body.architecture || '').slice(0, 40),
+      language: String(body.language || '').slice(0, 30),
+      timezone: String(body.timezone || '').slice(0, 80),
+      screen: String(body.screen || '').slice(0, 40),
+      pixelRatio: Number.isFinite(Number(body.pixelRatio)) ? Number(body.pixelRatio) : null,
+      touchPoints: Number.isFinite(Number(body.touchPoints)) ? Math.min(20, Math.max(0, Number(body.touchPoints))) : null,
+      cpuCores: Number.isFinite(Number(body.cpuCores)) ? Math.min(128, Math.max(1, Number(body.cpuCores))) : null,
+      memoryGb: Number.isFinite(Number(body.memoryGb)) ? Math.min(64, Math.max(0, Number(body.memoryGb))) : null,
+      network: String(body.network || '').slice(0, 40),
+      online: body.online === true,
+      path: String(body.path || '').slice(0, 160),
+      consent: true,
+      source: 'mandatory-browser-device-gate'
+    };
+    securityEvent('DEVICE_LOCATION_GATE_GRANTED', { ...details, risk: 5 });
+    return sendJson(res, 200, { ok: true, precision: 'coarse' });
+  }
+
   /* ---- alles darunter braucht Login */
   const session = getSession(req);
   if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+
+  /* 📍 Standort nur nach ausdrücklicher Browser-Zustimmung. Wir speichern
+     absichtlich nur auf zwei Nachkommastellen gerundete Koordinaten
+     (ungefähr 1 km Genauigkeit), nie exakte GPS-Daten. */
+  if (pathname === '/api/location' && req.method === 'POST') {
+    const body = await readBody(req);
+    const latitude = Number(body.latitude);
+    const longitude = Number(body.longitude);
+    const accuracy = Number(body.accuracy);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      return sendJson(res, 400, { error: 'Ungültige Standortdaten.' });
+    }
+    const details = {
+      actor: session.username || maskNumber(session.number),
+      number: maskNumber(session.number),
+      latitude: Number(latitude.toFixed(2)),
+      longitude: Number(longitude.toFixed(2)),
+      accuracyMeters: Number.isFinite(accuracy) ? Math.min(10000, Math.round(Math.max(0, accuracy))) : null,
+      ip: reqIp(req),
+      userAgent: String(req.headers?.['user-agent'] || '').slice(0, 200),
+      consent: true,
+      source: 'browser-geolocation'
+    };
+    securityEvent('LOCATION_CONSENT_GRANTED', { ...details, risk: 5 });
+    return sendJson(res, 200, { ok: true, precision: 'coarse', message: 'Standort grob gespeichert.' });
+  }
+
+  if (pathname === '/api/location/revoke' && req.method === 'POST') {
+    securityEvent('LOCATION_CONSENT_REVOKED', {
+      actor: session.username || maskNumber(session.number), number: maskNumber(session.number),
+      ip: reqIp(req), userAgent: String(req.headers?.['user-agent'] || '').slice(0, 200), consent: false, risk: 2
+    });
+    return sendJson(res, 200, { ok: true });
+  }
 
   /* ═══════════ 👑 OWNER-ADMIN-API (nur Rolle "owner") ═══════════ */
 
@@ -2031,9 +2207,14 @@ async function handleApi(req, res, pathname) {
     };
     writeDb(db);
     if (targetNumber) rbac.lockByBan(targetNumber, reason);
+    const ownerAlertId = queueOwnerSecurityAlert('USER_BANNED', {
+      target: targetJid || targetLid || targetNumber, targetNumber, targetJid, targetLid,
+      reason, bannedAt, bannedBy: session.username || session.name || 'Dashboard',
+      bannedByRole: roleOf(session), source: 'web-dashboard', requestIp: clientIp, userAgent
+    });
     const mailboxId = queueModerationNotice('ban', { jid: targetJid, lid: targetLid, number: targetNumber }, reason, session);
     audit(session.username || maskNumber(session.number), 'user.banned', targetJid || targetLid, 'success');
-    return sendJson(res, 200, { ok: true, mailboxId });
+    return sendJson(res, 200, { ok: true, mailboxId, ownerAlertId: ownerAlertId || null });
   }
   if (pathname === '/api/bans/unban' && req.method === 'POST') {
     if (!perm(session, 'users.ban')) return sendJson(res, 403, { error: 'Keine Berechtigung (users.ban).' });
@@ -2248,19 +2429,21 @@ async function handleApi(req, res, pathname) {
        Adressen sieht. */
     const canManage = perm(session, 'security.manage');
     const manualBans = listManualBans();
+    const deviceSnapshots = latestDeviceSnapshots();
     return sendJson(res, 200, {
       ok: true, events,
       threat: (activeBlocks.length || manualBans.length) ? 'HIGH' : events.some((x) => x.risk >= 70) ? 'HIGH' : events.some((x) => x.risk >= 40) ? 'WATCH' : 'LOW',
       alerts: events.filter((x) => x.risk >= 40).length,
       blocked: activeBlocks.length,
       blockedTotal: totalIpBlocksEver,
-      blockedIps: activeBlocks.map((b) => ({ ip: canManage ? b.ipFull : b.ip, reason: b.reason, blockedAt: b.blockedAt, fails: b.fails, remainingSec: b.remainingSec })),
-      manualBans: manualBans.map((b) => ({ ip: canManage ? b.ipFull : b.ip, reason: b.reason, bannedAt: b.bannedAt, bannedBy: b.bannedBy })),
+      blockedIps: activeBlocks.map((b) => ({ ip: canManage ? b.ipFull : b.ip, reason: b.reason, blockedAt: b.blockedAt, fails: b.fails, remainingSec: b.remainingSec, deviceInfo: canManage ? (deviceSnapshots[b.ipFull] || null) : null })),
+      manualBans: manualBans.map((b) => ({ ip: canManage ? b.ipFull : b.ip, reason: b.reason, bannedAt: b.bannedAt, bannedBy: b.bannedBy, deviceInfo: canManage ? (deviceSnapshots[b.ipFull] || null) : null })),
       manualBansTotal: manualBans.length,
       knownClients: canManage ? listKnownClients().slice(0, 100).map((c) => ({
         ip: c.ipFull, browser: c.browser, os: c.os, device: c.device, isBot: c.isBot,
         firstSeen: c.firstSeen, lastSeen: c.lastSeen, hits: c.hits, lastPath: c.lastPath,
-        numbers: c.numbers, banned: isManuallyBanned(c.ipFull), autoBlocked: !!isIpBlocked(c.ipFull)
+        numbers: c.numbers, banned: isManuallyBanned(c.ipFull), autoBlocked: !!isIpBlocked(c.ipFull),
+        deviceInfo: deviceSnapshots[c.ipFull] || null
       })) : [],
       failedLogins: failed
     });
@@ -2329,8 +2512,11 @@ async function handleApi(req, res, pathname) {
       manualBanIp(targetIp, reason, session.username || session.number);
     } else {
       const mins = Math.max(1, Math.min(1440, Number(body.durationMinutes) || 60));
-      blockedIps.set(targetIp, { until: Date.now() + mins * 60000, reason: reason + ' (temporär, ' + mins + ' Min., von ' + (session.username || session.number) + ')', blockedAt: new Date().toISOString(), fails: 0, tier: 'MANUAL_TEMP' });
+      const tempBanDetails = { ip: targetIp, reason, blockMinutes: mins, bannedAt: new Date().toISOString(), bannedBy: session.username || session.number, permanent: false, source: 'web-dashboard' };
+      blockedIps.set(targetIp, { until: Date.now() + mins * 60000, reason: reason + ' (temporär, ' + mins + ' Min., von ' + (session.username || session.number) + ')', blockedAt: tempBanDetails.bannedAt, fails: 0, tier: 'MANUAL_TEMP' });
       totalIpBlocksEver++;
+      securityEvent('IP_MANUALLY_BANNED_TEMP', { ...tempBanDetails, risk: 65 });
+      queueOwnerSecurityAlert('IP_MANUALLY_BANNED_TEMP', { ...tempBanDetails, requestIp: clientIp, userAgent });
     }
     /* Optional: alle aktiven Sessions dieser IP sofort beenden. */
     let killedSessions = 0;
@@ -2341,7 +2527,6 @@ async function handleApi(req, res, pathname) {
       if (killedSessions) saveSessions();
     }
     audit(session.username || session.number, 'security.ip_banned', maskIp(targetIp) + (isPermanent ? ' (dauerhaft)' : ' (temporär)') + (killedSessions ? ' · ' + killedSessions + ' Sessions beendet' : ''), 'success');
-    if (!isPermanent) securityEvent('IP_MANUALLY_BANNED_TEMP', { ip: targetIp, risk: 50, reason, by: session.username || session.number, killedSessions });
     return sendJson(res, 200, { ok: true, banned: true, permanent: isPermanent, killedSessions });
   }
 

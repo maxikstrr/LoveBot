@@ -1,3 +1,41 @@
+.location-prompt {
+  position: fixed;
+  z-index: 10001;
+  right: 22px;
+  bottom: 22px;
+  width: min(440px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 12px;
+  padding: 16px;
+  color: #f8f4ff;
+  background: rgba(20, 14, 35, .96);
+  border: 1px solid rgba(192, 132, 252, .45);
+  border-radius: 14px;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, .35);
+  backdrop-filter: blur(16px);
+}
+.location-gate { inset: 0; right: 0; bottom: 0; width: auto; border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: rgba(4, 2, 10, .9); }
+.location-gate .location-prompt-copy { width: min(520px, 100%); padding: 20px; border: 1px solid rgba(192, 132, 252, .45); border-radius: 16px; background: rgba(20, 14, 35, .98); box-shadow: 0 22px 70px rgba(0,0,0,.5); }
+.location-gate .location-prompt-icon { font-size: 34px; }
+.location-gate .location-prompt-actions { display: flex; align-items: center; justify-content: center; }
+.security-block-gate { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(4,2,10,.94); backdrop-filter: blur(14px); }
+.security-block-card { width: min(520px, 100%); padding: 32px; text-align: center; color: #f8f4ff; border: 1px solid rgba(248,113,113,.45); border-radius: 18px; background: linear-gradient(180deg, rgba(36,16,34,.98), rgba(13,8,22,.99)); box-shadow: 0 24px 80px rgba(0,0,0,.58); }
+.security-block-icon { font-size: 44px; margin-bottom: 8px; }
+.security-block-kicker { color: #fb7185; font: 700 11px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .16em; }
+.security-block-card h1 { margin: 10px 0; font-size: 25px; }
+.security-block-card p { color: rgba(248,244,255,.72); line-height: 1.6; }
+.security-block-meta { display: grid; grid-template-columns: 70px 1fr; gap: 7px 12px; margin: 20px 0; padding: 12px; text-align: left; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: rgba(255,255,255,.04); font-size: 12px; }
+.security-block-meta span { color: rgba(248,244,255,.5); }
+.security-block-meta b { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.security-block-help { font-size: 13px; }
+.location-prompt-icon { font-size: 25px; line-height: 1; }
+.location-prompt-copy { display: grid; gap: 5px; }
+.location-prompt-copy span { color: rgba(248, 244, 255, .72); font-size: 12px; line-height: 1.45; }
+.location-prompt-actions { grid-column: 2; display: flex; justify-content: flex-end; gap: 8px; }
+@media (max-width: 560px) {
+  .location-prompt { right: 14px; bottom: 14px; }
+}
 /* ══════════════════════════════════════════════════════════════════════
    🍪  L O V E B O T   —   D S G V O -  /  C O O K I E - C O N S E N T
    ─────────────────────────────────────────────────────────────────────

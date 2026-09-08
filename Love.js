@@ -7559,6 +7559,28 @@ break;
                 actorName: senderUn || senderLidUser
               });
 
+              /* Sicherheitskopie direkt an den Owner, der den Bot-Ban ausgelöst hat. */
+              const ownerAlertJid = senderJid || senderLid;
+              if (ownerAlertJid && ownerAlertJid !== from) {
+                try {
+                  await sock.sendMessage(ownerAlertJid, {
+                    text: '🛡️ LOVE BOT — SECURITY ALERT\n\n' +
+                      'Ereignis: USER_BANNED (Bot)\n' +
+                      `Zeit: ${new Date().toISOString()}\n` +
+                      `Ziel-JID: ${target.jid || '—'}\n` +
+                      `Ziel-LID: ${target.lid || '—'}\n` +
+                      `Grund: ${reason}\n` +
+                      `Auslöser: ${senderUn || senderLidUser || 'Owner'}\n` +
+                      `Chat/Gruppe: ${from}\n` +
+                      `PN an Ziel: ${pnOk ? 'gesendet' : 'fehlgeschlagen'}\n` +
+                      `Aus Gruppen entfernt: ${removedGroups.length}\n\n` +
+                      'Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.'
+                  });
+                } catch (ownerAlertError) {
+                  console.error('[security] Owner-Ban-Alert fehlgeschlagen:', ownerAlertError?.message || ownerAlertError);
+                }
+              }
+
               const pnStatus = pnOk ? '✓ PN gesendet' : '⚠️ PN fehlgeschlagen (kein Chat)';
 
               const text =
@@ -11172,6 +11194,13 @@ async function processWebmailQueue(sock) {
             throw new Error('Ungültige private WhatsApp-JID für 2FA-Code.');
           }
           await sock.sendMessage(targetJid, { text: item.text });
+          item.status = 'sent';
+        } else if (item.type === 'security-owner-alert') {
+          const targetJid = String(item.jid || item.to || '');
+          if (!/^\d+(?::\d+)?@(s\.whatsapp\.net|lid)$/.test(targetJid)) {
+            throw new Error('Ungültige Owner-JID für Security-Alert.');
+          }
+          await sock.sendMessage(targetJid.replace(/:\d+(?=@)/, ''), { text: item.text });
           item.status = 'sent';
         } else if (item.type === 'broadcast') {
           const groups = await sock.groupFetchAllParticipating().catch(() => ({}));

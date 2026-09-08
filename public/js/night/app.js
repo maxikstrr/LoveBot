@@ -412,11 +412,16 @@
     const manualBans = d.manualBans || [];
     const knownClients = d.knownClients || [];
     const canManage = (window.__lovePerms || []).includes('*') || (window.__lovePerms || []).includes('security.manage');
+    window.__securityDeviceMap = window.__securityDeviceMap || {};
+    const deviceSummary = (info) => info ? [info.device, info.os, info.browser].filter(Boolean).join(' · ') : 'keine Geräteakte';
+    blockedIps.forEach((b) => { window.__securityDeviceMap[b.ip] = b.deviceInfo || null; });
+    manualBans.forEach((b) => { window.__securityDeviceMap[b.ip] = b.deviceInfo || null; });
     const blockRows = blockedIps.map((b) => [
       '<span class="mono t">' + fmt.esc(b.ip) + '</span>',
       '<span class="dim small">' + fmt.esc(b.reason || '—') + '</span>',
       '<span class="mono num" style="color:var(--danger)">' + (b.fails || 0) + '</span>',
       '<span class="dim small mono">' + fmt.dur(b.remainingSec || 0) + '</span>',
+      b.deviceInfo ? '<button class="btn ghost sm" data-ban-device="' + fmt.esc(b.ip) + '">📱 ' + fmt.esc(deviceSummary(b.deviceInfo)) + '</button>' : '<span class="dim small">keine Geräteakte</span>',
       canManage ? '<button class="btn ghost sm" data-unblock-ip="' + fmt.esc(b.ip) + '">🔓 Entsperren</button>' : '<span class="dim small">—</span>'
     ]);
     const banRows = manualBans.map((b) => [
@@ -424,6 +429,7 @@
       '<span class="dim small">' + fmt.esc(b.reason || '—') + '</span>',
       '<span class="dim small mono">' + fmt.esc(b.bannedBy || '—') + '</span>',
       '<span class="dim small mono">' + fmt.esc(new Date(b.bannedAt).toLocaleString('de-DE')) + '</span>',
+      b.deviceInfo ? '<button class="btn ghost sm" data-ban-device="' + fmt.esc(b.ip) + '">📱 ' + fmt.esc(deviceSummary(b.deviceInfo)) + '</button>' : '<span class="dim small">keine Geräteakte</span>',
       canManage ? '<button class="btn ghost sm" data-unban-ip="' + fmt.esc(b.ip) + '">✓ Freigeben</button>' : '<span class="dim small">—</span>'
     ]);
     const deviceIcon = (dv) => dv === 'Smartphone' ? '📱' : dv === 'Tablet' ? '📟' : dv === 'Bot/Skript' ? '🤖' : '🖥️';
@@ -469,6 +475,12 @@
 
     const isOwner = ((window.__loveRole || '') === 'owner') || (window.__lovePerms || []).includes('*');
     const maintOn = !!maint.on;
+    const routerOnline = knownClients.filter((c) => !c.banned && !c.autoBlocked).length;
+    const routerPanel = '<div class="router-console">' +
+      '<div class="router-console-head"><div><span class="router-kicker">LOVEBOX SECURITY</span><h2>Netzwerkzentrale</h2><p>Geräte, IPs und Sperren auf einen Blick.</p></div><span class="router-led ' + (d.threat === 'LOW' ? 'ok' : 'warn') + '"></span></div>' +
+      '<div class="router-stats"><div><b>' + fmt.num(routerOnline) + '</b><span>verbundene Geräte</span></div><div><b>' + fmt.num(blockedIps.length + manualBans.length) + '</b><span>aktive Sperren</span></div><div><b>' + fmt.num(knownClients.length) + '</b><span>bekannte IPs</span></div><div><b>' + fmt.num(ov.openCases || 0) + '</b><span>offene Fälle</span></div></div>' +
+      '<div class="router-status"><span class="router-dot"></span><b>Schutzsystem aktiv</b><span class="dim small">Letzte Prüfung: ' + fmt.esc(new Date().toLocaleTimeString('de-DE')) + '</span><span class="router-spacer"></span><span class="pill ' + (d.threat === 'LOW' ? 'on' : 'wait') + '">' + fmt.esc(d.threat || 'LOW') + '</span></div>' +
+      '</div>';
     el.innerHTML =
       (isOwner ? panel('🛠️ Wartungsmodus (Bot &amp; Website)',
         '<div class="row" style="align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:' + (maintOn ? '14px' : '0') + '">' +
@@ -484,6 +496,7 @@
         ) +
         '<div class="sep"></div><span class="dim small" style="font-style:italic">💡 Entspricht genau <b>$offline &lt;grund&gt;</b> / <b>$online</b> im Bot-Chat — beide Wege steuern denselben Zustand.</span>'
       ) : '') +
+      routerPanel +
       '<div class="grid c4 mb">' +
         stat('Threat Level', (d.threat === 'HIGH' ? '🔴' : d.threat === 'WATCH' ? '🟡' : '🟢') + ' ' + (d.threat || 'LOW'), d.blocked ? d.blocked + ' IP(s) aktuell gesperrt' : 'nothing dangerous yet', d.threat === 'HIGH' ? 'danger' : d.threat === 'WATCH' ? 'warn' : 'ok') +
         stat('Alerts', fmt.num(d.alerts || 0), 'active', 'warn') +
@@ -520,9 +533,9 @@
         ['IP', 'Gerät', 'Browser · OS', 'Zuletzt aufgerufen', 'Anfragen', 'Risk-Score', 'Zuletzt gesehen', 'Status', ''],
         clientRows, '☾ noch keine Zugriffe erfasst.'),
         '<span class="dim small" style="font-style:italic">Wie eine Fritzbox-Geräteliste — jede IP, die die Website je aufgerufen hat. Klick auf „Details“ für die volle Akte.</span>') : '') +
-      panel('🚫 Automatisch gesperrte IP-Adressen', table(['IP', 'Grund', 'Fehlversuche', 'Verbleibend', ''], blockRows, '☾ aktuell ist keine IP automatisch gesperrt — alles ruhig.'),
+      panel('🚫 Automatisch gesperrte IP-Adressen', table(['IP', 'Grund', 'Fehlversuche', 'Verbleibend', 'Gerät / Standort', ''], blockRows, '☾ aktuell ist keine IP automatisch gesperrt — alles ruhig.'),
         '<span class="dim small" style="font-style:italic">Automatisch nach zu vielen Fehlversuchen · läuft von selbst ab oder manuell entsperrbar.</span>') +
-      panel('🔒 Dauerhaft vom Owner gesperrte IP-Adressen', table(['IP', 'Grund', 'Gesperrt von', 'Gesperrt am', ''], banRows, '☾ keine dauerhaften Sperren aktiv.'),
+      panel('🔒 Dauerhaft vom Owner gesperrte IP-Adressen', table(['IP', 'Grund', 'Gesperrt von', 'Gesperrt am', 'Gerät / Standort', ''], banRows, '☾ keine dauerhaften Sperren aktiv.'),
         '<span class="dim small" style="font-style:italic">Bleibt gesperrt, bis der Owner sie manuell wieder freigibt — übersteht Neustarts.</span>') +
       (canManage ? panel('🚫 IP manuell sperren',
         '<div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px">' +
@@ -538,7 +551,7 @@
         '<span class="dim small" style="font-style:italic">☾ LoveBot is watching.</span>') +
       '<div class="grid c2 mt">' +
         panel('🔐 Schutzschichten', '<div class="kv">' +
-          [['HTTPS/HSTS + Security-Header (CSP etc.)', 1], ['Rate Limit (pro Nummer)', 1], ['Globales API-Rate-Limit (pro IP)', 1], ['IP-Blocking, automatisch (Brute-Force)', 1], ['Gestaffelte Auto-Abwehr (Reload-/Request-Flut)', 1], ['IP-Sperre, manuell/dauerhaft (Owner)', 1], ['Globaler Wartungsmodus ($offline/$online, Bot+Web geteilt)', 1], ['Owner-Login ohne 2FA (Passwort-only)', 1], ['2FA für alle anderen Konten', 1], ['Passwort-Hashing (scrypt) + Timing-Safe-Vergleich', 1], ['Audit-/Zugriffs-Log (hash-chained)', 1], ['Pfad-Traversal-Schutz', 1], ['Risk-Scoring', 1], ['Session-Schutz', 1]]
+          [['HTTPS/HSTS + Security-Header (CSP etc.)', 1], ['Rate Limit (pro Nummer)', 1], ['Globales API-Rate-Limit (pro IP)', 1], ['IP-Blocking, automatisch (Brute-Force)', 1], ['Gestaffelte Auto-Abwehr (Reload-/Request-Flut)', 1], ['IP-Sperre, manuell/dauerhaft (Owner)', 1], ['Globaler Wartungsmodus ($offline/$online, Bot+Web geteilt)', 1], ['Owner-Login ohne 2FA (Passwort-only)', 1], ['2FA für alle anderen Konten', 1], ['Passwort-Hashing (scrypt) + Timing-Safe-Vergleich', 1], ['Audit-/Zugriffs-Log (hash-chained)', 1], ['Pfad-Traversal-Schutz', 1], ['Risk-Scoring', 1], ['Session-Schutz', 1], ['Standort nur nach Consent, grob gerundet', 1]]
             .map(([k, on]) => '<span class="k">' + k + '</span><span class="v">' + (on ? '<span class="neon-cyan">🟢 aktiv</span>' : '<span class="dim">🟡 geplant</span>') + '</span>').join('') + '</div>') +
         panel('🚨 Alert-Regeln &amp; gestaffelte Eskalation', '<div class="kv">' +
           [['ip_fails ≥ 5 / 10 min (Login-Fehlversuche)', '⏳ 2 Min Sperre'], ['ip_fails ≥ 10 / 10 min', '⏳ 15 Min Sperre'], ['ip_fails ≥ 20 / 10 min', '⏳ 60 Min Sperre'], ['pw-Versuche ≥ 3 / 10 min (pro Nummer)', 'HIGH'], ['API-Anfragen ≥ 240 / Min (pro IP)', 'WATCH'], ['reconnect loop ≥ 10 / 5 min', 'HIGH'], ['Reload-/Request-Flut: 1. Verstoß (&gt;50 Anfragen/10s)', '📝 nur geloggt'], ['Reload-/Request-Flut: 2. Verstoß', '⏳ 5 Min Sperre'], ['Reload-/Request-Flut: 4. Verstoß', '⏳ 60 Min Sperre'], ['Reload-/Request-Flut: 6. Verstoß', '🚫 dauerhaft (Owner prüft)']]
@@ -561,6 +574,9 @@
             '<span class="k">Security-Score</span><span class="v mono" style="color:' + riskColor(score) + '">' + score + ' / 100</span>' +
             '<span class="k">Gerät</span><span class="v">' + deviceIcon(c.device) + ' ' + fmt.esc(c.device || '—') + '</span>' +
             '<span class="k">Browser · OS</span><span class="v">' + fmt.esc(c.browser || '—') + ' · ' + fmt.esc(c.os || '—') + '</span>' +
+            '<span class="k">Plattformversion</span><span class="v mono small">' + fmt.esc(c.deviceInfo?.platformVersion || '—') + '</span>' +
+            '<span class="k">Standort grob</span><span class="v mono small">' + fmt.esc(c.deviceInfo ? (c.deviceInfo.latitude + ', ' + c.deviceInfo.longitude + ' ± ' + c.deviceInfo.accuracyMeters + ' m') : '—') + '</span>' +
+            '<span class="k">Netzwerk</span><span class="v">' + fmt.esc(c.deviceInfo?.network || '—') + '</span>' +
             '<span class="k">Erste Verbindung</span><span class="v mono small">' + fmt.esc(firstSeen) + '</span>' +
             '<span class="k">Letzte Verbindung</span><span class="v mono small">' + fmt.esc(lastSeen) + '</span>' +
             '<span class="k">Anfragen gesamt</span><span class="v mono">' + fmt.num(c.hits || 0) + '</span>' +
@@ -575,6 +591,29 @@
               ? { label: '✓ Entsperren', cls: 'ok', onClick: async (bg, close) => { close(); const r = await API.post('/api/security/unban-ip', { ip }); if (r.data && r.data.ok) { toast('✓ IP freigegeben', ip, 'ok'); V.security(el); } } }
               : { label: '🚫 Dauerhaft sperren', cls: 'danger', onClick: async (bg, close) => { close(); const r = await postCritical('/api/security/ban-ip', { ip, reason: 'Manuell über IP-Akte gesperrt', duration: 'permanent' }, 'Eine dauerhafte IP-Sperre ist eine kritische Aktion.'); if (r && r.data && r.data.ok) { toast('🚫 IP gesperrt', ip, 'ok'); V.security(el); } } }
           ] : [{ label: 'Schließen', cls: 'ghost' }]
+        );
+      };
+    });
+    el.querySelectorAll('[data-ban-device]').forEach((btn) => {
+      btn.onclick = () => {
+        const ip = btn.getAttribute('data-ban-device');
+        const info = (window.__securityDeviceMap || {})[ip] || {};
+        const value = (key) => info[key] === undefined || info[key] === null || info[key] === '' ? '—' : info[key];
+        modal(
+          '<h3>📱 Geräteakte zur IP — ' + fmt.esc(ip) + '</h3>' +
+          '<div class="kv" style="margin-top:10px">' +
+            '<span class="k">Gerät</span><span class="v">' + fmt.esc(value('device')) + '</span>' +
+            '<span class="k">Betriebssystem</span><span class="v">' + fmt.esc(value('os')) + ' ' + fmt.esc(value('platformVersion')) + '</span>' +
+            '<span class="k">Browser</span><span class="v">' + fmt.esc(value('browser')) + ' ' + fmt.esc(value('browserVersion')) + '</span>' +
+            '<span class="k">Architektur</span><span class="v mono">' + fmt.esc(value('architecture')) + '</span>' +
+            '<span class="k">Standort grob</span><span class="v mono">' + fmt.esc(value('latitude')) + ', ' + fmt.esc(value('longitude')) + ' ± ' + fmt.esc(value('accuracyMeters')) + ' m</span>' +
+            '<span class="k">Sprache / Zeitzone</span><span class="v">' + fmt.esc(value('language')) + ' · ' + fmt.esc(value('timezone')) + '</span>' +
+            '<span class="k">Bildschirm</span><span class="v mono">' + fmt.esc(value('screen')) + ' · DPR ' + fmt.esc(value('pixelRatio')) + '</span>' +
+            '<span class="k">Hardware</span><span class="v">' + fmt.esc(value('cpuCores')) + ' CPU-Kerne · ' + fmt.esc(value('memoryGb')) + ' GB RAM · ' + fmt.esc(value('touchPoints')) + ' Touch</span>' +
+            '<span class="k">Netzwerk</span><span class="v">' + fmt.esc(value('network')) + ' · online: ' + (info.online ? 'ja' : 'nein') + '</span>' +
+            '<span class="k">Erfasst</span><span class="v mono small">' + fmt.esc(info.recordedAt ? new Date(info.recordedAt).toLocaleString('de-DE') : '—') + '</span>' +
+          '</div><div class="sep"></div><span class="dim small">OS-Updates stellt der Browser nicht bereit. Standortdaten werden nur grob gerundet angezeigt.</span>',
+          [{ label: 'Schließen', cls: 'ghost' }]
         );
       };
     });

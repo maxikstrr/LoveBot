@@ -203,6 +203,50 @@
       "createdAt": "2026-09-05T23:34:06.776Z",
       "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*846302*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
       "finishedAt": "2026-09-05T23:34:08.742Z"
+    },
+    {
+      "id": "1583f49a58f1a0c38d80a6ee6f35356843b174143a21c4d1",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T21:20:03.616Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T21:20:03.615Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T21:20:04.507Z"
+    },
+    {
+      "id": "727517b933aeff0d36a50954e28b0764d62696f90bdae5ab",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T21:24:48.705Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T21:24:48.705Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T21:24:49.495Z"
+    },
+    {
+      "id": "7b15325daaad7b526856287cfce440a41a852afff5281796",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T21:27:48.836Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T21:27:48.835Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T21:27:51.234Z"
+    },
+    {
+      "id": "01bece00382adb1f5c199037838eec98d0357d09fd2be9d8",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T22:55:54.462Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T22:55:54.462Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T22:55:56.345Z"
     }
   ]
 }

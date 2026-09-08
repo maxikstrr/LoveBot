@@ -15,24 +15,24 @@
       "status": "CONNECTED",
       "source": "live",
       "createdAt": 1788651061273,
-      "connectedAt": 1788813580414,
-      "lastSeen": 1788814987849,
+      "connectedAt": 1788841302199,
+      "lastSeen": 1788878944520,
       "jid": "420721199654@s.whatsapp.net",
       "lid": "155019043160306@lid",
       "phone": "420721199654",
-      "messages": 961,
-      "commands": 64,
-      "groups": 7,
-      "reconnects": 2,
-      "errors": 5,
-      "memoryMb": 117,
+      "messages": 1307,
+      "commands": 73,
+      "groups": 6,
+      "reconnects": 4,
+      "errors": 6,
+      "memoryMb": 226.6,
       "isDefault": true,
       "pid": null,
       "desiredState": "running",
       "autoStart": true,
       "tags": [],
       "env": "production",
-      "connectedMs": 162495576
+      "connectedMs": 190209338
     },
     "test910": {
       "id": "test910",
@@ -136,6 +136,30 @@
       "type": "session",
       "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
       "sid": "main"
+    },
+    {
+      "ts": 1788834706877,
+      "type": "session",
+      "text": "🔴 Session „MainBot“ → DISCONNECTED",
+      "sid": "main"
+    },
+    {
+      "ts": 1788834711456,
+      "type": "session",
+      "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
+      "sid": "main"
+    },
+    {
+      "ts": 1788841298754,
+      "type": "session",
+      "text": "🔴 Session „MainBot“ → DISCONNECTED",
+      "sid": "main"
+    },
+    {
+      "ts": 1788878834666,
+      "type": "error",
+      "text": "🐞 Fehler in „MainBot“: forbidden",
+      "sid": "main"
     }
   ],
   "locks": {},
@@ -150,18 +174,30 @@
   ],
   "commandStats": {
     "me": 2,
-    "offline": 1,
-    "help": 1,
+    "offline": 2,
+    "help": 2,
     "delowner": 1,
-    "online": 1
+    "online": 2,
+    "menu": 1,
+    "all": 1,
+    "sticker": 2,
+    "afk": 1,
+    "ban": 1
   },
   "commandStatsDaily": {
     "2026-09-07": {
       "me": 2,
-      "offline": 1,
-      "help": 1,
+      "offline": 2,
+      "help": 2,
       "delowner": 1,
-      "online": 1
+      "online": 2,
+      "menu": 1
+    },
+    "2026-09-08": {
+      "all": 1,
+      "sticker": 2,
+      "afk": 1,
+      "ban": 1
     }
   }
 }

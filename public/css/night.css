@@ -1,3 +1,18 @@
+.router-console { margin: 0 0 18px; padding: 20px; border: 1px solid rgba(167,139,250,.28); border-radius: 16px; background: linear-gradient(135deg, rgba(31,24,58,.88), rgba(12,15,28,.96)); box-shadow: 0 16px 45px rgba(0,0,0,.2); }
+.router-console-head { display: flex; align-items: flex-start; gap: 16px; }
+.router-kicker { color: #a78bfa; font: 700 10px/1 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .18em; }
+.router-console h2 { margin: 7px 0 3px; font-size: 22px; }
+.router-console p { margin: 0; color: var(--muted); font-size: 12px; }
+.router-led { width: 11px; height: 11px; margin-left: auto; border-radius: 50%; box-shadow: 0 0 16px currentColor; background: currentColor; color: var(--warn); }
+.router-led.ok { color: var(--ok); }
+.router-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0 14px; }
+.router-stats div { padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(255,255,255,.035); }
+.router-stats b { display: block; font-size: 21px; color: #fff; }
+.router-stats span { color: var(--muted); font-size: 11px; }
+.router-status { display: flex; align-items: center; gap: 8px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.08); font-size: 12px; }
+.router-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 12px var(--ok); }
+.router-spacer { flex: 1; }
+@media (max-width: 700px) { .router-stats { grid-template-columns: repeat(2, 1fr); } .router-status { flex-wrap: wrap; } }
 /* ============================================================================
    LoveBot — NIGHT THEME
    ☾ dunkle Nacht · Neon Pink · Türkis · Lila
