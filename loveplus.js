@@ -13,6 +13,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { levelUpAnnounce, prestigeAnnounce } from './levelsystem.js';
+import { emit as engineEmit } from './loveengine.js';
 
 /* ---------- Speicher -------------------------------------------------- */
 const STORE_PATH = path.join('Database', 'loveplus.json');
@@ -206,6 +207,7 @@ function unlock(store, uid, id, unlockedNow) {
   if (!a) return;
   u.achievements[id] = Date.now();
   unlockedNow.push(a);
+  try { engineEmit('ACHIEVEMENT_UNLOCKED', { bid: uid, item: a.name }); } catch (e) {}
 }
 
 function checkAchievements(store, uid, profile, events = []) {
@@ -240,6 +242,7 @@ function checkAchievements(store, uid, profile, events = []) {
    liefert einen Anzeigeteil (inkl. Level-Up-Ankündigung) zurück. */
 function gameXpLine(ctx, xp, source = 'games') {
   if (!ctx.helpers?.grantGameXp) return ' · 💜 +' + xp + ' XP';
+  try { engineEmit(xp >= 5 ? 'GAME_WIN' : 'GAME_LOSS', { bid: ctx.uid, name: ctx.name, xp }); } catch (e) {}
   const res = ctx.helpers.grantGameXp(xp, source);
   if (!res) return '';
   let line = ' · 💜 +' + xp + ' XP';

@@ -59,8 +59,30 @@ CC.reg('dash', async () => {
     '<div class="cc-grid2">' +
       '<div class="cc-section"><h3>🛡️ Letzte Security-Events</h3>' + secFeed + '</div>' +
       '<div class="cc-section"><h3>📖 Letzte Audit-Aktionen</h3>' + auditFeed + '</div>' +
-    '</div>',
-  { after: () => { api('/api/maintenance').then((m) => { const el = document.getElementById('dashMaint'); if (el && m) el.innerHTML = m.on ? '<span class="cc-tag bad">🔴 WARTUNG</span>' : '<span class="cc-tag ok">🟢 AN</span>'; }).catch(() => {}); } });
+    '</div>' +
+    (CC.can('xp.view') ?
+      '<div class="cc-grid2">' +
+        '<div class="cc-section"><h3>⭐ XP & Level (LoveCore)</h3><div id="dashXp">…</div><div class="cc-btnrow"><button class="cc-btn sm" onclick="CC.go(\'xp\')">⭐ XP &amp; Level öffnen</button></div></div>' +
+        '<div class="cc-section"><h3>💜 Live-Aktivität <span class="cc-tag ok" style="padding:1px 7px;font-size:9.5px">LIVE</span></h3><div id="dashLiveFeed"></div></div>' +
+      '</div>' : '')
+  ,
+  { after: () => { api('/api/maintenance').then((m) => { const el = document.getElementById('dashMaint'); if (el && m) el.innerHTML = m.on ? '<span class="cc-tag bad">🔴 WARTUNG</span>' : '<span class="cc-tag ok">🟢 AN</span>'; }).catch(() => {});
+    if (CC.can('xp.view')) {
+      api('/api/xp').then((d) => {
+        const el = document.getElementById('dashXp');
+        if (!el || !d || !d.ok) return;
+        const st = d.stats || {};
+        el.innerHTML = '<div class="cc-kv">' +
+          '<span class="k">XP gesamt (Lifetime)</span><span class="v">⭐ ' + Number(st.totalXp || 0).toLocaleString('de-DE') + '</span>' +
+          '<span class="k">XP in 24 h</span><span class="v">' + Number(st.today || 0).toLocaleString('de-DE') + '</span>' +
+          '<span class="k">Level-Ups (24 h)</span><span class="v">' + (st.levelUps24h ?? 0) + '</span>' +
+          '<span class="k">Prestige-Ups (24 h)</span><span class="v">' + (st.prestigeUps24h ?? 0) + '</span>' +
+          '<span class="k">Anti-Spam-Cap aktiv</span><span class="v">' + (st.suspiciousXp ?? 0) + '</span>' +
+        '</div>';
+      }).catch(() => {});
+      try { CC.startLiveFeed('dashLiveFeed', 8); } catch (e) {}
+    }
+  } });
 }, { perms: [] });
 
 /* ═══ BOT-ÜBERSICHT ═══ */

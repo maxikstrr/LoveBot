@@ -38,6 +38,8 @@
    └──────────────────────────────┴──────────────────────────────────┘
    ══════════════════════════════════════════════════════════════════ */
 
+import { emit as engineEmit } from './loveengine.js';
+
 const PROGRESSION = Object.freeze({
   maxLevel: 743,
   maxPrestige: 743,
@@ -312,6 +314,15 @@ export function grantXp(profile, amount, { source = 'general', now = Date.now() 
   p.neededXpForLvOrPrestigeUp = need;
   if (p.prestige >= PROGRESSION.maxPrestige && p.level >= PROGRESSION.maxLevel) p.xp = need - 1; /* MAX: volle Leiste */
   addWallet(profile, copper);
+
+  /* 💜 LoveCore: Events für Live-Feed & Owner-Center (nie werfend) */
+  const evtBase = { bid: profile?.identity?.bid || '', name: profile?.registration?.name || '', source };
+  engineEmit('XP_GRANTED', { ...evtBase, granted: amt, level: p.level });
+  for (const ev of events) {
+    if (ev.type === 'levelup') engineEmit('LEVEL_UP', { ...evtBase, level: ev.level, xp: p.xp });
+    if (ev.type === 'prestige') engineEmit('PRESTIGE_UP', { ...evtBase, prestige: ev.prestige, level: 0 });
+  }
+  if (copper > 0) engineEmit('COINS_EARNED', { ...evtBase, granted: copper, reason: events.some((e) => e.type === 'prestige') ? 'prestige' : 'levelup' });
 
   return { granted: amt, copper, events, maxed: wasMaxed, capped: false, prog: p };
 }

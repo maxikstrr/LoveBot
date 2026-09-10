@@ -28,6 +28,7 @@ const MATRIX = {
   owner: ['*'],
   deputy: [
     'accounts.view', 'accounts.manage', 'roles.assign',
+    'xp.view', 'xp.adjust', 'economy.view', 'economy.adjust', 'games.view',
     'sessions.view', 'sessions.control', 'sessions.delete',
     'users.view', 'users.edit', 'users.ban',
     'groups.view', 'groups.manage',
@@ -39,6 +40,7 @@ const MATRIX = {
   ],
   admin: [
     'accounts.view',
+    'xp.view', 'economy.view', 'games.view',
     'sessions.view', 'sessions.control',
     'users.view', 'users.edit',
     'groups.view', 'groups.manage',
@@ -100,7 +102,12 @@ export const PERMISSIONS = [
   { id: 'system.control',   label: 'System steuern (Neustart etc.)',    cat: 'System',       critical: true },
   { id: 'broadcast.send',   label: 'Broadcast senden',                  cat: 'Sonstiges',    critical: false },
   { id: 'tickets.manage',   label: 'Tickets verwalten',                 cat: 'Sonstiges',    critical: false },
-  { id: 'self.view',        label: 'Eigenes Profil einsehen',           cat: 'Sonstiges',    critical: false }
+  { id: 'self.view',        label: 'Eigenes Profil einsehen',           cat: 'Sonstiges',    critical: false },
+  { id: 'xp.view',           label: 'XP-Statistik & Level-Tabelle einsehen', cat: 'XP & Level',   critical: false },
+  { id: 'xp.adjust',         label: 'XP von Nutzern vergeben/abziehen',      cat: 'XP & Level',   critical: true },
+  { id: 'economy.view',      label: 'Economy-Statistik einsehen',            cat: 'Economy',      critical: false },
+  { id: 'economy.adjust',    label: 'Wallets bearbeiten (Grants)',           cat: 'Economy',      critical: true },
+  { id: 'games.view',        label: 'Game-Statistik einsehen',               cat: 'Games',        critical: false }
 ];
 export const PERMISSION_IDS = PERMISSIONS.map((p) => p.id);
 
@@ -110,7 +117,9 @@ export const PERMISSION_TEMPLATES = {
   content_mod:     { label: '🧹 Content-Moderation',    grant: ['users.view', 'users.edit', 'users.ban', 'groups.view', 'groups.manage'] },
   support_basis:   { label: '💬 Support-Basis',         grant: ['users.view', 'tickets.manage', 'logs.view'] },
   audit_readonly:  { label: '👁️ Nur-Lesen (Audit)',     grant: ['accounts.view', 'users.view', 'groups.view', 'logs.view', 'security.view', 'system.view', 'db.view'] },
-  broadcast_team:  { label: '📢 Broadcast-Team',        grant: ['broadcast.send', 'groups.view'] }
+  broadcast_team:  { label: '📢 Broadcast-Team',        grant: ['broadcast.send', 'groups.view'] },
+  xp_moderator:    { label: '⭐ XP-Moderator',          grant: ['xp.view', 'xp.adjust', 'users.view'] },
+  economy_viewer:  { label: '💰 Economy-Observer',      grant: ['economy.view', 'xp.view', 'games.view'] }
 };
 
 /** Effektive Rechte eines Accounts: Rolle + Einzel-Zusatzrechte − Einzel-Entzüge.

@@ -584,7 +584,7 @@ erreichbar, sagt der Bot das ehrlich – es werden keine Werte erfunden.
 
 ## 11.1 Level-System (XP, Level, Ränge, Prestige) — neu ab 10.09.2026
 
-Das komplette Level-System steckt in **`levelsystem.js`** (losgekoppelt, wie `lovecore.js`/`loveplus.js`).
+Das komplette Level-System steckt in **`levelsystem.js`** (losgekoppelt, wie `loveengine.js`/`loveplus.js`).
 Die ausführliche Doku mit allen Werten: **`Dokumente/LEVEL-SYSTEM.md`**.
 
 **Kurzfassung:**
@@ -624,6 +624,26 @@ Die ausführliche Doku mit allen Werten: **`Dokumente/LEVEL-SYSTEM.md`**.
 > (`git rm --cached .env`, danach ggf. Historie bereinigen).
 
 ---
+
+### 11.1b LoveCore Engine (EventBus, Live-Feed, Owner-XP-Admin) — neu ab 10.09.2026
+
+**`loveengine.js`** ist das zentrale Nervensystem: Jede relevante Aktion (XP,
+Level, Prestige, Coins, Games, Achievements, Owner-Änderungen, Login-Fehlschläge)
+emittiert ein **Event** — In-Memory-Ring (500) + `Database/events.jsonl`
+(5.000 Zeilen, Rotation). `emit()` ist fire-and-forget und kann nie crashen.
+
+- **Live-Feed:** `/api/live` (SSE) pusht die Events alle 3 s → SOUL ECHO
+  Dashboard + XP-Ansicht (`public/control.html → #/xp`) zeigen Live-Aktivität.
+- **XP-Admin:** `POST /api/xp/adjust` (Recht `xp.adjust`, kritisch) —
+  Grund **Pflicht**, Step-up-Passwort, Audit `xp.adjusted`, Event `XP_ADJUSTED`.
+- **System Health:** `GET /api/health` — WhatsApp-Heartbeat, Web, DB, Sessions,
+  Media, Security auf einen Blick.
+- **Konfigurierbare WEB-REQ-07:** Die Request-Flut-Regel (Reload-Schutz) liegt
+  in `Database/security-rules.json` und ist im Center unter *Auto-Regeln*
+  änderbar (Schwellwert/Fenster/Verjährung/Stufen, versioniert + Step-up).
+
+Ausführliche Doku: **`Dokumente/LOVECORE.md`**.
+
 
 ## 12. . Neue Features: AFK, Auto-Mod, Setup, Ban, System
 
@@ -923,6 +943,7 @@ Für weiterführende Informationen gibt es in diesem Projekt zusätzlich Dokumen
 - `Dokumente/datenschutz.md`
 - `Dokumente/datenverarbeitung.md`
 - `Dokumente/LEVEL-SYSTEM.md` — komplettes Level-System (XP, Kurve, Ränge, Prestige, Anti-Spam, DSGVO)
+- `Dokumente/LOVECORE.md` — LoveCore Engine (EventBus, Live-Feed, XP-Admin, WEB-REQ-07)
 - `handbuch.md`
 
 Diese Dateien ergänzen diese README und erklären die datenschutzrechtlichen und betrieblichen Aspekte ausführlicher.

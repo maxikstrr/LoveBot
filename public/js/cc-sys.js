@@ -227,7 +227,23 @@ CC.reg('rateLimits', async () => {
 
 /* ═══ AUTO-REGELN ═══ */
 CC.reg('autoRules', async () => {
-  CC.page('⚙️ Auto-Regeln', 'Aktive automatische Schutzregeln des Systems — wie die Eskalationskette funktioniert.',
+  const rules = await api('/api/security/rules').catch(() => null);
+  const wrf = (rules && rules.webReqFlood) || { id: 'WEB-REQ-07', enabled: true, threshold: 50, windowSec: 10, violationDecayMin: 30, tiers: [{ atViolations: 2, action: 'TEMP_BLOCK', blockMin: 5 }, { atViolations: 4, action: 'LONG_BLOCK', blockMin: 60 }, { atViolations: 6, action: 'PERM_BLOCK', blockMin: 0 }] };
+  const canEdit = CC.can('security.manage');
+  const tierActionLabel = { TEMP_BLOCK: 'Kurze Sperre', LONG_BLOCK: 'Lange Sperre', PERM_BLOCK: 'Dauerhaft sperren' };
+  const tierRows = (wrf.tiers || []).map((t, i) =>
+    '<tr>' +
+      '<td><input class="cc-input" style="width:70px" id="arTierN' + i + '" type="number" min="1" max="50" value="' + (t.atViolations || 0) + '" ' + (canEdit ? '' : 'disabled') + '></td>' +
+      '<td><select class="cc-select" id="arTierA' + i + '" ' + (canEdit ? '' : 'disabled') + '>' +
+        '<option value="TEMP_BLOCK"' + (t.action === 'TEMP_BLOCK' ? ' selected' : '') + '>Kurze Sperre</option>' +
+        '<option value="LONG_BLOCK"' + (t.action === 'LONG_BLOCK' ? ' selected' : '') + '>Lange Sperre</option>' +
+        '<option value="PERM_BLOCK"' + (t.action === 'PERM_BLOCK' ? ' selected' : '') + '>Dauerhaft (manuelle Prüfung)</option>' +
+      '</select></td>' +
+      '<td>' + (t.action === 'PERM_BLOCK' ? '<span class="cc-tag bad">—</span>' : '<input class="cc-input" style="width:90px" id="arTierM' + i + '" type="number" min="1" max="10080" value="' + (t.blockMin || 5) + '" ' + (canEdit ? '' : 'disabled') + '><span style="margin-left:6px;color:var(--mut)">Min.</span>') + '</td>' +
+      '<td>' + esc(t.label || (tierActionLabel[t.action] || t.action)) + '</td>' +
+    '</tr>').join('');
+
+  CC.page('⚙️ Auto-Regeln', 'Aktive automatische Schutzregeln des Systems — wie die Eskalationskette funktioniert. Die Request-Flut-Regel ist <b>konfigurierbar</b> (nicht hart im Code).',
     '<div class="cc-section"><h3>Automatische Eskalationskette</h3><div class="cc-gauge">' +
       [['1 · Erkennen', 'Security-Events (AUTH_FAILURE, Brute-Force, 2FA fehlt, globale Limits, Missbrauch) bekommen automatisch einen Risiko-Punktwert.'],
        ['2 · Bewerten', 'Pro Client/IP wird der höchste Risiko-Wert als Risk-Score geführt (normal → Beobachtung → eingeschränkt → hoch → kritisch).'],
@@ -237,8 +253,66 @@ CC.reg('autoRules', async () => {
        ['6 · Jede Stufe protokollieren', 'Alles landet manipulationssicher in Audit-/Security-Log mit Wer/Was/Wann/Woher/Warum.']]
       .map(([t, x]) => '<div class="cc-bar" style="align-items:flex-start"><b style="width:210px;flex:0 0 210px">' + esc(t) + '</b><span style="color:var(--mut);flex:1">' + esc(x) + '</span></div>').join('') +
     '</div></div>' +
-    '<div class="cc-section"><h3>Kritische Aktionen mit erneuter Authentifizierung</h3><p class="cc-hint">Dauerhafte IP-Sperren, kritische Rollenvergaben, Wartungsmodus AN, Deaktivieren/Sperren von Owner-Accounts, Alle-Sessions-beenden, kritische Einzelrechte — immer mit frischem Passwort (Step-up).</p></div>'
-  );
+    '<div class="cc-section"><h3>🌊 Request-Flut-Regel <span class="cc-key" style="margin-left:8px">' + esc(wrf.id) + '</span></h3>' +
+    (rules && rules.version ? '<div class="cc-subline" style="margin:0 0 10px">Version ' + rules.version + ' · geändert ' + CC.dt(rules.updatedAt) + ' von <b>' + esc(rules.updatedBy) + '</b> · aktiv: ' + (wrf.enabled ? '<span class="cc-tag ok">AN</span>' : '<span class="cc-tag bad">AUS</span>') + (rules.activeCounts ? ' · gerade beobachtet: ' + rules.activeCounts.bursts + ' Bursts / ' + rules.activeCounts.violations + ' Verstöße' : '') + '</div>' : '') +
+    '<div class="cc-tip" style="margin-bottom:12px">Regel: Mehr als <b>[Schwellwert]</b> Anfragen von einer IP innerhalb von <b>[Fenster]</b> = 1 „Verstoß“. Wiederholte Verstöße (innerhalb der Verjährungsfrist) eskalieren automatisch — siehe Stufen. Änderungen sind kritisch: Passwort-Bestätigung + Audit-Log + Versionierung (alte Versionen werden 10 Stufen lang mitgeführt).</div>' +
+    '<div class="cc-xpform">' +
+      '<div class="cc-field"><label>Regel-ID</label><input class="cc-input" id="arId" value="' + esc(wrf.id || 'WEB-REQ-07') + '" ' + (canEdit ? '' : 'disabled') + '></div>' +
+      '<div class="cc-field"><label>Schwellwert (Anfragen)</label><input class="cc-input" id="arThreshold" type="number" min="3" max="1000" value="' + (wrf.threshold || 50) + '" ' + (canEdit ? '' : 'disabled') + '></div>' +
+      '<div class="cc-field"><label>Fenster (Sekunden)</label><input class="cc-input" id="arWindow" type="number" min="2" max="3600" value="' + (wrf.windowSec || 10) + '" ' + (canEdit ? '' : 'disabled') + '></div>' +
+      '<div class="cc-field"><label>Verjährung (Minuten)</label><input class="cc-input" id="arDecay" type="number" min="1" max="1440" value="' + (wrf.violationDecayMin || 30) + '" ' + (canEdit ? '' : 'disabled') + '></div>' +
+      '<div class="cc-field"><label class="checkline" style="display:flex;gap:8px;align-items:center;cursor:pointer;margin-top:20px"><input type="checkbox" id="arEnabled"' + (wrf.enabled === false ? '' : ' checked') + ' ' + (canEdit ? '' : 'disabled') + '> Regel aktiv</label></div>' +
+    '</div>' +
+    '<div class="cc-subline" style="margin:0 0 6px;font-weight:600">Eskalations-Stufen (ab Verstoß-Nr.)</div>' +
+    '<div class="cc-tablewrap" style="overflow-x:auto"><table class="cc-table"><thead><tr><th>Ab Verstoß</th><th>Aktion</th><th>Dauer</th><th>Beschriftung</th></tr></thead><tbody>' + tierRows + '</tbody></table></div>' +
+    (canEdit ? '<div class="cc-btnrow" style="margin-top:12px"><button class="cc-btn primary" id="arSave">💾 Regeln speichern (kritisch)</button></div><div id="arOut"></div>' : '<div class="cc-empty" style="margin-top:10px">Nur Ansicht — zum Ändern ist <span class="cc-key">security.manage</span> nötig.</div>') +
+    '</div>' +
+    '<div class="cc-section"><h3>Kritische Aktionen mit erneuter Authentifizierung</h3><p class="cc-hint">Dauerhafte IP-Sperren, kritische Rollenvergaben, Wartungsmodus AN, Deaktivieren/Sperren von Owner-Accounts, Alle-Sessions-beenden, kritische Einzelrechte, Schutzregeln ändern — immer mit frischem Passwort (Step-up).</p></div>'
+  , { after: () => {
+    if (!canEdit) return;
+    const btn = document.getElementById('arSave');
+    if (!btn) return;
+    btn.onclick = async () => {
+      const nTiers = (wrf.tiers || []).length;
+      const tiers = [];
+      for (let i = 0; i < nTiers; i++) {
+        const a = (document.getElementById('arTierA' + i) || {}).value || 'TEMP_BLOCK';
+        tiers.push({
+          atViolations: Number(document.getElementById('arTierN' + i).value) || 0,
+          action: a,
+          blockMin: a === 'PERM_BLOCK' ? 0 : Number(document.getElementById('arTierM' + i).value) || 0
+        });
+      }
+      const payload = {
+        id: document.getElementById('arId').value.trim() || 'WEB-REQ-07',
+        enabled: document.getElementById('arEnabled').checked,
+        threshold: Number(document.getElementById('arThreshold').value),
+        windowSec: Number(document.getElementById('arWindow').value),
+        violationDecayMin: Number(document.getElementById('arDecay').value),
+        tiers
+      };
+      if (payload.threshold < 3 || payload.windowSec < 2) { CC.toast('❌ Schwellwert ≥ 3 und Fenster ≥ 2 s'); return; }
+      if (!tiers.some((t) => t.atViolations > 0)) { CC.toast('❌ Mindestens eine Stufe mit Wert > 0 nötig'); return; }
+      const ans = await CC.confirm({
+        ico: '⚙️',
+        title: 'Schutzregel ändern (kritisch)',
+        text: 'WEB-REQ-07: <b>' + payload.threshold + ' Anfragen / ' + payload.windowSec + ' s</b>, Eskalation über ' + tiers.filter((t) => t.atViolations > 0).length + ' Stufen, Regel <b>' + (payload.enabled ? 'AKTIV' : 'DEAKTIVIERT') + '</b>.<br>Wird versioniert und im Audit-Log gespeichert (security.rules.changed).',
+        fields: [
+          { name: 'reason', label: 'Grund (Audit)', type: 'text', required: true, placeholder: 'z. B. Testphase: Schwellwert erhöht' },
+          { name: 'reauth', label: 'Passwort (kritische Aktion)', type: 'password', required: true, placeholder: 'Dein Owner-Passwort' }
+        ],
+        okLabel: '💾 Speichern'
+      });
+      if (!ans) return;
+      const r = await CC.post('/api/security/rules', { ...payload, reason: ans.reason, reauth: ans.reauth });
+      if (r.status >= 200 && r.status < 300) {
+        document.getElementById('arOut').innerHTML = '<div class="cc-tip" style="margin-top:10px;border-color:var(--ok,#2c2)"><b>✅ Gespeichert:</b> Version ' + r.data.version + ' — gilt sofort (ohne Neustart).</div>';
+        CC.toast('✅ Regeln gespeichert (v' + r.data.version + ')');
+      } else {
+        document.getElementById('arOut').innerHTML = '<div class="cc-tip" style="margin-top:10px;border-color:var(--bad,#c44)"><b>❌ ' + esc(r.data?.error || 'Fehler') + '</b></div>';
+      }
+    };
+  } });
 }, { perms: ['security.view'] });
 
 /* ═══ KONFIGURATION (Referenz) ═══ */

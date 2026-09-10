@@ -24,6 +24,7 @@ import { exportXlsx } from './xlsxwriter.js';
 import { makeZip } from './zipwriter.js';
 import { migrateRegistration, isMinor, cityLabel, ageLabel, publicProfileAllowed } from './privacy.js';
 import { rankFor } from './levelsystem.js';
+import * as LoveEngine from './loveengine.js';
 
 /* 🔐 Minimaler .env-Loader (keine Zusatz-Abhängigkeit nötig): lädt
    Werte aus einer .env-Datei im Projektordner in process.env, aber
@@ -401,6 +402,20 @@ function chainAppend(file, entry) {
 function audit(actor, action, target, result) {
   chainAppend(AUDIT_FILE, { actor, action, target, result: result || 'success' });
   try { termLog(result === 'denied' ? 'DENIED' : 'AUDIT', String(actor || '?') + ' › ' + action + (target ? ' · ' + String(target) : '') + ' → ' + String(result || 'success')); } catch (e) {}
+  /* 💜 LoveCore: bestimmte Audit-Aktionen kaskadieren automatisch als Live-Events
+     (eine Aktion → Audit + Security-Log + Live-Feed — dieselbe Wahrheit). */
+  try {
+    const who = String(actor || '').slice(0, 40);
+    const tgt = String(target || '').slice(0, 80);
+    if (result === 'denied') {
+      if (String(action).includes('login')) LoveEngine.emit('LOGIN_FAILED', { name: who, reason: tgt || action });
+      return;
+    }
+    if (action === 'user.banned') LoveEngine.emit('USER_BANNED', { name: tgt, reason: 'banned' });
+    if (action === 'user.unbanned') LoveEngine.emit('SESSION_EVENT', { name: tgt, reason: 'unbanned' });
+    if (action === 'role.change') LoveEngine.emit('SESSION_EVENT', { name: tgt, reason: 'role.change' });
+    if (action === 'session.killed' || action === 'all.sessions.killed') LoveEngine.emit('SESSION_EVENT', { name: tgt, reason: 'session.kill' });
+  } catch (e) {}
 }
 function securityEvent(event, extra) {
   chainAppend(SECURITY_FILE, Object.assign({ event }, extra || {}));
@@ -724,6 +739,11 @@ function listBlockedIps() {
   return out.sort((a, b) => b.fails - a.fails);
 }
 
+function fmtSizeKb(kb) {
+  if (kb >= 1024) return (kb / 1024).toFixed(1) + ' MB';
+  return kb + ' KB';
+}
+
 function maskIp(ip) {
   ip = String(ip || '');
   if (ip.includes('.')) {
@@ -915,33 +935,112 @@ function listManualBans() {
    auffälliger Nutzer, der sich seitdem normal verhält, wird NICHT für
    immer nachträglich eskaliert. Jede Stufe wird vollständig geloggt
    (Grund, Anzahl Anfragen, Zeitfenster, Aktion, Dauer) für den Owner. */
-const ABUSE_BURST_WINDOW_MS = 10 * 1000;          /* 10 Sek. Beobachtungsfenster */
-const ABUSE_BURST_THRESHOLD = 50;                 /* > 50 Anfragen/10s einer IP = auffällig */
-const ABUSE_VIOLATION_DECAY_MS = 30 * 60 * 1000;  /* Verstöße verjähren nach 30 Min Ruhe */
-const ABUSE_TIERS = [
-  { atViolations: 2, action: 'TEMP_BLOCK', blockMs: 5 * 60 * 1000, label: '5 Minuten' },
-  { atViolations: 4, action: 'LONG_BLOCK', blockMs: 60 * 60 * 1000, label: '1 Stunde' },
-  { atViolations: 6, action: 'PERM_BLOCK', blockMs: null, label: 'dauerhaft (manuelle Prüfung nötig)' }
-];
+/* ── Konfigurierbare Web-Abuse-Regeln (WEB-REQ-07) ─────────────────────
+   Die Parameter sind NICHT hart im Code, sondern liegen in
+   Database/security-rules.json und können im Owner-Center (Auto-Regeln)
+   geändert werden — jede Änderung wird versioniert, auditiert und
+   erfordert ein Step-up-Passwort. Die Defaults unten gelten, solange die
+   Datei fehlt, und werden beim ersten Start automatisch angelegt. */
+const ABUSE_DEFAULTS = {
+  id: 'WEB-REQ-07',
+  enabled: true,
+  threshold: 50,                /* > N Anfragen einer IP im Fenster = 1 Verstoß */
+  windowSec: 10,                /* Beobachtungsfenster in Sekunden */
+  violationDecayMin: 30,        /* Verstöße verjähren nach N Min ohne Vorfall */
+  tiers: [
+    { atViolations: 2, action: 'TEMP_BLOCK', blockMin: 5, label: '5 Minuten' },
+    { atViolations: 4, action: 'LONG_BLOCK', blockMin: 60, label: '1 Stunde' },
+    { atViolations: 6, action: 'PERM_BLOCK', blockMin: 0, label: 'dauerhaft (manuelle Prüfung nötig)' }
+  ]
+};
+const SEC_RULES_FILE = path.join('Database', 'security-rules.json');
+
+function normalizeAbuseRules(input) {
+  const src = input || {};
+  const t = Array.isArray(src.tiers) ? src.tiers.slice(0, 8) : ABUSE_DEFAULTS.tiers.map((x) => ({ ...x }));
+  const tiers = t
+    .map((x) => ({
+      atViolations: Math.max(1, Math.min(50, Math.round(Number(x?.atViolations) || 0))),
+      action: ['TEMP_BLOCK', 'LONG_BLOCK', 'PERM_BLOCK'].includes(x?.action) ? x.action : 'TEMP_BLOCK',
+      blockMin: x?.action === 'PERM_BLOCK' ? 0 : Math.max(1, Math.min(10080, Math.round(Number(x?.blockMin) || 0) || ABUSE_DEFAULTS.tiers[0].blockMin)),
+      label: String(x?.label || '').slice(0, 60)
+    }))
+    .filter((x) => x.atViolations > 0)
+    .sort((a, b) => a.atViolations - b.atViolations);
+  if (!tiers.length) tiers.push({ ...ABUSE_DEFAULTS.tiers[0] });
+  return {
+    id: String(src.id || 'WEB-REQ-07').slice(0, 40),
+    enabled: src.enabled !== false,
+    threshold: Math.max(3, Math.min(1000, Math.round(Number(src.threshold) || ABUSE_DEFAULTS.threshold))),
+    windowSec: Math.max(2, Math.min(3600, Math.round(Number(src.windowSec) || ABUSE_DEFAULTS.windowSec))),
+    violationDecayMin: Math.max(1, Math.min(1440, Math.round(Number(src.violationDecayMin) || ABUSE_DEFAULTS.violationDecayMin))),
+    tiers
+  };
+}
+
+let SEC_RULES = { version: 0, updatedAt: null, updatedBy: 'defaults', history: [], webReqFlood: normalizeAbuseRules(null) };
+
+function loadSecurityRules() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(SEC_RULES_FILE, 'utf8'));
+    const wrf = normalizeAbuseRules(raw.webReqFlood || raw);
+    SEC_RULES = {
+      version: Math.max(1, Number(raw.version) || 1),
+      updatedAt: raw.updatedAt || null,
+      updatedBy: raw.updatedBy || 'datei',
+      history: Array.isArray(raw.history) ? raw.history.slice(-10) : [],
+      webReqFlood: wrf
+    };
+  } catch (e) {
+    /* Datei fehlt oder kaputt → Defaults anlegen */
+    SEC_RULES = { version: 1, updatedAt: new Date().toISOString(), updatedBy: 'system-init', history: [], webReqFlood: normalizeAbuseRules(null) };
+    try { fs.writeFileSync(SEC_RULES_FILE, JSON.stringify(SEC_RULES, null, 2), 'utf8'); } catch (e2) {}
+  }
+  return SEC_RULES;
+}
+function saveSecurityRules(actor, reason) {
+  const prev = { v: SEC_RULES.version, webReqFlood: SEC_RULES.webReqFlood };
+  SEC_RULES.history = [...SEC_RULES.history, prev].slice(-10);
+  SEC_RULES.version += 1;
+  SEC_RULES.updatedAt = new Date().toISOString();
+  SEC_RULES.updatedBy = String(actor || '?');
+  fs.writeFileSync(SEC_RULES_FILE, JSON.stringify(SEC_RULES, null, 2), 'utf8');
+  audit(actor, 'security.rules.changed', 'WEB-REQ-07 → v' + SEC_RULES.version + (reason ? ' — ' + String(reason).slice(0, 160) : ''), 'success');
+  return SEC_RULES;
+}
+loadSecurityRules();
+/* Der Effective-Wert kommt aus den Regeln (Default-Fallback bleibt als Konstante erhalten) */
+const abuseRule = () => SEC_RULES.webReqFlood || ABUSE_DEFAULTS;
+const ABUSE_BURST_WINDOW_MS = () => (abuseRule().windowSec || 10) * 1000;
+const ABUSE_BURST_THRESHOLD = () => abuseRule().threshold || 50;
+const ABUSE_VIOLATION_DECAY_MS = () => (abuseRule().violationDecayMin || 30) * 60 * 1000;
+const ABUSE_TIERS = () => (abuseRule().tiers || ABUSE_DEFAULTS.tiers).map((t) => ({
+  atViolations: t.atViolations,
+  action: t.action,
+  blockMs: t.action === 'PERM_BLOCK' ? null : (t.blockMin || 5) * 60 * 1000,
+  label: t.label || (t.action === 'PERM_BLOCK' ? 'dauerhaft' : (t.blockMin || 5) + ' Minuten')
+}));
 const abuseBursts = new Map();     /* ip -> { count, windowStart, tier1Logged } */
 const abuseViolations = new Map(); /* ip -> { count, lastAt } */
 
 function recordAbuseCheck(ip) {
   if (!ip) return;
+  const rule = abuseRule();
+  if (!rule.enabled) return; /* Regel deaktiviert (im Owner-Center konfigurierbar) */
   const now = Date.now();
 
   let burst = abuseBursts.get(ip);
-  if (!burst || burst.windowStart + ABUSE_BURST_WINDOW_MS < now) {
+  if (!burst || burst.windowStart + ABUSE_BURST_WINDOW_MS() < now) {
     burst = { count: 0, windowStart: now, tier1Logged: false };
     abuseBursts.set(ip, burst);
   }
   burst.count++;
-  if (burst.count <= ABUSE_BURST_THRESHOLD) return;
+  if (burst.count <= ABUSE_BURST_THRESHOLD()) return;
   if (burst.tier1Logged) return; /* pro Zeitfenster nur 1x eskalieren/loggen */
   burst.tier1Logged = true;
 
   let viol = abuseViolations.get(ip);
-  if (!viol || viol.lastAt + ABUSE_VIOLATION_DECAY_MS < now) {
+  if (!viol || viol.lastAt + ABUSE_VIOLATION_DECAY_MS() < now) {
     viol = { count: 0, lastAt: now };
   }
   viol.count++;
@@ -951,16 +1050,16 @@ function recordAbuseCheck(ip) {
   securityEvent('ABUSE_BURST_DETECTED', {
     ip, risk: Math.min(90, 25 + viol.count * 10),
     reason: 'Ungewöhnlich viele Anfragen in kurzer Zeit (Reload-/Request-Flut)',
-    requestsInWindow: burst.count, windowSec: ABUSE_BURST_WINDOW_MS / 1000, violationCount: viol.count
+    requestsInWindow: burst.count, windowSec: ABUSE_BURST_WINDOW_MS() / 1000, violationCount: viol.count, rule: rule.id
   });
 
   let hitTier = null;
-  for (const t of ABUSE_TIERS) if (viol.count >= t.atViolations) hitTier = t;
+  for (const t of ABUSE_TIERS()) if (viol.count >= t.atViolations) hitTier = t;
   if (!hitTier) return; /* 1. Verstoß: nur Warnung/Log, noch keine Sperre */
 
   if (hitTier.action === 'PERM_BLOCK') {
     if (!isManuallyBanned(ip)) {
-      manualBanIp(ip, `Automatisch gesperrt: wiederholte Reload-/Request-Flut (${viol.count}. Verstoß in ${ABUSE_VIOLATION_DECAY_MS / 60000} Min) — bitte manuell prüfen`, 'auto-security-system');
+      manualBanIp(ip, `Automatisch gesperrt: wiederholte Reload-/Request-Flut (${viol.count}. Verstoß in ${ABUSE_VIOLATION_DECAY_MS() / 60000} Min) — bitte manuell prüfen`, 'auto-security-system');
       securityEvent('ABUSE_AUTO_PERM_BLOCK', {
         ip, risk: 90, reason: 'Wiederholte Anfrage-Flut trotz vorheriger Sperren', violationCount: viol.count,
         action: 'permanent_ban', by: 'auto-security-system'
@@ -989,8 +1088,8 @@ function recordAbuseCheck(ip) {
 /* Aufräumen alter Einträge, damit die Maps nicht unbegrenzt wachsen */
 setInterval(() => {
   const now = Date.now();
-  for (const [ip, b] of abuseBursts) if (b.windowStart + ABUSE_BURST_WINDOW_MS < now) abuseBursts.delete(ip);
-  for (const [ip, v] of abuseViolations) if (v.lastAt + ABUSE_VIOLATION_DECAY_MS < now) abuseViolations.delete(ip);
+  for (const [ip, b] of abuseBursts) if (b.windowStart + ABUSE_BURST_WINDOW_MS() < now) abuseBursts.delete(ip);
+  for (const [ip, v] of abuseViolations) if (v.lastAt + ABUSE_VIOLATION_DECAY_MS() < now) abuseViolations.delete(ip);
 }, 5 * 60 * 1000).unref?.();
 
 /* ---------- 🚦 Globales Rate-Limiting (gilt für ALLE /api/-Routen,
@@ -1720,6 +1819,7 @@ async function handleApi(req, res, pathname) {
   /* 🏆 Öffentliches Leaderboard (kein Login) — Top-Level/XP, Top-Reichste,
    * Top-Paare. Namen werden anonymisiert (Username falls gesetzt, sonst
    * maskierte Nummer) — dieselbe Logik wie im übrigen öffentlichen API. */
+
   if (pathname === '/api/leaderboard') {
     const profiles = [];
     try {
@@ -1828,7 +1928,9 @@ async function handleApi(req, res, pathname) {
           sessions: SessionManager.listSessions(),
           activity: SessionManager.recentActivity(25),
           audit: SessionManager.recentAudit(40),
-          fleet: SessionManager.fleetStats()
+          fleet: SessionManager.fleetStats(),
+          /* 💜 LoveCore: Live-Event-Feed (XP, Level-Ups, Games, Achievements) */
+          events: LoveEngine.recent(25)
         });
         res.write('data: ' + payload + '\n\n');
       } catch (e) {}
@@ -1943,6 +2045,8 @@ async function handleApi(req, res, pathname) {
             level: prof?.progression?.level || 0,
             prestige: prof?.progression?.prestige || 0,
             xp: prof?.progression?.xp || 0,
+            totalXp: prof?.progression?.totalXp || 0,
+            xpSources: prof?.progression?.xpSources || {},
             neededXp: prof?.progression?.neededXpForLvOrPrestigeUp || 0,
             copper: prof?.wallet?.copper || 0,
             silver: prof?.wallet?.silver || 0,
@@ -2015,6 +2119,7 @@ async function handleApi(req, res, pathname) {
         petTypes,
         achievements
       },
+      xp: LoveEngine.xpStats(profiles),
       topRich: profiles.sort((a, b) => b.copper - a.copper).slice(0, 10)
         .map((x) => ({ name: x.name || maskNum(x.bid.split('_')[0]), copper: x.copper, level: x.level })),
       topCouples: couples.sort((a, b) => (b.loveXp || 0) - (a.loveXp || 0)).slice(0, 10)
@@ -2024,6 +2129,92 @@ async function handleApi(req, res, pathname) {
     });
   }
 
+  /* ⭐ XP & LEVEL (LoveCore): Statistik + Level-Tabelle — nur mit xp.view */
+  if (pathname === '/api/xp' && req.method === 'GET') {
+    if (!perm(session, 'xp.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (xp.view).' });
+    const profiles = scanUserProfiles();
+    const stats = LoveEngine.xpStats(profiles);
+    const top = profiles
+      .map((x) => ({ name: x.name || maskNum(x.bid.split('_')[0]), bid: x.bid, level: x.level, prestige: x.prestige, xp: x.xp, totalXp: x.totalXp || x.xp }))
+      .sort((a, b) => b.prestige - a.prestige || b.level - a.level || b.xp - a.xp)
+      .slice(0, 15)
+      .map((x) => ({ ...x, rank: rankFor(x.prestige, x.level).full }));
+    return sendJson(res, 200, { ok: true, stats, top, table: LoveEngine.levelTable(50, 0) });
+  }
+
+  /* ⭐ XP ADJUST (LoveCore, kritisch): Grund PFLICHT + Audit + Event.
+     Nur mit xp.adjust (Owner + Deputy; kritisches Recht). */
+  if (pathname === '/api/xp/adjust' && req.method === 'POST') {
+    if (!perm(session, 'xp.adjust')) return sendJson(res, 403, { error: 'Keine Berechtigung (xp.adjust).' });
+    const body = await readBody(req);
+    const bid = String(body.bid || '').trim();
+    const delta = Number(body.delta || 0);
+    const reason = String(body.reason || '').trim();
+    if (!/^[0-9a-z]+jid[0-9a-z]+i?d$/i.test(bid) && !/^\d+(_[a-z0-9]+)?$/i.test(bid)) {
+      return sendJson(res, 400, { error: 'Ungültige Nutzer-ID.' });
+    }
+    if (!isFinite(delta) || delta === 0 || Math.abs(delta) > 10_000_000) {
+      return sendJson(res, 400, { error: 'Delta muss zwischen -10.000.000 und +10.000.000 sein.' });
+    }
+    if (reason.length < 5) {
+      return sendJson(res, 400, { error: 'Grund ist Pflicht (min. 5 Zeichen) — jede XP-Änderung wird auditiert.' });
+    }
+    const profPath = path.join('Database', 'LoveUser', bid, bid + '.json');
+    let prof;
+    try { prof = JSON.parse(fs.readFileSync(profPath, 'utf8')); } catch (e) { return sendJson(res, 404, { error: 'Nutzer-Profil nicht gefunden.' }); }
+    const actor = session?.username || session?.number || 'web';
+    if (delta > 0) {
+      /* Positive Anpassung läuft durch die Level-Engine (Level-Ups + Kupfer möglich) */
+      const { ensureProgression, grantXp, levelUpAnnounce } = await import('./levelsystem.js');
+      ensureProgression(prof);
+      grantXp(prof, delta, { source: 'admin' });
+    } else {
+      /* Negative Anpassung: nur XP reduzieren, KEIN Level-Down (konservativ, dokumentiert) */
+      const { ensureProgression } = await import('./levelsystem.js');
+      const pr = ensureProgression(prof);
+      pr.xp = Math.max(0, (Number(pr.xp) || 0) + delta);
+      pr.totalXp = Math.max(0, (Number(pr.totalXp) || 0) + delta);
+    }
+    try { fs.writeFileSync(profPath, JSON.stringify(prof, null, 2), 'utf8'); } catch (e) { return sendJson(res, 500, { error: 'Speichern fehlgeschlagen.' }); }
+    audit(actor, 'xp.adjusted', bid + ': ' + (delta > 0 ? '+' : '') + delta + ' XP — ' + reason.slice(0, 200), 'success');
+    try { LoveEngine.emit('XP_ADJUSTED', { bid, delta, reason: reason.slice(0, 120), name: prof?.registration?.name || '' }); } catch (e) {}
+    return sendJson(res, 200, { ok: true, applied: true, reason: reason.slice(0, 200) });
+  }
+
+  /* ❤️ SYSTEM HEALTH (LoveCore): Komponenten-Status auf einen Blick */
+  if (pathname === '/api/health' && req.method === 'GET') {
+    if (!adminGuard()) return;
+    const components = [];
+    /* WhatsApp-Verbindung (Heartbeat des Bots) */
+    let wb = null;
+    try { wb = JSON.parse(fs.readFileSync(path.join('Database', 'heartbeat.json'), 'utf8')); } catch (e) {}
+    const wbAge = wb?.time ? Date.now() - new Date(wb.time).getTime() : Infinity;
+    components.push({ id: 'whatsapp', label: 'WhatsApp-Verbindung', ok: wbAge < 5 * 60_000, detail: wbAge < 5 * 60_000 ? 'online · ' + (wb?.uptimeSec ? Math.round(wb.uptimeSec / 3600) + 'h Uptime' : 'heartbeat') : (wb ? 'kein frisches Heartbeat (' + Math.round(wbAge / 60000) + ' Min.)' : 'kein Heartbeat gefunden') });
+    /* Webserver */
+    components.push({ id: 'web', label: 'Webserver', ok: true, detail: 'online · Uptime ' + Math.round(process.uptime() / 3600) + 'h' });
+    /* Datenbank */
+    let dbOk = false, dbKb = 0, backups = 0;
+    try { dbKb = Math.round(fs.statSync(DB_PATH).size / 1024); dbOk = true; } catch (e) {}
+    try { backups = fs.readdirSync('Database').filter((f) => f.startsWith('backup-')).length; } catch (e) {}
+    components.push({ id: 'database', label: 'Datenbank (Database.json)', ok: dbOk, detail: dbOk ? fmtSizeKb(dbKb) + ' · ' + backups + ' Backups' : 'Datei nicht gefunden' });
+    /* Sessions */
+    const sess = SessionManager.listSessions();
+    const online = sess.filter((x) => x.status === 'CONNECTED' || x.status === 'ONLINE').length;
+    components.push({ id: 'sessions', label: 'Sessions', ok: online > 0, detail: online + '/' + sess.length + ' online' });
+    /* Media-Engine (heutige Jobs) */
+    let mediaJobs = 0, mediaOkToday = 0;
+    try {
+      const mj = JSON.parse(fs.readFileSync(path.join('Database', 'media.json'), 'utf8'));
+      const today = new Date().toISOString().slice(0, 10);
+      for (const j of mj.jobs || []) { if (String(j.ts || '').startsWith(today)) { mediaJobs++; if (j.ok) mediaOkToday++; } }
+    } catch (e) {}
+    components.push({ id: 'media', label: 'Media-Engine', ok: true, detail: mediaJobs ? mediaJobs + ' Jobs heute (' + mediaOkToday + ' ok)' : 'keine Jobs heute' });
+    /* Security */
+    const blocks = listBlockedIps().length;
+    const bans = listManualBans().length;
+    components.push({ id: 'security', label: 'Security', ok: true, detail: blocks + ' aktive IP-Blocks · ' + bans + ' manuelle Bans' });
+    return sendJson(res, 200, { ok: true, components, checkedAt: new Date().toISOString() });
+  }
   /* 👤 Nutzer-Suche + Profil */
   if (pathname === '/api/admin/users' && req.method === 'GET') {
     if (!adminGuard()) return;
@@ -2046,6 +2237,7 @@ async function handleApi(req, res, pathname) {
         level: prof.level || 0,
         prestige: prof.prestige || 0,
         xp: prof.xp || 0,
+        totalXp: prof.totalXp || 0,
         neededXp: prof.neededXp || 0,
         copper: prof.copper || 0,
         silver: prof.silver || 0,
@@ -2889,6 +3081,26 @@ async function handleApi(req, res, pathname) {
 
   /* 🚫 Owner/Deputy: eine IP DAUERHAFT sperren (Fritzbox-Stil) — läuft
      nicht automatisch ab, übersteht Neustarts, betrifft die ganze API. */
+  /* ⚙️ Konfigurierbare Schutzregeln (WEB-REQ-07) — Lese-Zugang: security.view */
+  if (pathname === '/api/security/rules' && req.method === 'GET') {
+    if (!perm(session, 'security.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (security.view).' });
+    return sendJson(res, 200, { ok: true, version: SEC_RULES.version, updatedAt: SEC_RULES.updatedAt, updatedBy: SEC_RULES.updatedBy, webReqFlood: SEC_RULES.webReqFlood, activeCounts: { bursts: abuseBursts.size, violations: abuseViolations.size }, history: SEC_RULES.history.slice(-5).reverse() });
+  }
+
+  /* ⚙️ Regeln ändern (kritisch): security.manage + Step-up-Reauth + Audit */
+  if (pathname === '/api/security/rules' && req.method === 'POST') {
+    if (!perm(session, 'security.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung (security.manage).' });
+    const body = await readBody(req);
+    /* 🔐 Sicherheitsregeln ändern = kritisch → Step-up-Reauth + Audit */
+    if (!requireStepUp(req, res, session, body, 'security.rules.changed')) return;
+    const actor = session.username || session.number;
+    const reason = String(body.reason || 'Regel angepasst').trim().slice(0, 200);
+    const next = normalizeAbuseRules(body.webReqFlood || body);
+    const saved = saveSecurityRules(actor, reason);
+    securityEvent('SECURITY_RULES_CHANGED', { actor, risk: 55, reason: reason, newVersion: saved.version, rule: next.id, threshold: next.threshold, windowSec: next.windowSec, enabled: next.enabled });
+    return sendJson(res, 200, { ok: true, version: saved.version, webReqFlood: saved.webReqFlood });
+  }
+
   if (pathname === '/api/security/ban-ip' && req.method === 'POST') {
     if (!perm(session, 'security.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung (security.manage).' });
     const body = await readBody(req);

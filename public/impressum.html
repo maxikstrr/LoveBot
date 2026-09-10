@@ -66,8 +66,9 @@
     <div id="impBanner" class="banner-warn" style="display:none"></div>
 
     <div class="legal-check" id="impCheck">
-      <div class="lc-head red" id="impCheckHead">🔴 PUBLICATION CHECK — wird geladen …</div>
+      <div class="lc-head" style="color:var(--text)">IMPRESSUM STATUS</div>
       <div id="impCheckRows"></div>
+      <div class="lc-head red" id="impCheckHead" style="margin-top:10px">PUBLICATION CHECK 🔴 wird geprüft …</div>
       <div class="lc-foot" id="impCheckFoot">Produktionscheck: Diese Seite zeigt nur echte, hinterlegte Angaben. Solange Felder leer sind, erscheinen markierte Platzhalter — erfundene Daten werden nie ausgegeben.</div>
     </div>
 
@@ -164,10 +165,10 @@
     var street = [b.strasse, b.plz + ' ' + b.ort].filter(function (x) { return String(x || '').trim(); });
     var nameOk = !!name, addrOk = street.length === 2, emailOk = !!String(b.email || '').trim(), phoneOk = !!String(b.telefon || '').trim();
 
-    document.getElementById('impName').innerHTML = nameOk ? ('<b>' + esc(name) + '</b>') : (val(b.vorname, 'Dein Vorname') + ' ' + val(b.nachname, 'Dein Nachname'));
-    document.getElementById('impAddress').innerHTML = addrOk ? (esc(street[0]) + '<br>' + esc(street[1])) : (val(b.strasse, 'Deine Straße + Hausnummer') + '<br>' + val(b.plz, 'PLZ') + ' ' + val(b.ort, 'Ort'));
-    document.getElementById('impEmail').innerHTML = emailOk ? ('E-Mail: <a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>') : ('E-Mail: ' + val(b.email, 'Deine E-Mail-Adresse'));
-    document.getElementById('impPhone').innerHTML = phoneOk ? ('Telefon: <a href="tel:' + esc(b.telefon) + '">' + esc(b.telefon) + '</a>') : ('Telefon: ' + val(b.telefon, 'Deine Telefonnummer (optional)'));
+    document.getElementById('impName').innerHTML = 'Betreiber: ' + (nameOk ? ('<b>' + esc(name) + '</b>') : val(null, 'Vorname Nachname'));
+    document.getElementById('impAddress').innerHTML = 'Anschrift: ' + (addrOk ? (esc(street[0]) + '<br>' + esc(street[1])) : (val(null, 'Straße Hausnummer') + '<br>' + val(null, 'PLZ Ort')));
+    document.getElementById('impEmail').innerHTML = 'E-Mail: ' + (emailOk ? ('<a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>') : val(null, 'E-Mail-Adresse'));
+    document.getElementById('impPhone').innerHTML = 'Telefon: ' + (phoneOk ? ('<a href="tel:' + esc(b.telefon) + '">' + esc(b.telefon) + '</a>') : val(null, 'Telefonnummer – optional'));
 
     var status = document.getElementById('impStatus');
     if (data.status && data.status.kommerziell) {
@@ -181,8 +182,7 @@
         (String(g.aufsichtsbehoerde || '').trim() ? '<p>Aufsichtsbehörde: <b>' + esc(g.aufsichtsbehoerde) + '</b></p>' : '') +
         '</div>';
     } else {
-      status.innerHTML = esc((data.status && data.status.hinweis) || 'LoveBot ist ein privat betriebenes Hobbyprojekt und wird ohne kommerzielle Gewinnerzielungsabsicht betrieben.') +
-        ' <span style="color:var(--faint);font-size:12.5px">_(Privatanbieter — keine Gewerbeanmeldung.)_</span>';
+      status.innerHTML = 'Hinweis: ' + esc((data.status && data.status.hinweis) || 'LoveBot ist ein privat betriebenes Hobbyprojekt und wird ohne kommerzielle Gewinnerzielungsabsicht betrieben.');
     }
 
     /* Produktionscheck */
@@ -191,29 +191,31 @@
       var g2 = data.gewerblich || {};
       gewOk = !!(String(g2.ustIdNr || '').trim() && String(g2.registergericht || '').trim() && String(g2.registernummer || '').trim());
     }
+    var isPrivat = !(data.status && data.status.kommerziell);
     var rows = [
-      ['Betreiber (Name)', nameOk],
+      ['Name', nameOk],
       ['Adresse', addrOk],
       ['E-Mail', emailOk],
       ['Telefon', phoneOk],
-      ['Betreiberstatus', true]
+      ['Betreiberstatus', true, isPrivat ? '✓ Privat / Hobby' : '✓ Gewerblich']
     ];
     if (data.status && data.status.kommerziell) rows.push(['Gewerbe-Angaben (USt-IdNr. etc.)', gewOk]);
     var ready = nameOk && addrOk && emailOk && (data.status && data.status.kommerziell ? gewOk : true);
     var rowsHtml = rows.map(function (r) {
-      return '<div class="lc-row"><span>' + r[0] + '</span><span class="lc-state ' + (r[1] ? 'ok' : 'missing') + '">' + (r[1] ? '✓ hinterlegt' : '⚠ fehlt') + '</span></div>';
+      var stateTxt = r[2] ? r[2] : (r[1] ? '✓ hinterlegt' : '⚠ fehlt');
+      return '<div class="lc-row"><span>' + r[0] + '</span><span class="lc-state ' + (r[1] ? 'ok' : 'missing') + '">' + stateTxt + '</span></div>';
     }).join('');
     document.getElementById('impCheckRows').innerHTML = rowsHtml;
     var head = document.getElementById('impCheckHead');
     if (ready) {
       head.className = 'lc-head green';
-      head.textContent = '🟢 PUBLICATION CHECK — Impressum vollständig & veröffentlichungsbereit';
+      head.textContent = 'PUBLICATION CHECK 🟢 Impressum vollständig & veröffentlichungsbereit';
       var banner = document.getElementById('impBanner');
       banner.className = 'banner-ok'; banner.style.display = '';
       banner.textContent = '✅ Alle Anbieterangaben sind hinterlegt — die Seite zeigt ausschließlich echte Angaben.';
     } else {
       head.className = 'lc-head red';
-      head.textContent = '🔴 PUBLICATION CHECK — Impressum noch nicht veröffentlichungsbereit';
+      head.textContent = 'PUBLICATION CHECK 🔴 Impressum noch nicht veröffentlichungsbereit';
       var banner = document.getElementById('impBanner');
       banner.className = 'banner-warn'; banner.style.display = '';
       banner.innerHTML = '⚠ <b>IMPRESSUM UNVOLLSTÄNDIG</b> — Bitte echte Betreiberangaben in <code style="font-family:var(--mono);font-size:12px">public/impressum-data.json</code> hinterlegen, bevor die Website veröffentlicht wird. Diese Seite zeigt bewusst <b>keine erfundenen Daten</b> — leere Felder erscheinen als markierte Platzhalter.';

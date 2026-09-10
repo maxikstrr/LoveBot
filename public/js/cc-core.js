@@ -265,6 +265,7 @@ CC.go = (id) => {
   if (!CC.anyPerm(p.meta.perms)) { CC.viewErr('⛔ Keine Berechtigung für diese Ansicht.'); return; }
   CC.active = id;
   location.hash = '#/' + id;
+  try { CC.stopLiveFeed(); } catch (e) {}
   CC.buildSidebar();
   const [g, l] = CC.crumbOf(id);
   document.getElementById('ccCrumb').innerHTML = 'SOUL ECHO / <b>' + esc(g) + '</b> / ' + esc(l);
