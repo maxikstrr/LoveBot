@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔔 Benachrichtigungen — LoveBot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  .page-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin: 22px 0 18px; }
+  .page-head h1 { font-size: 26px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 10px; }
+  .nf-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .nf-grid { grid-template-columns: 1fr; } }
+  .nf-card { background: linear-gradient(180deg, rgba(124,58,237,.07), rgba(30,12,54,.55)); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); }
+  .nf-card h2 { font-size: 14px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  .nf-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 12px; border: 1px solid transparent; cursor: pointer; transition: all .15s; }
+  .nf-item:hover { background: rgba(124,58,237,.08); border-color: var(--line); }
+  .nf-item.unread { background: rgba(124,58,237,.10); border-color: rgba(124,58,237,.35); }
+  .nf-icon { font-size: 22px; line-height: 1.2; }
+  .nf-main { flex: 1; min-width: 0; }
+  .nf-title { font-weight: 700; font-size: 14px; }
+  .nf-item.unread .nf-title { color: var(--brand-2, #e879f9); }
+  .nf-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .nf-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .nf-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand-1, #7c3aed); flex-shrink: 0; margin-top: 6px; }
+  .nf-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 4px; border-bottom: 1px dashed rgba(139,92,246,.15); }
+  .nf-row:last-child { border-bottom: none; }
+  .nf-row .lbl { font-size: 14px; font-weight: 600; }
+  .nf-row .sub { font-size: 11px; color: var(--muted); }
+  .sw { position: relative; width: 42px; height: 24px; flex-shrink: 0; cursor: pointer; }
+  .sw input { display: none; }
+  .sw .tr { position: absolute; inset: 0; background: rgba(139,92,246,.2); border-radius: 999px; transition: background .15s; }
+  .sw .tr::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: #c4b5fd; top: 3px; left: 3px; transition: all .15s; }
+  .sw input:checked + .tr { background: var(--brand-1, #7c3aed); }
+  .sw input:checked + .tr::after { left: 21px; background: #fff; }
+  .nf-toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(80px); background: linear-gradient(135deg, #7c3aed, #c026d3); color: #fff; font-weight: 700; padding: 12px 22px; border-radius: 14px; box-shadow: 0 12px 34px rgba(124,58,237,.5); opacity: 0; transition: all .3s; z-index: 50; max-width: 90vw; }
+  .nf-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .empty { text-align: center; color: var(--muted); padding: 30px 0; font-size: 14px; }
+  .btns { display: flex; gap: 8px; }
+  .btns a { font-size: 12px; padding: 7px 14px; }
+</style>
+</head>
+<body>
+<div id="hearts" class="hearts"></div>
+
+<nav class="topnav">
+  <div class="wrap nav-inner">
+    <a class="logo" href="/level.html">💜 <span>LoveBot</span></a>
+    <div class="nav-links">
+      <a href="/level.html">Level</a>
+      <a href="/games.html">Games</a>
+      <a href="/economy.html">Economy</a>
+      <a href="/status.html">Status</a>
+      <a href="/impressum.html">Impressum</a>
+    </div>
+    <div class="cta">
+      <span class="me" id="who"></span>
+      <a class="btn ghost" id="out" href="javascript:void(0)">Abmelden</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="page-head">
+    <h1>🔔 Benachrichtigungen</h1>
+    <div class="btns">
+      <a class="btn ghost" id="readAll" href="javascript:void(0)">✓ Alle als gelesen markieren</a>
+    </div>
+  </div>
+
+  <div class="nf-grid">
+    <div class="nf-card">
+      <h2>Deine Zentrale</h2>
+      <div id="nfList"><div class="empty">Lade …</div></div>
+    </div>
+    <div class="nf-card">
+      <h2>⚙️ Was darfst der Bot dir senden?</h2>
+      <div id="nfPrefs"><div class="empty">Lade …</div></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px">Deine Einstellungen werden privat in deinem Bot-Profil gespeichert (DSGVO). Web-Push mit Browser-Bestätigung folgt in Phase 7.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="foot"><div class="wrap">💜 LoveBot · Private Progression Platform · <span id="yr"></span></div></footer>
+<div class="nf-toast" id="toast"></div>
+
+<script src="/js/common.js"></script>
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+const state = { prefs: {} };
+
+function rel(ts) {
+  const d = Date.now() - new Date(ts).getTime();
+  const m = Math.floor(d / 60000);
+  if (m < 1) return 'gerade eben';
+  if (m < 60) return 'vor ' + m + ' Min.';
+  const h = Math.floor(m / 60);
+  if (h < 24) return 'vor ' + h + ' Std.';
+  return 'vor ' + Math.floor(h / 24) + ' Tagen';
+}
+
+function renderList(d) {
+  const el = document.getElementById('nfList');
+  if (!d.list || d.list.length === 0) {
+    el.innerHTML = '<div class="empty">Noch keine Benachrichtigungen — mache etwas, LoveBot erinnert sich. 💜</div>';
+    return;
+  }
+  el.innerHTML = d.list.map((n) => {
+    const t = n.type || 'system';
+    const icon = (d.types && d.types[t] && d.types[t].icon) || '💜';
+    let title = n.title || (d.types && d.types[t] ? d.types[t].title : 'Benachrichtigung');
+    let sub = '';
+    if (n.data) {
+      if (n.data.level) sub += 'Level ' + n.data.level;
+      if (n.data.reward) sub += (sub ? ' · ' : '') + n.data.reward;
+      if (n.data.streak) sub += ' 🔥' + n.data.streak;
+      if (n.data.type) sub += ' · ' + n.data.type;
+      if (n.data.reason) sub += ' · ' + n.data.reason;
+    }
+    if (!sub) sub = 'LoveBot';
+    const href = t === 'levelup' ? '/level.html' : (t === 'streak' ? '/games.html' : null);
+    return '<div class="nf-item ' + (n.read ? '' : 'unread') + '" data-id="' + n.id + '" ' + (href ? 'data-href="' + href + '"' : '') + '>' +
+      (n.read ? '' : '<div class="nf-dot"></div>') +
+      '<div class="nf-icon">' + icon + '</div>' +
+      '<div class="nf-main"><div class="nf-title">' + title + '</div><div class="nf-sub">' + sub + '</div></div>' +
+      '<div class="nf-time">' + rel(n.ts) + '</div>' +
+      '</div>';
+  }).join('');
+  el.querySelectorAll('.nf-item').forEach((it) => {
+    it.addEventListener('click', () => {
+      if (!it.classList.contains('unread')) {
+        if (it.dataset.href) location.href = it.dataset.href;
+        return;
+      }
+      api('/api/notifications/read', { method: 'POST', body: { ids: [it.dataset.id] } }).then(() => load());
+      if (it.dataset.href) location.href = it.dataset.href;
+    });
+  });
+}
+
+function renderPrefs(prefs) {
+  const el = document.getElementById('nfPrefs');
+  const defs = {
+    levelup: ['⬆️ Level-Up', 'Jede neue Level-Stufe — mit Belohnung'],
+    achievement: ['🏆 Achievement', 'Neue Errungenschaften & Meilensteine'],
+    quest: ['🎯 Quest', 'Quest-Fortschritt & Abschluss (Phase 6)'],
+    daily: ['📅 Daily Bonus', 'Reminder, wenn dein Daily-Bonus wartet'],
+    streak: ['🔥 Streak', 'Streak-Updates & Warnung, wenn eine Gefahr droht'],
+    economy: ['🪙 Economy', 'Zahlungen, Transfers & Preise'],
+    gift: ['🎁 Geschenke', 'Geschenke an und von dir'],
+    game: ['🎮 Games', 'Turniere & Game-Events (Phase 4/5)'],
+    media: ['📺 Media', 'Fertige $play-Jobs & Fehler'],
+    group: ['👥 Gruppen', 'Gruppen-Level & Community-Events'],
+    security: ['🛡️ Sicherheit', 'Wichtig — empfohlen AN (Sperrungen, IP-Wechsel)']
+  };
+  el.innerHTML = Object.keys(defs).map((k) => {
+    const on = state.prefs[k] !== false;
+    return '<div class="nf-row"><div><div class="lbl">' + defs[k][0] + '</div><div class="sub">' + defs[k][1] + '</div></div>' +
+      '<label class="sw"><input type="checkbox" data-type="' + k + '"' + (on ? ' checked' : '') + '><span class="tr"></span></label></div>';
+  }).join('');
+  el.querySelectorAll('input').forEach((cb) => {
+    cb.addEventListener('change', () => {
+      state.prefs[cb.dataset.type] = cb.checked;
+      api('/api/notifications/prefs', { method: 'POST', body: { prefs: state.prefs } }).then(() => {
+        toast('⚙️ Gespeichert');
+      });
+    });
+  });
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+async function load() {
+  const d = await api('/api/notifications');
+  if (!d) return;
+  if (!d.ok) return;
+  renderList(d);
+  state.prefs = d.prefs || {};
+  renderPrefs(state.prefs);
+}
+
+document.getElementById('who').textContent = '💜 ' + getName();
+document.getElementById('out').addEventListener('click', () => { localStorage.clear(); location.href = '/login.html'; });
+document.getElementById('readAll').addEventListener('click', () => {
+  api('/api/notifications/read', { method: 'POST', body: { all: true } }).then(() => { toast('✓ Alle gelesen'); load(); });
+});
+load();
+setInterval(load, 30000); /* frische Belohnungen */
+</script>
+</body>
+</html>

@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { levelUpAnnounce, prestigeAnnounce } from './levelsystem.js';
 import { emit as engineEmit } from './loveengine.js';
+import { notify as notifyUser } from './notifications.js';
 
 /* ---------- Speicher -------------------------------------------------- */
 const STORE_PATH = path.join('Database', 'loveplus.json');
@@ -208,6 +209,7 @@ function unlock(store, uid, id, unlockedNow) {
   u.achievements[id] = Date.now();
   unlockedNow.push(a);
   try { engineEmit('ACHIEVEMENT_UNLOCKED', { bid: uid, item: a.name }); } catch (e) {}
+  try { notifyUser(uid, 'achievement', { title: '🏆 ' + a.name + ' freigeschaltet!', text: a.desc || 'Neues Achievement', link: '/level.html' }); } catch (e) {}
 }
 
 function checkAchievements(store, uid, profile, events = []) {

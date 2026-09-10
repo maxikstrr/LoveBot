@@ -912,3 +912,7 @@ pre.logs {
 /* ═══ LoveBot 5.0: Plattform-Chips (Startseite) ═══ */
 .platform-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 18px 0 4px; }
 .pchip { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.03); font-size: 12.5px; font-weight: 700; color: var(--muted); backdrop-filter: blur(6px); }
+
+/* ═══ Notification-Bell (Progression 2.0) ═══ */
+.notif-bell { position: relative; display: inline-flex; align-items: center; font-size: 18px; margin: 0 14px 0 10px; text-decoration: none; }
+.notif-badge { position: absolute; top: -7px; right: -10px; background: var(--brand-1, #7c3aed); color: #fff; font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 999px; min-width: 16px; text-align: center; }

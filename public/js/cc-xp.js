@@ -13,11 +13,49 @@ const XP_SRC_LABEL = {
 };
 
 /* ═══  XP & LEVEL ═══ */
+/* Progression 2.0: XP-Regel-Editor (Kategorien / Multiplikatoren / Anti-Farm) */
+function buildRulesSection(rules, canAdjust) {
+  if (!rules || !rules.ok) return '<div class="cc-section"><h3>⚙️ XP-Regeln (Progression 2.0)</h3><div class="cc-empty">Regel-Engine nicht erreichbar.</div></div>';
+  const catMeta = {
+    message: ['💬 Nachrichten', 'Basis-XP pro Nachricht (Gruppe), 1:1, Nett-Multiplikator, Love-Multiplikator, Kompliment-Bonus'],
+    command: ['⚡ Befehle', 'Basis-XP pro Command, Bonus für Love-Actions'],
+    compliment: ['💜 Komplimente', 'Sender-XP, Empfänger-XP, Cooldown (s), Tages-Cap — Social XP Layer'],
+    game: ['🎮 Spiele', 'Sieg-XP, Niederlage-XP'],
+    daily: ['📅 Dailies', '$daily, $dailylove, $work'],
+    media: ['📺 Media', 'Erster Download, neuer Provider, Events/Tag']
+  };
+  const rows = Object.entries(rules.categories).map(([k, v]) => {
+    const [label, hint] = catMeta[k] || [k, ''];
+    const dis = canAdjust ? '' : ' disabled';
+    return '<tr><td class="cc-rule-ico">' + label + '</td>' +
+      '<td class="cc-rule-nums">' + Object.entries(v).filter(([f]) => f !== 'enabled').map(([f, val]) =>
+        '<label class="cc-rule-field">' + esc(f) + ' <input class="cc-input" data-cat="' + k + '" data-field="' + f + '" type="number" value="' + val + '" style="width:86px"' + dis + '></label>').join(' ') +
+      '</td>' +
+      '<td style="text-align:center"><input type="checkbox" class="cc-rule-en" data-cat="' + k + '"' + (v.enabled ? ' checked' : '') + dis + ' title="' + esc(hint) + '"></td></tr>';
+  }).join('');
+  const m = rules.multipliers || {};
+  const a = rules.antiFarm || {};
+  const num = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-multi="' + k + '" type="' + (k === 'eventActive' ? 'checkbox' : 'number') + '"' + (k === 'eventActive' ? (v ? ' checked' : '') : ' value="' + v + '"') + ' style="width:86px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const anum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-anti="' + k + '" type="number" value="' + v + '" style="width:96px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  return '<div class="cc-section" style="margin-top:14px"><h3>⚙️ XP-Regeln (Progression 2.0) <span class="cc-key">v' + rules.version + '</span></h3>' +
+    '<div class="cc-tip" style="margin-bottom:10px">XP-Qualitäts-Regeln: Kategorien mit Werten &amp; Schaltern, Multiplikatoren (Wochenende/Event/Prestige) und Anti-Farm-Grenzen. Änderungen sind <b>kritisch</b>: Grund + Passwort + Audit (<span class="cc-key">xp.rules.changed</span>) + Versionierung. Gilt ab sofort für alle XP-Pfade (WhatsApp &amp; Website).</div>' +
+    '<div class="cc-tablewrap"><table class="cc-table"><thead><tr><th>Kategorie</th><th>Werte</th><th>AN</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="cc-grid2" style="margin-top:10px"><div><div class="cc-subline">Multiplikatoren</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      ['weekend', 'event', 'eventActive', 'prestigePerLevel', 'prestigeCap'].map((k) => num(k, m[k])).join('') + '</div></div>' +
+    '<div><div class="cc-subline">Anti-Farm</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      ['msgCapPerHour', 'cmdCapPerHour', 'duplicateWindowSec', 'duplicateMaxPerDay', 'mutualFarmMaxPerHour', 'suspiciousXpPerDay'].map((k) => anum(k, a[k])).join('') + '</div></div></div>' +
+    (canAdjust ?
+      '<div class="cc-xpform" style="margin-top:10px"><div class="cc-field" style="flex:1;min-width:260px"><label>Grund für die Regeländerung (Pflicht — wird auditiert)</label><input class="cc-input" id="xpRulesReason" placeholder="z. B. Anti-Farm verschärft nach Spike-Analyse" maxlength="200"></div></div>' +
+      '<div class="cc-btnrow"><button class="cc-btn primary" id="xpRulesSave">💾 Regeln speichern</button></div><div id="xpRulesOut"></div>'
+      : '<div class="cc-empty" style="margin-top:8px">Nur Lesezugriff — ändern darf <span class="cc-key">xp.adjust</span>.</div>') +
+    '</div>';
+}
 CC.reg('xp', async () => {
   const d = await api('/api/xp').catch(() => null);
   if (!d || !d.ok) { CC.viewErr('Keine Berechtigung für XP & Level (xp.view).'); return; }
   const st = d.stats || {};
   const canAdjust = CC.can('xp.adjust');
+  const rules = await api('/api/xp/rules').catch(() => null);
 
   /* Nutzer-Suche für die XP-Verwaltung */
   const users = await api('/api/admin/users?q=').catch(() => null);
@@ -67,8 +105,46 @@ CC.reg('xp', async () => {
     '<div class="cc-section" style="margin-top:14px"><h3>📶 Level-Tabelle (Zyklus 0 · erste ' + t.rows.length + ' Level)</h3>' +
       '<div class="cc-subline" style="margin:0 0 10px">Max: Level ' + (t.meta && t.meta.maxLevel) + ' · Wachstum: ' + (t.meta && t.meta.growth) + ' · Danach Prestige (Level 0, Zyklus +1)</div>' +
       '<div class="cc-tablewrap" style="overflow-x:auto;max-height:420px;overflow-y:auto"><table class="cc-table"><thead><tr><th>Level</th><th>XP nötig</th><th>XP kumuliert</th><th>Rang</th></tr></thead><tbody>' + tableRows + '</tbody></table></div>' +
-    '</div>'
+    '</div>' +
+    buildRulesSection(rules, canAdjust)
   , { after: () => {
+    const rulesBtn = document.getElementById('xpRulesSave');
+    if (rulesBtn && canAdjust) {
+      rulesBtn.onclick = async () => {
+        const reason = (document.getElementById('xpRulesReason') || {}).value || '';
+        if (String(reason).trim().length < 5) { CC.toast('❌ Grund ist Pflicht (mind. 5 Zeichen)'); return; }
+        const body = { reason: String(reason).trim() };
+        const cats = {}; const multi = {}; const anti = {};
+        document.querySelectorAll('[data-cat]').forEach((inp) => {
+          const c = inp.dataset.cat;
+          cats[c] = cats[c] || {};
+          if (inp.classList.contains('cc-rule-en')) cats[c].enabled = inp.checked;
+          else cats[c][inp.dataset.field] = Number(inp.value);
+        });
+        document.querySelectorAll('[data-multi]').forEach((inp) => {
+          multi[inp.dataset.multi] = inp.classList.contains('cc-rule-en') || inp.type === 'checkbox' ? inp.checked : Number(inp.value);
+        });
+        document.querySelectorAll('[data-anti]').forEach((inp) => { anti[inp.dataset.anti] = Number(inp.value); });
+        body.categories = cats; body.multipliers = multi; body.antiFarm = anti;
+        const ans = await CC.confirm({
+          ico: '⚙️',
+          title: 'XP-Regeln ändern?',
+          text: 'Alle Kategorien, Multiplikatoren und Anti-Farm-Grenzen werden auf die neuen Werte gesetzt.<br>Grund: ' + esc(body.reason) + '<br><br>Audit: <b>xp.rules.changed</b> · Versionierung.',
+          fields: [{ name: 'reauth', label: 'Passwort (kritische Aktion)', type: 'password', required: true, placeholder: 'Dein Owner-Passwort' }],
+          okLabel: '💾 Regeln setzen'
+        });
+        if (!ans) return;
+        body.reauth = ans.reauth;
+        const r = await CC.post('/api/xp/rules', body);
+        const out = document.getElementById('xpRulesOut');
+        if (r.status >= 200 && r.status < 300) {
+          out.innerHTML = '<div class="cc-tip" style="border-color:var(--ok,#2c2)"><b>✅ Gespeichert:</b> XP-Regeln → v' + r.data.version + ' — ' + esc(body.reason) + '</div>';
+          CC.toast('✅ XP-Regeln aktualisiert');
+        } else {
+          out.innerHTML = '<div class="cc-tip" style="border-color:var(--bad,#c44)"><b>❌ ' + esc((r.data && r.data.error) || 'Fehler') + '</b></div>';
+        }
+      };
+    }
     if (!canAdjust) return;
     document.getElementById('xpAdjBtn').onclick = async () => {
       const bid = document.getElementById('xpAdjBid').value.trim();

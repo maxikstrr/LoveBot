@@ -107,7 +107,8 @@
         "droppedFrom": "tools"
       }
     ],
-    "note": "Full-Update 2026: +12 neue Offline-Befehle (Kategorie fullupdate)"
+    "note": "Full-Update 2026: +12 neue Offline-Befehle (Kategorie fullupdate)",
+    "progression2": "Progression 2.0: XP-Regel-Engine (xp-rules.json), Social XP Layer, 3 Streaks, Media-XP, Notifications"
   },
   "categories": [
     {
@@ -2415,6 +2416,28 @@
           "perms": "all",
           "cooldown": 3,
           "source": "loveplus.js (neu)"
+        },
+        {
+          "name": "rewards",
+          "usage": "$rewards",
+          "desc": "Level-Rewards & Meilensteine — was ist freigeschaltet 🎁",
+          "aliases": [
+            "belohnungen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
+        },
+        {
+          "name": "notif",
+          "usage": "$notif [typ] [an|aus]",
+          "desc": "Benachrichtigungs-Einstellungen (Level-Up, Streak, Daily …) 🔔",
+          "aliases": [
+            "notifications"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "Bot-Code"
         }
       ]
     },

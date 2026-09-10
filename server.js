@@ -25,6 +25,8 @@ import { makeZip } from './zipwriter.js';
 import { migrateRegistration, isMinor, cityLabel, ageLabel, publicProfileAllowed } from './privacy.js';
 import { rankFor } from './levelsystem.js';
 import * as LoveEngine from './loveengine.js';
+import * as NotifCenter from './notifications.js';
+import { xpRules, saveXpRules, XP_RULES_DEFAULTS } from './levelsystem.js';
 
 /* 🔐 Minimaler .env-Loader (keine Zusatz-Abhängigkeit nötig): lädt
    Werte aus einer .env-Datei im Projektordner in process.env, aber
@@ -2173,6 +2175,98 @@ async function handleApi(req, res, pathname) {
       activity: SessionManager.recentActivity(20),
       audit: SessionManager.recentAudit(20)
     });
+  }
+
+  /* 🔔 BENACHRICHTIGUNGEN (Progression 2.0): Zentrum für eingeloggte Nutzer */
+  if (pathname === '/api/notifications' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const number = String(session.number || '');
+    let bid = '';
+    try {
+      const dir = path.join('Database', 'LoveUser');
+      for (const b of fs.readdirSync(dir)) {
+        if (b.startsWith(number)) { bid = b; break; }
+      }
+    } catch (e) {}
+    if (!bid) return sendJson(res, 200, { ok: true, list: [], unread: 0, note: 'Kein Bot-Profil zu dieser Nummer gefunden.' });
+    const r = NotifCenter.listFor(bid);
+    const prefs = (() => { try { return JSON.parse(fs.readFileSync(path.join('Database', 'LoveUser', bid, bid + '.json'), 'utf8'))?.notifications || {}; } catch (e) { return {}; } })();
+    return sendJson(res, 200, { ok: true, ...r, prefs, types: NotifCenter.NOTIF_TYPES });
+  }
+  if (pathname === '/api/notifications/prefs' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const number = String(session.number || '');
+    const profPath = (() => {
+      try {
+        const dir = path.join('Database', 'LoveUser');
+        for (const b of fs.readdirSync(dir)) if (b.startsWith(number)) return path.join(dir, b, b + '.json');
+      } catch (e) {}
+      return null;
+    })();
+    if (!profPath) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    let prof;
+    try { prof = JSON.parse(fs.readFileSync(profPath, 'utf8')); } catch (e) { return sendJson(res, 404, { error: 'Profil nicht lesbar.' }); }
+    const body = await readBody(req);
+    const { updatePrefs } = await import('./notifications.js');
+    const prefs = updatePrefs(prof, body.prefs || {});
+    fs.writeFileSync(profPath, JSON.stringify(prof, null, 2), 'utf8');
+    return sendJson(res, 200, { ok: true, prefs });
+  }
+  if (pathname === '/api/notifications/read' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const number = String(session.number || '');
+    let bid = '';
+    try {
+      const dir = path.join('Database', 'LoveUser');
+      for (const b of fs.readdirSync(dir)) if (b.startsWith(number)) { bid = b; break; }
+    } catch (e) {}
+    if (!bid) return sendJson(res, 200, { ok: true });
+    const body = await readBody(req);
+    NotifCenter.markRead(bid, body.ids || (body.all === true ? 'all' : []));
+    return sendJson(res, 200, { ok: true });
+  }
+
+  /* ⭐ XP-REGELN (Progression 2.0): Kategorien, Multiplikatoren, Anti-Farm
+     — Lese: xp.view · Änderung: xp.adjust + Step-up + Audit + Versionierung */
+  if (pathname === '/api/xp/rules' && req.method === 'GET') {
+    if (!perm(session, 'xp.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (xp.view).' });
+    return sendJson(res, 200, { ok: true, ...xpRules() });
+  }
+  if (pathname === '/api/xp/rules' && req.method === 'POST') {
+    if (!perm(session, 'xp.adjust')) return sendJson(res, 403, { error: 'Keine Berechtigung (xp.adjust) — XP-Regeln sind ein kritisches Recht.' });
+    const body = await readBody(req);
+    if (!requireStepUp(req, res, session, body, 'xp.rules.changed')) return;
+    const reason = String(body.reason || '').trim();
+    if (reason.length < 5) return sendJson(res, 400, { error: 'Grund ist Pflicht (min. 5 Zeichen) — wird auditiert.' });
+    const actor = session.username || session.number;
+    const cur = xpRules();
+    const next = {
+      multipliers: Object.assign({}, cur.multipliers, body.multipliers || {}),
+      categories: Object.fromEntries(Object.keys(cur.categories).map((k) => [k, Object.assign({}, cur.categories[k], (body.categories || {})[k] || {})])),
+      antiFarm: Object.assign({}, cur.antiFarm, body.antiFarm || {})
+    };
+    /* Grenzen, damit keine Regel das System brechen kann */
+    next.multipliers.weekend = Math.max(1, Math.min(5, Number(next.multipliers.weekend) || 1));
+    next.multipliers.event = Math.max(1, Math.min(10, Number(next.multipliers.event) || 1));
+    next.multipliers.eventActive = !!next.multipliers.eventActive;
+    next.multipliers.prestigePerLevel = Math.max(0, Math.min(0.5, Number(next.multipliers.prestigePerLevel) || 0));
+    next.multipliers.prestigeCap = Math.max(0, Math.min(2, Number(next.multipliers.prestigeCap) || 0));
+    for (const [k, v] of Object.entries(next.categories)) {
+      if (v.enabled === undefined) v.enabled = true;
+      v.enabled = !!v.enabled;
+      for (const f of Object.keys(v)) if (f !== 'enabled') v[f] = Math.max(0, Math.min(100000, Number(v[f]) || 0));
+    }
+    next.antiFarm.msgCapPerHour = Math.max(10, Math.min(5000, Number(next.antiFarm.msgCapPerHour) || 300));
+    next.antiFarm.cmdCapPerHour = Math.max(10, Math.min(5000, Number(next.antiFarm.cmdCapPerHour) || 150));
+    next.antiFarm.duplicateWindowSec = Math.max(5, Math.min(3600, Number(next.antiFarm.duplicateWindowSec) || 45));
+    next.antiFarm.duplicateMaxPerDay = Math.max(1, Math.min(100, Number(next.antiFarm.duplicateMaxPerDay) || 5));
+    next.antiFarm.mutualFarmMaxPerHour = Math.max(2, Math.min(100, Number(next.antiFarm.mutualFarmMaxPerHour) || 6));
+    next.antiFarm.suspiciousXpPerDay = Math.max(100, Math.min(100000, Number(next.antiFarm.suspiciousXpPerDay) || 1500));
+    const saved = saveXpRules(next, actor);
+    audit(actor, 'xp.rules.changed', 'XP-Regeln → v' + saved.version + ' — ' + reason.slice(0, 160), 'success');
+    securityEvent('XP_RULES_CHANGED', { actor, risk: 40, reason: reason.slice(0, 200), newVersion: saved.version });
+    try { LoveEngine.emit('SESSION_EVENT', { reason: 'xp-rules-changed' }); } catch (e) {}
+    return sendJson(res, 200, { ok: true, version: saved.version });
   }
 
   /* ⭐ XP & LEVEL (LoveCore): Statistik + Level-Tabelle — nur mit xp.view */

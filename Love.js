@@ -82,8 +82,16 @@ import {
   prestigeAnnounce,
   profileCard,
   rankLine,
-  topProgression
+  topProgression,
+  MILESTONES,
+  rewardsTable,
+  applyComplimentXp,
+  applyMediaXp,
+  xpMultiplier,
+  xpRules
 } from './levelsystem.js';
+import { NOTIF_TYPES, updatePrefs } from './notifications.js';
+import { notify as notifyLove } from './notifications.js';
 import { handleMediaCommand } from './mediacmds.js';
 
 /* ═══ 🏓 PING (echte Messwerte) + 🧭 ALLTAGS-TOOLS ═══ */
@@ -6119,6 +6127,17 @@ break;
                   await sock.sendJson(from, buildCodePayload('⚠️ PLAY — KEIN DIREKTES MEDIA GEFUNDEN', rawText || 'Keine Daten', 'json'), { quoted: msg });
                 }
 
+                /* 💜 Progression 2.0: Media-XP (Erst-Download / neuer Provider,
+                   mit Tageslimit gegen Download-Farming) */
+                try {
+                  if (userProfile && (result.video || result.audio || result.thumbnail || sentMedia)) {
+                    const mediaRes = applyMediaXp(userProfile, { platform: result.platform || 'generic' });
+                    if (mediaRes.granted > 0) {
+                      saveUserProfile(userProfile);
+                      await sock.sendMessage(from, { text: `\n⭐ *+${mediaRes.granted} XP* — ${mediaRes.reason === 'first-download' ? 'dein erster Media-Download!' : 'neuer Provider entdeckt: ' + (mediaRes.reason || '').split(':')[1]}` }, { quoted: msg });
+                    }
+                  }
+                } catch (mediaXpErr) {}
                 await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
                 console.log(c.bold + c.brightGreen + `[play] ${result.platform} erfolgreich verarbeitet.` + c.reset);
               } catch (playErr) {
@@ -10551,12 +10570,65 @@ break;
               const loveP = pP.love || {};
               const nameP = getProfileDisplayName(pP, msg.pushName || cleanId(senderJid));
               const levelCard = profileCard(pP, nameP, pref);
+              /* Progression 2.0: Heute/Woche + drei getrennte Streaks */
+              const p2P = pP.progression || {};
+              const p2Today = (p2P.xpDaily || []).find((e) => e.d === new Date().toISOString().slice(0, 10))?.a || 0;
+              const p2Week = (p2P.xpDaily || []).slice(-7).reduce((a, e) => a + (Number(e.a) || 0), 0);
+              const p2St = p2P.streaks || {};
+              const p2Mult = xpMultiplier(pP).toFixed(2);
+              const p2Unlocks = Object.keys(p2P.unlocks || {}).length;
               await sock.sendMessage(from, {
                 text: levelCard +
                   (pP.identity?.title ? `\n📛 Titel: *${pP.identity.title}*` : '') +
                   (pP.identity?.bio ? `\n📝 Bio: *${pP.identity.bio}*` : '') +
                   (loveP.spouseName ? `\n💍 verheiratet mit: *${loveP.spouseName}*` : '') +
+                  `\n\n📈 *Progression 2.0*\n• *Heute:* +${Number(p2Today).toLocaleString('de-DE')} XP\n• *Diese Woche:* +${Number(p2Week).toLocaleString('de-DE')} XP\n• *Multiplikator:* ${p2Mult}×\n\n🔥 *Streaks*\n• Aktiv: ${p2St.daily?.c || 0} Tage\n• Chat: ${p2St.chat?.c || 0} Tage\n• XP (≥50/Tag): ${p2St.xp?.c || 0} Tage\n\n🎁 Freischaltungen: ${p2Unlocks}/${MILESTONES.length}` +
                   '\n\n☾ every soul has a story.'
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'rewards':
+            case 'belohnungen': {
+              /* 🎁 Level-Rewards: was ist bereits freigeschaltet, was kommt? */
+              const pR = userProfile?.progression || {};
+              const rowsR = rewardsTable(pR.prestige || 0, pR.level || 0).map((m) =>
+                `${m.unlocked ? '✅' : '🔒'} *Level ${m.level}* — ${m.label} (+${m.coins} Kupfer)`
+              ).join('\n');
+              await sock.sendMessage(from, {
+                text: `> 🎁 *REWARDS*\n\n${rowsR}\n\n💡 _Jedes Level bringt Kupfer, Meilensteine bringen Titel & Cosmetics. Mit Prestige bleiben alle Freischaltungen erhalten._\n♡ level up to unlock the night.`
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'notif':
+            case 'notifications': {
+              /* 🔔 Benachrichtigungs-Einstellungen anzeigen / umschalten */
+              userProfile = userProfile || { identity: { bid: '' } };
+              const argN = (args[0] || '').toLowerCase();
+              const setN = args.slice(1).join(' ').toLowerCase();
+              if (argN) {
+                const known = NOTIF_TYPES.find((t) => t.id === argN || t.label.toLowerCase().includes(argN));
+                if (!known) {
+                  await sock.sendMessage(from, { text: `> ❌ Unbekannter Typ. Verfügbar: ${NOTIF_TYPES.map((t) => t.id).join(', ')}` }, { quoted: msg });
+                  break;
+                }
+                if (setN === 'an' || setN === 'on' || setN === 'ja') known._set = true;
+                else if (setN === 'aus' || setN === 'off' || setN === 'nein') known._set = false;
+                else if (!setN) known._set = !(userProfile.notifications?.[known.id] !== undefined ? userProfile.notifications[known.id] : known.default);
+                else { await sock.sendMessage(from, { text: `> ❌ Nutzung: ${pref}notif <typ> [an|aus]` }, { quoted: msg }); break; }
+                updatePrefs(userProfile, { [known.id]: known._set });
+                saveUserProfile(userProfile);
+                await sock.sendMessage(from, { text: `> 🔔 *${known.label}* → ${known._set ? '🟢 AN' : '⚫ AUS'}` }, { quoted: msg });
+                break;
+              }
+              const prefsN = userProfile.notifications || {};
+              const rowsN = NOTIF_TYPES.map((t) => {
+                const on = prefsN[t.id] !== undefined ? prefsN[t.id] : t.default;
+                return `${on ? '☑' : '☐'} *${t.label}* — ${pref}notif ${t.id} ${on ? 'aus' : 'an'}`;
+              }).join('\n');
+              await sock.sendMessage(from, {
+                text: `> 🔔 *BENACHRICHTIGUNGEN*\n\n${rowsN}\n\n💡 _Auch auf der Website: /notifications.html (nach Login)._`
               }, { quoted: msg });
               break;
             }
@@ -10617,8 +10689,11 @@ break;
                 break;
               }
               progD.lastDaily = todayD;
-              const dailyRes = grantLevelXp(userProfile, 50, { source: 'dailies' });
+              const dailyRules = xpRules().categories?.daily || {};
+              const dailyAmt = Number(dailyRules.daily) || 50;
+              const dailyRes = grantLevelXp(userProfile, dailyRules.enabled === false ? 0 : dailyAmt, { source: 'dailies' });
               saveUserProfile(userProfile);
+              try { notifyLove(userProfile?.identity?.bid || '', 'daily', { title: `💰 Daily gesammelt: +${dailyRes.granted} XP`, text: `Level ${progD.level} · Prestige ${progD.prestige}`, link: '/level.html' }, userProfile); } catch (e) {}
               const dailyNameD = getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid));
               if (dailyRes.events?.length) {
                 const dailyPrestige = dailyRes.events.some((e) => e.type === 'prestige');
@@ -10635,8 +10710,9 @@ break;
 
             case 'streak': {
               const progS = userProfile?.progression || {};
+              const stS = progS.streaks || {};
               await sock.sendMessage(from, {
-                text: `> 🔥 *STREAK*\n\n• *Aktuelle Serie:* ${progS.streak || 0} Tage\n• *Bestwert:* ${progS.bestStreak || progS.streak || 0} Tage\n\n☾ consistency is a love language.`
+                text: `> 🔥 *STREAKS*\n\n• *Aktiv:* ${stS.daily?.c || progS.streak || 0} Tage\n• *Chat:* ${stS.chat?.c || 0} Tage\n• *XP (≥50/Tag):* ${stS.xp?.c || 0} Tage\n• *Bestwert:* ${progS.bestStreak || progS.streak || 0} Tage\n\n☾ consistency is a love language.`
               }, { quoted: msg });
               break;
             }
@@ -11337,6 +11413,29 @@ break;
                 mentions: isSelf ? [senderJid] : [compMention, senderJid].filter(Boolean)
               }, { quoted: msg });
               await sendReaction(sock, from, '🌹', msg.key);
+              /* 💜 Progression 2.0: Social XP Layer — Empfänger +5, Sender +8,
+                 Social Bond +1, mit Cooldown + Anti-Mutual-Farm. */
+              try {
+                if (userProfile && xpEligible(userProfile)) {
+                  let compTargetProfile = null;
+                  if (!isSelf) {
+                    compTargetProfile = await loadUserProfileForSender({ jid: compMention?.endsWith('@s.whatsapp.net') ? compMention : '', lid: String(compMention || '').endsWith('@lid') ? compMention : '' });
+                  }
+                  const compRes = applyComplimentXp(userProfile, compTargetProfile || userProfile, {});
+                  saveUserProfile(userProfile);
+                  if (compTargetProfile && !isSelf) saveUserProfile(compTargetProfile);
+                  if (compRes.senderXp || compRes.recipientXp) {
+                    await sock.sendMessage(from, {
+                      text: `\n💜 *SOCIAL XP*\n• ${isSelf ? 'Selbstliebe' : 'Empfängerin'}: +${compRes.recipientXp} XP${compRes.bond ? ' · ❤️ Bond +1' : ''}\n• Du: +${compRes.senderXp} XP`
+                    }, { quoted: msg });
+                  }
+                  if (compRes.farmSuspect) {
+                    /* Anti-Farm: Muster im Bot-Log + XP-Event (Owner sieht es im Abuse-Center) */
+                    try { const { emit } = await import('./loveengine.js'); emit('XP_GRANTED', { bid: userProfile?.identity?.bid || '', source: 'compliment-farm-suspect', granted: 0, reason: 'mutual-farm-pattern' }); } catch (e) {}
+                    console.log(c.yellow + '[compliment] Mutual-Farm-Muster erkannt (Sender: ' + cleanId(senderJid) + ')' + c.reset);
+                  }
+                }
+              } catch (compXpErr) { /* XP darf nie den Befehl brechen */ }
               break;
             }
 

@@ -15,6 +15,28 @@ function makeHearts(count = 14) {
   }
 }
 
+/* 🔔 Notification-Bell: nach Login zeigt die Top-Nav die ungelesene Zahl */
+function initNotifBell() {
+  try {
+    if (!getToken() || !document.querySelector('.topnav')) return;
+    fetch('/api/notifications', { headers: { Authorization: 'Bearer ' + getToken() } })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (!d || !d.ok) return;
+        const nav = document.querySelector('.topnav');
+        const cta = nav.querySelector('.cta');
+        const bell = document.createElement('a');
+        bell.href = '/notifications.html';
+        bell.className = 'notif-bell';
+        bell.title = 'Benachrichtigungen';
+        bell.innerHTML = '🔔' + (d.unread > 0 ? '<span class="notif-badge">' + (d.unread > 99 ? '99+' : d.unread) + '</span>' : '');
+        if (cta) cta.insertBefore(bell, cta); else nav.appendChild(bell);
+      })
+      .catch(() => {});
+  } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', initNotifBell);
+
 function getToken() { return localStorage.getItem('love_token'); }
 function getRole() { return localStorage.getItem('love_role') || 'user'; }
 function getName() { return localStorage.getItem('love_name') || ''; }
