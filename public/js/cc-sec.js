@@ -415,3 +415,40 @@ CC.reg('sperrenSessions', async () => {
     ], rows) : '<div class="cc-empty">Keine aktiven Sessions.</div>') + '</div>'
   );
 }, { perms: ['sessions.view'] });
+
+/* ═══  OWNER-ALERT CENTER (Security-Warnungen im Web) ═══ */
+CC.reg('ownerAlerts', async () => {
+  const d = await api('/api/owner-alerts').catch(() => null);
+  if (!d || !d.ok) { CC.viewErr('Keine Berechtigung (security.view).'); return; }
+  const alerts = d.alerts || [];
+  const sevTag = { critical: ['bad', '🔴 KRITISCH'], warning: ['warn', '🟠 WARNUNG'], notice: ['info', '🟡 HINWEIS'], info: ['ok', '🟢 INFO'] };
+  const sevCount = (s2) => alerts.filter((a) => a.severity === s2).length;
+  const filtered = alerts;
+  CC.page('🔔 Owner-Alerts', 'Sicherheits-Warnungen &amp; automatische Aktionen — dieselben Alerts, die auch per WhatsApp ankommen (Webmail-Queue), mit Read-Status.',
+    '<div class="cc-statgrid">' +
+      '<div class="cc-stat"><div class="ic">🔴</div><div class="num' + (sevCount('critical') ? ' st-bad' : '') + '">' + sevCount('critical') + '</div><div class="lab">Kritisch</div></div>' +
+      '<div class="cc-stat"><div class="ic">🟠</div><div class="num' + (sevCount('warning') ? ' st-warn' : '') + '">' + sevCount('warning') + '</div><div class="lab">Warnungen</div></div>' +
+      '<div class="cc-stat"><div class="ic">🟡</div><div class="num">' + sevCount('notice') + '</div><div class="lab">Hinweise</div></div>' +
+      '<div class="cc-stat"><div class="ic">✉️</div><div class="num">' + (d.unread ?? 0) + '</div><div class="lab">Ungelesen</div></div>' +
+    '</div><br>' +
+    (filtered.length ? filtered.map((a) => {
+      const t = sevTag[a.severity] || sevTag.notice;
+      return '<div class="cc-event mx-alert' + (a.read ? ' read' : '') + '" id="alrt_' + esc(a.id) + '"><div class="ev-ico">' + t[0].split(' ')[0] + '</div><div class="ev-main"><div class="ev-t">' + esc(a.event) + ' <span class="cc-tag ' + t[1].split(' ')[1] === 'KRITISCH' ? 'bad' : t[0].includes('warn') ? 'warn' : 'info' + '">' + esc(t[1]) + '</span>' + (a.read ? '' : ' <span class="cc-tag ok">NEU</span>') + '</div><div class="ev-s">' + esc(String(a.text || '').replace(/\n/g, ' · ').slice(0, 220)) + '</div></div><div class="ev-time">' + CC.dt(a.createdAt) + '</div>' + (!a.read ? '<button class="cc-btn sm" style="margin-left:8px" onclick="CC.markAlertRead(\'' + esc(a.id) + '\')">✓ Gelesen</button>' : '') + '</div>';
+    }).join('') : '<div class="cc-empty">Keine Alerts — alles ruhig. 🟢</div>')
+  );
+}, { perms: ['security.view'] });
+
+CC.markAlertRead = async (id) => {
+  await CC.post('/api/owner-alerts/read', { id });
+  const el = document.getElementById('alrt_' + id);
+  if (el) { el.classList.add('read'); el.innerHTML = el.innerHTML.replace(' <span class="cc-tag ok">NEU</span>', ''); const b = el.querySelector('.cc-btn'); if (b) b.remove(); }
+  CC.toast('✓ Als gelesen markiert');
+};
+
+/* Menü: Alert-Center in SICHERHEIT */
+(function () {
+  const g = CC.menu.find((m) => m.sec && m.sec.startsWith('🛡 SICHERHEIT'));
+  if (g && !g.items.find((i) => i.id === 'ownerAlerts')) {
+    g.items.unshift({ id: 'ownerAlerts', ico: '🔔', label: 'Owner-Alerts', perms: ['security.view'] });
+  }
+})();

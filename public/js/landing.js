@@ -67,6 +67,15 @@ async function loadCommands() {
     set('cntUsers', '—'); set('cntGroups', '—');
   }
 
+  /* Plattform-Statistiken (öffentlich, /api/statistics) */
+  try {
+    const st = await api('/api/statistics');
+    const setN = (id, v) => { const e = document.getElementById(id); if (e && v != null) e.textContent = Number(v).toLocaleString('de-DE'); };
+    setN('cntSessions', st.counts && (st.counts.sessionsOnline ?? st.counts.sessions));
+    setN('cntPets', st.loveplus && st.loveplus.pets);
+    setN('cntCouples', st.loveplus && st.loveplus.couples);
+  } catch (e) {}
+
   /* Bot-Status-Pill */
   const bot = document.getElementById('cntBot');
   if (bot) {

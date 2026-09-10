@@ -908,3 +908,7 @@ pre.logs {
   background: rgba(251,191,36,.08); border: 1px dashed rgba(251,191,36,.5);
   padding: 1px 10px; border-radius: 8px; white-space: nowrap;
 }
+
+/* ═══ LoveBot 5.0: Plattform-Chips (Startseite) ═══ */
+.platform-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 18px 0 4px; }
+.pchip { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.03); font-size: 12.5px; font-weight: 700; color: var(--muted); backdrop-filter: blur(6px); }

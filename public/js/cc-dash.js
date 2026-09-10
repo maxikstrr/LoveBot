@@ -4,11 +4,14 @@
 
 /* ═══ DASHBOARD ═══ */
 CC.reg('dash', async () => {
-  const [ov, fullSec, sys, site] = await Promise.all([
+  const [ov, fullSec, sys, site, adov, health, stats] = await Promise.all([
     CC.can('security.view') ? api('/api/security/overview').catch(() => null) : Promise.resolve(null),
     CC.can('security.view') ? api('/api/security').catch(() => null) : Promise.resolve(null),
     api('/api/system').catch(() => null),
-    api('/api/siteinfo').catch(() => null)
+    api('/api/siteinfo').catch(() => null),
+    (CC.can('xp.view') || CC.can('economy.view')) ? api('/api/admin/overview').catch(() => null) : Promise.resolve(null),
+    CC.can('system.view') ? api('/api/health').catch(() => null) : Promise.resolve(null),
+    api('/api/statistics').catch(() => null)
   ]);
   const o = (ov && ov.ok) ? ov : {};
   const sc = (fullSec && fullSec.ok) ? fullSec : {};
@@ -35,7 +38,53 @@ CC.reg('dash', async () => {
       auditFeed = es.length ? '<div class="cc-feed">' + es.slice(0, 8).map((e) => '<div class="cc-event"><div class="ev-ico">📖</div><div class="ev-main"><div class="ev-t"><span class="cc-key">' + esc(e.action) + '</span></div><div class="ev-s">' + esc(e.actor || '') + (e.target ? ' → ' + esc(e.target) : '') + '</div></div><div class="ev-time">' + esc(e.time) + '</div></div>').join('') + '</div>' : '<div class="cc-empty">Keine Audit-Einträge.</div>';
     } catch (e) {}
   }
-  CC.page('Dashboard', 'Systemübersicht — alles auf einen Blick. (' + new Date().toLocaleString('de-DE') + ')',
+  /* ❤️ HEALTH SCORE (system-wide) */
+  let healthHtml = '';
+  if (health && health.ok) {
+    const comps = health.components || [];
+    const okCount = comps.filter((c) => c.ok).length;
+    const score = comps.length ? Math.round((okCount / comps.length) * 100) : 100;
+    const bars = comps.map((c) => '<div class="cc-hbar"><span class="k">' + esc(c.label) + '</span><div class="cc-hbartrack"><div class="cc-hbarfill' + (c.ok ? ' ok' : ' bad') + '" style="width:' + (c.ok ? 100 : 18) + '%"></div></div><span class="v">' + (c.ok ? 'OK' : '⚠') + '</span></div>').join('');
+    healthHtml = '<div class="cc-section"><h3>❤️ LoveBot Health</h3><div class="cc-hscore"><div class="cc-hscore-num' + (score >= 90 ? ' ok' : score >= 60 ? ' warn' : ' bad') + '">' + score + '%</div><div class="cc-hbars">' + bars + '</div></div></div>';
+  }
+  /* 📈 KPI-Zeile */
+  let kpiHtml = '';
+  if (adov) {
+    const t = adov.totals || {}, c = adov.counts || {}, f = adov.fleet || {}, xp = adov.xp || {};
+    const kpi = (ic, n, l) => '<div class="cc-stat"><div class="ic">' + ic + '</div><div class="num">' + n + '</div><div class="lab">' + l + '</div></div>';
+    kpiHtml = '<div class="cc-statgrid">' +
+      kpi('👤', (c.users ?? '—').toLocaleString ? Number(c.users || 0).toLocaleString('de-DE') : '—', 'Nutzer (WhatsApp)') +
+      kpi('👥', Number(c.groups || 0).toLocaleString('de-DE'), 'Gruppen') +
+      kpi('📡', (f.running || 0) + '/' + (f.managed || 0), 'Sessions online') +
+      kpi('⭐', Number(xp.totalXp || 0).toLocaleString('de-DE'), 'XP gesamt') +
+      kpi('🪙', Number(t.copper || 0).toLocaleString('de-DE'), 'Kupfer gesamt') +
+      kpi('💞', Number(t.couples || 0).toLocaleString('de-DE'), 'Paare aktiv') +
+      kpi('🏆', Number(xp.games24h ?? 0), 'Games (24 h)') +
+      kpi('🐾', Number(t.pets || 0).toLocaleString('de-DE'), 'Pets') +
+    '</div>';
+  }
+  /* 📈 Aktivitäts-Graph (14 Tage, SVG) */
+  let chartHtml = '';
+  try {
+    const act = (stats && stats.activity) || (stats && stats.activityByDay) || [];
+    if (act.length > 1) {
+      const W = 560, H = 120, pad = 6;
+      const max = Math.max(...act.map((x) => Number(x.count ?? x.commands ?? 0) || 0), 1);
+      const bw = (W - pad * 2) / act.length;
+      const bars = act.map((x, i) => {
+        const v = Number(x.count ?? x.commands ?? 0) || 0;
+        const h = Math.max(2, Math.round((v / max) * (H - 30)));
+        return '<rect x="' + (pad + i * bw + 2) + '" y="' + (H - 18 - h) + '" width="' + Math.max(3, bw - 4) + '" height="' + h + '" rx="3" fill="var(--acc)" opacity="' + (0.45 + 0.55 * (v / max)) + '"><title>' + esc(String(x.day || i)) + ': ' + v + '</title></rect>';
+      }).join('');
+      const labels = act.map((x, i) => (i % 2 === 0 ? '<text x="' + (pad + i * bw + bw / 2) + '" y="' + (H - 4) + '" font-size="8" fill="var(--dim)" text-anchor="middle">' + esc(String(x.day || '').slice(5)) + '</text>' : '')).join('');
+      chartHtml = '<div class="cc-section"><h3>⚡ Kommando-Aktivität (14 Tage)</h3><div class="cc-chart"><svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto">' + bars + labels + '</svg></div></div>';
+    }
+  } catch (e) {}
+
+  CC.page('Dashboard', 'LOVE CONTROL CENTER — Systemübersicht. (' + new Date().toLocaleString('de-DE') + ')',
+    kpiHtml +
+    (healthHtml ? '<div class="cc-grid2">' + healthHtml + '</div>' : '') +
+    chartHtml +
     '<div class="cc-grid2">' +
       '<div class="cc-section"><h3>🚦 Security-Lage (24 h)</h3><div class="cc-kv">' +
         '<span class="k">Bedrohungslevel</span><span class="v"><span class="cc-tag ' + (threat === 'HIGH' ? 'bad' : threat === 'WATCH' ? 'warn' : 'ok') + '">' + esc(threat) + '</span></span>' +

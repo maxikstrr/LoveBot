@@ -44,7 +44,7 @@ CC.reg('users', async () => {
       { k: 'lastLoginAt', t: 'Letzte Aktivität', f: (r) => r.lastLoginAt ? CC.rel(r.lastLoginAt) : 'nie' },
       { k: 'createdAt', t: 'Erstellt', f: (r) => r.createdAt ? CC.dt(r.createdAt) : '—' },
       { k: 'restrictions', t: 'Einschr.', f: (r) => (r.restrictions && r.restrictions.length) ? '<span class="cc-tag warn">' + r.restrictions.length + '</span>' : '—' },
-      { k: 'x', t: '', f: (r) => '<button class="cc-btn sm" onclick="CC.openAkte(\'' + esc(r.id) + '\')">📂 Akte</button>' }
+      { k: 'x', t: '', f: (r) => '<button class="cc-btn sm" onclick="location.hash=\'#/userFull?id=' + encodeURIComponent(r.id) + '\'">📂 Akte öffnen</button>' }
     ];
     el.innerHTML = '<div class="cc-section">' +
       (canManage && rows.length ? '<div class="cc-massbar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 2px 10px">' +

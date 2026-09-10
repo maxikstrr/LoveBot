@@ -219,3 +219,56 @@ a{color:var(--acc);text-decoration:none}
 /* ⭐ XP-Formular (LoveCore) */
 .cc-xpform { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .cc-xpform .cc-field { margin: 0; }
+
+/* ═══ Phase 2: Rechte-Matrix, Feature-Registry, Health, Akte ═══ */
+.mx-table td.mx-cell { text-align: center; font-weight: 700; }
+.mx-table td.mx-cell.on { color: var(--ok, #34d399); }
+.mx-table td.mx-cell.crit { color: var(--warn, #fbbf24); }
+.mx-table td.mx-cell:not(.on):not(.crit) { color: var(--dim); }
+.mx-table th.mx-role { white-space: nowrap; font-size: 11px; }
+.mx-lv { font-size: 9px; color: var(--dim); font-weight: 400; }
+.mx-perm { font-family: var(--mono); font-size: 11.5px; }
+.mx-permlabel { font-size: 9.5px; color: var(--dim); font-family: inherit; }
+tr.mx-catrow td { background: rgba(139,92,246,.08); color: var(--acc, #a78bfa); font-weight: 800; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 6px 10px; }
+.mx-branch { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: rgba(255,255,255,.015); }
+.mx-branch > b { color: var(--acc, #a78bfa); font-size: 11px; letter-spacing: .12em; }
+.mx-items { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.mx-item { font-size: 11.5px; color: var(--mut); }
+
+/* Feature-Registry (App Store) */
+.cc-featuregrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+.cc-featurecard { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; background: rgba(255,255,255,.02); }
+.cc-featurecard.disabled { opacity: .55; }
+.cc-featicon { font-size: 26px; }
+.cc-featname { flex: 1; min-width: 0; }
+.cc-featname .cc-key { font-size: 10px; opacity: .7; }
+.cc-featstatus { text-align: right; }
+.cc-feataud { font-size: 10px; color: var(--dim); margin-top: 4px; }
+.cc-featctrl { display: flex; flex-direction: column; gap: 5px; }
+.cc-featctrl .cc-select { font-size: 11px; padding: 4px 8px; }
+
+/* Health-Score */
+.cc-hscore { display: flex; gap: 18px; align-items: center; }
+.cc-hscore-num { font-size: 34px; font-weight: 900; font-family: var(--mono); }
+.cc-hscore-num.ok { color: var(--ok, #34d399); }
+.cc-hscore-num.warn { color: var(--warn, #fbbf24); }
+.cc-hscore-num.bad { color: var(--err, #fb7185); }
+.cc-hbars { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.cc-hbar { display: flex; align-items: center; gap: 10px; font-size: 11.5px; }
+.cc-hbar .k { width: 170px; flex: 0 0 170px; color: var(--mut); }
+.cc-hbar .v { width: 30px; text-align: right; color: var(--dim); font-size: 10px; }
+.cc-hbartrack { flex: 1; height: 7px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; }
+.cc-hbarfill { height: 100%; border-radius: 4px; }
+.cc-hbarfill.ok { background: linear-gradient(90deg, #7c3aed, #34d399); }
+.cc-hbarfill.bad { background: linear-gradient(90deg, #7c3aed, #fb7185); }
+.cc-chart { background: rgba(255,255,255,.015); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+
+/* Benutzerakte 2.0 */
+.cc-aktenhead { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,.02); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; }
+.cc-avatar.xl { width: 52px; height: 52px; font-size: 24px; }
+.cc-tabbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.cc-tab { border: 1px solid var(--line); background: transparent; color: var(--mut); border-radius: 999px; padding: 6px 13px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.cc-tab:hover { border-color: var(--acc); color: var(--text); }
+.cc-tab.on { background: var(--acc, #7c3aed); border-color: var(--acc, #7c3aed); color: #fff; font-weight: 700; }
+.mx-alert { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; background: rgba(255,255,255,.02); }
+.mx-alert.read { opacity: .55; }

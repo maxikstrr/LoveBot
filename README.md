@@ -944,6 +944,7 @@ Für weiterführende Informationen gibt es in diesem Projekt zusätzlich Dokumen
 - `Dokumente/datenverarbeitung.md`
 - `Dokumente/LEVEL-SYSTEM.md` — komplettes Level-System (XP, Kurve, Ränge, Prestige, Anti-Spam, DSGVO)
 - `Dokumente/LOVECORE.md` — LoveCore Engine (EventBus, Live-Feed, XP-Admin, WEB-REQ-07)
+- `Dokumente/LOVEBOT-5.0-ROADMAP.md` — komplette 5.0-Vision (106 Punkte) mit Status + Phasenplan
 - `handbuch.md`
 
 Diese Dateien ergänzen diese README und erklären die datenschutzrechtlichen und betrieblichen Aspekte ausführlicher.
