@@ -338,7 +338,6 @@ function closeConsentGate() {
   const el = document.getElementById('consentGate');
   if (el) el.remove();
   ensureConsentRelaunch();
-  initLocationPrompt();
 }
 
 function ensureConsentRelaunch() {
@@ -365,7 +364,6 @@ function ensureConsentRelaunch() {
 function initConsentGate() {
   if (getConsent()) {
     ensureConsentRelaunch();
-    initLocationPrompt();
   } else {
     renderConsentGate();
   }
@@ -376,68 +374,6 @@ if (document.readyState === 'loading') {
   initConsentGate();
 }
 
-/* 📍 Verbindlicher Geräte-/Standort-Gate. Die Browser-/iPhone-/Android-
-   Berechtigung erscheint erst nach Klick auf den sichtbaren Zustimmungsbutton. */
-const LOCATION_CHOICE_KEY = 'love_location_choice';
-
-function initLocationPrompt() {
-  if (localStorage.getItem(LOCATION_CHOICE_KEY) === 'granted') return;
-  const box = document.createElement('div');
-  box.className = 'location-prompt location-gate';
-  box.id = 'locationPrompt';
-  box.innerHTML = '<div class="location-prompt-icon">📍</div>' +
-    '<div class="location-prompt-copy"><b>Standort &amp; Gerät für den Schutz freigeben</b>' +
-    '<span>Für den Website-Zugriff erforderlich. Android/iPhone fragen dich gleich separat. Gespeichert werden ein grober Bereich und technische Gerätedaten; der OS-Update-Stand ist technisch nicht auslesbar.</span></div>' +
-    '<div class="location-prompt-actions"><button class="btn ghost sm" id="locationRetry">Erneut prüfen</button><button class="btn sm" id="locationAllow">📍 Freigeben</button></div>';
-  document.body.appendChild(box);
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      box.querySelector('.location-prompt-copy span').textContent = 'Dieses Gerät bietet keinen Standortdienst. Ohne Standortfreigabe bleibt der Website-Zugriff gesperrt.';
-      return;
-    }
-    if (!window.isSecureContext && location.hostname !== 'localhost') {
-      box.querySelector('.location-prompt-copy span').textContent = 'Standort funktioniert nur über HTTPS. Öffne die sichere Website-Adresse und versuche es dort erneut.';
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const info = await collectDeviceInfo();
-      const result = await api('/api/device-info', { method: 'POST', body: {
-        ...info, latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy
-      } });
-      if (result?.ok) {
-        localStorage.setItem(LOCATION_CHOICE_KEY, 'granted');
-        box.remove();
-      } else {
-        box.querySelector('.location-prompt-copy span').textContent = 'Die Sicherheitsakte konnte nicht gespeichert werden. Bitte versuche es erneut.';
-      }
-    }, () => {
-      box.querySelector('.location-prompt-copy span').textContent = 'Standort wurde abgelehnt. Erlaube ihn in den Browser-/Geräteeinstellungen und klicke danach auf „Erneut prüfen“. Ohne Freigabe bleibt die Website gesperrt.';
-    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
-  };
-  box.querySelector('#locationAllow').onclick = requestLocation;
-  box.querySelector('#locationRetry').onclick = requestLocation;
-}
-
-async function collectDeviceInfo() {
-  const ua = navigator.userAgent || '';
-  const uaData = navigator.userAgentData;
-  let high = {};
-  if (uaData?.getHighEntropyValues) {
-    try { high = await uaData.getHighEntropyValues(['architecture', 'bitness', 'model', 'platformVersion', 'uaFullVersion']); } catch (e) {}
-  }
-  const browser = uaData?.brands?.find((b) => !/Not.?A.?Brand/i.test(b.brand))?.brand || 'Unbekannt';
-  const browserVersion = uaData?.brands?.find((b) => b.brand === browser)?.version || '';
-  const os = uaData?.platform || (/Windows/i.test(ua) ? 'Windows' : /Android/i.test(ua) ? 'Android' : /iPhone|iPad/i.test(ua) ? 'iOS' : /Mac OS/i.test(ua) ? 'macOS' : /Linux/i.test(ua) ? 'Linux' : 'Unbekannt');
-  const device = uaData?.mobile ? 'Smartphone' : navigator.maxTouchPoints > 1 ? 'Touch-Gerät' : 'Desktop';
-  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  return {
-    userAgent: ua, platform: navigator.platform || '', os, browser, browserVersion,
-    device, platformVersion: high.platformVersion || '', architecture: high.architecture || '',
-    language: navigator.language || '', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-    screen: `${screen.width}x${screen.height}x${screen.colorDepth || 0}`,
-    pixelRatio: window.devicePixelRatio || 1, touchPoints: navigator.maxTouchPoints || 0,
-    cpuCores: navigator.hardwareConcurrency || 0, memoryGb: navigator.deviceMemory || 0,
-    network: connection?.effectiveType || '', online: navigator.onLine === true, path: location.pathname
-  };
-}
-
+/* ⚠️ Das frühere „📍 Standort- & Geräte-Gate" wurde auf Wunsch des Owners
+   vollständig entfernt: kein Geolocation-Popup, keine Standort-Erfassung,
+   keine „Zugriff nur nach Freigabe"-Sperre mehr. */

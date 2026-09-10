@@ -1756,6 +1756,24 @@ const baileysConstants = {
   DECRYPTION_RETRY_CONFIG
 };
 
+/* Löscht nur die Haupt-Session-Dateien DIREKT in targetPath (creds.json &
+   *.json im Ordner selbst) — Unterordner (Multisessions) bleiben erhalten. */
+function deleteMainSessionFiles(targetPath = './xoisChallangeBot') {
+  let removed = 0;
+  try {
+    if (fs.existsSync(targetPath)) {
+      for (const entry of fs.readdirSync(targetPath, { withFileTypes: true })) {
+        if (!entry.isDirectory()) {
+          try { fs.rmSync(path.join(targetPath, entry.name), { force: true }); removed++; } catch (e) {}
+        }
+      }
+    }
+  } catch (err) {
+    console.error(c.bold + c.brightRed + 'Fehler beim Löschen der Haupt-Session:' + c.reset, err);
+  }
+  return removed > 0;
+}
+
 function deleteOldSession(targetPath = './xoisChallangeBot') {
   try {
     if (fs.existsSync(targetPath)) {
@@ -1820,6 +1838,23 @@ async function pairMenu(options = {}) {
   const startBotFn = options.startBot;
 
   const hasSession = hasValidSession(credsPath);
+
+  /* ── Box-Zeichnung im LoveBot-Night-Stil ─────────────────────────── */
+  const L = '─'.repeat(46);
+  const boxTop  = (t) => console.log('\n' + c.bold + c.brightMagenta + '  ╭' + L + '╮' + c.reset + '\n' + c.bold + c.brightGreen + '  │ ' + String(t).slice(0, 46).padEnd(45) + '│' + c.reset + '\n' + c.bold + c.brightMagenta + '  ├' + L + '┤' + c.reset);
+  const boxLine = (t) => console.log(c.cyan + '  │' + c.reset + ' ' + t);
+  const boxBot  = () => console.log(c.bold + c.brightMagenta + '  ╰' + L + '╯' + c.reset + '\n');
+
+  /* ── Multisession-Menü öffnen (wenn Love.js es bereitstellt) ──────── */
+  const openMulti = async () => {
+    if (typeof options.openMulti === 'function') {
+      try { await options.openMulti(); } catch (multiErr) { console.log(c.bold + c.brightRed + '❌ Multisession-Menü-Fehler: ' + c.reset + (multiErr?.message || multiErr)); }
+    } else {
+      console.log(c.brightYellow + 'ℹ️  Multisession-Menü nicht verfügbar (nur im Love.js-Start).' + c.reset);
+    }
+    return await pairMenu(options);
+  };
+
   if (hasSession) {
     const credsData = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
     const rawJid = credsData?.me?.id || '';
@@ -1828,75 +1863,76 @@ async function pairMenu(options = {}) {
     const lid = rawLid ? normalizeLid(rawLid) : normalizeLid(rawJid);
     const sid = parseSessionId(rawJid) || parseSessionId(rawLid) || '1';
 
-    console.log('\n' + c.bold + c.brightCyan + '==================================================' + c.reset);
-    console.log(c.bold + c.brightMagenta + '       LOVE BOT — SESSION GEFUNDEN' + c.reset);
-    console.log(c.bold + c.brightCyan + '==================================================' + c.reset);
-    console.log(c.cyan + '• JID: ' + c.brightWhite + jid + c.reset);
-    console.log(c.cyan + '• LID: ' + c.brightWhite + lid + c.reset);
-    console.log(c.cyan + '• SID: ' + c.brightWhite + sid + c.reset);
-    console.log(c.bold + c.brightCyan + '==================================================' + c.reset);
-    console.log(c.brightGreen + '[r]' + c.reset + ' – Reconnect mit den vorhandenen Credentials.');
-    console.log(c.brightYellow + '[d]' + c.reset + ' – Session löschen (löscht den gesamten Ordner ./xoisChallangeBot restlos vom System).');
-    console.log(c.brightRed + '[x]' + c.reset + ' – Skript beenden.');
-    console.log(c.bold + c.brightCyan + '==================================================' + c.reset);
+    boxTop('☾  L O V E B O T  —  SESSION  ☾');
+    boxLine('');
+    boxLine(c.brightGreen + ' 💜  Haupt-Session gefunden' + c.reset);
+    boxLine('');
+    boxLine(c.dim + '   JID  ' + c.reset + c.brightWhite + jid);
+    boxLine(c.dim + '   LID  ' + c.reset + c.brightWhite + lid);
+    boxLine(c.dim + '   SID  ' + c.reset + c.brightWhite + sid);
+    boxLine('');
+    boxLine(c.brightGreen + ' [r] ' + c.reset + c.dim + 'Reconnect mit diesen Credentials' + c.reset);
+    boxLine(c.brightYellow + ' [d] ' + c.reset + c.dim + 'Haupt-Session löschen (nur diese — andere Sessions bleiben)' + c.reset);
+    boxLine(c.brightCyan + ' [m] ' + c.reset + c.dim + 'Multi-Session-Menü (alle starten · neue · löschen · Liste)' + c.reset);
+    boxLine(c.brightRed + ' [x] ' + c.reset + c.dim + 'Skript beenden' + c.reset);
+    boxBot();
 
-    const choice = (await askFn(c.bold + 'Auswahl eingeben [r/d/x]: ' + c.reset)).toLowerCase();
+    const choice = (await askFn(c.pink + 'LoveBot › ' + c.reset + c.bold + 'Auswahl [r/d/m/x]: ' + c.reset)).toLowerCase();
     if (choice === 'r') {
       await reconnectOldSession(startBotFn);
     } else if (choice === 'd') {
-      console.log('\n' + c.yellow + '🗑️ Lösche Session-Ordner ./xoisChallangeBot...' + c.reset);
-      const deleted = deleteOldSession(sessionPath);
+      console.log(c.brightYellow + '🗑️  Lösche NUR die Haupt-Session (' + path.basename(sessionPath) + '/creds.json)…' + c.reset);
+      const deleted = deleteMainSessionFiles(sessionPath);
       if (deleted) {
-        console.log(c.bold + c.brightGreen + '✅ Session-Ordner ./xoisChallangeBot wurde restlos vom System gelöscht.' + c.reset);
+        console.log(c.bold + c.brightGreen + '✅ Haupt-Session gelöscht. Multisession-Ordner bleiben erhalten.' + c.reset);
       } else {
-        console.log(c.yellow + 'ℹ️ Kein Session-Ordner vorhanden.' + c.reset);
+        console.log(c.yellow + 'ℹ️ Keine Haupt-Session-Dateien vorhanden.' + c.reset);
       }
       return await pairMenu(options);
+    } else if (choice === 'm') {
+      return await openMulti();
     } else if (choice === 'x') {
       console.log(c.brightMagenta + '👋 Skript wird beendet.' + c.reset);
       process.exit(0);
     } else {
-      console.log(c.brightRed + '❌ Ungültige Eingabe. Bitte r, d oder x wählen.' + c.reset);
+      console.log(c.brightRed + '❌ Ungültige Eingabe. Bitte r, d, m oder x wählen.' + c.reset);
       return await pairMenu(options);
     }
   } else {
-    console.log('\n' + c.bold + c.brightCyan + '==================================================' + c.reset);
-    console.log(c.bold + c.brightMagenta + '          LOVE BOT — PAIRING MENÜ' + c.reset);
-    console.log(c.bold + c.brightCyan + '==================================================' + c.reset);
-    console.log(c.yellow + 'Keine bestehende Session gefunden.' + c.reset);
-    console.log(c.bold + c.brightCyan + '==================================================' + c.reset);
-    console.log(c.brightGreen + '[p]' + c.reset + ' – Pairing via Telefonnummer & Code initialisieren.');
-    console.log(c.brightGreen + '[q]' + c.reset + ' – QR-Code im Terminal für den Login generieren.');
-    console.log(c.brightRed + '[x]' + c.reset + ' – Skript beenden.');
-    console.log(c.bold + c.brightCyan + '==================================================' + c.reset);
+    boxTop('☾  L O V E B O T  —  PAIRING  ☾');
+    boxLine('');
+    boxLine(c.brightYellow + ' Keine bestehende Haupt-Session gefunden.' + c.reset);
+    boxLine('');
+    boxLine(c.brightGreen + ' [p] ' + c.reset + c.dim + 'Pairing via Telefonnummer & Code initialisieren' + c.reset);
+    boxLine(c.brightGreen + ' [q] ' + c.reset + c.dim + 'QR-Code im Terminal für den Login generieren' + c.reset);
+    boxLine(c.brightCyan + ' [m] ' + c.reset + c.dim + 'Multi-Session-Menü (ohne Haupt-Session)' + c.reset);
+    boxLine(c.brightRed + ' [x] ' + c.reset + c.dim + 'Skript beenden' + c.reset);
+    boxBot();
 
-    const choice = (await askFn(c.bold + 'Auswahl eingeben [p/q/x]: ' + c.reset)).toLowerCase();
+    const choice = (await askFn(c.pink + 'LoveBot › ' + c.reset + c.bold + 'Auswahl [p/q/m/x]: ' + c.reset)).toLowerCase();
     if (choice === 'p') {
-      let phone = await askFn(c.cyan + 'Bitte Telefonnummer mit Ländervorwahl eingeben (z. B. 491701234567): ' + c.reset);
+      let phone = await askFn(c.cyan + '📱  Telefonnummer mit Ländervorwahl (z. B. 491701234567): ' + c.reset);
       phone = phone.replace(/\D/g, '');
       if (phone.length < 6) {
         console.log(c.brightRed + '❌ Ungültige Telefonnummer.' + c.reset);
         return await pairMenu(options);
       }
-      console.log('\n' + c.brightCyan + `⏳ Starte Pairing-Vorgang für Nummer: ${phone}...` + c.reset);
+      console.log('\n' + c.brightCyan + '⏳ Starte Pairing-Vorgang für Nummer: ' + phone + '...' + c.reset);
       if (typeof startBotFn === 'function') {
-        await startBotFn({
-          mode: 'pairing',
-          phoneNumber: phone
-        });
+        await startBotFn({ mode: 'pairing', phoneNumber: phone });
       }
     } else if (choice === 'q') {
       console.log('\n' + c.brightCyan + '⏳ Starte QR-Code-Login...' + c.reset);
       if (typeof startBotFn === 'function') {
-        await startBotFn({
-          mode: 'qr'
-        });
+        await startBotFn({ mode: 'qr' });
       }
+    } else if (choice === 'm') {
+      return await openMulti();
     } else if (choice === 'x') {
       console.log(c.brightMagenta + '👋 Skript wird beendet.' + c.reset);
       process.exit(0);
     } else {
-      console.log(c.brightRed + '❌ Ungültige Eingabe. Bitte p, q oder x wählen.' + c.reset);
+      console.log(c.brightRed + '❌ Ungültige Eingabe. Bitte p, q oder m wählen.' + c.reset);
       return await pairMenu(options);
     }
   }

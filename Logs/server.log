@@ -1,0 +1,253 @@
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 00:04:57       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/2
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+00:04:57  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+04:00:38  200 ✓ GET  /api/heartbeat  · 6 ms
+04:37:45  200 ✓ GET  /api/maintenance  · 2 ms
+04:37:46  200 ✓ GET  /api/commands  · 2 ms
+04:37:46  200 ✓ GET  /api/siteinfo  · 4 ms
+07:55:51  200 ✓ GET  /api/maintenance  · 1 ms
+07:55:51  200 ✓ GET  /api/heartbeat  · 2 ms
+07:55:51  401 ✕ GET  /api/me  · 1 ms
+07:55:51  401 ✕ GET  /api/me  · 1 ms
+07:55:52  200 ✓ GET  /api/heartbeat  · 1 ms
+08:02:11  200 ✓ POST /api/check-number  · 3 ms
+08:02:15  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+08:02:15  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+08:02:15  200 ✓ POST /api/login  · 8 ms
+08:02:16  200 ✓ GET  /api/maintenance  · 1 ms
+08:02:16  200 ✓ GET  /api/heartbeat  · 1 ms
+08:02:16  200 ✓ GET  /api/me  · 6 ms
+08:02:17  200 ✓ GET  /api/me  · 7 ms
+08:02:17  200 ✓ GET  /api/stats  · 8 ms
+08:02:17  200 ✓ GET  /api/logs  · 3 ms
+08:02:17  200 ✓ GET  /api/sessions  · 4 ms
+08:02:22  200 ✓ GET  /api/logs  · 2 ms
+08:04:40  200 ✓ GET  /api/heartbeat  · 1 ms
+08:04:40  200 ✓ GET  /api/logs  · 2 ms
+08:05:39  200 ✓ GET  /api/logs  · 2 ms
+08:05:39  200 ✓ GET  /api/heartbeat  · 1 ms
+08:05:40  200 ✓ GET  /api/downloads/list  · 3 ms
+08:05:41  401 ✕ GET  /api/sessions/all  · 3 ms
+08:05:42  200 ✓ GET  /api/stats  · 5 ms
+08:05:42  200 ✓ GET  /api/system  · 2 ms
+08:05:43  200 ✓ GET  /api/stats  · 5 ms
+08:05:43  200 ✓ GET  /api/logs  · 2 ms
+08:05:43  200 ✓ GET  /api/sessions  · 5 ms
+08:05:45  200 ✓ GET  /api/accounts  · 3 ms
+08:05:45  200 ✓ GET  /api/history  · 5 ms
+08:05:47  200 ✓ GET  /api/heartbeat  · 1 ms
+08:05:55  200 ✓ GET  /api/heartbeat  · 1 ms
+08:05:56  200 ✓ POST /api/logout  · 2 ms
+08:05:56  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:23  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:28  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:30  200 ✓ GET  /api/maintenance  · 2 ms
+08:38:30  200 ✓ GET  /api/commands  · 1 ms
+08:38:30  200 ✓ GET  /api/siteinfo  · 4 ms
+08:38:33  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:38  200 ✓ POST /api/check-number  · 2 ms
+08:38:43  AUTH_FAILURE               185.47.235.132           risk 30
+08:38:43  DENIED     › owner › login.failed · web → denied
+08:38:43  401 ✕ POST /api/login  · 5 ms
+08:38:48  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+08:38:48  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+08:38:48  200 ✓ POST /api/login  · 6 ms
+08:38:49  200 ✓ GET  /api/maintenance  · 1 ms
+08:38:49  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:49  200 ✓ GET  /api/me  · 4 ms
+08:38:49  200 ✓ GET  /api/me  · 3 ms
+08:38:49  200 ✓ GET  /api/stats  · 6 ms
+08:38:50  200 ✓ GET  /api/logs  · 4 ms
+08:38:50  200 ✓ GET  /api/sessions  · 3 ms
+08:38:54  200 ✓ GET  /api/logs  · 2 ms
+08:38:55  401 ✕ GET  /api/sessions/all  · 4 ms
+08:38:57  200 ✓ GET  /api/heartbeat  · 1 ms
+08:39:03  STEP_UP_REAUTH_OK          910maxi                  risk 5
+08:39:03  ADMIN      › 910maxi › reauth.ok · reauth.verify
+08:39:03  200 ✓ POST /api/reauth/verify  · 7 ms
+08:39:03  200 ✓ GET  /api/sessions/all  · 3 ms
+08:39:05  200 ✓ GET  /api/heartbeat  · 1 ms
+08:39:08  200 ✓ GET  /api/stats  · 5 ms
+08:39:08  200 ✓ GET  /api/system  · 2 ms
+08:39:09  200 ✓ GET  /api/sessions  · 3 ms
+08:39:10  200 ✓ GET  /api/stats  · 5 ms
+08:39:10  200 ✓ GET  /api/system  · 2 ms
+08:39:11  200 ✓ GET  /api/sessions  · 4 ms
+08:39:13  200 ✓ GET  /api/heartbeat  · 3 ms
+08:39:19  AUDIT      › 910maxi › session.delete · test910 → success
+08:39:19  ADMIN      › 910maxi › session.delete · test910
+08:39:19  200 ✓ POST /api/session/delete  · 8 ms
+08:39:19  200 ✓ GET  /api/sessions  · 3 ms
+08:39:21  200 ✓ GET  /api/stats  · 6 ms
+08:39:21  200 ✓ GET  /api/system  · 2 ms
+08:39:21  200 ✓ GET  /api/heartbeat  · 2 ms
+08:39:22  200 ✓ GET  /api/sessions  · 3 ms
+08:39:25  200 ✓ POST /api/logout  · 2 ms
+08:39:25  200 ✓ GET  /api/heartbeat  · 1 ms
+09:32:09  200 ✓ GET  /api/maintenance  · 2 ms
+09:32:09  200 ✓ GET  /api/commands  · 2 ms
+09:32:09  200 ✓ GET  /api/siteinfo  · 3 ms
+11:14:29  200 ✓ GET  /api/maintenance  · 2 ms
+11:14:29  200 ✓ GET  /api/commands  · 1 ms
+11:14:30  200 ✓ GET  /api/siteinfo  · 3 ms
+11:14:34  200 ✓ GET  /api/maintenance  · 1 ms
+11:14:34  200 ✓ GET  /api/commands  · 1 ms
+11:14:34  200 ✓ GET  /api/siteinfo  · 3 ms
+11:14:36  200 ✓ GET  /api/heartbeat  · 1 ms
+11:14:48  200 ✓ POST /api/check-number  · 2 ms
+11:14:53  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+11:14:53  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+11:14:53  200 ✓ POST /api/login  · 5 ms
+11:14:54  200 ✓ GET  /api/maintenance  · 1 ms
+11:14:54  200 ✓ GET  /api/heartbeat  · 1 ms
+11:14:55  200 ✓ GET  /api/me  · 4 ms
+11:14:55  200 ✓ GET  /api/me  · 4 ms
+11:14:55  200 ✓ GET  /api/stats  · 6 ms
+11:14:55  200 ✓ GET  /api/logs  · 3 ms
+11:14:55  200 ✓ GET  /api/sessions  · 3 ms
+11:14:58  200 ✓ GET  /api/downloads/list  · 3 ms
+11:15:03  200 ✓ GET  /api/heartbeat  · 1 ms
+11:15:07  AUDIT      › 910maxi › download.zip · all-in-one → success
+11:15:07  ADMIN      › 910maxi › download.zip · LoveBot-All-in-One
+11:15:07  200 ✓ POST /api/downloads/zip  · 51 ms
+11:15:11  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:39  200 ✓ GET  /api/maintenance  · 1 ms
+11:18:39  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:39  200 ✓ GET  /api/me  · 3 ms
+11:18:39  200 ✓ GET  /api/me  · 3 ms
+11:18:40  200 ✓ GET  /api/downloads/list  · 4 ms
+11:18:41  200 ✓ GET  /api/downloads/list  · 3 ms
+11:18:47  401 ✕ GET  /api/sessions/all  · 3 ms
+11:18:48  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:56  200 ✓ GET  /api/heartbeat  · 1 ms
+11:20:44  200 ✓ GET  /api/heartbeat  · 1 ms
+11:20:57  200 ✓ GET  /api/heartbeat  · 2 ms
+11:21:05  200 ✓ GET  /api/heartbeat  · 1 ms
+11:28:18  200 ✓ GET  /api/maintenance  · 1 ms
+11:28:18  200 ✓ GET  /api/heartbeat  · 2 ms
+11:28:18  200 ✓ GET  /api/me  · 4 ms
+11:28:18  200 ✓ GET  /api/me  · 3 ms
+11:28:18  401 ✕ GET  /api/sessions/all  · 4 ms
+11:28:23  200 ✓ POST /api/logout  · 7 ms
+11:28:23  200 ✓ GET  /api/heartbeat  · 2 ms
+11:28:28  200 ✓ GET  /api/maintenance  · 2 ms
+11:28:28  200 ✓ GET  /api/commands  · 2 ms
+11:28:28  200 ✓ GET  /api/siteinfo  · 4 ms
+12:01:03  200 ✓ GET  /api/maintenance  · 1 ms
+12:01:03  200 ✓ GET  /api/commands  · 1 ms
+12:01:03  200 ✓ GET  /api/siteinfo  · 3 ms
+12:01:08  200 ✓ GET  /api/heartbeat  · 2 ms
+12:01:16  200 ✓ POST /api/check-number  · 1 ms
+12:01:23  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+12:01:23  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+12:01:23  200 ✓ POST /api/login  · 6 ms
+12:01:24  200 ✓ GET  /api/maintenance  · 2 ms
+12:01:24  200 ✓ GET  /api/heartbeat  · 1 ms
+12:01:24  200 ✓ GET  /api/me  · 3 ms
+12:01:24  200 ✓ GET  /api/me  · 4 ms
+12:01:24  200 ✓ GET  /api/stats  · 6 ms
+12:01:24  200 ✓ GET  /api/logs  · 3 ms
+12:01:24  200 ✓ GET  /api/sessions  · 4 ms
+12:01:26  401 ✕ GET  /api/sessions/all  · 3 ms
+12:01:32  200 ✓ GET  /api/heartbeat  · 1 ms
+12:01:34  STEP_UP_REAUTH_OK          910maxi                  risk 5
+12:01:34  ADMIN      › 910maxi › reauth.ok · reauth.verify
+12:01:34  200 ✓ POST /api/reauth/verify  · 6 ms
+12:01:34  200 ✓ GET  /api/sessions/all  · 3 ms
+12:01:34  200 ✓ GET  /api/stats  · 5 ms
+12:01:34  200 ✓ GET  /api/accounts  · 4 ms
+12:01:34  200 ✓ GET  /api/groups  · 3 ms
+12:01:34  200 ✓ GET  /api/admin-actions  · 3 ms
+12:01:34  200 ✓ GET  /api/sessions  · 3 ms
+12:01:40  200 ✓ GET  /api/heartbeat  · 1 ms
+12:01:42  STEP_UP_REAUTH_OK          910maxi                  risk 5
+12:01:42  ADMIN      › 910maxi › export.xlsx · owner-export
+12:01:42  200 ✓ POST /api/export/xlsx  · 41 ms
+12:02:04  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:11  200 ✓ GET  /api/groups  · 2 ms
+12:02:12  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:14  200 ✓ GET  /api/groups  · 3 ms
+12:02:15  200 ✓ GET  /api/groups  · 3 ms
+12:02:20  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:28  401 ✕ POST /api/groups/toggle  · 3 ms
+12:02:28  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:36  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:37  STEP_UP_REAUTH_OK          910maxi                  risk 5
+12:02:37  AUDIT      › 910maxi › feature.antilink.off · 120363411386930403 (𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe) — Brauche ich ned → success
+12:02:37  ADMIN      › 910maxi › feature.toggle · 120363411386930403 | 𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe | antilink
+12:02:37  200 ✓ POST /api/groups/toggle  · 11 ms
+12:02:37  200 ✓ GET  /api/groups  · 2 ms
+12:02:42  200 ✓ GET  /api/stats  · 4 ms
+12:02:42  200 ✓ GET  /api/logs  · 4 ms
+12:02:42  200 ✓ GET  /api/sessions  · 3 ms
+12:02:44  200 ✓ GET  /api/downloads/list  · 3 ms
+12:02:44  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:47  200 ✓ GET  /api/logs  · 2 ms
+12:02:50  200 ✓ GET  /api/logs  · 3 ms
+12:02:52  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:53  200 ✓ GET  /api/logs  · 3 ms
+12:02:56  200 ✓ GET  /api/logs  · 2 ms
+12:02:59  200 ✓ GET  /api/logs  · 2 ms
+12:03:00  200 ✓ GET  /api/logs  · 3 ms
+12:03:00  200 ✓ GET  /api/heartbeat  · 1 ms
+12:03:00  200 ✓ GET  /api/logs  · 3 ms
+12:03:01  200 ✓ GET  /api/logs  · 3 ms
+12:03:02  200 ✓ GET  /api/logs  · 3 ms
+12:03:03  200 ✓ GET  /api/logs  · 4 ms
+12:03:03  200 ✓ GET  /api/logs  · 3 ms
+12:03:03  200 ✓ GET  /api/logs  · 2 ms
+12:03:04  200 ✓ GET  /api/logs  · 3 ms
+12:03:04  200 ✓ GET  /api/logs  · 2 ms
+12:03:05  200 ✓ GET  /api/logs  · 3 ms
+12:03:06  200 ✓ GET  /api/logs  · 3 ms
+12:03:06  200 ✓ GET  /api/logs  · 3 ms
+12:03:06  200 ✓ GET  /api/logs  · 3 ms
+12:03:08  200 ✓ GET  /api/logs  · 3 ms
+12:03:08  200 ✓ POST /api/logout  · 2 ms
+12:03:09  200 ✓ GET  /api/heartbeat  · 2 ms
+12:03:09  200 ✓ GET  /api/maintenance  · 1 ms
+12:03:10  200 ✓ GET  /api/commands  · 2 ms
+12:03:10  200 ✓ GET  /api/siteinfo  · 2 ms
+12:03:15  200 ✓ GET  /api/maintenance  · 1 ms
+12:03:16  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:18  200 ✓ GET  /api/maintenance  · 1 ms
+12:03:18  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:18  200 ✓ GET  /api/commands  · 1 ms
+12:03:23  200 ✓ GET  /api/siteinfo  · 2 ms
+12:03:28  200 ✓ GET  /api/siteinfo  · 2 ms
+12:03:33  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:38  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:44  200 ✓ GET  /api/siteinfo  · 2 ms
+13:57:54  200 ✓ GET  /api/maintenance  · 2 ms
+13:57:54  200 ✓ GET  /api/commands  · 1 ms
+13:57:55  200 ✓ GET  /api/siteinfo  · 2 ms
+13:58:12  200 ✓ GET  /api/heartbeat  · 2 ms
+13:58:43  200 ✓ POST /api/check-number  · 2 ms
+13:58:52  200 ✓ GET  /api/siteinfo  · 3 ms
+13:59:05  200 ✓ GET  /api/maintenance  · 1 ms
+13:59:07  200 ✓ GET  /api/commands  · 1 ms
+13:59:08  200 ✓ GET  /api/siteinfo  · 3 ms
+13:59:20  200 ✓ GET  /api/maintenance  · 1 ms
+13:59:20  200 ✓ GET  /api/commands  · 1 ms
+13:59:21  200 ✓ GET  /api/siteinfo  · 2 ms
+14:18:16  200 ✓ GET  /api/maintenance  · 1 ms
+14:18:16  200 ✓ GET  /api/commands  · 1 ms
+14:18:16  200 ✓ GET  /api/siteinfo  · 3 ms
+14:40:06  200 ✓ GET  /api/maintenance  · 1 ms
+14:40:06  200 ✓ GET  /api/commands  · 2 ms
+14:40:06  200 ✓ GET  /api/siteinfo  · 2 ms
+15:46:55  200 ✓ GET  /api/maintenance  · 1 ms
+15:46:55  200 ✓ GET  /api/commands  · 2 ms
+15:46:55  200 ✓ GET  /api/siteinfo  · 2 ms

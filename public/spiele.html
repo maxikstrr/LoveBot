@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spiele & Fun 💜 — LoveBot</title>
+<meta name="description" content="Spiele & Fun im LoveBot-Bot: münzwurf, würfel, scheresteinpapier, wahrheitoderpflicht, lottoschein, schicksal & vieles mehr.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/spiele.html" class="active">Spiele</a>
+    <a href="/status.html">Status</a>
+    <a href="/statistics.html">Statistiken</a>
+    <a href="/leaderboard.html">Bestenliste</a>
+    <a href="/sessions.html">Sessions</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <section class="hero" style="padding-bottom:10px">
+    <span class="badge">🎲 Zocken &amp; Lachen</span>
+    <h1>Spiele &amp; <span class="grad">Fun</span></h1>
+    <p class="sub">Von Kopf-oder-Zahl bis Orakel — alle Spiel- und Fun-Befehle auf einen Blick. Einfach <code>$befehl</code> in die Gruppe tippen.</p>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">✨ Neu im Full-Update 2026</div><h2>Frisch dazugekommen</h2><p>12 neue Befehle — alle laufen offline, ohne Wartezeit, ohne externe Dienste.</p></div>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">🪙</div><h3>$münzwurf</h3><p>Kopf oder Zahl? Die Münze entscheidet. Selten landet sie auf der Kante … 👀</p></div>
+      <div class="card reveal"><div class="ico">🎲</div><h3>$würfel</h3><p>1–6 Würfel gleichzeitig — mit Summe und Würfelbild (⚀⚁⚂⚃⚄⚅).</p></div>
+      <div class="card reveal"><div class="ico">✂️</div><h3>$scheresteinpapier</h3><p>Du gegen den Bot: <code>$scheresteinpapier schere|stein|papier</code>. Wer gewinnt?</p></div>
+      <div class="card reveal"><div class="ico">🎭</div><h3>$wahrheitoderpflicht</h3><p>Wahrheit oder Pflicht — mit @user oder für dich selbst. Die Gruppe wird’s lieben.</p></div>
+      <div class="card reveal"><div class="ico">🕯️</div><h3>$mantra</h3><p>Ein positives Mantra für den Tag. Kurz, ehrlich, wohltuend.</p></div>
+      <div class="card reveal"><div class="ico">🎟️</div><h3>$lottoschein</h3><p>Ein frischer Lotto-Tipp: 6 aus 49 plus Superzahl. Viel Glück! 🍀</p></div>
+      <div class="card reveal"><div class="ico">🔢</div><h3>$zufallszahl</h3><p>Zufallszahl zwischen zwei Werten: <code>$zufallszahl 1 100</code>.</p></div>
+      <div class="card reveal"><div class="ico">📡</div><h3>$morse</h3><p>Text in Morsecode verwandeln — beeindruckt garantiert.</p></div>
+      <div class="card reveal"><div class="ico">🔮</div><h3>$schicksal</h3><p>Das Orakel antwortet auf deine Frage. Frag weise.</p></div>
+      <div class="card reveal"><div class="ico">🎁</div><h3>$geschenkidee</h3><p>Persönliche Geschenk-Ideen — für Geburtstag, Weihnachten oder einfach so.</p></div>
+      <div class="card reveal"><div class="ico">🍽️</div><h3>$essen</h3><p>„Was koche ich heute?“ LoveBot hat eine Idee. Guten Appetit!</p></div>
+      <div class="card reveal"><div class="ico">🌿</div><h3>$entspannung</h3><p>Eine 1-Minuten-Atemübung für zwischendurch. Tief durchatmen. ☾</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">🎰 Bereits im Bot</div><h2>Die Klassiker</h2><p>Diese Funsachen kennst du vielleicht schon — sie laufen weiter wie gewohnt.</p></div>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">💍</div><h3>Love-Games</h3><p>$marry mit Antrag, $divorce, $ship, $lovecalc, $kiss, $hug, $slap, $compliment.</p></div>
+      <div class="card reveal"><div class="ico">🔮</div><h3>Orakel &amp; Fragen</h3><p>$8ball, $truth, $dare, $fakt — schnelle Antworten und Peinlichkeiten inklusive.</p></div>
+      <div class="card reveal"><div class="ico">🗡️</div><h3>Duell &amp; Würfelduell</h3><p>$duell @user oder $würfelduell @user — wer ist heute stärker?</p></div>
+      <div class="card reveal"><div class="ico">🎰</div><h3>Slot &amp; Economy</h3><p>$slot mit Sound, $balance, $work, $daily, $gamble und die Top-10-Rangliste.</p></div>
+      <div class="card reveal"><div class="ico">🔤</div><h3>Wortspiele</h3><p>$wortkette, $anagram, $palindrom, $mathequiz, $emoji-Übersetzer &amp; $sternzeichen.</p></div>
+      <div class="card reveal"><div class="ico">💌</div><h3>Kuschelig</h3><p>$kuschelvorschlag, $liebescheck und der $komplimentgenerator.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head reveal"><div class="kicker">💡 Gut zu wissen</div><h2>So nutzt du die Befehle</h2><p>In jeder Gruppe, in der LoveBot ist.</p></div>
+    <div class="cards">
+      <div class="card reveal"><div class="ico">💬</div><h3>Präfix $</h3><p>Alle Befehle starten mit <code>$</code> — z. B. <code>$münzwurf</code>. Groß-/Kleinschreibung ist egal.</p></div>
+      <div class="card reveal"><div class="ico">📋</div><h3>Alle Befehle</h3><p><code>$menu</code> zeigt die Kategorien, <code>$menu alle</code> die komplette Liste im Chat.</p></div>
+      <div class="card reveal"><div class="ico">🪪</div><h3>Regeln</h3><p>Bitte unsere <a href="/regeln.html" style="color:var(--accent)">Community-Regeln</a> beachten — Fun ist toll, Respekt bleibt Pflicht.</p></div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Spielen ist schön — gemeinsam spielen ist besser. Dein LoveBot ☾</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/spiele.html">Spiele</a>
+        <a href="/regeln.html">Regeln</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/statistics.html">Statistiken</a>
+        <a href="/leaderboard.html">Bestenliste</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p>© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+makeHearts(12);
+document.getElementById('year').textContent = new Date().getFullYear();
+(async function () {
+  const site = await api('/api/siteinfo');
+  if (site) document.getElementById('socials').innerHTML = buildSocials(site.links);
+})();
+</script>
+</body>
+</html>

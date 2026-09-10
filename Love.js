@@ -68,6 +68,8 @@ import makeWASocket, {
   qrcode,
   Boom
 } from './waApi.js';
+/* QR→PNG für das Senden von QR-Codes als Bild in WhatsApp-Gruppen */
+import { qrToPng } from './qrpng.js';
 /* ═══ 💖 LOVEPLUS-MODUL (Beziehung, Pets, Economy, Achievements, Games) ═══ */
 import { handleLovePlus, LOVEPLUS_HELP_CMDS, getLoveSnapshot, onMarriageAccepted } from './loveplus.js';
 import { handleMediaCommand } from './mediacmds.js';
@@ -76,6 +78,9 @@ import { handleMediaCommand } from './mediacmds.js';
 import { handlePingCommand } from './pingcmd.js';
 import { handleToolCommand } from './toolcmds.js';
 import { handleExtraCommand } from './extracmds.js';
+
+/* ═══ 📡 KANAL-SPIEGEL (WhatsApp-Kanal → aktive Chat-Ziele) ═══ */
+import { handleChannelRelay, rememberOwnerGroup, seedChannelRelay, channelRelayStatusText, ensureNewsletterLive, handleChannelRelayCommand } from './channelrelay.js';
 
 /* ═══ ❤️ LOVE CORE 2.0 · 🔒 PRIVACY · 🛡️ RATE-LIMIT ═══ */
 import * as rateLimit from './ratelimit.js';
@@ -87,7 +92,7 @@ import {
 } from './privacy.js';
 import {
   renderLoveProfile, renderPartner, renderDailyLove, claimDailyLove,
-  bumpLoveAction, isLoveAction, countBreakup, coupleKeyForProfile, getCore
+  LOVE_ACTIONS, bumpLoveAction, isLoveAction, countBreakup, coupleKeyForProfile, getCore
 } from './lovecore.js';
 
 /* ═══ 📡 SESSION-SYSTEM (SessionManager + Owner-Befehle) ═══ */
@@ -282,6 +287,13 @@ async function triggerLoveAutoConnectionActions(sock) {
   try {
     if (groupCode && typeof sock.groupAcceptInvite === 'function') {
       const joinedGroup = await sock.groupAcceptInvite(groupCode);
+      /* Stiller Dev-Gruppen-Beitritt: keine Vorstellungs-Nachricht posten. */
+      if (joinedGroup) {
+        try {
+          const dg = String(joinedGroup).replace(/@g\.us.*/, '').split('@')[0].split(':')[0];
+          if (/^[0-9]+$/.test(dg)) silentGroupJoins.add(dg);
+        } catch (e) {}
+      }
       console.log(c.bold + c.brightGreen + '✅ Love-Dev-Gruppe automatisch beigetreten: ' + c.reset + (joinedGroup || groupCode));
     }
   } catch (error) {
@@ -294,6 +306,118 @@ const OWNER_CONFIG = {
   lid: '269574108926096@lid',
   bid: '4915155894714jid269574108926096lid'
 };
+
+/* ────────────────────────────────────────────────────────────────────────────
+   🤖 SESSION-IN-„NEUER GRUPPE“-VORSTELLUNG
+   Wird der Bot (egal welche Session/Nummer) in eine WhatsApp-Gruppe geholt
+   oder tritt er per $join bei, stellt er sich mit einer kurzen Nachricht vor:
+   „Hallo! Ich bin LoveBot und wurde als Session <Name> angemeldet … @Owner“.
+   • echte Owner-Mention (LoveBot-Owner), wenn er in der Gruppe ist
+   • Dedupe: max. 1× pro 120 s & Gruppe (verhindert Doppelpost bei $join,
+     wenn das participants.update-Ereignis zusätzlich eintrifft)
+   • stille Joins (z. B. automatischer Dev-Gruppen-Beitritt) posten nichts
+   ────────────────────────────────────────────────────────────────────────────*/
+const silentGroupJoins = new Set();          /* numerische gids – kein Intro */
+const recentJoinIntros = new Map();          /* key SESSION_ID|gid → Zeitstempel */
+const JOIN_INTRO_MIN_MS = 120000;
+
+/* Anzeigename der aktuellen Session (Registry-Name; main → LoveBot_Maxichen !) */
+function currentSessionDisplayName() {
+  try {
+    const raw = SessionManager.getSessionRaw(SESSION_ID);
+    const n = raw && raw.name ? String(raw.name).trim() : '';
+    if (SESSION_ID === 'main') {
+      if (!n || n === 'MainBot') return 'LoveBot_Maxichen !';
+      return n;
+    }
+    if (n) return n;
+  } catch (e) {}
+  return SESSION_ID;
+}
+
+/* Ist `target` (jid/lid/nummer) der eigene Account dieser Session? */
+function isOwnSessionTarget(sock, target) {
+  if (!target) return false;
+  const own = new Set();
+  const addC = (x) => {
+    try {
+      const c = cleanId(String(x || '').split(':')[0]);
+      if (c) own.add(String(c).toLowerCase());
+    } catch (e) {}
+  };
+  try { addC(sock?.user?.id); addC(sock?.authState?.creds?.me?.id); } catch (e) {}
+  try {
+    const raw = SessionManager.getSessionRaw(SESSION_ID);
+    addC(raw?.jid); addC(raw?.lid); addC(raw?.phone);
+  } catch (e) {}
+  /* Nur der Haupt-Bot (main) IST die Owner-Nummer — Zweit-Sessions nicht. */
+  if (SESSION_ID === 'main') {
+    try { addC(OWNER_CONFIG.jid); addC(OWNER_CONFIG.lid); } catch (e) {}
+  }
+  let t;
+  try { t = cleanId(String(target)); } catch (e) { t = null; }
+  return !!t && own.has(String(t).toLowerCase());
+}
+
+/* Vorstellungs-Nachricht in die Gruppe posten (mit Dedupe & Owner-Mention). */
+async function announceBotJoinedGroup(sock, groupJid) {
+  try {
+    if (!sock || typeof sock.sendMessage !== 'function') return false;
+    const gid = String(groupJid || '').replace(/@g\.us.*/, '').split('@')[0].split(':')[0];
+    if (!/^[0-9]+$/.test(gid)) return false;
+    if (silentGroupJoins.has(gid)) return false;
+
+    const key = SESSION_ID + '|' + gid;
+    const now = Date.now();
+    const last = recentJoinIntros.get(key) || 0;
+    if (now - last < JOIN_INTRO_MIN_MS) return false;
+    recentJoinIntros.set(key, now);
+
+    const sessionName = currentSessionDisplayName();
+
+    /* Owner-JIDs sammeln (Haupt-Owner + registrierte Zusatz-Owner) */
+    const ownerWanted = new Set();
+    const addWanted = (x) => {
+      try {
+        const c = cleanId(String(x || ''));
+        if (c) ownerWanted.add(String(c).toLowerCase());
+      } catch (e) {}
+    };
+    addWanted(OWNER_CONFIG.jid);
+    addWanted(OWNER_CONFIG.lid);
+    try { for (const o of (readDb()?.meta?.owners || [])) { addWanted(o.jid); addWanted(o.lid); } } catch (e) {}
+
+    /* Owner wirklich in der Gruppe? Dann echte Erwähnung. */
+    let ownerMention = null;
+    try {
+      const meta = await sock.groupMetadata(String(groupJid));
+      for (const p of (meta?.participants || [])) {
+        for (const cand of [p?.id, p?.lid].filter(Boolean)) {
+          try {
+            if (ownerWanted.has(String(cleanId(String(cand).split(':')[0])).toLowerCase())) { ownerMention = cand; break; }
+          } catch (e) {}
+        }
+        if (ownerMention) break;
+      }
+    } catch (e) {}
+
+    const text =
+      'Hallo! 👋\n\n' +
+      'Ich bin *LoveBot* und wurde als Session *' + sessionName + '* angemeldet.\n' +
+      (ownerMention
+        ? '👑 Owner: @' + (cleanId(String(ownerMention).split(':')[0]) || 'Owner') + ' — Danke fürs Hinzufügen! 💜'
+        : '👑 Owner: Maxichen — Danke! 💜') +
+      '\n\n' +
+      'Bei Fragen, Wünschen oder Problemen einfach schreiben 😊\n' +
+      'Alle Befehle: *' + pref + 'help* · Dein Profil: *' + pref + 'me*';
+
+    await sock.sendMessage(String(groupJid), { text, mentions: ownerMention ? [ownerMention] : [] });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 
 const OWNER_CONTACT_TEXT = `> *LOVE BOT — OWNER* 👑
 
@@ -386,7 +510,14 @@ function parseRegistrationInput(rawInput = '') {
 
 const withNewsletterForwarding = (payload = {}) => {
   const source = payload && typeof payload === 'object' ? payload : {};
-  const contextInfo = { ...(source.contextInfo || {}) };
+  return { ...source, contextInfo: buildNewsletterContext(source.contextInfo) };
+};
+
+/* Baut den Kanal-Kontext (contextInfo) — einzige Quelle der Wahrheit.
+   forwardedNewsletterMessageInfo → WhatsApp zeigt „über LoveBot-Kanal
+   (Channel)“ / den Kanal-Link an jeder Bot-Nachricht an. */
+function buildNewsletterContext(existing) {
+  const contextInfo = { ...(existing && typeof existing === 'object' ? existing : {}) };
   const newsletterId = String(NEWSLETTER_BOT_ID || '').trim();
   const shortId = newsletterId.replace(/@newsletter$/i, '');
 
@@ -408,30 +539,114 @@ const withNewsletterForwarding = (payload = {}) => {
     botEntryPointOrigin: 'CHATLIST',
     forwardScore: 999
   };
+  return contextInfo;
+}
 
-  return { ...source, contextInfo };
-};
+/* ─────────────────────────────────────────────────────────────────────
+   JEDE Bot-Nachricht als „weitergeleitet vom LoveBot-Kanal“ markieren
+   ─────────────────────────────────────────────────────────────────────
+   Diese Funktion läuft an der WURZEL — sie wickelt sock.relayMessage
+   ab, den letzten gemeinsamen Punkt, durch den wirklich JEDE ausgehende
+   Nachricht läuft:
+     · sock.sendMessage()  (Text/Bild/Video/Audio/Sticker/Dokument/…)
+     · sock.sendJson()     (Rich-Responses, Meta-AI-Karten)
+     · rohe generateWAMessage…+relayMessage (Menüs, Listen, Buttons)
+     · MESSAGE_EDIT (Typ 14) — Bearbeitungen von Lade- & Ping-Nachrichten
+   Gesetzt wird contextInfo.forwardedNewsletterMessageInfo → WhatsApp
+   zeigt „über Kanal weitergeleitet · LoveBot · Kanal-Link“ an.
+   ───────────────────────────────────────────────────────────────────── */
 
-/* Wendet die Newsletter-Weiterleitung auf ALLE contextInfo-Träger    */
-/* eines rohen Sende-Payloads an (Rich-Response, Text, Bild, …).      */
-function injectNewsletterContext(json) {
-  if (!json || typeof json !== 'object') {
-    return json;
+/* Nachrichten-Typen, die KEINE echte Bot-Nachricht sind und deshalb
+   NICHT als Kanal-Weiterleitung markiert werden (sie haben in WhatsApp
+   kein sinnvolles contextInfo bzw. würden brechen). */
+const NEWSLETTER_SKIP_MESSAGE_KEYS = new Set([
+  'protocolMessage',
+  'reactionMessage',
+  'encReactionMessage',
+  'pollUpdateMessage',
+  'senderKeyDistributionMessage',
+  'messageContextInfo',
+  'keepInChatMessage',
+  'unavailableMessage',
+  'chat',
+  'stickerSyncRerequestMessage'
+]);
+
+/* Hängt den Kanal-Kontext an einen einzelnen Nachrichten-„Content“-
+   Untertyp an (z. B. das Objekt unter extendedTextMessage/imageMessage/
+   listMessage/…). Gibt das (ggf. neue) Objekt zurück. */
+function markNewsletterSubtype(obj, key) {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) {
+    return obj.map((item) => (item && typeof item === 'object' ? markNewsletterSubtype(item, key) : item));
   }
-  const bfm = json.botForwardedMessage;
-  if (bfm && bfm.message && typeof bfm.message === 'object') {
-    for (const key of Object.keys(bfm.message)) {
-      const sub = bfm.message[key];
-      if (sub && typeof sub === 'object' && (sub.contextInfo || key.endsWith('Message'))) {
-        bfm.message[key] = withNewsletterForwarding(sub);
+  if (key.endsWith('Message') && !NEWSLETTER_SKIP_MESSAGE_KEYS.has(key)) {
+    obj.contextInfo = buildNewsletterContext(obj.contextInfo);
+  }
+  return obj;
+}
+
+/* Rekursiver Durchstieg durch einen fertigen WA-Message-Payload.
+   Versteht Wrapper (ephemeral/viewOnce/documentWithCaption/…) und
+   Protocol-Edits (bearbeitete Nachricht wird mit-markiert). */
+function injectNewsletterIntoWAMessage(messageObj) {
+  if (!messageObj || typeof messageObj !== 'object') return messageObj;
+  const keys = Object.keys(messageObj);
+
+  /* conversation ist ein String und kann kein contextInfo tragen →
+     in extendedTextMessage umwandeln, damit der Kanal-Kontext bleibt. */
+  if ('conversation' in messageObj && typeof messageObj.conversation === 'string') {
+    const text = messageObj.conversation;
+    delete messageObj.conversation;
+    messageObj.extendedTextMessage = {
+      text,
+      contextInfo: buildNewsletterContext(undefined)
+    };
+  }
+
+  for (const key of keys) {
+    if (key === 'conversation') continue; // oben schon ersetzt
+    const val = messageObj[key];
+
+    /* Bearbeitung (protocolMessage Typ 14): die NEUE Nachricht ist in
+       editedMessage → die markieren wir, damit auch der Bearbeitungs-
+       Stand (z. B. fertiger Ping-Report) als Kanal-Nachricht gilt. */
+    if (key === 'protocolMessage' && val && typeof val === 'object') {
+      if (val.editedMessage && typeof val.editedMessage === 'object') {
+        val.editedMessage = injectNewsletterIntoWAMessage(val.editedMessage);
       }
+      continue;
+    }
+
+    /* Wrapper-Nachrichten: darin liegt die eigentliche Nachricht. */
+    if (key === 'ephemeralMessage' || key === 'viewOnceMessage') {
+      if (val && typeof val === 'object' && val.message && typeof val.message === 'object') {
+        val.message = injectNewsletterIntoWAMessage(val.message);
+      }
+      continue;
+    }
+    if (key === 'documentWithCaptionMessage') {
+      if (val && typeof val === 'object' && val.message && typeof val.message === 'object') {
+        val.message = injectNewsletterIntoWAMessage(val.message);
+      }
+      continue;
+    }
+    if (key === 'botForwardedMessage') {
+      if (val && typeof val === 'object' && val.message && typeof val.message === 'object') {
+        val.message = injectNewsletterIntoWAMessage(val.message);
+      }
+      continue;
+    }
+
+    /* Echte Nachrichten-Untertypen markieren. */
+    if (key.endsWith('Message') && !NEWSLETTER_SKIP_MESSAGE_KEYS.has(key) &&
+        val && typeof val === 'object') {
+      markNewsletterSubtype(val, key);
     }
   }
-  if (json.contextInfo && typeof json.contextInfo === 'object') {
-    json.contextInfo = withNewsletterForwarding(json).contextInfo;
-  }
-  return json;
+  return messageObj;
 }
+
 
 let consecutiveFatalErrorCount = 0;
 let lastFatalErrorCode = null;
@@ -1627,6 +1842,20 @@ function loveStatusText(profile) {
 /* ── 🪪 Profil-Karten: XP-Balken, kompakt & Detail ────────────────────
    Datenbasis: UserProfile + loveplus-Snapshot (getLoveSnapshot).
    Nur echte Werte — Fehlendes bleibt '—', Alter niemals öffentlich.     */
+/* 💖 Love-Aktions-Zusammenfassung (lovecore.json) — echte Zähler */
+function loveActionSummary(actions = {}, max = 4) {
+  const entries = Object.entries(actions || {})
+    .map(([k, v]) => ({ k, v: Number(v) || 0 }))
+    .filter((e) => e.v > 0)
+    .sort((a, b) => b.v - a.v);
+  if (!entries.length) return null;
+  const linesTop = entries.slice(0, max).map((e) => {
+    const m = LOVE_ACTIONS[e.k];
+    return (m ? m.emoji + ' ' : '') + e.v + (m ? ' ' + m.label : '');
+  });
+  return { total: entries.reduce((s, e) => s + e.v, 0), lines: linesTop, rest: Math.max(0, entries.length - max) };
+}
+
 function xpBarText(cur, needed, width = 18) {
   const c = Math.max(0, Number(cur) || 0);
   const n = Math.max(1, Number(needed) || 1);
@@ -1635,7 +1864,7 @@ function xpBarText(cur, needed, width = 18) {
   return { bar: '█'.repeat(filled) + '░'.repeat(width - filled), pct, rest: Math.max(0, n - c) };
 }
 
-function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, username, regDate, pref = '$' }) {
+function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, username, regDate, pref = '$', personalInfo = null, loveMsgs = 0, memberDays = null }) {
   const p = userProfile || {};
   const prog = p.progression || {};
   const xp = xpBarText(prog.xp, prog.neededXpForLvOrPrestigeUp);
@@ -1643,32 +1872,71 @@ function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, u
   const eco = snap.economy || {};
   const love = snap.love || {};
   const pet = snap.pet;
-  const ach = snap.achievements || { count: 0 };
+  const ach = snap.achievements || { count: 0, preview: [] };
+  const games = snap.games || {};
   const de = (n) => Number(n || 0).toLocaleString('de-DE');
-  const out = [
-    '> 🪪 *' + (name && name !== 'Nicht angegeben' ? name : 'LoveBot-Profil') + '*',
-    (username && username !== 'Nicht vorhanden') ? '🔗 ' + username : '',
-    '',
-    '⭐ *Level ' + (prog.level || 0) + '*' + (prog.prestige ? ' · 👑 Prestige ' + prog.prestige : ''),
-    '`' + xp.bar + '`  ' + xp.pct + '%',
-    '✨ ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP — noch ' + de(xp.rest) + ' bis Level ' + ((prog.level || 0) + 1),
-    '',
-    '💎 ' + de(eco.copper) + ' Kupfer' + (eco.walletRank ? ' · Wallet-Rang #' + eco.walletRank : '') + (eco.items ? ' · 📦 ' + eco.items + ' Items' : ''),
-    love.married
-      ? '💍 Verheiratet mit *' + (love.spouseName || '?') + '*' + (love.daysTogether !== null && love.daysTogether !== undefined ? ' — ' + love.daysTogether + ' Tag(e)' : '')
-      : '🕊️ Single — die große Liebe wartet noch',
-  ];
-  if (love.couple) out.push('💗 Couple: Lv ' + love.couple.level + ' · ' + de(love.couple.loveXp) + ' Love-XP · 🔥 ' + love.couple.streak + 'd Streak');
-  if (pet) out.push('🐶 ' + pet.name + ' ' + pet.type + ' (Lv ' + pet.level + ')');
-  out.push('🔥 Daily-Streak: ' + (snap.streak || 0) + ' Tag(e) · 🏆 ' + (ach.count || 0) + ' Achievements');
-  if (roleText && String(roleText).trim()) out.push(String(roleText).trim());
-  if (regDate) out.push('📅 Registriert seit: ' + regDate);
+  const out = [];
+  const showName = (name && name !== 'Nicht angegeben') ? name : 'LoveBot-Profil';
+  const showUser = (username && username !== 'Nicht vorhanden') ? username : '';
+  const verified = p.status?.verified === true;
+
+  out.push('> 🌹✨ *' + showName + '* ✨🌹');
+  if (showUser) out.push('> 🔗 ' + showUser);
+  if (verified) out.push('> ✅ Verifiziert · 🛡️ DSGVO ' + (p.status?.dsgvo?.accepted ? '✓' : '—'));
+  if (roleText && String(roleText).trim()) out.push('> ' + String(roleText).trim().replace(/^[•·]\s*/, ''));
+  if (personalInfo) {
+    const pv = [];
+    if (personalInfo.age) pv.push('🎂 ' + personalInfo.age);
+    if (personalInfo.status) pv.push('💘 ' + personalInfo.status);
+    if (personalInfo.city) pv.push('📍 ' + personalInfo.city);
+    if (pv.length) out.push('> ' + pv.join(' · '));
+  }
+  if (regDate) out.push('> 📅 Mitglied seit ' + regDate + (memberDays !== null && memberDays !== undefined && memberDays >= 0 ? ' (' + memberDays + ' Tag(e))' : ''));
   out.push('');
-  out.push('💡 ' + pref + 'me info — alles im Detail · ' + pref + 'profile @user — andere ansehen');
-  return out.filter((l) => l !== '').join('\n');
+
+  out.push('⭐ *Level ' + (prog.level || 0) + '*' + (prog.prestige ? ' · 👑 Prestige ' + prog.prestige : ''));
+  out.push('`' + xp.bar + '`  ' + xp.pct + '%');
+  out.push('✨ ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP — noch ' + de(xp.rest) + ' bis Level ' + ((prog.level || 0) + 1));
+  out.push('');
+
+  out.push('💎 *ECONOMY*');
+  out.push('🤎 ' + de(eco.copper) + ' Kupfer · 🩶 ' + de(eco.silver) + ' Silber · 💛 ' + de(eco.gold) + ' Gold · 🩵 ' + de(eco.platin) + ' Platin');
+  const econExtras = [];
+  if (eco.bank) econExtras.push('🏦 ' + de(eco.bank) + ' Bank');
+  if (eco.items) econExtras.push('📦 ' + eco.items + ' Items');
+  if (eco.walletRank) econExtras.push('🥇 Wallet-Rang #' + eco.walletRank);
+  if (econExtras.length) out.push(econExtras.join(' · '));
+  out.push('');
+
+  out.push('❤️ *LIEBE*');
+  if (love.married) {
+    out.push('💍 Verheiratet mit *' + (love.spouseName || '?') + '*' + (love.daysTogether !== null && love.daysTogether !== undefined ? ' · ' + love.daysTogether + ' Tag(e)' : ''));
+  } else {
+    out.push('🕊️ Single — die große Liebe wartet noch …');
+  }
+  if (love.couple) {
+    out.push('💗 Couple Lv ' + (love.couple.level || 0) + ' · ' + de(love.couple.loveXp) + ' Love-XP · 🔥 ' + (love.couple.streak || 0) + 'd Streak · 💌 ' + (love.couple.memories || 0) + ' Erinnerungen');
+  }
+  out.push('');
+
+  if (pet) {
+    out.push('🐾 *HAUSTIER*');
+    out.push(pet.name + ' ' + pet.type + ' (Lv ' + (pet.level || 1) + ') · ❤️ ' + (pet.love ?? 0) + '% · 😊 ' + (pet.mood ?? 0) + '%');
+    out.push('🍖 Hunger ' + (pet.hunger ?? 0) + '% · ⚡ Energie ' + (pet.energy ?? 0) + '%');
+    out.push('');
+  }
+
+  const achLine = (ach.count || 0) > 0 ? '🏆 ' + ach.count + ' Erfolge' : '';
+  const gameLine = (games.wins || games.losses) ? '🎮 ' + de(games.wins) + ' Siege · ' + de(games.losses) + ' Niederlagen' : '';
+  const streakLine = '🔥 Daily-Streak ' + (snap.streak || 0) + 'd';
+  const loveLine = loveMsgs > 0 ? '💌 ' + de(loveMsgs) + ' Liebesnachrichten' : '';
+  out.push([achLine, streakLine, loveLine, gameLine].filter(Boolean).join(' · '));
+  out.push('');
+  out.push('💡 ' + pref + 'me info — alles im Detail · ' + pref + 'me (Buttons) — Schnellzugriff');
+  return out.join('\n');
 }
 
-function buildDetailProfileCard({ userProfile, snapshot, isHost = false, roleText = '', name, username, regDate, pref = '$', privateView = false }) {
+function buildDetailProfileCard({ userProfile, snapshot, isHost = false, roleText = '', name, username, regDate, pref = '$', privateView = false, jid = '', lid = '', sid = '' }) {
   const p = userProfile || {};
   const prog = p.progression || {};
   const xp = xpBarText(prog.xp, prog.neededXpForLvOrPrestigeUp);
@@ -1679,66 +1947,240 @@ function buildDetailProfileCard({ userProfile, snapshot, isHost = false, roleTex
   const ach = snap.achievements || { count: 0, preview: [] };
   const games = snap.games || {};
   const reg = p.registration || {};
+  const rewards = p.rewards || {};
+  const status = p.status || {};
   const de = (n) => Number(n || 0).toLocaleString('de-DE');
-  const out = [ '> 🪪✨ *PROFIL — ALLES IM DETAIL*' ];
+  const coreKey = love.couple?.key || coupleKeyForProfile(p);
+  const core = getCore(p?.identity?.bid || '', coreKey);
+  const myCore = core.user || {};
+  const cpCore = core.couple || {};
+  const myActs = loveActionSummary(myCore.actions);
+  const cpActs = loveActionSummary(cpCore.actions);
+  const out = ['> 🪪✨ *PROFIL — ALLES IM DETAIL* ✨🪪',
+    '> 💜 _Dein komplettes LoveBot-Profil · Werte live aus deinem Konto_'];
 
+  /* 👑 Account (nur der Owner sieht das) */
   if (isHost) {
-    out.push('', '*🔐 ACCOUNT (nur du siehst das)*',
+    out.push('', '👑 *ACCOUNT · nur du siehst das*',
       '• Username: ' + (username || '—'),
-      '• BID: `' + (p.identity?.bid || '—') + '`',
-      '• DSGVO: ' + (p.status?.dsgvo?.accepted ? 'Akzeptiert ✅' : 'Offen ☑️') + ' · Verify: ' + (p.status?.verified ? '✅' : '☑️'));
+      '• 📱 Telefon: ' + (p.identity?.phone || '—'),
+      '• JID: `' + (jid || '—') + '` · LID: `' + (lid || '—') + '`',
+      '• SID: `' + (sid || '—') + '` · BID: `' + (p.identity?.bid || '—') + '`');
   }
-  out.push('', '*👤 PROFIL*',
-    '• Name: ' + (reg.name || name || '—'),
-    '• Status: ' + (reg.status || '—'),
-    '• Stadt: ' + (reg.city || '—'),
-    '• Registriert: ' + (regDate || (reg.registeredAt ? new Date(reg.registeredAt).toLocaleDateString('de-DE') : '—')));
-  /* Alter bewusst NICHT öffentlich — nur für Funktionen, die es brauchen. */
-  out.push('', '*⭐ LEVEL & XP*',
+
+  /* Person */
+  out.push('', '🪪 *PERSON*',
+    '• Name: *' + (reg.name || name || '—') + '*',
+    '• 💘 Status: ' + (reg.status || '—'),
+    '• 📍 Stadt: ' + cityLabel(reg, { privateChat: privateView }));
+  if (privateView || isHost) {
+    out.push('• 🎂 Alter: ' + ageLabel(reg, { reveal: true }));
+  }
+  if (reg.registeredAt) {
+    const daysMember = Math.max(0, Math.floor((Date.now() - new Date(reg.registeredAt).getTime()) / 86400000));
+    out.push('• 📅 Mitglied seit: ' + (regDate || formatDateTimeShort(reg.registeredAt)) + ' (' + daysMember + ' Tag(e))');
+  } else if (regDate) {
+    out.push('• 📅 Mitglied seit: ' + regDate);
+  }
+
+  /* Status */
+  out.push('', '🛡️ *STATUS*',
+    '• DSGVO: ' + (status.dsgvo?.accepted ? 'Akzeptiert ✅' : (status.dsgvo?.rejected ? 'Abgelehnt ❌' : 'Offen ☑️')) + (status.dsgvo?.acceptedAt ? ' · am ' + formatDateTimeShort(status.dsgvo.acceptedAt) : ''),
+    '• Verify: ' + (status.verified ? 'Verifiziert ✅' : 'Nicht verifiziert ☑️') + (status.verifiedAt ? ' · seit ' + formatDateTimeShort(status.verifiedAt) : ''),
+    '• Mapping: ' + (status.mappedAt ? formatDateTimeShort(status.mappedAt) : '—'));
+
+  /* Level */
+  out.push('', '⭐ *LEVEL & XP*',
     '• Level *' + (prog.level || 0) + '*' + (prog.prestige ? ' · Prestige ' + prog.prestige : ''),
     '• `' + xp.bar + '`  ' + xp.pct + '%',
     '• ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP',
     '• Noch *' + de(xp.rest) + ' XP* bis Level ' + ((prog.level || 0) + 1));
-  out.push('', '*💎 ECONOMY*',
+
+  /* Economy */
+  out.push('', '💎 *ECONOMY*',
     '• 🤎 ' + de(eco.copper) + ' Kupfer · 🩶 ' + de(eco.silver) + ' Silber · 💛 ' + de(eco.gold) + ' Gold · 🩵 ' + de(eco.platin) + ' Platin',
-    '• 🏦 Bank: ' + de(eco.bank),
-    '• Wallet-Rang: ' + (eco.walletRank ? '#' + eco.walletRank : '—'),
-    '• 📦 Items: ' + (eco.items || 0));
-  out.push('', '*❤️ LOVE*');
+    '• 🏦 Bank: ' + de(eco.bank) + (p.bank?.active ? ' (aktiv)' : ''),
+    '• Wallet-Rang: ' + (eco.walletRank ? '#' + eco.walletRank : '—') + ' · 📦 Items: ' + (eco.items || 0));
+  out.push('', '⏱️ *BELOHNUNGEN*',
+    '• Täglich: ' + (rewards.lastDailyAt ? formatDateTimeShort(rewards.lastDailyAt) : (prog.lastDaily ? 'am ' + prog.lastDaily : 'noch nie')),
+    '• Wöchentlich: ' + (rewards.lastWeeklyAt ? formatDateTimeShort(rewards.lastWeeklyAt) : 'noch nie'),
+    '• Monatlich: ' + (rewards.lastMonthlyAt ? formatDateTimeShort(rewards.lastMonthlyAt) : 'noch nie'),
+    '• Arbeiten: ' + (rewards.lastWorkAt ? formatDateTimeShort(rewards.lastWorkAt) : 'noch nie'));
+
+  /* Liebe */
+  out.push('', '❤️ *LIEBE*');
   if (love.married) {
     out.push('• 💍 Verheiratet mit *' + (love.spouseName || '?') + '*',
-      '• 🏩 Seit ' + (love.marriedAt ? new Date(love.marriedAt).toLocaleDateString('de-DE') : '—') + ' — ' + (love.daysTogether ?? 0) + ' Tag(e)',
+      '• 🏩 Seit ' + (love.marriedAt ? formatDateTimeShort(love.marriedAt) : '—') + ' — ' + (love.daysTogether ?? 0) + ' Tag(e)',
       (love.couple ? '• 💗 Couple-Level ' + love.couple.level + ' · ' + de(love.couple.loveXp) + ' Love-XP · 🔥 ' + love.couple.streak + 'd Streak · 💌 ' + love.couple.memories + ' Erinnerungen' : '• 💗 Couple-Stats: siehe *' + pref + 'couplestats*'),
       '• 💒 Ehen gesamt: ' + (love.marriages || 1));
+    if (cpCore.breakups) out.push('• 💔 Trennungen: ' + cpCore.breakups);
+    if (cpActs) out.push('• ' + cpActs.lines.join(' · ') + (cpActs.rest ? ' · +' + cpActs.rest + ' weitere' : ''));
   } else {
     out.push('• 🕊️ Single — die große Liebe wartet noch …');
   }
-  out.push('', '*🐶 PET*');
+
+  /* Pet */
+  out.push('', '🐾 *HAUSTIER*');
   if (pet) {
     out.push('• ' + pet.name + ' ' + pet.type + ' — Level ' + pet.level,
       '• ❤️ Bond ' + (pet.love ?? 0) + '% · 😊 Glück ' + (pet.mood ?? 0) + '% · 🍖 Hunger ' + (pet.hunger ?? 0) + '% · ⚡ Energie ' + (pet.energy ?? 0) + '%');
   } else {
     out.push('• Noch kein Haustier — *' + pref + 'pet create <name>* 🐾');
   }
-  out.push('', '*🏆 ACHIEVEMENTS*',
-    '• ' + (ach.count || 0) + ' freigeschaltet' + (ach.count ? '' : ' — noch keine'));
-  for (const a of (ach.preview || []).slice(0, 4)) out.push('• ' + (a.emoji || '🏅') + ' ' + a.name);
-  if (ach.count > 4) out.push('• … und ' + (ach.count - 4) + ' weitere — *' + pref + 'achievements*');
-  out.push('', '*🎮 GAMES*',
-    '• Siege: ' + de(games.wins) + ' · Niederlagen: ' + de(games.losses) + ' · Aktuelle Siegesserie: ' + de(games.winStreak));
-  /* ❤️ Love-Core-Zähler (echte Werte aus Database/lovecore.json) */
-  const coreBid = p?.identity?.bid || '';
-  const coreKey = love.couple?.key || coupleKeyForProfile(p);
-  const core = getCore(coreBid, coreKey);
-  const coreMessages = core.couple?.loveMessages || core.user?.loveMessages || 0;
 
-  out.push('', '*📊 ACTIVITY*',
-    '• Daily-Streak: ' + (snap.streak || 0) + ' Tag(e)',
-    '• 💌 Liebesnachrichten: ' + de(coreMessages) + (core.couple ? ' _(als Paar)_' : ' _(als Single)_'),
-    '• 🔒 Sichtbarkeit: Stadt ' + (reg?.privacy?.hideCity ? 'versteckt' : (privateView ? 'sichtbar' : 'maskiert')) +
-      ' · Alter ' + (reg?.privacy?.hideAge ? 'versteckt' : (isMinor(reg) ? 'unter 18 (geschützt)' : 'sichtbar')));
+  /* Achievements */
+  out.push('', '🏆 *ACHIEVEMENTS*',
+    '• ' + (ach.count || 0) + ' freigeschaltet' + (ach.count ? '' : ' — noch keine'));
+  for (const a of (ach.preview || []).slice(0, 5)) out.push('• ' + (a.emoji || '🏅') + ' ' + a.name);
+  if (ach.count > 5) out.push('• … und ' + (ach.count - 5) + ' weitere — *' + pref + 'achievements*');
+
+  /* Games */
+  const played = games.played ?? p.games?.gamesPlayed ?? 0;
+  const winsN = games.wins || 0;
+  const lossesN = games.losses || 0;
+  const totalGames = winsN + lossesN;
+  const quote = totalGames > 0 ? Math.round((winsN / totalGames) * 100) + '%' : '—';
+  out.push('', '🎮 *GAMES*',
+    '• Gespielt: ' + de(played || totalGames) + ' Runden',
+    '• Siege: ' + de(winsN) + ' · Niederlagen: ' + de(lossesN) + ' · Quote: ' + quote,
+    '• 🔥 Siegesserie: ' + de(games.winStreak || 0) + ' (Rekord ' + de(p.games?.highestWinStreak || 0) + ')',
+    '• Höchster Einsatz: ' + de(p.games?.highestWin || 0) + (p.games?.lastPlayedAt ? ' · Zuletzt: ' + formatDateTimeShort(p.games.lastPlayedAt) : ''));
+
+  /* Aktivität */
+  out.push('', '📊 *AKTIVITÄT*',
+    '• 🔥 Daily-Streak: ' + (snap.streak || 0) + ' Tag(e)',
+    '• 💌 Liebesnachrichten: ' + de(myCore.loveMessages || 0) + (core.couple ? ' _(als Paar: ' + de(cpCore.loveMessages || 0) + ')_' : ' _(als Single)_'));
+  if (myActs) out.push('• 💖 ' + myActs.total + ' Love-Aktionen: ' + myActs.lines.join(' · ') + (myActs.rest ? ' · +' + myActs.rest + ' mehr' : ''));
+  out.push('• 🔒 Sichtbarkeit: Stadt ' + (reg?.privacy?.hideCity ? 'versteckt' : (privateView ? 'sichtbar' : 'maskiert')) +
+    ' · Alter ' + (reg?.privacy?.hideAge ? 'versteckt' : (isMinor(reg) ? 'unter 18 (geschützt)' : (privateView ? 'sichtbar' : 'nicht angezeigt'))));
   if (roleText && String(roleText).trim()) out.push('', String(roleText).trim());
   out.push('', '🌹 _LoveBot by Maxichen_ 🌹');
+  return out.join('\n');
+}
+
+function buildOwnerProfileCard({ userProfile, snapshot = null, roleText = '', name = 'Maxichen', username = '', regDate = 'Unbekannt', pref = '$', regAge = '—', regStatus = '—', regCity = '—', jid = 'N/A', lid = 'N/A', sid = 'N/A', bid = 'N/A', dsgvo = '—', verify = '—', stats = null }) {
+  const p = userProfile || {};
+  const prog = p.progression || {};
+  const xp = xpBarText(prog.xp, prog.neededXpForLvOrPrestigeUp);
+  const snap = snapshot || {};
+  const eco = snap.economy || {};
+  const love = snap.love || {};
+  const pet = snap.pet;
+  const ach = snap.achievements || { count: 0, preview: [] };
+  const games = snap.games || {};
+  const reg = p.registration || {};
+  const rewards = p.rewards || {};
+  const status = p.status || {};
+  const de = (n) => Number(n || 0).toLocaleString('de-DE');
+  const ram = process.memoryUsage ? Math.round((process.memoryUsage().rss || 0) / 1024 / 1024) : 0;
+  const coreKey = love.couple?.key || coupleKeyForProfile(p);
+  const core = getCore(p?.identity?.bid || '', coreKey);
+  const myCore = core.user || {};
+  const cpCore = core.couple || {};
+  const myActs = loveActionSummary(myCore.actions);
+  const cpActs = loveActionSummary(cpCore.actions);
+  const fmtUp = (sec) => {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return (h ? h + 'h ' : '') + (m || h ? m + 'm ' : '') + s + 's';
+  };
+  const daysMember = reg.registeredAt ? Math.max(0, Math.floor((Date.now() - new Date(reg.registeredAt).getTime()) / 86400000)) : null;
+  const out = [];
+
+  out.push('> 👑✨ *LOVE BOT — OWNER PROFIL* ✨👑');
+  out.push('> 💜 _Der Boss ist im Haus._ 🕶️');
+  out.push('> 🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹');
+  out.push('');
+  out.push('👤 *' + name + '*' + (username && username !== 'Nicht vorhanden' ? ' · ' + username : ''));
+  if (roleText && String(roleText).trim()) out.push('> ' + String(roleText).trim().replace(/^[•·]\s*/, ''));
+  out.push('> 🎂 ' + regAge + ' · 💘 ' + regStatus + ' · 📍 ' + regCity);
+  out.push('> 📅 Registriert seit ' + regDate + (daysMember !== null ? ' (' + daysMember + ' Tag(e))' : ''));
+  out.push('');
+
+  out.push('⭐ *LEVEL & XP*');
+  out.push('> Level ' + (prog.level || 0) + (prog.prestige ? ' · 👑 Prestige ' + prog.prestige : ''));
+  out.push('> `' + xp.bar + '`  ' + xp.pct + '%');
+  out.push('> ✨ ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP — noch ' + de(xp.rest) + ' bis Level ' + ((prog.level || 0) + 1));
+  out.push('');
+
+  out.push('💎 *ECONOMY*');
+  out.push('> 🤎 ' + de(eco.copper) + ' Kupfer · 🩶 ' + de(eco.silver) + ' Silber · 💛 ' + de(eco.gold) + ' Gold · 🩵 ' + de(eco.platin) + ' Platin');
+  const econExtras = [];
+  if (eco.bank) econExtras.push('🏦 ' + de(eco.bank) + ' Bank' + (p.bank?.active ? ' (aktiv)' : ''));
+  if (eco.items) econExtras.push('📦 ' + eco.items + ' Items');
+  if (eco.walletRank) econExtras.push('🥇 Wallet-Rang #' + eco.walletRank);
+  if (econExtras.length) out.push('> ' + econExtras.join(' · '));
+  out.push('> ⏱️ Zuletzt: täglich ' + (rewards.lastDailyAt ? formatDateTimeShort(rewards.lastDailyAt) : (prog.lastDaily ? 'am ' + prog.lastDaily : '—')) +
+    ' · Arbeit ' + (rewards.lastWorkAt ? formatDateTimeShort(rewards.lastWorkAt) : '—'));
+  out.push('');
+
+  out.push('❤️ *LIEBE*');
+  if (love.married) {
+    out.push('> 💍 Verheiratet mit *' + (love.spouseName || '?') + '* · seit ' + (love.marriedAt ? formatDateTimeShort(love.marriedAt) : '?') + ' · ' + (love.daysTogether ?? 0) + ' Tag(e)');
+    if (love.couple) out.push('> 💗 Couple Lv ' + (love.couple.level || 0) + ' · ' + de(love.couple.loveXp) + ' Love-XP · 🔥 ' + (love.couple.streak || 0) + 'd Streak · 💌 ' + (love.couple.memories || 0) + ' Erinnerungen');
+    out.push('> 💒 Ehen gesamt: ' + (love.marriages || 1) + (cpCore.breakups ? ' · 💔 Trennungen: ' + cpCore.breakups : ''));
+    if (cpActs) out.push('> 💑 Paar-Aktionen: ' + cpActs.lines.join(' · ') + (cpActs.rest ? ' · +' + cpActs.rest : ''));
+  } else {
+    out.push('> 🕊️ Single — die große Liebe wartet noch …');
+  }
+  out.push('');
+
+  out.push('🐾 *HAUSTIER*');
+  if (pet) out.push('> ' + pet.name + ' ' + pet.type + ' (Lv ' + (pet.level || 1) + ') · ❤️ ' + (pet.love ?? 0) + '% · 😊 ' + (pet.mood ?? 0) + '% · 🍖 ' + (pet.hunger ?? 0) + '% · ⚡ ' + (pet.energy ?? 0) + '%');
+  else out.push('> Noch keins — ' + pref + 'pet create 🐾');
+  out.push('');
+
+  out.push('🏆 *ERFOLGE*');
+  out.push('> ' + (ach.count || 0) + ' freigeschaltet');
+  for (const a of (ach.preview || []).slice(0, 5)) out.push('> ' + (a.emoji || '🏅') + ' ' + a.name);
+  if (ach.count > 5) out.push('> … und ' + (ach.count - 5) + ' weitere');
+  out.push('');
+
+  out.push('🎮 *GAMES*');
+  const winsN = games.wins || 0;
+  const lossesN = games.losses || 0;
+  const totalG = winsN + lossesN;
+  const quote = totalG > 0 ? Math.round((winsN / totalG) * 100) + '%' : '—';
+  out.push('> Siege ' + de(winsN) + ' · Niederlagen ' + de(lossesN) + ' · Quote ' + quote);
+  out.push('> 🔥 Serie ' + de(games.winStreak || 0) + ' (Rekord ' + de(p.games?.highestWinStreak || 0) + ') · Höchster Einsatz ' + de(p.games?.highestWin || 0));
+  out.push('> 🎯 Gespielt ' + de(p.games?.gamesPlayed || totalG) + ' Runden' + (p.games?.lastPlayedAt ? ' · Zuletzt ' + formatDateTimeShort(p.games.lastPlayedAt) : ''));
+  out.push('');
+
+  out.push('🛡️ *STATUS-ZEITEN*');
+  out.push('> DSGVO: ' + (status.dsgvo?.accepted ? 'akzeptiert ✅ am ' + formatDateTimeShort(status.dsgvo.acceptedAt) : (status.dsgvo?.rejected ? 'abgelehnt ❌' : 'offen ☑️')));
+  out.push('> Verify: ' + (status.verified ? '✅ seit ' + (status.verifiedAt ? formatDateTimeShort(status.verifiedAt) : '—') : '☑️ nicht verifiziert'));
+  out.push('> Mapping: ' + (status.mappedAt ? formatDateTimeShort(status.mappedAt) : '—'));
+  out.push('');
+
+  out.push('📊 *AKTIVITÄT*');
+  out.push('> 🔥 Daily-Streak ' + (snap.streak || 0) + 'd · 💌 ' + de(myCore.loveMessages || 0) + ' Liebesnachrichten' + (core.couple ? ' (Paar: ' + de(cpCore.loveMessages || 0) + ')' : ''));
+  if (myActs) out.push('> 💖 ' + myActs.total + ' Love-Aktionen: ' + myActs.lines.join(' · ') + (myActs.rest ? ' · +' + myActs.rest : ''));
+  out.push('');
+
+  out.push('🔐 *ACCOUNT · nur du siehst das*');
+  out.push('> Username: ' + (username && username !== 'Nicht vorhanden' ? username : '—'));
+  out.push('> 📱 Telefon: ' + (p.identity?.phone || '—'));
+  out.push('> JID: `' + jid + '` · LID: `' + lid + '`');
+  out.push('> SID: `' + sid + '` · BID: `' + bid + '`');
+  out.push('> 🛡️ DSGVO: ' + dsgvo + ' · Verify: ' + verify);
+  out.push('');
+
+  out.push('📊 *LIVE-SYSTEM*');
+  if (stats) {
+    out.push('> 👥 ' + stats.totalUsers + ' Nutzer · 📝 ' + stats.registeredUsers + ' registriert · ✅ ' + stats.verifiedUsers + ' verifiziert');
+    out.push('> 👥 ' + stats.totalGroups + ' Gruppen · 🟢 ' + stats.activeGroups + ' aktiv · 🛠️ ' + stats.setupGroups + ' Setup');
+    out.push('> 🚫 ' + stats.totalBans + ' Bans · 💤 ' + stats.totalAfk + ' AFK');
+    out.push('> ⏱️ Uptime ' + stats.uptime + ' · 💾 ' + ram + ' MB RAM · Node ' + (process.version || '?'));
+  } else {
+    out.push('> ⏱️ Uptime ' + fmtUp(process.uptime()) + ' · 💾 ' + ram + ' MB RAM · Node ' + (process.version || '?'));
+  }
+  out.push('');
+  out.push('> 🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹');
+  out.push('> 🏅 *Rolle:* Owner & Entwickler 👑');
+  out.push('> 💜 *LoveBot* · maxichen.de · maxichen.gamebot.me');
   return out.join('\n');
 }
 
@@ -3734,6 +4176,142 @@ async function askQuestion(promptText) {
   return nextLine.value ? nextLine.value.trim() : '';
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   🧠 MULTI-SESSION-MENÜ (im `node .`-Terminal, aufrufbar aus dem Pairing-Menü)
+    1 · Alle Sessions starten          (spawnt alle Nicht-main-Sessions)
+    2 · Neue Session erstellen         (Name + QR oder Pairing-Code)
+    3 · Alle zusätzlichen Sessions löschen (Registry + Ordner, mit Abfrage)
+    4 · Sessions auflisten
+    0 · zurück
+   ═══════════════════════════════════════════════════════════════════════ */
+const _msL = '─'.repeat(50);
+async function openMultiSessionMenu() {
+  const box = (title) => {
+    console.log('\n' + c.bold + c.brightMagenta + '  ╭' + _msL + '╮' + c.reset);
+    console.log(c.bold + c.brightGreen + '  │ ' + String(title).slice(0, 48).padEnd(48) + '│' + c.reset);
+    console.log(c.bold + c.brightMagenta + '  ├' + _msL + '┤' + c.reset);
+  };
+  const line = (t) => console.log(c.cyan + '  │' + c.reset + ' ' + t);
+  const bot  = () => console.log(c.bold + c.brightMagenta + '  ╰' + _msL + '╯' + c.reset + '\n');
+  const statusIcon = (st) => ({ CONNECTED: '🟢', DISCONNECTED: '🔴', QR_REQUIRED: '🟡', CONNECTING: '🕸️', STOPPED: '⚫', ERROR: '💥', PAUSED: '⏸️', WAITING_FOR_AUTH: '🟣' }[st] || '⚪');
+
+  const showQr = async (id, tries = 12) => {
+    for (let i = 0; i < tries; i++) {
+      await new Promise((r2) => setTimeout(r2, 1500));
+      const raw = SessionManager.getSessionRaw(id);
+      if (raw && raw.qr) {
+        console.log(c.brightYellow + '\n📲 QR-Code für Session „' + id + '“ — scanne in WhatsApp > Verknüpfte Geräte:' + c.reset);
+        try {
+          const qrMod = await import('qrcode-terminal');
+          qrMod.default.generate(String(raw.qr), { small: true });
+        } catch (qrErr) {
+          console.log(c.dim + '   (QR im Web-Dashboard unter Sessions ansehen)' + c.reset);
+        }
+        return true;
+      }
+      const st = raw && raw.status;
+      if (st === 'CONNECTED') { console.log(c.brightGreen + '✅ Session „' + id + '“ ist bereits verbunden.' + c.reset); return true; }
+    }
+    console.log(c.yellow + 'ℹ️ Noch kein QR sichtbar — Status & QR siehst du im Web-Dashboard unter „Sessions“.' + c.reset);
+    return false;
+  };
+
+  const listAll = () => {
+    box('☾ MULTI-SESSION · ÜBERSICHT');
+    const all = SessionManager.listSessionsRaw();
+    if (!all.length) { line(c.dim + ' (leer)' + c.reset); bot(); return; }
+    for (const x of all) {
+      const phone = x.phone ? String(x.phone).replace(/^(.{4}).*(.{2})$/, '$1••••$2') : '';
+      line(statusIcon(x.status) + '  ' + c.brightWhite + String(x.name || x.id).padEnd(20) + c.reset +
+           c.dim + String(x.id).padEnd(16) + c.reset +
+           c.dim + (x.status || '').padEnd(14) + (phone ? ' · ' + phone : '') + c.reset +
+           (x.id === 'main' ? c.dim + '  (Haupt-Session)' + c.reset : ''));
+    }
+    bot();
+  };
+
+  for (;;) {
+    const all = SessionManager.listSessionsRaw();
+    const connected = all.filter((x) => x.status === 'CONNECTED').length;
+    box('☾  M U L T I - S E S S I O N  ☾');
+    line('');
+    line(c.dim + '   Registry: ' + all.length + ' Sessions · ' + connected + ' verbunden · Spawn: ' + (SessionManager.spawnConfigured() ? 'AN' : 'aus') + c.reset);
+    line('');
+    line(c.brightCyan  + ' [1] ' + c.reset + c.dim + 'Alle Sessions starten (QR-Modus, wartende Sessions)' + c.reset);
+    line(c.brightGreen + ' [2] ' + c.reset + c.dim + 'Neue Session erstellen (Name + QR / Pairing-Code)' + c.reset);
+    line(c.brightRed   + ' [3] ' + c.reset + c.dim + 'Alle zusätzlichen Sessions löschen (mit Abfrage)' + c.reset);
+    line(c.brightYellow+ ' [4] ' + c.reset + c.dim + 'Sessions auflisten' + c.reset);
+    line(c.brightWhite + ' [0] ' + c.reset + c.dim + 'Zurück zum Hauptmenü' + c.reset);
+    bot();
+    const opt = (await askQuestion(c.pink + 'LoveBot › Multi-Session [' + c.reset + c.bold + '0-4' + c.reset + c.pink + ']: ' + c.reset)).toLowerCase();
+
+    if (opt === '1') {
+      SessionManager.setSpawnEnabled(true);
+      const targets = all.filter((x) => x.id !== 'main' && x.status !== 'CONNECTED');
+      box('▶️  ALLE SESSIONS STARTEN');
+      let ok = 0, skip = 0;
+      for (const t of targets) {
+        const started = SessionManager.spawnSession(t.id, { authMode: 'qr' });
+        if (started) { line(c.brightGreen + ' 🚀 ' + t.id + ' gestartet…' + c.reset); ok++; }
+        else skip++;
+      }
+      line(c.dim + '   Fertig: ' + ok + ' gestartet, ' + skip + ' übersprungen (laufen schon / Fehler).' + c.reset);
+      bot();
+      if (targets.length) {
+        console.log(c.brightCyan + '⏳ Warte auf die QR-Codes der neuen Kindprozesse…' + c.reset);
+        await Promise.all(targets.filter((t) => t.status !== 'CONNECTED').slice(0, 3).map((t) => showQr(t.id)));
+      }
+    } else if (opt === '2') {
+      box('🆕  NEUE SESSION');
+      const nm = (await askQuestion(c.cyan + '   Name der neuen Session: ' + c.reset)).trim();
+      if (!nm) { line(c.brightRed + '❌ Kein Name — abgebrochen.' + c.reset); bot(); continue; }
+      const mode = (await askQuestion(c.cyan + '   Anmeldung  [1] QR  ·  [2] Pairing-Code: ' + c.reset)).trim();
+      let authMode = 'qr', phone = '';
+      if (mode === '2') {
+        authMode = 'pairing';
+        phone = (await askQuestion(c.cyan + '   Telefonnummer mit Ländervorwahl: ' + c.reset)).replace(/\D/g, '');
+        if (phone.length < 6) { line(c.brightRed + '❌ Ungültige Nummer — abgebrochen.' + c.reset); bot(); continue; }
+      }
+      SessionManager.setSpawnEnabled(true);
+      const created = SessionManager.createSession(nm, { source: 'terminal', actor: 'terminal' });
+      const spawned = SessionManager.spawnSession(created.id, { authMode, phone: phone || undefined });
+      line(c.brightGreen + ' ✅ Session „' + created.name + '“ angelegt (ID: ' + created.id + ')' + c.reset);
+      line(spawned
+        ? (c.dim + ' 🚀 Kindprozess gestartet (' + authMode + ') — warte auf QR/Pairing…' + c.reset)
+        : (c.brightYellow + ' ⚠️ Spawn nicht möglich (config?) — Session steht in der Registry.' + c.reset));
+      bot();
+      if (spawned) await showQr(created.id, authMode === 'pairing' ? 6 : 14);
+    } else if (opt === '3') {
+      const extra = all.filter((x) => x.id !== 'main');
+      if (!extra.length) { box('🗑️  LÖSCHEN'); line(c.dim + '   Keine zusätzlichen Sessions vorhanden.' + c.reset); bot(); continue; }
+      box('🗑️  ALLE ZUSÄTZLICHEN SESSIONS LÖSCHEN');
+      extra.forEach((x) => line('   ' + statusIcon(x.status) + '  ' + x.name + '  (' + x.id + ')'));
+      line(c.brightRed + '   Achtung: löscht Registry-Eintrag UND Sessions/<id>-Ordner (Credentials).' + c.reset);
+      bot();
+      const conf = (await askQuestion(c.brightRed + 'Zum Löschen tippen: ' + c.reset + c.bold + 'ALLE LÖSCHEN' + c.reset + c.dim + '  — oder Enter zum Abbrechen: ' + c.reset)).trim();
+      if (conf !== 'ALLE LÖSCHEN') { console.log(c.yellow + '↩ Abgebrochen.' + c.reset); continue; }
+      let n = 0;
+      for (const x of extra) {
+        try {
+          if (x.source === 'spawned') SessionManager.stopSpawned(x.id);
+          const dir = path.join('Sessions', x.id);
+          try { fs.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+          SessionManager.deleteSession(x.id, { actor: 'terminal' });
+          n++;
+        } catch (e) { console.log(c.brightRed + '❌ ' + x.id + ': ' + (e?.message || e) + c.reset); }
+      }
+      console.log(c.bold + c.brightGreen + '✅ ' + n + ' Session(s) gelöscht. Haupt-Session bleibt unberührt.' + c.reset);
+    } else if (opt === '4') {
+      listAll();
+    } else if (opt === '0' || opt === '' ) {
+      console.log(c.dim + '↩ zurück…' + c.reset);
+      return;
+    } else {
+      console.log(c.brightRed + '❌ Ungültige Eingabe (0–4).' + c.reset);
+    }
+  }
+}
+
 async function startBot(options = {}) {
   const mode = options.mode || 'reconnect';
   const phoneNumber = options.phoneNumber || null;
@@ -3806,8 +4384,10 @@ async function startBot(options = {}) {
     sock.sendMessage = async (jid, content, options = {}) => {
       let finalContent = content;
       if (content && typeof content === 'object' && !Array.isArray(content)) {
-        const hasMsgField = ['text', 'image', 'video', 'audio', 'document', 'sticker', 'location', 'caption', 'contacts', 'contact'].some((k) => k in content);
-        if (hasMsgField) {
+        /* Steuer-Nachrichten (Reaktion, Löschen, echte Weiterleitung)
+           bekommen KEINEN Kanal-Kontext — alles andere schon.          */
+        const isControl = ('react' in content) || ('delete' in content) || ('forward' in content);
+        if (!isControl) {
           finalContent = withGlobalSignature(withNewsletterForwarding(content));
         }
       }
@@ -3817,11 +4397,36 @@ async function startBot(options = {}) {
       return originalSendMessage(jid, finalContent, options);
     };
 
+    /* 📡 JEDE Bot-Nachricht als „über den LoveBot-Kanal weitergeleitet“
+       markieren. relayMessage ist die WURZEL aller ausgehenden Nach-
+       richten — hier läuft wirklich ALLES durch:
+         · sendMessage (Text/Bild/Video/Audio/Sticker/Dokument/…)
+         · sendJson (Rich-Responses, Meta-AI-Karten, Ban-Check-Karten)
+         · rohe Menüs/Listen/Buttons (generateWAMessage…+relayMessage)
+         · MESSAGE_EDIT (Typ 14) — auch Bearbeitungen (z. B. der fertige
+           Ping-Report) behalten die Kanal-Markierung.
+       conversation-Strings werden dabei automatisch zu extendedText-
+       Message umgewandelt, weil nur dort contextInfo sitzen kann.      */
+    const originalRelayMessage = sock.relayMessage.bind(sock);
+    sock.relayMessage = async (jid, message, options = {}) => {
+      try {
+        if (message && typeof message === 'object') {
+          injectNewsletterIntoWAMessage(message);
+        }
+      } catch (nlErr) {
+        console.log(c.bold + c.brightYellow + '⚠️ Newsletter-Markierung übersprungen: ' + c.reset + (nlErr?.message || nlErr));
+      }
+      return originalRelayMessage(jid, message, options);
+    };
+
     sock.ev.on('creds.update', saveCreds);
 
     if (mode === 'pairing' && phoneNumber && !sock.authState.creds.registered) {
       setTimeout(async () => {
-        await phonePair(sock, phoneNumber);
+        try {
+          const code = await phonePair(sock, phoneNumber);
+          if (code) { try { SessionManager.setPairCode(SESSION_ID, String(code)); } catch (smErr2) {} }
+        } catch (pairErr) {}
       }, 3000);
     }
 
@@ -3833,9 +4438,11 @@ async function startBot(options = {}) {
           qrPair(qr);
         }
 
-        /* 📡 SessionManager: QR benötigt */
+        /* 📡 SessionManager: QR benötigt — QR-Wert speichern, damit das
+           Web-Dashboard ihn anzeigen kann (z. B. beim Anlegen einer Session) */
         if (qr) {
           try { SessionManager.setStatus(SESSION_ID, 'QR_REQUIRED'); } catch (smErr) {}
+          try { SessionManager.setQr(SESSION_ID, String(qr)); } catch (smErr2) {}
         }
 
         if (connection === 'open') {
@@ -3851,6 +4458,10 @@ async function startBot(options = {}) {
           const jid = normalizeJid(hostRawId);
           const lid = hostRawLid ? normalizeLid(hostRawLid) : normalizeLid(hostRawId);
           const sid = parseSessionId(hostRawId) || parseSessionId(hostRawLid) || '1';
+
+          /* Verbunden → QR/Pairing-Code sind verbraucht */
+          try { SessionManager.setQr(SESSION_ID, null); } catch (smErrQ) {}
+          try { SessionManager.setPairCode(SESSION_ID, null); } catch (smErrP) {}
 
           /* 📡 SessionManager: Live-Verbindung registrieren */
           try {
@@ -3879,6 +4490,18 @@ async function startBot(options = {}) {
           console.log(c.dim + '  ' + thin + c.reset);
           console.log(c.bold + c.brightMagenta + '  🌹 LoveBot by Maxichen · maxichen.de 🌹' + c.reset + '\n');
           logLove('boot', 'LoveBot ist bereit und wartet auf Nachrichten.', c.brightGreen);
+
+          /* 📡 KANAL-SPIEGEL: Standard-Konfig anlegen + Status zeigen */
+          try {
+            seedChannelRelay();
+            console.log(c.cyan + channelRelayStatusText() + c.reset);
+            console.log(c.cyan + '🏷️ Kanal-Markierung AKTIV — wirklich JEDE Bot-Nachricht erscheint als „über LoveBot-Kanal“ (relayMessage-Wrapper).' + c.reset);
+          } catch (relaySeedErr) {}
+
+          /* 🔴 Live-Abo für den Kanal: follow + subscribeNewsletterUpdates,
+             damit neue Kanal-Posts (Bild/Audio/Sticker/Text/Video) wirklich
+             beim Bot ankommen (Abo läuft ab → wird erneuert). */
+          try { ensureNewsletterLive(sock); } catch (nlLiveErr) {}
 
           await triggerLoveAutoConnectionActions(sock);
         }
@@ -3926,7 +4549,8 @@ async function startBot(options = {}) {
               sessionPath,
               credsPath,
               askQuestion,
-              startBot
+              startBot,
+              openMulti: openMultiSessionMenu
             });
             return;
           }
@@ -3990,6 +4614,15 @@ async function startBot(options = {}) {
             : (targetId && typeof targetId === 'object'
               ? (targetId.id || targetId.jid || targetId.phoneNumber || targetId.participant || targetId.user || targetId.lid || targetId.remoteJid || '')
               : '');
+
+          /* 🤖 Der BOT selbst (diese Session) wurde in die Gruppe geholt →
+             Vorstellung posten („Hallo, ich bin LoveBot … Session <Name> …“)
+             und KEINE Willkommens-Nachricht an sich selbst schicken. */
+          if (actionType === 'add' && isOwnSessionTarget(sock, normalizedTargetId)) {
+            try { await announceBotJoinedGroup(sock, groupJid); } catch (selfAddErr) {}
+            pIndex++;
+            continue;
+          }
 
           /* Auto-Mod: Welcome / Goodbye / Kick / Promote / Demote */
           if (['add', 'remove', 'promote', 'demote'].includes(actionType)) {
@@ -4188,6 +4821,11 @@ async function startBot(options = {}) {
           const msg = messages[msgIndex];
           msgIndex++;
 
+          /* 📡 KANAL-SPIEGEL: Gruppen, in denen der OWNER mit dem Bot
+             schreibt, automatisch als Spiegel-Ziel merken (billig —
+             Key-Check zuerst, DB nur bei Treffer). */
+          try { rememberOwnerGroup(msg); } catch (relayRememberErr) {}
+
           /* 🤖 META AI — Antworten automatisch weiterleiten (falls per
              $metaforward on aktiviert). Läuft nebenbei, blockiert nichts. */
           await handleMetaAiForward(sock, msg);
@@ -4220,6 +4858,19 @@ async function startBot(options = {}) {
 
           const from = getChatId(msg.key);
           if (!from || from === 'status@broadcast') {
+            continue;
+          }
+
+          /* 📡 KANAL-SPIEGEL: Neue Veröffentlichungen aus dem WhatsApp-
+             Kanal (@newsletter) automatisch an alle aktiven Ziel-Chats
+             weiterleiten (Bild · Audio · Sticker · Text · Video · …).
+             Kanal-Nachrichten laufen NICHT durch die Befehlsverarbeitung. */
+          if (String(from).toLowerCase().endsWith('@newsletter')) {
+            try {
+              await handleChannelRelay(sock, msg, { from });
+            } catch (relayErr) {
+              console.log(c.bold + c.brightYellow + '[relay] Fehler: ' + c.reset + (relayErr?.message || relayErr));
+            }
             continue;
           }
 
@@ -4645,8 +5296,6 @@ case 'loadingaivid': {
 
               const dsgvoText = userProfile?.status?.dsgvo?.accepted ? 'Akzeptiert ✅' : (userProfile?.status?.dsgvo?.rejected ? 'Abgelehnt ❌' : 'Offen ☑️');
               const verifyText = userProfile?.status?.verified ? 'Verifiziert ✅' : 'Nicht verifiziert ☑️';
-              const walletText = `🤎 ${userProfile?.wallet?.copper || 0} | 🩶 ${userProfile?.wallet?.silver || 0} | 💛 ${userProfile?.wallet?.gold || 0} | 🩵 ${userProfile?.wallet?.platin || 0}`;
-              const progressionText = `Level ${userProfile?.progression?.level || 0} | Prestige ${userProfile?.progression?.prestige || 0} (XP: ${userProfile?.progression?.xp || 0}/${userProfile?.progression?.neededXpForLvOrPrestigeUp || 743})`;
               const displayUsername = userProfile?.identity?.username ? `@${userProfile.identity.username}` : (senderUn ? `@${senderUn}` : 'Nicht vorhanden');
               const displayJid = senderJid || `${cleanId(senderLid || senderLidUser || '')}@s.whatsapp.net` || 'N/A';
               const displayLid = senderLid || `${cleanId(senderJid || '')}@lid` || 'N/A';
@@ -4659,50 +5308,43 @@ case 'loadingaivid': {
               const regAge = ageLabel(reg, { reveal: true });
               const regStatus = reg.status || 'Nicht angegeben';
               const regCity = cityLabel(reg, { privateChat: !isGroup });
-              const regDate = userProfile?.registration?.registeredAt ? new Date(userProfile.registration.registeredAt).toLocaleString('de-DE') : 'Unbekannt';
+              const regPersonalInfo = (reg.registered && !isGroup) ? {
+                age: ageLabel(reg, { reveal: true }),
+                status: reg.status || '—',
+                city: cityLabel(reg, { privateChat: true })
+              } : null;
+              const regDate = userProfile?.registration?.registeredAt ? formatDateTimeShort(userProfile.registration.registeredAt) : 'Unbekannt';
 
               /* 💍 Liebe-/Marry-Status (rosa Rosen-Look) */
               const meMode = String(args[0] || '').toLowerCase();
               const meSnapshot = getLoveSnapshot(userProfile, identityKey(senderJid, senderLid));
-              const loveStatusLine = loveStatusText(userProfile);
-              const loveHeader = userProfile?.love?.married === true ? '💍' : '🕊️';
 
               let responseText = '';
               if (isHost) {
-                responseText =
-                  `> 👑✨ *LOVE BOT — OWNER PROFIL* ✨👑\n` +
-                  `🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹\n` +
-                  `💜 *Willkommen zurück, @${senderLidUser}!*\n` +
-                  `_Der Boss ist im Haus._ 🕶️\n\n` +
-                  `*🪪 PERSON*\n` +
-                  `• *Name:* ${regName}\n` +
-                  `• *Alter:* ${regAge}\n` +
-                  `• *Status:* ${regStatus}\n` +
-                  `• *Stadt:* ${regCity}\n` +
-                  `• *Registriert seit:* ${regDate}\n\n` +
-                  `*🔐 IDENTITÄT*\n` +
-                  `• *Username:* ${displayUsername}\n` +
-                  `• *JID:* ${safeSenderJid}\n` +
-                  `• *LID:* ${safeSenderLid}\n` +
-                  `• *SID:* ${senderSid}\n` +
-                  `• *BID:* ${userProfile?.identity?.bid || 'N/A'}\n\n` +
-                  `*🛡️ STATUS*\n` +
-                  `• *DSGVO:* ${dsgvoText}\n` +
-                  `• *Verify:* ${verifyText}\n\n` +
-                  `*💰 FORTSCHRITT*\n` +
-                  `• *Guthaben:* ${walletText}\n` +
-                  `• *Level/Prestige:* ${progressionText}\n\n` +
-                  `*${loveHeader} LIEBE*\n` +
-                  `• ${loveStatusLine}\n` +
-                  groupRoleText + '\n\n' +
-                  `🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹\n` +
-                  `🏅 *Rolle:* Owner & Entwickler 👑\n` +
-                  `💜 *LoveBot* · maxichen.de`;
+                /* 👑✨ Owner-Profil: die große schöne Karte — nur der Boss sieht sie */
+                let hostStats = null;
+                try {
+                  hostStats = systemStats(readDb(), process.uptime() * 1000);
+                } catch (stErr) { hostStats = null; }
+                responseText = buildOwnerProfileCard({
+                  userProfile, snapshot: meSnapshot, roleText: groupRoleText,
+                  name: regName, username: displayUsername, regDate, pref,
+                  regAge, regStatus, regCity,
+                  jid: safeSenderJid, lid: safeSenderLid, sid: senderSid,
+                  bid: userProfile?.identity?.bid || 'N/A',
+                  dsgvo: dsgvoText, verify: verifyText,
+                  stats: hostStats
+                });
               } else {
                 /* 🪪 Kompakt-Profil (öffentlich — KEIN Alter, KEINE JID/LID/BID) */
+                const coreMe = getCore(userProfile?.identity?.bid || '', meSnapshot?.love?.couple?.key || coupleKeyForProfile(userProfile));
+                const loveMsgsMe = (coreMe.couple?.loveMessages || coreMe.user?.loveMessages || 0);
                 responseText = buildCompactProfileCard({
                   userProfile, snapshot: meSnapshot, roleText: groupRoleText,
-                  name: regName, username: displayUsername, regDate, pref
+                  name: regName, username: displayUsername, regDate, pref,
+                  personalInfo: regPersonalInfo,
+                  loveMsgs: loveMsgsMe,
+                  memberDays: (reg.registeredAt ? Math.max(0, Math.floor((Date.now() - new Date(reg.registeredAt).getTime()) / 86400000)) : null)
                 });
               }
 
@@ -4711,6 +5353,7 @@ case 'loadingaivid': {
                 responseText = buildDetailProfileCard({
                   userProfile, snapshot: meSnapshot, isHost,
                   roleText: groupRoleText, name: regName, username: displayUsername, regDate, pref,
+                  jid: safeSenderJid, lid: safeSenderLid, sid: senderSid,
                   privateView: !isGroup   /* 🔒 Stadt/Alter nur im Privatchat unmaskiert */
                 });
               }
@@ -5699,6 +6342,27 @@ break;
               console.log(c.cyan + `[check2] Signale: exists=${signals.exists} onWhatsApp=${signals.onWhatsAppExists} devices=${signals.deviceCount} pic=${signals.profilePic}:${signals.profilePicCode} business=${signals.business} errors=${JSON.stringify(signals.usyncErrorCodes)}` + c.reset);
               if (signals.probeErrors.length) {
                 console.log(c.bold + c.brightYellow + '[check2] Probe-Fehler: ' + signals.probeErrors.join(' | ') + c.reset);
+              }
+              break;
+            }
+            case 'kanal':
+            case 'channelrelay':
+            case 'kanalspiegel': {
+              /* 📡 KANAL-SPIEGEL (Owner): Status / an-aus / Test.
+                 Leitet jede Veröffentlichung im LoveBot-Kanal (Bild,
+                 Audio, Sticker, Text, Video, Dokument, …) automatisch
+                 in den Owner-Chat & alle aktiven Gruppen weiter. */
+              if (!isHost) {
+                await sock.sendMessage(from, {
+                  text: `> ❌ *Nur der Owner* kann ${pref}kanal nutzen.`
+                }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+              } else {
+                try {
+                  await handleChannelRelayCommand({ sock, msg, from, args, isHost, pref });
+                } catch (kanalErr) {
+                  console.log(c.bold + c.brightYellow + '[kanal] Fehler: ' + c.reset + (kanalErr?.message || kanalErr));
+                }
               }
               break;
             }
@@ -7035,21 +7699,29 @@ break;
               const parsed = parseRegistrationInput(rawRegistration);
 
               if (!rawRegistration || !parsed) {
-                const usageText = '> *LOVE BOT — REGISTRIERUNG* 📝\n\n' +
+                const usageText = '> 📝 *LOVE BOT — REGISTRIERUNG* 📝\n' +
+                  '> 💜 _Dein LoveBot-Ausweis · in 10 Sekunden fertig._\n\n' +
+                  '🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹\n\n' +
+                  '*So geht’s:*\n' +
+                  '> ' + pref + 'register *Name*[.*Alter*][.*Status*][.*Stadt*]\n\n' +
                   '*Beispiele:*\n' +
-                  '$register Maxichen\n' +
-                  '$register Maxichen.25.Single.Kerkrade\n\n' +
-                  '*Format:*\n' +
-                  '$register Name[.Alter][.Status][.Stadt]\n\n' +
-                  '*Erklärung:*\n' +
-                  '• Name = Maxichen (Pflicht)\n' +
-                  '• Alter = optional, z. B. 25 oder 18+\n' +
-                  '• Status = optional, z. B. Single\n' +
-                  '• Stadt = optional, wird in Gruppen maskiert\n\n' +
-                  '🔒 *Datenschutz:* Unter 18 wird kein exaktes Alter gespeichert,\n' +
-                  'Stadt und Alter sind in Gruppen automatisch versteckt.\n' +
-                  'Steuern kannst du das jederzeit mit *' + pref + 'privacy*.\n\n' +
-                  '*Hinweis:* Wenn du nur $register schreibst, bekommst du diese Hilfe.';
+                  '• ' + pref + 'register Maxichen\n' +
+                  '• ' + pref + 'register Maxichen.16.Single.Kerkrade\n\n' +
+                  '*📝 Die Felder:*\n' +
+                  '• *Name* — Pflicht, 2+ Zeichen\n' +
+                  '• *Alter* — optional, z. B. 25 oder 18+\n' +
+                  '• *Status* — optional, z. B. Single / Vergeben\n' +
+                  '• *Stadt* — optional, wird in Gruppen maskiert\n\n' +
+                  '*🎁 Danach wartet auf dich:*\n' +
+                  '• 👤 Dein Profil & Profil-Buttons (' + pref + 'me)\n' +
+                  '• 💎 Tägliche Kupfer (' + pref + 'daily)\n' +
+                  '• 🐾 Haustier adoptieren (' + pref + 'pet)\n' +
+                  '• 🏆 Erfolge & Level (' + pref + 'achievements)\n\n' +
+                  '🔒 *Datenschutz:*\n' +
+                  '• Unter 18 wird *kein exaktes Alter* gespeichert\n' +
+                  '• Stadt & Alter sind in Gruppen automatisch versteckt\n' +
+                  '• Alles steuerbar mit ' + pref + 'privacy\n\n' +
+                  '🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹';
 
                 await sock.sendMessage(from, {
                   text: usageText
@@ -7092,14 +7764,24 @@ break;
               saveUserProfile(userProfile);
 
               const reg = userProfile.registration;
-              const regCardText = '> *LOVE BOT — REGISTRIERUNG ERFOLGREICH* ✅\n\n' +
-                `• *Name:* ${reg.name}\n` +
-                `• *Alter:* ${ageLabel(reg, { reveal: true })}\n` +
-                `• *Status:* ${reg.status || '—'}\n` +
-                `• *Stadt:* ${cityLabel(reg, { privateChat: !isGroup })}\n` +
-                `• *Sichtbarkeit in Gruppen:* Stadt ${cityLabel(reg, { privateChat: false })} · Alter ${ageLabel(reg, { reveal: false })}\n` +
-                `• *Registriert seit:* ${new Date(reg.registeredAt).toLocaleString('de-DE')}\n\n` +
-                `🔒 *${pref}privacy* — Stadt/Alter verstecken, öffentliches Profil steuern`;
+              const regCardText = '> ✅ *REGISTRIERUNG ERFOLGREICH* ✅\n' +
+                  '> 💜 _Willkommen an Bord, ' + String(reg.name || '') + '!_ 🥳\n\n' +
+                  '🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹\n\n' +
+                  '*🪪 DEIN AUSWEIS*\n' +
+                  '• 👤 Name: *' + reg.name + '*\n' +
+                  '• 🎂 Alter: ' + ageLabel(reg, { reveal: true }) + '\n' +
+                  '• 💘 Status: ' + (reg.status || '—') + '\n' +
+                  '• 📍 Stadt: ' + cityLabel(reg, { privateChat: !isGroup }) + '\n' +
+                  '• 📅 Registriert seit: ' + (reg.registeredAt ? formatDateTimeShort(reg.registeredAt) : '—') + '\n\n' +
+                  '*🛡️ SICHTBARKEIT*\n' +
+                  '• In Gruppen: Stadt ' + cityLabel(reg, { privateChat: false }) + ' · Alter ' + ageLabel(reg, { reveal: false }) + '\n' +
+                  '• Anpassen: ' + pref + 'privacy\n\n' +
+                  '*💡 ERSTE SCHRITTE*\n' +
+                  '• ' + pref + 'me → Profil & Profil-Buttons\n' +
+                  '• ' + pref + 'daily → tägliche Kupfer abholen\n' +
+                  '• ' + pref + 'achievements → erste Erfolge\n' +
+                  '• ' + pref + 'pet create → Haustier adoptieren\n\n' +
+                  '🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹';
 
               if (typeof sock.profilePictureUrl === 'function') {
                 try {
@@ -8291,6 +8973,12 @@ break;
                 const invite = await sock.groupAcceptInvite(code);
                 await sock.sendMessage(from, { text: `> ➕ *BEIGETRETEN*\n\nBot ist der Gruppe beigetreten! (${invite || code})\n\n*Tip:* ${pref}setup zum Aktivieren.` }, { quoted: msg });
                 await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+                /* 🤖 Nach dem Beitreten stellt sich der Bot der Gruppe vor
+                   (Dedupe verhindert Doppelpost, falls das
+                   participants.update zusätzlich eintrifft). */
+                if (invite) {
+                  try { await announceBotJoinedGroup(sock, String(invite)); } catch (joinIntroErr) {}
+                }
               } catch (e) {
                 await sock.sendMessage(from, { text: '> ❌ *Fehler:* ' + (e.message || 'Einladung ungültig/abgelaufen.') }, { quoted: msg });
               }
@@ -11178,8 +11866,41 @@ function writeHeartbeat(sock, online) {
   } catch (e) {}
 }
 
+/* Ziel-JIDs für Owner-Benachrichtigungen: explizit (item.to) + Owner-Config
+   + alle in db.meta.owners hinterlegten Kontakte (jid/lid). */
+function ownerNotifyTargets(item) {
+  const out = [];
+  const add = (v) => {
+    v = String(v || '').trim();
+    if (/^\d+(?::\d+)?@(s\.whatsapp\.net|lid)$/.test(v) && !out.includes(v)) out.push(v.replace(/:\d+(?=@)/, ''));
+  };
+  (Array.isArray(item.to) ? item.to : []).forEach(add);
+  try {
+    add(OWNER_CONFIG.jid);
+    add(OWNER_CONFIG.lid);
+  } catch (e) {}
+  try {
+    for (const o of (readDb()?.meta?.owners || [])) { add(o.jid); add(o.lid); }
+  } catch (e) {}
+  return out;
+}
+
+/* Gruppen-Admins (participants mit Rang admin/superadmin) als Mention-JIDs. */
+async function groupAdminMentions(sock, gid) {
+  try {
+    const meta = await sock.groupMetadata(gid);
+    return (meta.participants || [])
+      .filter((p) => p.admin === 'admin' || p.admin === 'superadmin')
+      .map((p) => p.id)
+      .filter(Boolean);
+  } catch (e) {
+    return [];
+  }
+}
+
 /* Verarbeitet die Befehle, die das Web-Dashboard in die Mailbox legt:
-   Verifizierungs-Codes senden + Broadcasts an alle Gruppen. */
+   Verifizierungs-Codes senden + Broadcasts an alle Gruppen +
+   Owner-/Gruppen-Benachrichtigungen + QR-Bild an alle Gruppen. */
 async function processWebmailQueue(sock) {
   try {
     const mail = readWebmail();
@@ -11216,6 +11937,46 @@ async function processWebmailQueue(sock) {
             throw new Error(`Broadcast konnte an keine der ${jids.length} Gruppen gesendet werden.`);
           }
           item.status = 'sent';
+        } else if (item.type === 'owner-notice') {
+          const targets = ownerNotifyTargets(item);
+          if (!targets.length) throw new Error('Keine gültige Owner-JID für owner-notice.');
+          let ok = 0;
+          for (const jid of targets) {
+            try { await sock.sendMessage(jid, { text: item.text }); ok++; } catch (ownErr) {}
+          }
+          item.result = { sent: ok, targets: targets.length };
+          if (ok === 0) throw new Error('Owner-Nachricht konnte an keine JID gesendet werden.');
+          item.status = 'sent';
+        } else if (item.type === 'group-notice') {
+          /* db.groups speichert Gruppenschlüssel ohne Domain → @g.us ergänzen */
+          let gid = String(item.gid || '').trim();
+          if (!/^[0-9]+(@g\.us)?$/.test(gid)) throw new Error('Ungültige Gruppen-ID für group-notice.');
+          if (!gid.endsWith('@g.us')) gid += '@g.us';
+          let mentions = item.mentions || [];
+          if (item.mentionAdmins) mentions = await groupAdminMentions(sock, gid);
+          await sock.sendMessage(gid, { text: item.text, mentions });
+          item.status = 'sent';
+        } else if (item.type === 'broadcast-qr') {
+          /* QR-Code einer neuen Session als Bild in ALLE Gruppen des aktiven Bots */
+          const png = qrToPng(String(item.qr || ''));
+          if (!png) throw new Error('QR-Bild konnte nicht erzeugt werden.');
+          const groups = await sock.groupFetchAllParticipating().catch(() => ({}));
+          const jids = Object.keys(groups || {});
+          let ok = 0;
+          let failed = 0;
+          const caption = String(item.caption || '🔗 Neuer QR-Code zum Verbinden');
+          for (const gjid of jids) {
+            try {
+              await sock.sendMessage(gjid, { image: png, caption });
+              ok++;
+            } catch (bcErr) { failed++; }
+            await delay(400);
+          }
+          item.result = { sent: ok, failed, total: jids.length };
+          if (jids.length > 0 && ok === 0) {
+            throw new Error(`QR konnte an keine der ${jids.length} Gruppen gesendet werden.`);
+          }
+          item.status = 'sent';
         }
         changed = true;
       } catch (wmErr) {
@@ -11234,11 +11995,52 @@ async function processWebmailQueue(sock) {
   } catch (wmOuterErr) {}
 }
 
+/* 🔗 Neue Session wartet auf QR → Bild mit allen Hinweisen an alle Gruppen
+   dieses (aktiven) Bots + private Owner-Nachricht. Läuft nur, wenn dieser
+   Bot selbst verbunden ist (er ist dann die „aktive Session“). */
+async function announcePendingSessionQrs(sock) {
+  try {
+    let rawList = [];
+    try { rawList = SessionManager.listSessionsRaw() || []; } catch (e) { return; }
+    for (const s of rawList) {
+      if (!s || s.id === SESSION_ID) continue; /* nicht sich selbst ankündigen */
+      const needsAuth = s.status === 'QR_REQUIRED' || s.status === 'WAITING_FOR_AUTH' || s.status === 'CONNECTING';
+      if (!needsAuth || !s.qr || s.announcedQr) continue;
+      const png = qrToPng(String(s.qr));
+      if (!png) continue;
+      const displayName = (s.id === 'main') ? 'LoveBot_Maxichen !' : (s.name || s.id);
+      const caption =
+        '🔗 *NEUE SESSION — QR ZUM VERBINDEN* 🔗\n\n' +
+        '• Bot: *' + displayName + '*\n' +
+        '• Angelegt über das LoveBot-Dashboard.\n\n' +
+        '📱 Scanne mit WhatsApp:\n' +
+        '*Verknüpfte Geräte > Gerät verknüpfen*\n\n' +
+        'Der QR läuft nur kurz — bei Ablauf erscheint im Dashboard ein neuer.\n— LoveBot ☾';
+      const groups = await sock.groupFetchAllParticipating().catch(() => ({}));
+      const jids = Object.keys(groups || {});
+      let ok = 0;
+      for (const gjid of jids) {
+        try { await sock.sendMessage(gjid, { image: png, caption }); ok++; } catch (qrErr) {}
+        await delay(400);
+      }
+      /* Owner privat informieren */
+      try {
+        const targets = ownerNotifyTargets({});
+        for (const jid of targets) {
+          await sock.sendMessage(jid, { text: '🔗 *NEUER SESSION-QR* 🔗\n\n' + displayName + ' (' + s.id + ') wartet auf Scan. QR wurde in ' + ok + ' Gruppen gepostet.\n— LoveBot ☾ Dashboard' });
+        }
+      } catch (ownErr) {}
+      try { SessionManager.markAnnounced(s.id); } catch (mErr) {}
+    }
+  } catch (outerErr) {}
+}
+
 let webmailTimerStarted = false;
 function startDashboardTimers(sock) {
   if (webmailTimerStarted) return;
   webmailTimerStarted = true;
   setInterval(() => processWebmailQueue(sock), 2000);
+  setInterval(() => announcePendingSessionQrs(sock), 3500);
   setInterval(() => writeHeartbeat(sock, true), 10000);
   writeHeartbeat(sock, true);
   logLove('dashboard', 'Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).', c.brightCyan);
@@ -11248,9 +12050,25 @@ function startDashboardTimers(sock) {
 printStartupBanner();
 logLove('boot', `LoveBot v2 gestartet — Node ${process.version}, ${HELP_CATEGORIES.length} Hilfe-Kategorien geladen.`, c.brightCyan);
 
-pairMenu({
-  sessionPath,
-  credsPath,
-  askQuestion,
-  startBot
-});
+/* 🤖 Headless-Modus (vom SessionManager gespawnte Instanzen): kein
+   interaktives Menü möglich (kein TTY) — LOVEBOT_AUTH_MODE sagt dem Bot,
+   ob er sich per QR oder Pairing-Code anmelden soll. Die QR-/Code-Daten
+   landen über SessionManager.setQr/setPairCode im Store, damit das
+   Web-Dashboard sie anzeigen kann. */
+const _headlessMode = String(process.env.LOVEBOT_AUTH_MODE || '').trim();
+if (_headlessMode === 'qr' || _headlessMode === 'pairing') {
+  startBot({
+    mode: _headlessMode,
+    phoneNumber: process.env.LOVEBOT_PAIR_PHONE || null
+  }).catch((bootErr) => {
+    console.error('[Love.js] Headless-Start fehlgeschlagen:', bootErr?.message || bootErr);
+  });
+} else {
+  pairMenu({
+    sessionPath,
+    credsPath,
+    askQuestion,
+    startBot,
+    openMulti: openMultiSessionMenu
+  });
+}

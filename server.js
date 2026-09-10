@@ -12,12 +12,16 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import crypto from 'crypto';
+import { spawnSync } from 'child_process';
 import * as rbac from './night/rbac.js';
 import * as SessionManager from './sessionManager.js';
 import * as CommandRegistry from './commandRegistry.js';
 import { getMaintenance, setMaintenanceOn, setMaintenanceOff } from './night/maintenance.js';
 import * as SecurityCases from './night/security-cases.js';
+import { exportXlsx } from './xlsxwriter.js';
+import { makeZip } from './zipwriter.js';
 import { migrateRegistration, isMinor, cityLabel, ageLabel, publicProfileAllowed } from './privacy.js';
 
 /* 🔐 Minimaler .env-Loader (keine Zusatz-Abhängigkeit nötig): lädt
@@ -50,6 +54,29 @@ const HOST = process.env.HOST || '0.0.0.0';
 const TRUST_PROXY = /^(1|true|yes)$/i.test(String(process.env.TRUST_PROXY || 'false'));
 const OWNER_NUMBER = process.env.OWNER_NUMBER || '4915155894714';
 const OWNER_PASSWORD = process.env.OWNER_PASSWORD || '';
+/* 🔐 ADMIN-PASSWORT (Master) — bewusst GETRENNT vom Login-Passwort der
+   Konten (accounts.json). Gilt für Downloads/Exporte & Step-up-Bestätigung
+   kritischer Aktionen. Wird nur aus der .env geladen, nie geloggt und nie
+   in Dateien/Code abgelegt. Ohne ADMIN_PASSWORD greift als Fallback das
+   OWNER_PASSWORD (Legacy), damit nichts blockiert. */
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+/* 🔐 DATEI-LOGIN beim ÖFFNEN der Dateien (automatisch, ohne Office):
+   Wenn DATEI_LOGIN_PW gesetzt ist, wird JEDE Office-Datei, die der Owner
+   hier herunterlädt (Brand-Datei, Live-.xlsx und jede Office-Datei
+   INNERHALB der All-in-One-ZIP), mit der offiziellen Office-Agile-
+   Verschlüsselung (ECMA-376) geschützt. Beim Öffnen fragt Excel/Word/
+   PowerPoint dann selbst nach dem Passwort — auf jedem Gerät, ohne Makro,
+   ohne „Inhalt aktivieren“.
+   DATEI_LOGIN_USER ist nur der Anzeige-/Doku-Benutzername — eine
+   verschlüsselte Office-Datei hat technisch KEIN Benutzername-Feld
+   (Benutzername + Passwort braucht das Makro-Login, siehe Schutz/).
+   Voraussetzung auf dem Server: python3 + msoffcrypto-tool (pip install
+   msoffcrypto-tool pycryptodome). Fehlt das, bleiben Downloads normal
+   (Feature automatisch aus). Das Passwort wird NIE geloggt oder in
+   Dateien/Code abgelegt. */
+const DATEI_LOGIN_PW = process.env.DATEI_LOGIN_PW || '';
+const DATEI_LOGIN_USER = process.env.DATEI_LOGIN_USER || 'Maxichen';
+const PROTECT_OFFICE_EXT = new Set(['.xlsx', '.xlsm', '.docx', '.docm', '.pptx', '.pptm']);
 const SESSION_DIR = process.env.LOVEBOT_SESSION_DIR || './Sessions';
 const CREDS_PATH = path.join(SESSION_DIR, 'creds.json');
 const OWNER_JID = process.env.OWNER_JID || '';
@@ -154,6 +181,81 @@ function queueMailbox(item) {
   mail.queue.push(item);
   writeWebmail(mail);
   return item.id;
+}
+/* 🧾 Zentrale Admin-Aktions-Logdatei (Dashboard-Aktionen aller Art —
+   Feature-Schalter, Session-Start/-Löschung, Session-Kills, Reauths …).
+   Append-only JSONL, wird auf die letzten 1000 Zeilen begrenzt. */
+const ADMIN_ACTION_LOG = path.join('Database', 'admin-actions.jsonl');
+function logAdminAction(actor, action, target, meta = {}) {
+  try {
+    const line = JSON.stringify({
+      time: new Date().toISOString(),
+      actor: String(actor || '?'),
+      action: String(action || '?'),
+      target: target === undefined ? '' : String(target),
+      ...meta
+    });
+    fs.mkdirSync('Database', { recursive: true });
+    fs.appendFileSync(ADMIN_ACTION_LOG, line + '\n', 'utf8');
+    try { termLog('ADMIN', String(actor || '?') + ' › ' + action + (target ? ' · ' + String(target) : '')); } catch (e) {}
+    try {
+      const st = fs.statSync(ADMIN_ACTION_LOG);
+      if (st.size > 2 * 1024 * 1024) {
+        const lines = fs.readFileSync(ADMIN_ACTION_LOG, 'utf8').trim().split('\n');
+        fs.writeFileSync(ADMIN_ACTION_LOG, lines.slice(-1000).join('\n') + '\n', 'utf8');
+      }
+    } catch (capErr) {}
+  } catch (e) {}
+}
+
+/* 📣 Webmail-Queue-Helfer für Benachrichtigungen an Love.js.
+   Verarbeitet werden sie vom verbundenen Bot (processWebmailQueue):
+   - owner-notice  → private Nachricht an den/die Owner (item.to = [jids/lids])
+   - group-notice  → Nachricht in genau eine Gruppe (item.gid)
+   - broadcast     → in ALLE Gruppen des verarbeitenden Bots (bestehend) */
+/* Letzte N Zeilen einer JSONL-Datei als Objekte lesen (für Anzeige/Export). */
+function readJsonlTail(file, limit) {
+  try {
+    const raw = fs.readFileSync(file, 'utf8').trim();
+    if (!raw) return [];
+    const lines = raw.split('\n');
+    const out = [];
+    for (const l of lines.slice(-(limit || 500))) {
+      try { out.push(JSON.parse(l)); } catch (e) {}
+    }
+    return out;
+  } catch (e) { return []; }
+}
+
+function notifyOwner(item) {
+  return queueMailbox(Object.assign({
+    id: newToken(), type: 'owner-notice', status: 'pending', createdAt: new Date().toISOString(),
+    to: ownerJidFromCreds() ? [ownerJidFromCreds()] : []
+  }, item));
+}
+function notifyGroup(item) {
+  return queueMailbox(Object.assign({
+    id: newToken(), type: 'group-notice', status: 'pending', createdAt: new Date().toISOString(),
+    gid: item.gid || ''
+  }, item));
+}
+
+/* QR-Rohtext → terminaltaugliche Block-ASCII (via qrcode-terminal, ist als
+   Abhängigkeit vorhanden). Das Web-Panel rendert die Blöcke als <pre> —
+   WhatsApp scannt die Zeichen-QR problemlos (wie im Bot-Terminal). */
+async function qrToBlocks(text) {
+  try {
+    const mod = await import('qrcode-terminal');
+    const api = (mod.default && typeof mod.default.generate === 'function') ? mod.default : mod;
+    if (!api || typeof api.generate !== 'function') return '';
+    return await new Promise((resolve) => {
+      try {
+        api.generate(String(text), { small: true }, (out) => resolve(String(out || '')));
+      } catch (e) { resolve(''); }
+    });
+  } catch (e) {
+    return '';
+  }
 }
 
 const ownerAlertCache = new Map();
@@ -297,9 +399,16 @@ function chainAppend(file, entry) {
 }
 function audit(actor, action, target, result) {
   chainAppend(AUDIT_FILE, { actor, action, target, result: result || 'success' });
+  try { termLog(result === 'denied' ? 'DENIED' : 'AUDIT', String(actor || '?') + ' › ' + action + (target ? ' · ' + String(target) : '') + ' → ' + String(result || 'success')); } catch (e) {}
 }
 function securityEvent(event, extra) {
   chainAppend(SECURITY_FILE, Object.assign({ event }, extra || {}));
+  try {
+    const r = (extra && (extra.risk || 0)) || 0;
+    const col = r >= 40 ? TERM.red : r >= 15 ? TERM.yellow : TERM.grey;
+    const who = (extra && extra.actor) || (extra && extra.ip) || '';
+    termWrite(`${TERM.grey}${termStamp()}${TERM.reset}  ${col}${TERM.bold}${String(event).padEnd(26)}${TERM.reset} ${TERM.white}${String(who || '').padEnd(24)}${TERM.reset}${TERM.dim} risk ${r}${TERM.reset}`);
+  } catch (e) {}
 }
 
 function latestDeviceSnapshots() {
@@ -350,9 +459,20 @@ function perm(session, need) {
    erneute Eingabe des aktuellen Passworts im selben Request (Feld
    "reauth"), unabhängig davon, wie lange die Session schon läuft. Schützt
    z. B. gegen einen kurz unbeaufsichtigten, eingeloggten Browser-Tab. */
+/* 🔐 Admin-Passwort-Prüfung: „Admin-Passwort“ ist NICHT das Login-Passwort
+   eines Nutzers, sondern der separate Master aus .env (ADMIN_PASSWORD).
+   Nur wenn kein ADMIN_PASSWORD konfiguriert ist, wird als Fallback das
+   OWNER_PASSWORD des Haupt-Owners akzeptiert (Legacy). */
+function adminPasswordOk(password) {
+  const pw = String(password || '');
+  if (ADMIN_PASSWORD) return safeStringEqual(pw, ADMIN_PASSWORD);
+  if (OWNER_PASSWORD) return safeStringEqual(pw, OWNER_PASSWORD);
+  return false;
+}
 function verifyReauth(session, password) {
   if (!session) return false;
   const pw = String(password || '');
+  if (ADMIN_PASSWORD) return safeStringEqual(pw, ADMIN_PASSWORD);
   if (String(session.number) === OWNER_NUMBER && OWNER_PASSWORD) {
     if (safeStringEqual(pw, OWNER_PASSWORD)) return true;
   }
@@ -369,10 +489,19 @@ function requireStepUp(req, res, session, body, actionLabel) {
   if (!verifyReauth(session, pw)) {
     securityEvent('STEP_UP_REAUTH_FAILED', { ip: reqIp(req), actor: session.username || maskNumber(session.number), action: actionLabel, risk: 35 });
     audit(session.username || maskNumber(session.number), 'stepup.failed', actionLabel, 'denied');
+    logAdminAction(session.username || maskNumber(session.number), 'reauth.failed', actionLabel, { ip: maskIp(reqIp(req)) });
     sendJson(res, 401, { error: 'Passwort falsch.', needsReauth: true, action: actionLabel });
     return false;
   }
   securityEvent('STEP_UP_REAUTH_OK', { ip: reqIp(req), actor: session.username || maskNumber(session.number), action: actionLabel, risk: 5 });
+  /* Kurzes Reauth-Fenster auf der Session vermerken (z. B. für das
+     Owner-Gate der Login-Sessions-Ansicht). */
+  try {
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : new URL('http://x' + req.url).searchParams.get('token');
+    const sv = sessions.get(token);
+    if (sv) { sv.lastReauthAt = Date.now(); saveSessions(); }
+  } catch (reauthMarkErr) {}
   return true;
 }
 /* Kritische Aktionen, die eine Step-up-Reauth verlangen (für die UI, damit
@@ -385,6 +514,75 @@ const STEP_UP_ACTIONS = [
 function roleOf(session) {
   const acc = session ? rbac.getAccountByNumber(session.number) : null;
   return acc ? acc.role : (session ? session.role : 'user');
+}
+
+/* ⬇️ Download-Gate (nur Owner): prüft Benutzername + Passwort gegen einen
+   Owner-Account aus accounts.json (bzw. den festen OWNER_PASSWORD des
+   Haupt-Owners). Wird NIE geloggt/gespeichert — nur serverseitig geprüft.
+   Gibt den passenden Account zurück oder null. */
+
+/* 🗂️ Ordner mit den fertigen Brand-Kit-Dateien (wird NIE öffentlich ausgeliefert). */
+const BRAND_DIR = path.join('Dokumente', 'BrandKit');
+const BRAND_MIME = {
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  '.rtf': 'application/rtf',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+};
+function brandItems() {
+  try {
+    return fs.readdirSync(BRAND_DIR).filter((f) => !f.startsWith('.')).sort();
+  } catch (e) {
+    return [];
+  }
+}
+
+/* 🔐 Datei-Login beim Öffnen: schützt Download-Dateien serverseitig mit
+   der Office-Agile-Verschlüsselung (ECMA-376). mode='single' verschlüsselt
+   eine einzelne Office-Datei, mode='zip' alle Office-Einträge innerhalb
+   einer ZIP. Ohne DATEI_LOGIN_PW (oder ohne python3/msoffcrypto) wird der
+   Puffer unverändert durchgereicht — Downloads funktionieren immer. */
+let _protectWarned = false;
+function officeProtect(buf, mode) {
+  if (!DATEI_LOGIN_PW || !buf || !buf.length) return buf;
+  const pythonBin = process.env.LB_PYTHON || 'python3';
+  const stamp = process.pid + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const inFile = path.join(os.tmpdir(), 'lb_prot_' + stamp + '.in');
+  const outFile = path.join(os.tmpdir(), 'lb_prot_' + stamp + '.out');
+  try {
+    fs.writeFileSync(inFile, buf);
+  } catch (e) {
+    return buf;
+  }
+  const helper = path.join('Schutz', 'schuetzen-server.py');
+  let res = null;
+  try {
+    res = spawnSync(pythonBin, [helper, mode, inFile, outFile], {
+      env: Object.assign({}, process.env, { LB_PW: DATEI_LOGIN_PW }),
+      encoding: null,
+      timeout: 120000,
+      windowsHide: true
+    });
+  } catch (e) {
+    res = null;
+  }
+  let out = null;
+  try {
+    if (res && res.status === 0 && fs.existsSync(outFile)) out = fs.readFileSync(outFile);
+  } catch (e) {
+    out = null;
+  }
+  try { fs.unlinkSync(inFile); } catch (e) {}
+  try { fs.unlinkSync(outFile); } catch (e) {}
+  if (out) return out;
+  if (!_protectWarned) {
+    _protectWarned = true;
+    console.log('⚠  DATEI_LOGIN_PW ist gesetzt, aber das Schutz-Python (python3 + msoffcrypto-tool, ' + helper + ') lief nicht. Downloads bleiben ungeschützt. Installation: pip install msoffcrypto-tool pycryptodome');
+  }
+  return buf;
 }
 function reqIp(req) {
   const socketIp = String(req.socket?.remoteAddress || '').replace('::ffff:', '');
@@ -901,6 +1099,68 @@ const SECURITY_HEADERS = {
     "frame-ancestors 'none'"
   ].join('; ')
 };
+
+/* ==========================================================================
+   🖥️  TERMINAL (server.js) — schöne Konsolenausgabe + vollständiges Log
+   Jede API-Anfrage, jeder Audit-/Security-/Admin-Aktions-Eintrag erscheint
+   hier als getaggte Zeile (ANSI, deaktiviert ohne TTY) und wird zusätzlich
+   nach Logs/server.log geschrieben (mit Rotation).
+   ==========================================================================*/
+const TERM = {
+  reset: '\x1b[0m', dim: '\x1b[2m', bold: '\x1b[1m',
+  pink: '\x1b[38;5;206m', pinkB: '\x1b[38;5;212m',
+  cyan: '\x1b[38;5;51m', violet: '\x1b[38;5;141m',
+  white: '\x1b[97m', grey: '\x1b[38;5;240m',
+  red: '\x1b[38;5;203m', yellow: '\x1b[38;5;221m', green: '\x1b[38;5;114m'
+};
+const SERVER_LOG_FILE = path.join('Logs', 'server.log');
+const stripAnsi = (t) => String(t).replace(/\x1b\[[0-9;]*m/g, '');
+const termStamp = () => new Date().toLocaleTimeString('de-DE');
+const termDate = () => new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+function termColorOf(tag) {
+  const t = String(tag || '').toLowerCase();
+  if (['error', 'security', 'denied', 'fail', 'ban'].some((x) => t.includes(x))) return TERM.red;
+  if (['warn', 'warning', 'gate'].some((x) => t.includes(x))) return TERM.yellow;
+  if (['session', 'web', 'login', 'download', 'api'].some((x) => t.includes(x))) return TERM.cyan;
+  if (['owner', 'admin'].some((x) => t.includes(x))) return TERM.pink;
+  if (['boot', 'system', 'start'].some((x) => t.includes(x))) return TERM.violet;
+  return TERM.violet;
+}
+function termWrite(line) {
+  console.log(line);
+  try {
+    fs.mkdirSync('Logs', { recursive: true });
+    fs.appendFileSync(SERVER_LOG_FILE, stripAnsi(line) + '\n', 'utf8');
+  } catch (e) {}
+}
+/* Formatierte Terminalzeile mit Tag + Zeitstempel (und Datei-Log). */
+function termLog(tag, text) {
+  const stamp = termStamp();
+  const col = termColorOf(tag);
+  const tagPad = String(tag).slice(0, 10).padEnd(10);
+  termWrite(`${TERM.grey}${stamp}${TERM.reset}  ${col}${TERM.bold}${tagPad}${TERM.reset} ${TERM.dim}›${TERM.reset} ${TERM.white}${text}${TERM.reset}`);
+}
+/* Kompakte Zeile je API-Anfrage: 200 POST /api/… */
+function apiTermLine(method, route, code, ms) {
+  const ok = code >= 200 && code < 300;
+  const col = code >= 500 ? TERM.red : code >= 400 ? TERM.yellow : ok ? TERM.green : TERM.cyan;
+  const sym = code >= 500 ? '!!' : code >= 400 ? '✕' : ok ? '✓' : '→';
+  termWrite(
+    `${TERM.grey}${termStamp()}${TERM.reset}  ${col}${TERM.bold}${String(code).padEnd(3)} ${sym}${TERM.reset} ` +
+    `${TERM.cyan}${String(method || 'GET').padEnd(4)}${TERM.reset} ${TERM.white}${route}${TERM.reset}` +
+    (ms ? `${TERM.dim}  · ${ms} ms${TERM.reset}` : '')
+  );
+}
+/* Server-Log einmal beim Boot rotieren (max. 2500 Zeilen). */
+function rotateServerLog() {
+  try {
+    const st = fs.statSync(SERVER_LOG_FILE);
+    if (st.size > 2 * 1024 * 1024) {
+      const lines = fs.readFileSync(SERVER_LOG_FILE, 'utf8').split('\n');
+      fs.writeFileSync(SERVER_LOG_FILE, lines.slice(-2500).join('\n'), 'utf8');
+    }
+  } catch (e) {}
+}
 
 /* ---------- HTTP-Helfer ------------------------------------------------ */
 function sendJson(res, code, obj) {
@@ -1612,83 +1872,12 @@ async function handleApi(req, res, pathname) {
     }
   }
 
-  /* 📍 Geräte-Schutz-Gate: Die Website darf erst nach aktiver Standort-
-     freigabe genutzt werden. Standort wird serverseitig nur grob gerundet;
-     technische Gerätedaten dienen der Sicherheitsakte. */
-  if (pathname === '/api/device-info' && req.method === 'POST') {
-    const body = await readBody(req);
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
-    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-      return sendJson(res, 400, { error: 'Standortfreigabe fehlt oder ist ungültig.' });
-    }
-    const details = {
-      ip: clientIp,
-      latitude: Number(latitude.toFixed(2)),
-      longitude: Number(longitude.toFixed(2)),
-      accuracyMeters: Number.isFinite(Number(body.accuracy)) ? Math.min(10000, Math.round(Math.max(0, Number(body.accuracy)))) : null,
-      userAgent: String(body.userAgent || userAgent).slice(0, 300),
-      platform: String(body.platform || '').slice(0, 100),
-      os: String(body.os || '').slice(0, 100),
-      browser: String(body.browser || '').slice(0, 100),
-      browserVersion: String(body.browserVersion || '').slice(0, 60),
-      device: String(body.device || '').slice(0, 60),
-      platformVersion: String(body.platformVersion || '').slice(0, 60),
-      architecture: String(body.architecture || '').slice(0, 40),
-      language: String(body.language || '').slice(0, 30),
-      timezone: String(body.timezone || '').slice(0, 80),
-      screen: String(body.screen || '').slice(0, 40),
-      pixelRatio: Number.isFinite(Number(body.pixelRatio)) ? Number(body.pixelRatio) : null,
-      touchPoints: Number.isFinite(Number(body.touchPoints)) ? Math.min(20, Math.max(0, Number(body.touchPoints))) : null,
-      cpuCores: Number.isFinite(Number(body.cpuCores)) ? Math.min(128, Math.max(1, Number(body.cpuCores))) : null,
-      memoryGb: Number.isFinite(Number(body.memoryGb)) ? Math.min(64, Math.max(0, Number(body.memoryGb))) : null,
-      network: String(body.network || '').slice(0, 40),
-      online: body.online === true,
-      path: String(body.path || '').slice(0, 160),
-      consent: true,
-      source: 'mandatory-browser-device-gate'
-    };
-    securityEvent('DEVICE_LOCATION_GATE_GRANTED', { ...details, risk: 5 });
-    return sendJson(res, 200, { ok: true, precision: 'coarse' });
-  }
+  /* ⚠️ Das frühere 📍 Geräte-/Standort-Gate (inkl. /api/device-info) wurde auf
+     Wunsch des Owners entfernt — keine Standort-Erfassung mehr. */
 
   /* ---- alles darunter braucht Login */
   const session = getSession(req);
   if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
-
-  /* 📍 Standort nur nach ausdrücklicher Browser-Zustimmung. Wir speichern
-     absichtlich nur auf zwei Nachkommastellen gerundete Koordinaten
-     (ungefähr 1 km Genauigkeit), nie exakte GPS-Daten. */
-  if (pathname === '/api/location' && req.method === 'POST') {
-    const body = await readBody(req);
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
-    const accuracy = Number(body.accuracy);
-    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-      return sendJson(res, 400, { error: 'Ungültige Standortdaten.' });
-    }
-    const details = {
-      actor: session.username || maskNumber(session.number),
-      number: maskNumber(session.number),
-      latitude: Number(latitude.toFixed(2)),
-      longitude: Number(longitude.toFixed(2)),
-      accuracyMeters: Number.isFinite(accuracy) ? Math.min(10000, Math.round(Math.max(0, accuracy))) : null,
-      ip: reqIp(req),
-      userAgent: String(req.headers?.['user-agent'] || '').slice(0, 200),
-      consent: true,
-      source: 'browser-geolocation'
-    };
-    securityEvent('LOCATION_CONSENT_GRANTED', { ...details, risk: 5 });
-    return sendJson(res, 200, { ok: true, precision: 'coarse', message: 'Standort grob gespeichert.' });
-  }
-
-  if (pathname === '/api/location/revoke' && req.method === 'POST') {
-    securityEvent('LOCATION_CONSENT_REVOKED', {
-      actor: session.username || maskNumber(session.number), number: maskNumber(session.number),
-      ip: reqIp(req), userAgent: String(req.headers?.['user-agent'] || '').slice(0, 200), consent: false, risk: 2
-    });
-    return sendJson(res, 200, { ok: true });
-  }
 
   /* ═══════════ 👑 OWNER-ADMIN-API (nur Rolle "owner") ═══════════ */
 
@@ -2028,6 +2217,45 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
   }
 
+  /* 📜 VERLAUF (History) — rollenbewusst:
+     • Owner  → ?user=<username|nummer> = Verlauf genau dieses Kontos,
+                ohne user-Param = Verlauf ALLER Konten gemischt.
+     • andere Rollen → immer nur der eigene Verlauf (user-Param wird ignoriert). */
+  if (pathname === '/api/history' && req.method === 'GET') {
+    const meNum = session && session.number;
+    if (!meNum) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    const isOwner = roleOf(session) === 'owner';
+    const q = new URL('http://x' + req.url).searchParams;
+    let targets = [];
+    if (isOwner && q.get('user')) {
+      const t = String(q.get('user')).trim();
+      let acc = rbac.getAccountByUsername(t) || null;
+      if (!acc) { const d = t.replace(/\D/g, ''); if (d) acc = rbac.getAccountByNumber(d); }
+      if (acc) targets = [acc];
+    } else if (isOwner) {
+      targets = rbac.listAccounts();
+    } else {
+      const self = rbac.getAccountByNumber(meNum);
+      targets = self ? [self] : [];
+    }
+    const entries = [];
+    for (const acc of targets) {
+      const u = acc.username || acc.number || '?';
+      if (acc.createdAt) entries.push({ t: acc.createdAt, u, k: 'konto', label: 'Konto erstellt', d: 'Rolle: ' + acc.role + (acc.scope && acc.scope.type === 'group' ? ' · Scope: Gruppe' : ' · global'), by: 'system' });
+      for (const h of (acc.roleHistory || [])) entries.push({ t: h.at, u, k: 'rolle', label: 'Rolle geändert', d: (h.from ? h.from + ' → ' : '→ ') + (h.role || '?'), by: h.by || '?' });
+      for (const h of (acc.statusHistory || [])) entries.push({ t: h.at, u, k: 'status', label: 'Status geändert', d: (h.from ? h.from + ' → ' : '→ ') + (h.to || '?') + (h.reason ? ' · ' + h.reason : ''), by: h.by || '?' });
+      for (const h of (acc.permsHistory || [])) entries.push({ t: h.at, u, k: 'rechte', label: 'Rechte geändert', d: h.reason || 'Rechte angepasst', by: h.by || '?' });
+      if (acc.passwordChangedAt) entries.push({ t: acc.passwordChangedAt, u, k: 'pw', label: 'Passwort geändert', d: '', by: u });
+      if (acc.lastLoginAt) entries.push({ t: acc.lastLoginAt, u, k: 'login', label: 'Login', d: 'letzte Anmeldung am Panel', by: u });
+      if (acc.mustChange) entries.push({ t: acc.createdAt, u, k: 'hinweis', label: 'Temp-Passwort aktiv', d: 'Konto muss Passwort beim ersten Login ändern', by: 'system' });
+    }
+    entries.sort((a, b) => String(b.t || '').localeCompare(String(a.t || '')));
+    const seen = new Set();
+    const uniq = [];
+    for (const e of entries) { const key = e.t + '|' + e.u + '|' + e.label + '|' + e.d + '|' + e.by; if (!seen.has(key)) { seen.add(key); uniq.push(e); } }
+    return sendJson(res, 200, { ok: true, mode: isOwner ? (q.get('user') ? 'target' : 'all') : 'self', target: q.get('user') || null, entries: uniq.slice(0, 600) });
+  }
+
   if (pathname === '/api/logout') {
     sessions.delete(session.token);
     saveSessions();
@@ -2057,6 +2285,22 @@ async function handleApi(req, res, pathname) {
     try { fleet = SessionManager.fleetStats(); } catch (e) {}
     let commandStats = null;
     try { commandStats = CommandRegistry.stats(); } catch (e) {}
+    /* Umrechnung auf das kompakte Schema, das Dashboard & Monitor erwarten */
+    const fleetView = (f) => (f ? {
+      managed: f.managed || 0, running: f.running || 0,
+      online: (f.running || 0), total: f.managed || 0,
+      paused: f.paused || 0, authRequired: f.authRequired || 0,
+      stopped: f.stopped || 0, error: f.error || 0
+    } : null);
+    const sessList = (() => { try { return SessionManager.listSessions(); } catch (e) { return []; } })();
+    const onlineCnt = sessList.filter((s) => s.status === 'CONNECTED').length;
+    /* Laufzeit-Zähler: echte Nachrichten/Befehle der Sessions (Fallback auf Registry) */
+    const msgSum = sessList.reduce((a, s) => a + (Number(s.messages) || 0), 0);
+    const cmdSum = sessList.reduce((a, s) => a + (Number(s.commands) || 0), 0);
+    const regCmds = commandStats && typeof commandStats.commands === 'number' ? commandStats.commands : 0;
+    const messages = msgSum || 0;
+    const commands = cmdSum || 0;
+    const dbHealthy = true;
     return sendJson(res, 200, {
       users: Object.keys(db.users || {}).length,
       groups: Object.keys(db.groups || {}).length,
@@ -2064,9 +2308,21 @@ async function handleApi(req, res, pathname) {
       webusers: Object.keys(db.meta?.webusers || {}).length,
       owners: (db.meta?.owners || []).length,
       badwordsAdded: (db.meta?.badwords?.added || []).length,
+      /* kompakte Zähler für Live-Monitor / Dashboard */
+      sessionsTotal: sessList.length,
+      sessionsOnline: onlineCnt,
+      messages,
+      commands,
+      totalCommands: regCmds,
+      errors: (fleet && (fleet.error || 0)) || 0,
+      warnings: 0,
+      dbHealthy,
+      fleet: fleetView(fleet),
       heartbeat: readHeartbeat(),
-      fleet,
-      commands: commandStats,
+      /* Uptime/RAM kommen aus dem Bot-Heartbeat (für Dashboard-Karten) */
+      uptimeSec: readHeartbeat()?.uptimeSec || 0,
+      ramMb: readHeartbeat()?.ramMb || 0,
+      commandStats,
       loveplus: loveplusLiveSnapshot(),
       links: {
         website: 'https://maxichen.de',
@@ -2164,17 +2420,49 @@ async function handleApi(req, res, pathname) {
       }));
     return sendJson(res, 200, { groups });
   }
+  /* 🎛️ Gruppen-Feature umschalten (Owner, per Dashboard).
+     - verlangt das Admin-Passwort (Step-up-Reauth),
+     - protokolliert jede Änderung (Audit + admin-actions-Log),
+     - schickt der Gruppe eine Benachrichtigung mit @Admin/@Owner-Mention,
+       Feature, Status, Grund und dem Vermerk der Passwort-Authentifizierung. */
   if (pathname === '/api/groups/toggle' && req.method === 'POST') {
-    if (session.role !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner.' });
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner.' });
     const body = await readBody(req);
     const { gid, key, on } = body;
     const allowed = ['autodl', 'welcome', 'goodbye', 'badwords', 'antilink', 'active'];
     if (!gid || !allowed.includes(key)) return sendJson(res, 400, { error: 'Ungültig.' });
+    if (!requireStepUp(req, res, session, body, 'groups.feature_toggle')) return;
+    const reason = String(body.reason || '').trim().slice(0, 300);
     const db = readDb();
     if (!db.groups[gid]) db.groups[gid] = {};
+    const before = db.groups[gid][key] === true;
     db.groups[gid][key] = on === true;
     writeDb(db);
-    return sendJson(res, 200, { ok: true });
+    const actorLabel = session.username || maskNumber(session.number) || 'Owner';
+    const FEATURE_LABELS = {
+      autodl: '📥 Auto-Download', welcome: '👋 Welcome', goodbye: '🚪 Goodbye',
+      badwords: '🤬 Badword-Filter', antilink: '🔗 Anti-Link', active: 'Gruppe aktiv'
+    };
+    const label = FEATURE_LABELS[key] || key;
+    const groupSubject = db.groups[gid].subject || gid;
+    const stateTxt = on === true ? 'AKTIVIERT' : 'DEAKTIVIERT';
+    /* Log alles: Audit-Datei + Admin-Aktions-Log */
+    audit(actorLabel, 'feature.' + key + '.' + (on ? 'on' : 'off'), gid + ' (' + groupSubject + ') — ' + (reason || 'kein Grund'), 'success');
+    logAdminAction(actorLabel, 'feature.toggle', gid + ' | ' + groupSubject + ' | ' + key, {
+      key, on: on === true, before, reason: reason || '', group: groupSubject
+    });
+    /* Gruppe benachrichtigen (verarbeitet der aktive Bot, erwähnt Admins) */
+    const noticeText =
+      '🎛️ *FEATURE-ÄNDERUNG — DASHBOARD* 🎛️\n\n' +
+      '👥 *Gruppe:* ' + groupSubject + '\n' +
+      '⚙️ *Feature:* ' + label + ' (' + key + ')\n' +
+      '✅ *Status:* ' + stateTxt + '\n' +
+      '👤 *Von:* @Owner/' + actorLabel + ' (Dashboard)\n' +
+      (reason ? '📝 *Grund:* ' + reason + '\n' : '') +
+      '\n🔐 Diese Änderung wurde über das Dashboard per *Admin-Passwort* authentifiziert.\n' +
+      '— LoveBot ☾';
+    notifyGroup({ gid, text: noticeText, mentionAdmins: true, feature: key, on: on === true, actor: actorLabel });
+    return sendJson(res, 200, { ok: true, before, after: on === true, key, label, group: groupSubject });
   }
 
   /* ---- BANS */
@@ -2383,6 +2671,31 @@ async function handleApi(req, res, pathname) {
     });
   }
 
+  /* 💾 Backups auflisten (nur Datei-Metadaten, keine Inhalte). */
+  if (pathname === '/api/database/backups' && req.method === 'GET') {
+    if (!perm(session, 'db.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (db.view).' });
+    let files = [];
+    try {
+      files = fs.readdirSync('Database').filter((f) => f.startsWith('backup-') && f.endsWith('.json'))
+        .map((f) => {
+          try { const st = fs.statSync(path.join('Database', f)); return { name: f, sizeKb: Math.round(st.size / 1024), mtime: st.mtime.toISOString() }; } catch (e) { return null; }
+        }).filter(Boolean).sort((a, b) => (a.name < b.name ? 1 : -1));
+    } catch (e) {}
+    return sendJson(res, 200, { ok: true, backups: files });
+  }
+
+  /* ➕ Neues Datenbank-Backup erstellen (Kopie von Database/Database.json). */
+  if (pathname === '/api/database/backup' && req.method === 'POST') {
+    if (!perm(session, 'db.backup')) return sendJson(res, 403, { error: 'Keine Berechtigung (db.backup).' });
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const name = 'backup-' + ts + '.json';
+    try {
+      fs.copyFileSync(DB_PATH, path.join('Database', name));
+    } catch (e) { return sendJson(res, 500, { error: 'Backup fehlgeschlagen: ' + String(e.message || e) }); }
+    audit(session.username || maskNumber(session.number), 'db.backup_created', name, 'success');
+    return sendJson(res, 200, { ok: true, name });
+  }
+
   if (pathname === '/api/system' && req.method === 'GET') {
     const mem = process.memoryUsage();
     const os = await import('node:os');
@@ -2453,6 +2766,41 @@ async function handleApi(req, res, pathname) {
   if (pathname === '/api/security/overview' && req.method === 'GET') {
     if (!perm(session, 'security.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (security.view).' });
     return sendJson(res, 200, { ok: true, ...SecurityCases.overview24h(AUDIT_FILE) });
+  }
+
+  /* 📊 Live-Schutz-Zähler fürs Security Center („Rate Limits“-Panel): zeigt
+     die AKTUELLEN in-memory-Zustände der Schutzsysteme (Brute-Force per
+     Nummer, IP-Fehlversuche, Globales Rate-Limit, aktive Auto-Blocks,
+     manuelle Bans). Nur Rollen mit security.manage sehen die Zahlen. */
+  if (pathname === '/api/security/rate-limits' && req.method === 'GET') {
+    if (!perm(session, 'security.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung (security.manage).' });
+    const now = Date.now();
+    const rlActive = [...rateLimits.entries()].filter(([, v]) => v.resetAt > now);
+    const grlActive = [...globalRateLimits.entries()].filter(([, v]) => v.resetAt > now);
+    const ipFailActive = [...ipFailures.entries()].filter(([, v]) => now - (v.windowStart || now) < IP_FAIL_WINDOW_MS);
+    const blocks = listBlockedIps();
+    const bans = listManualBans();
+    return sendJson(res, 200, {
+      ok: true,
+      counts: {
+        numberRateLimited: rlActive.length,
+        globalRateLimited: grlActive.length,
+        ipFailureWindows: ipFailActive.length,
+        activeAutoBlocks: blocks.length,
+        manualBans: bans.length,
+        knownClients: knownClients.size,
+        abuseBursts: abuseBursts.size,
+        abuseViolations: abuseViolations.size
+      },
+      config: {
+        numberWindowSec: 600, numberMaxAttempts: 3,
+        ipFailWindowSec: Math.round(IP_FAIL_WINDOW_MS / 1000),
+        ipBlockThresholds: IP_BLOCK_THRESHOLDS,
+        globalWindowSec: Math.round(GLOBAL_RL_WINDOW_MS / 1000),
+        globalMaxPerWindow: GLOBAL_RL_MAX,
+        permanentBanViaWeb: true
+      }
+    });
   }
 
   /* 🗂️ Security Cases: gebündelte, zusammenhängende Sicherheitsereignisse
@@ -2570,6 +2918,732 @@ async function handleApi(req, res, pathname) {
         });
     } catch (e) {}
     return sendJson(res, 200, { ok: true, entries });
+  }
+
+  /* ---- 👾 SESSION-LIVE-STEUERUNG (echt, über SessionManager) --------------
+     create / delete / restart / qr wirken direkt auf die Session-Registry und
+     auf echte Kind-Prozesse (spawn) — NICHT nur auf die Webmail-Queue. */
+
+  /* ✚ Neue Session anlegen. Ist Multi-Session (spawn) auf dem Host aktiv,
+     wird sofort ein echter Kind-Prozess gestartet, der sich per QR oder
+     Pairing-Code anmeldet — sonst entsteht ein "wartend"-Eintrag. */
+  if (pathname === '/api/session/create' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf Sessions anlegen.' });
+    const body = await readBody(req);
+    const name = String(body.name || '').trim().slice(0, 32) || 'Session';
+    const mode = String(body.mode || 'qr');
+    const actorLabel = session.username || maskNumber(session.number) || 'web';
+    const spawnEnabled = SessionManager.spawnConfigured();
+    let created;
+    try {
+      created = SessionManager.createSession(name, {
+        source: 'web',
+        actor: actorLabel,
+        spawn: true,
+        authMode: mode === 'pair' ? 'pairing' : 'qr',
+        phone: body.phone
+      });
+    } catch (cErr) {
+      return sendJson(res, 400, { error: String(cErr?.message || cErr) });
+    }
+    audit(actorLabel, 'session.create', created.id, spawnEnabled && created.spawned ? 'spawned' : 'registered');
+    logAdminAction(actorLabel, 'session.create', created.id, { name: created.name, mode, spawned: !!created.spawned, spawnEnabled });
+    /* 📣 Benachrichtigungen (verarbeitet der aktive Bot): Owner privat +
+       Ankündigung in allen Gruppen des aktiven Bots. */
+    const createdOwnerText =
+      '🔗 *NEUE BOT-SESSION* 🔗\n\n' +
+      '• Session: *' + created.name + '* (' + created.id + ')\n' +
+      '• Angelegt von: ' + actorLabel + ' (Dashboard)\n' +
+      '• Methode: ' + (mode === 'pair' ? 'Pairing-Code' : 'QR-Code') + '\n' +
+      '• Status: ' + (spawnEnabled && created.spawned ? '▶️ gestartet' : '⏳ wartend (spawn aus)') + '\n\n' +
+      '— LoveBot ☾ Dashboard';
+    notifyOwner({ text: createdOwnerText });
+    const createdGroupText =
+      '🔗 *NEUE SESSION ANGEMELDET* 🔗\n\n' +
+      'Bot „' + created.name + '“ wurde über das Dashboard angelegt.\n' +
+      'Weitere Infos bekommt der Owner direkt.\n— LoveBot ☾';
+    queueMailbox({ id: newToken(), type: 'broadcast', status: 'pending', createdAt: new Date().toISOString(), text: createdGroupText, mentions: [] });
+    return sendJson(res, 200, {
+      ok: true,
+      session: { id: created.id, name: created.name },
+      spawned: !!created.spawned,
+      spawnEnabled,
+      mode
+    });
+  }
+
+  /* 📷 QR/Pairing-Code einer Session abrufen (nur eingeloggt!). Enthält die
+     aktuellen Auth-Daten aus dem Session-Manager; QR als <pre>-Block-ASCII. */
+  if (pathname === '/api/session/qr' && req.method === 'GET') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf QR-Codes abrufen.' });
+    const q = new URL('http://x' + req.url).searchParams;
+    const id = String(q.get('id') || 'main');
+    const raw = SessionManager.getSessionRaw(id);
+    if (!raw) return sendJson(res, 404, { error: 'Session nicht gefunden.' });
+    const freshQr = raw.qr && raw.qrAt && (Date.now() - raw.qrAt) < 180000 ? raw.qr : null;
+    const freshCode = raw.pairCode && raw.pairAt && (Date.now() - raw.pairAt) < 300000 ? raw.pairCode : null;
+    const qrText = freshQr ? await qrToBlocks(freshQr) : null;
+    return sendJson(res, 200, {
+      ok: true,
+      id,
+      status: raw.status,
+      hasQr: !!freshQr,
+      qr: qrText,
+      pairCode: freshCode || null,
+      note: !freshQr && raw.status === 'CONNECTED' ? 'verbunden' : 'noch kein QR — läuft an…'
+    });
+  }
+
+  /* 🗑 Session endgültig löschen (Zeile weg). Haupt-Session ist geschützt. */
+  if (pathname === '/api/session/delete' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf Sessions löschen.' });
+    const body = await readBody(req);
+    const id = String(body.id || body.name || '').trim();
+    if (!id) return sendJson(res, 400, { error: 'id fehlt.' });
+    const raw = SessionManager.getSessionRaw(id);
+    if (!raw) return sendJson(res, 404, { error: 'Session nicht gefunden.' });
+    const actorLabel = session.username || maskNumber(session.number) || 'web';
+    if (raw.source === 'spawned' && raw.pid) SessionManager.stopSpawned(id);
+    const r = SessionManager.deleteSession(id, { actor: actorLabel });
+    if (!r.ok) {
+      if (r.reason === 'main_protected') return sendJson(res, 400, { error: 'MainBot ist die aktive Haupt-Session und kann hier nicht gelöscht werden.' });
+      return sendJson(res, 400, { error: 'Konnte Session nicht löschen (' + r.reason + ').' });
+    }
+    audit(actorLabel, 'session.delete', id, 'success');
+    logAdminAction(actorLabel, 'session.delete', id, { name: raw.name || id });
+    const delOwnerText =
+      '🗑️ *SESSION GELÖSCHT* 🗑️\n\n' +
+      '• Session: *' + (raw.name || id) + '* (' + id + ')\n' +
+      '• Gelöscht von: ' + actorLabel + ' (Dashboard)\n' +
+      '• Zeit: ' + new Date().toLocaleString('de-DE') + '\n\n' +
+      'Das verknüpfte WhatsApp-Konto bleibt unberührt.\n— LoveBot ☾ Dashboard';
+    notifyOwner({ text: delOwnerText });
+    const delGroupText =
+      '🗑️ *SESSION ENTFERNT* 🗑️\n\n' +
+      'Bot „' + (raw.name || id) + '“ wurde über das Dashboard aus der Session-Verwaltung entfernt.\n— LoveBot ☾';
+    queueMailbox({ id: newToken(), type: 'broadcast', status: 'pending', createdAt: new Date().toISOString(), text: delGroupText, mentions: [] });
+    return sendJson(res, 200, { ok: true, removed: id });
+  }
+
+  /* ↻ Session neu starten: läuft sie als Kind-Prozess (spawn), wird sie
+     gestoppt und neu gestartet; sonst nur, wenn spawn auf dem Host an ist.
+     Der manuell betriebene Haupt-Bot muss auf dem Server neu gestartet werden. */
+  if (pathname === '/api/session/restart' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf Sessions neu starten.' });
+    const body = await readBody(req);
+    const id = String(body.id || body.name || '').trim();
+    if (!id) return sendJson(res, 400, { error: 'id fehlt.' });
+    const raw = SessionManager.getSessionRaw(id);
+    if (!raw) return sendJson(res, 404, { error: 'Session nicht gefunden.' });
+    if (id === 'main') {
+      return sendJson(res, 200, { ok: false, main: true, error: 'MainBot läuft als eigener Prozess auf dem Server — dort manuell neu starten (QR erscheint hier, sobald er ohne gültige Session hochkommt).' });
+    }
+    if (!SessionManager.spawnConfigured()) {
+      return sendJson(res, 200, { ok: false, error: 'Multi-Session (spawn) ist auf diesem Host deaktiviert — siehe Database/sessions.json → config.spawn.enabled.' });
+    }
+    if (raw.source === 'spawned' && raw.pid) SessionManager.stopSpawned(id);
+    const started = SessionManager.spawnSession(id, { authMode: 'qr' });
+    audit(session.username || maskNumber(session.number) || 'web', 'session.restart', id, started ? 'success' : 'failed');
+    logAdminAction(session.username || maskNumber(session.number) || 'web', 'session.restart', id, { started: !!started });
+    if (started) {
+      notifyOwner({ text: '↻ *SESSION NEU GESTARTET* ↻\n\nSession *' + id + '* wurde über das Dashboard neu gestartet. QR erscheint dort zum Verbinden.\n— LoveBot ☾ Dashboard' });
+    }
+    return sendJson(res, 200, { ok: !!started, restarted: !!started, error: started ? undefined : 'Neustart fehlgeschlagen.' });
+  }
+
+  /* 🔛 Multi-Session (spawn) aktivieren und eine wartende Session sofort
+     als echten Kind-Prozess starten — Owner-Aktion, ändert die Config in
+     Database/sessions.json. */
+  if (pathname === '/api/session/spawn-on' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf Multi-Session aktivieren.' });
+    const body = await readBody(req);
+    const id = String(body.id || '').trim();
+    SessionManager.setSpawnEnabled(true);
+    if (!id) return sendJson(res, 200, { ok: true, spawnEnabled: true });
+    const raw = SessionManager.getSessionRaw(id);
+    if (!raw) return sendJson(res, 404, { error: 'Session nicht gefunden.' });
+    const started = SessionManager.spawnSession(id, { authMode: body.mode === 'pair' ? 'pairing' : 'qr', phone: body.phone });
+    audit(session.username || maskNumber(session.number) || 'web', 'session.spawn-on', id, started ? 'started' : 'failed');
+    logAdminAction(session.username || maskNumber(session.number) || 'web', 'session.spawn_on', id, { started: !!started });
+    if (started) {
+      notifyOwner({ text: '🔛 *MULTI-SESSION AKTIVIERT*\n\nSession *' + id + '* wurde sofort gestartet. QR/Pairing-Code erscheint im Dashboard.\n— LoveBot ☾ Dashboard' });
+    }
+    return sendJson(res, 200, { ok: !!started, spawnEnabled: true, started: !!started, error: started ? undefined : 'Start fehlgeschlagen.' });
+  }
+
+  /* ▶️▶️ Alle registrierten (nicht verbundenen) Sessions starten — Owner.
+     Aktiviert Multi-Session (spawn) und startet jede wartende/gestoppte
+     Session als echten Kind-Prozess im QR-Modus. */
+  if (pathname === '/api/sessions/start-all' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner.' });
+    const body = await readBody(req);
+    if (String(body.confirm || '') !== 'ALLE STARTEN') return sendJson(res, 400, { error: 'Bestätigung fehlt: Erwartet "ALLE STARTEN".' });
+    SessionManager.setSpawnEnabled(true);
+    const all = SessionManager.listSessionsRaw();
+    const targets = all.filter((s) => s.id !== 'main' && s.status !== 'CONNECTED');
+    let started = 0;
+    let skipped = 0;
+    for (const t of targets) {
+      if (t.source === 'spawned' && t.pid) { skipped++; continue; }
+      try {
+        const okSpawn = SessionManager.spawnSession(t.id, { authMode: 'qr' });
+        if (okSpawn) started++; else skipped++;
+      } catch (spErr) { skipped++; }
+    }
+    audit(session.username || maskNumber(session.number) || 'web', 'session.start_all', String(started) + ' gestartet / ' + skipped + ' übersprungen', 'success');
+    logAdminAction(session.username || maskNumber(session.number) || 'web', 'session.start_all', String(started) + ' gestartet', { skipped });
+    notifyOwner({ text: '▶️ *ALLE SESSIONS GESTARTET*\n\n' + started + ' Session(s) wurden über das Dashboard gestartet (QR-Modus).\n' + (skipped ? skipped + ' übersprungen (laufen bereits).' : '') + '\n— LoveBot ☾ Dashboard' });
+    return sendJson(res, 200, { ok: true, started, skipped, spawnEnabled: true });
+  }
+
+  /* 🧾 Admin-Aktionen (Owner): letzte Einträge aus Database/admin-actions.jsonl
+     für die Owner-Zentrale. */
+  if (pathname === '/api/admin-actions' && req.method === 'GET') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner.' });
+    const entries = readJsonlTail(ADMIN_ACTION_LOG, 60).reverse();
+    return sendJson(res, 200, { ok: true, entries });
+  }
+
+  /* ⬇️ DOWNLOADS-BEREICH (nur Owner) — fertige Brand-Kit-Dateien
+     (.docx/.pptx/.rtf/Logo) mit Benutzername+Passwort-Gate.
+     Die Dateien liegen in Dokumente/BrandKit/ (NIE im öffentlichen Web). */
+  if (pathname === '/api/downloads/list' && req.method === 'GET') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner.' });
+    const items = brandItems().map((f) => {
+      try {
+        const st = fs.statSync(path.join(BRAND_DIR, f));
+        return { name: f, size: st.size, mtime: st.mtime.toISOString() };
+      } catch (e) { return { name: f, size: 0, mtime: null }; }
+    });
+    return sendJson(res, 200, { ok: true, items, fileLogin: DATEI_LOGIN_PW ? { on: true, user: DATEI_LOGIN_USER } : { on: false } });
+  }
+
+  if (pathname === '/api/downloads/brand' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf herunterladen.' });
+    const body = await readBody(req);
+    const actor = session.username || maskNumber(session.number) || 'Owner';
+    /* ⬇️ Download-Gate: NUR das separate Admin-Passwort — kein Benutzername mehr.
+       Der Datei-Login (Benutzername+Passwort) schützt die Datei selbst beim Öffnen. */
+    if (!adminPasswordOk(String(body.password || ''))) {
+      securityEvent('DOWNLOAD_GATE_FAILED', { ip: reqIp(req), actor, action: 'brand-download', risk: 15 });
+      audit(actor, 'download.gate_failed', 'brand', 'denied');
+      return sendJson(res, 401, { error: 'Admin-Passwort ungültig.' });
+    }
+    /* Nur Dateien aus dem BrandKit-Ordner — kein Pfad-Traversal. */
+    const want = String(body.file || '').replace(/\\/g, '/').split('/').pop();
+    if (!want || !/^[A-Za-z0-9._-]+$/.test(want) || !brandItems().includes(want)) {
+      return sendJson(res, 400, { error: 'Unbekannte Datei.' });
+    }
+    const full = path.join(BRAND_DIR, want);
+    let buf = null;
+    try { buf = fs.readFileSync(full); } catch (e) {
+      return sendJson(res, 500, { error: 'Datei nicht lesbar.' });
+    }
+    /* 🔐 Datei-Login: Office-Dateien werden beim Download verschlüsselt —
+       beim Öffnen fragt Excel/Word/PowerPoint nach dem Passwort. */
+    if (PROTECT_OFFICE_EXT.has(path.extname(want).toLowerCase())) buf = officeProtect(buf, 'single');
+    const ext = path.extname(want).toLowerCase();
+    const mime = BRAND_MIME[ext] || 'application/octet-stream';
+    audit(actor, 'download.brand', want, 'success');
+    logAdminAction(actor, 'download.brand', want, {
+      size: buf.length, time: new Date().toLocaleString('de-DE'), ip: maskIp(reqIp(req))
+    });
+    res.writeHead(200, Object.assign({
+      'Content-Type': mime,
+      'Content-Disposition': 'attachment; filename="' + want + '"',
+      'Content-Length': buf.length
+    }, SECURITY_HEADERS));
+    return res.end(buf);
+  }
+
+  /* 🗜️ ALL-IN-ONE-Download: Brand-Kit + frischer Live-.xlsx-Export als ZIP.
+     Nur Owner · Download-Gate: Admin-Passwort. */
+  if (pathname === '/api/downloads/zip' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf herunterladen.' });
+    const body = await readBody(req);
+    const stepupActor = session.username || maskNumber(session.number) || 'Owner';
+    /* ⬇️ Download-Gate: NUR das separate Admin-Passwort. */
+    if (!adminPasswordOk(String(body.password || ''))) {
+      securityEvent('DOWNLOAD_GATE_FAILED', { ip: reqIp(req), actor: stepupActor, action: 'downloads.zip', risk: 15 });
+      audit(stepupActor, 'download.gate_failed', 'downloads.zip', 'denied');
+      return sendJson(res, 401, { error: 'Admin-Passwort ungültig.' });
+    }
+    const when = new Date().toLocaleString('de-DE');
+    const date = new Date().toISOString().slice(0, 10);
+    const entries = [];
+    /* 1) fertige Brand-Dateien aus Dokumente/BrandKit/ */
+    for (const f of brandItems()) {
+      try { entries.push({ name: 'LoveBot-BrandKit/' + f, data: fs.readFileSync(path.join(BRAND_DIR, f)) }); } catch (e) {}
+    }
+    /* 2) frischer Live-Export (alle Blätter inkl. IP-Übersicht) */
+    try {
+      const payload = collectExportSheets({}, stepupActor);
+      const xbuf = exportXlsx(payload.sheets);
+      entries.push({ name: 'LoveBot-Export-' + date + '.xlsx', data: xbuf });
+    } catch (xe) {
+      entries.push({ name: 'Hinweis-Export.txt', data: 'Live-Export konnte nicht erzeugt werden: ' + String(xe.message || xe) });
+    }
+    /* 3) Übersichts-README */
+    const readme =
+      'LOVEBOT ☾ — All-in-one Download\n' +
+      '================================\n\n' +
+      'Erstellt am: ' + when + '\n' +
+      'Freigeschaltet von: ' + stepupActor + ' (per Admin-Passwort)\n\n' +
+      'Inhalt:\n' +
+      '  LoveBot-BrandKit/    – Firmenprofil (.docx), Präsentation (.pptx),\n' +
+      '                         Fact-Sheet (.rtf), Logo (PNG + SVG), Kit-Übersicht\n' +
+      '  LoveBot-Export-' + date + '.xlsx  – Live-Export mit allen Tabellen:\n' +
+      '                         Übersicht, Gruppen, Nutzer & Profile, Accounts & Rechte,\n' +
+      '                         Konten-Historie, Web-Sessions, IP-Übersicht & Standorte,\n' +
+      '                         Sperren & Bans, Bot-Sessions, Audit-Log, Admin-Aktionen,\n' +
+      '                         Rollen-Matrix\n\n' +
+      '🔐 Jeder Download ist im Audit-Log & Admin-Aktions-Log protokolliert.\n' +
+      'Keine Passwörter oder Passwort-Hashes sind enthalten.\n' +
+      '— LoveBot by Maxichen 💜  maxichen.gamebot.me';
+    entries.push({ name: 'LIESMICH-Download.txt', data: readme + (DATEI_LOGIN_PW ? '\n\n🔐 DATEI-LOGIN: Die Office-Dateien in dieser ZIP sind geschützt — beim Öffnen fragt Excel/Word/PowerPoint nach dem Passwort (Benutzer laut Vorgabe: ' + DATEI_LOGIN_USER + ').' : '') });
+
+    let zip = null;
+    try {
+      zip = makeZip(entries);
+    } catch (ze) {
+      return sendJson(res, 500, { error: 'ZIP-Erstellung fehlgeschlagen: ' + String(ze.message || ze) });
+    }
+    /* 🔐 Datei-Login: alle Office-Dateien INNERHALB der ZIP verschlüsseln. */
+    zip = officeProtect(zip, 'zip');
+    audit(stepupActor, 'download.zip', 'all-in-one', 'success');
+    logAdminAction(stepupActor, 'download.zip', 'LoveBot-All-in-One', {
+      files: entries.length, size: zip.length, time: when, ip: maskIp(reqIp(req))
+    });
+    res.writeHead(200, Object.assign({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="LoveBot-All-in-One-' + date + '.zip"',
+      'Content-Length': zip.length
+    }, SECURITY_HEADERS));
+    return res.end(zip);
+  }
+
+  /* 📊 Baut alle Export-Blätter (inkl. Übersicht) für .xlsx & ZIP. */
+  function collectExportSheets(body, actorLabel) {
+    const pick = new Set(Array.isArray(body.sections) ? body.sections : null);
+    const want = (k) => !body.sections || pick.has(k);
+    const db = readDb();
+    const when = new Date().toLocaleString('de-DE');
+    const dt = (iso) => { try { return iso ? new Date(iso).toLocaleString('de-DE') : ''; } catch (e) { return ''; } };
+    const yn = (v, fallback) => (v === true ? 'ja' : (v === false ? 'nein' : (fallback || '')));
+
+    /* --- 👥 Gruppen --- */
+    const groupsRows = [];
+    if (want('gruppen')) {
+      for (const [id, g] of Object.entries(db.groups || {})) {
+        if (!g || typeof g !== 'object' || !(g.subject || g.active !== undefined)) continue;
+        groupsRows.push([
+          id, g.subject || id, g.active === false ? 'inaktiv' : 'aktiv',
+          yn(g.autodl, 'standard'), yn(g.welcome, 'standard'), yn(g.goodbye, 'standard'),
+          yn(g.badwords, 'standard'), g.antilink === true ? 'an' : 'aus',
+          yn(g.kick, 'standard'), yn(g.promote, 'standard'), yn(g.demote, 'standard'),
+          dt(g.joinedAt || g.createdAt || g.activatedAt), dt(g.setupAt)
+        ]);
+      }
+    }
+
+    /* --- 💜 WhatsApp-Nutzer & Profile (aus Database.json + LoveUser/) --- */
+    const userRows = [];
+    if (want('nutzer')) {
+      const profileMap = new Map();
+      try {
+        const dir = path.join('Database', 'LoveUser');
+        for (const bid of fs.readdirSync(dir).slice(0, 5000)) {
+          try {
+            const p = JSON.parse(fs.readFileSync(path.join(dir, bid, bid + '.json'), 'utf8'));
+            profileMap.set(bid, p);
+          } catch (e) {}
+        }
+      } catch (e) {}
+      const seen = new Set();
+      /* erst die Profile (vollständigste Daten) */
+      for (const [bid, p] of profileMap) {
+        seen.add(bid);
+        const idn = (p && p.identity) || {};
+        const reg = (p && p.registration) || {};
+        const st = (p && p.status) || {};
+        const prog = (p && p.progression) || {};
+        const wal = (p && p.wallet) || {};
+        const love = (p && p.love) || {};
+        userRows.push([
+          idn.cleanJid || String(idn.phone || '').replace(/\D/g, '') || String(bid).split('jid')[0],
+          reg.name || idn.username || '',
+          prog.level || 0, prog.xp || 0, prog.prestige || 0,
+          wal.copper || 0, wal.silver || 0, wal.gold || 0, wal.platin || 0,
+          st.verified === true ? 'ja' : (st.verified === false ? 'nein' : ''),
+          (st.dsgvo && st.dsgvo.accepted === true) ? 'ja' : 'nein',
+          reg.registered === true ? 'ja' : 'nein',
+          reg.age || '', reg.status || '', reg.city || '', dt(reg.registeredAt),
+          love.married === true ? 'ja' : 'nein', love.spouseName || '', dt(love.marriedAt)
+        ]);
+      }
+      /* zusätzliche Einträge aus Database.json (ohne Profil-Datei) */
+      for (const [key, u] of Object.entries(db.users || {})) {
+        if (seen.has(key) || !u || typeof u !== 'object') continue;
+        const reg = u.registration || {};
+        const st = u.status || {};
+        userRows.push([
+          String(key).split('jid')[0] || key, reg.name || '',
+          0, 0, 0, 0, 0, 0, 0,
+          st.verified === true ? 'ja' : (st.verified === false ? 'nein' : ''),
+          (st.dsgvo && st.dsgvo.accepted === true) ? 'ja' : 'nein',
+          reg.registered === true ? 'ja' : 'nein',
+          reg.age || '', reg.status || '', reg.city || '', dt(reg.registeredAt),
+          'nein', '', ''
+        ]);
+      }
+      userRows.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+    }
+
+    /* --- 🎲 Nutzer-Details: Spiele, Bank & Liebe (pro Profil, 1 Zeile je User) --- */
+    const detailRows = [];
+    if (want('nutzer')) {
+      let lpUsers = null;
+      try { lpUsers = JSON.parse(fs.readFileSync(path.join('Database', 'loveplus.json'), 'utf8')).users || {}; } catch (e) { lpUsers = {}; }
+      try {
+        const dir = path.join('Database', 'LoveUser');
+        for (const bid of fs.readdirSync(dir).slice(0, 5000)) {
+          try {
+            const p = JSON.parse(fs.readFileSync(path.join(dir, bid, bid + '.json'), 'utf8'));
+            const idn = (p && p.identity) || {};
+            const reg = (p && p.registration) || {};
+            const prog = (p && p.progression) || {};
+            const wal = (p && p.wallet) || {};
+            const bank = (p && p.bank) || {};
+            const games = (p && p.games) || {};
+            const rew = (p && p.rewards) || {};
+            const love = (p && p.love) || {};
+            const lpu = (lpUsers && lpUsers[bid]) || {};
+            const ach = (lpu.achievements && Object.keys(lpu.achievements)) || [];
+            const bankTotal = [bank.copper, bank.silver, bank.gold, bank.platin].reduce((a, b) => a + (Number(b) || 0), 0);
+            detailRows.push([
+              idn.cleanJid || String(idn.phone || '').replace(/\D/g, '') || String(bid).split('jid')[0],
+              reg.name || idn.username || '',
+              prog.level || 0, prog.xp || 0, prog.neededXpForLvOrPrestigeUp || '',
+              wal.copper || 0, wal.silver || 0, wal.gold || 0, wal.platin || 0,
+              bank.active === true ? 'ja' : 'nein', bankTotal,
+              games.gamesPlayed || 0, games.highestWin || 0, games.highestWinStreak || 0,
+              rew.lastDailyAt ? dt(rew.lastDailyAt) : '', dt(rew.lastWeeklyAt),
+              ach.length || 0,
+              love.married === true ? 'ja' : 'nein', love.spouseName || '',
+              reg.city || ''
+            ]);
+          } catch (e) {}
+        }
+      } catch (e) {}
+      detailRows.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+    }
+
+    /* --- 🛡️ Accounts & Rechte (Panel) --- */
+    const accRows = [];
+    if (want('accounts')) {
+      for (const a of rbac.listAccounts()) {
+        accRows.push([
+          a.id || '', a.username, a.number, a.role,
+          (rbac.ROLES[a.role] && rbac.ROLES[a.role].label) || a.role,
+          (a.scope && a.scope.type === 'group') ? ('Gruppe ' + (a.scope.groupJid || '')) : 'global',
+          a.status || 'active', a.mustChange ? 'ja' : 'nein',
+          dt(a.createdAt), dt(a.lastLoginAt),
+          (a.permsExtra || []).join(', '), (a.permsRevoked || []).join(', '),
+          (a.restrictions || []).join(', '),
+          rbac.effectivePerms(a).join(', ')
+        ]);
+      }
+    }
+
+    /* --- 📜 Konten-Historie (Rollen-/Status-/Passwort-/Login-Events) --- */
+    const histRows = [];
+    if (want('kontenhist')) {
+      const evs = [];
+      for (const a of rbac.listAccounts()) {
+        const user = a.username || a.number || '?';
+        if (a.createdAt) evs.push({ t: a.createdAt, u: user, k: 'Konto erstellt', d: 'Rolle: ' + a.role, by: 'system' });
+        for (const rh of (a.roleHistory || [])) {
+          evs.push({ t: rh.at, u: user, k: 'Rolle', d: '→ ' + (rh.role || '?'), by: rh.by || '?' });
+        }
+        for (const sh of (a.statusHistory || [])) {
+          const d = (sh.from ? sh.from + ' → ' : '→ ') + (sh.to || '?') + (sh.reason ? '  ·  ' + sh.reason : '');
+          evs.push({ t: sh.at, u: user, k: 'Status', d, by: sh.by || '?' });
+        }
+        if (a.passwordChangedAt) evs.push({ t: a.passwordChangedAt, u: user, k: 'Passwort geändert', d: '', by: user });
+        if (a.lastLoginAt) evs.push({ t: a.lastLoginAt, u: user, k: 'Login', d: 'letzte Anmeldung', by: user });
+      }
+      evs.sort((a, b) => String(b.t || '').localeCompare(String(a.t || '')));
+      for (const e of evs.slice(0, 3000)) histRows.push([dt(e.t), e.u, e.k, e.d, e.by]);
+    }
+
+    /* --- 🖥️ Web-Login-Sessions (persistent + live markiert) --- */
+    const loginRows = [];
+    if (want('logins')) {
+      let rawWeb = {};
+      try { rawWeb = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8')); } catch (e) { rawWeb = {}; }
+      const live = new Set(sessions.keys());
+      const merged = new Map();
+      for (const [tok, sv] of sessions) {
+        merged.set(tok, { ...sv, _active: tok === session.token ? 'aktiv · du' : 'aktiv', _tok: tok });
+      }
+      for (const [tok, sv] of Object.entries(rawWeb)) {
+        if (!merged.has(tok)) merged.set(tok, { ...sv, _active: 'gespeichert', _tok: tok });
+      }
+      const list = [...merged.values()];
+      list.sort((a, b) => String(b.lastSeenAt || b.createdAt || '').localeCompare(String(a.lastSeenAt || a.createdAt || '')));
+      for (const sv of list.slice(0, 2000)) {
+        loginRows.push([
+          sv._active, sv.username || sv.name || '?', sv.role || 'user', sv.number,
+          sv.name || '', dt(sv.createdAt), dt(sv.lastSeenAt),
+          sv.lastIp || '', sv.userAgent || '',
+          (sv.scope && sv.scope.type === 'group') ? ('Gruppe ' + (sv.scope.groupJid || '')) : 'global'
+        ]);
+      }
+    }
+
+    /* --- 🌐 IP-Übersicht & Standorte: jede Login-IP mit Benutzern/Geräten --- */
+    const ipRows = [];
+    if (want('ips')) {
+      const shortUa = (ua) => {
+        if (!ua) return '—';
+        const u = String(ua);
+        const dev = u.includes('Edg/') ? 'Edge'
+          : u.includes('OPR/') || u.includes('Opera/') ? 'Opera'
+          : u.includes('Chrome/') ? 'Chrome'
+          : u.includes('Firefox/') ? 'Firefox'
+          : u.includes('Safari/') ? 'Safari'
+          : u.includes('curl') || u.includes('wget') ? 'CLI/curl'
+          : u.includes('WhatsApp') ? 'WhatsApp'
+          : 'Unbekannt';
+        const os = u.includes('Windows NT') ? 'Windows'
+          : u.includes('Android') ? 'Android'
+          : u.includes('iPhone') || u.includes('iPad') ? 'iOS'
+          : u.includes('Mac OS X') ? 'macOS'
+          : u.includes('Linux') ? 'Linux'
+          : '';
+        return os ? dev + ' · ' + os : dev;
+      };
+      const byIp = new Map();
+      const addSess = (sv) => {
+        if (!sv) return;
+        const ips = [sv.lastIp, sv.prevIp, sv.ip, sv.clientIp].filter(Boolean);
+        for (const rawIp of [...new Set(ips.map((x) => String(x).trim()).filter(Boolean))]) {
+          const e = byIp.get(rawIp) || {
+            ip: rawIp, users: new Set(), roles: new Set(), uas: new Set(), nums: new Set(),
+            first: sv.createdAt, last: sv.lastSeenAt || sv.createdAt, count: 0
+          };
+          if (sv.username || sv.name) e.users.add(String(sv.username || sv.name).trim());
+          if (sv.role) e.roles.add(String(sv.role));
+          if (sv.userAgent) e.uas.add(String(sv.userAgent));
+          if (sv.number) e.nums.add(String(sv.number));
+          const t = sv.lastSeenAt || sv.createdAt;
+          if (t && (!e.last || String(t) > String(e.last))) e.last = t;
+          if (sv.createdAt && (!e.first || String(sv.createdAt) < String(e.first))) e.first = sv.createdAt;
+          e.count++;
+          byIp.set(rawIp, e);
+        }
+      };
+      for (const [, sv] of sessions) addSess(sv);
+      try {
+        const rawWeb = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+        for (const sv of Object.values(rawWeb)) addSess(sv);
+      } catch (e) {}
+      /* Profil-Stadt je Nummer (freiwillig im WhatsApp-Profil hinterlegt) */
+      const cityByNum = new Map();
+      try {
+        const dir = path.join('Database', 'LoveUser');
+        for (const bid of fs.readdirSync(dir)) {
+          try {
+            const p = JSON.parse(fs.readFileSync(path.join(dir, bid, bid + '.json'), 'utf8'));
+            const idn = (p && p.identity) || {};
+            const city = ((p && p.registration) || {}).city;
+            if (idn.cleanJid && city) cityByNum.set(String(idn.cleanJid), String(city));
+          } catch (e) {}
+        }
+      } catch (e) {}
+      const ipRowsArr = [...byIp.values()];
+      ipRowsArr.sort((a, b) => String(b.last || '').localeCompare(String(a.last || '')));
+      for (const e of ipRowsArr) {
+        const dev = [...e.uas].slice(0, 3).map(shortUa).join(', ');
+        const cities = [...new Set([...e.nums].map((n) => cityByNum.get(n)).filter(Boolean))];
+        ipRows.push([
+          e.ip,
+          dt(e.last),
+          e.count,
+          [...e.users].join(', ') || '—',
+          [...e.roles].join(', ') || '—',
+          dev || '—',
+          dt(e.first),
+          cities.join(', ') || '—',
+          'keine IP-Geo-Abfrage — Standort nur aus freiwilligen Profilangaben'
+        ]);
+      }
+    }
+
+    /* --- 🚫 Sperren & Bans --- */
+    const banRows = [];
+    if (want('bans')) {
+      for (const [key, b] of Object.entries(db.bans || {})) {
+        banRows.push([
+          key, b.jid || b.number || '', b.lid || '', b.reason || '',
+          b.bannedBy || b.by || b.bannedByName || '', dt(b.bannedAt || b.at)
+        ]);
+      }
+    }
+
+    /* --- 🤖 Bot-Sessions --- */
+    const botRows = [];
+    if (want('bot-sessions')) {
+      try {
+        for (const x of SessionManager.listSessions()) {
+          botRows.push([
+            x.name, x.id, x.status,
+            (x.health && x.health.label) || '', x.source || '',
+            x.isDefault ? 'ja' : 'nein', x.phone || '',
+            x.uptimeSec || 0, (x.uptimePct != null ? x.uptimePct : ''),
+            x.messages || 0, x.commands || 0, x.groups || 0,
+            x.reconnects || 0, x.errors || 0, x.memoryMb || 0,
+            x.maintenance ? 'an' : 'aus',
+            x.desiredState || '', x.autoStart ? 'ja' : 'nein',
+            dt(x.lastSeen), dt(x.createdAt)
+          ]);
+        }
+      } catch (e) {}
+    }
+
+    /* --- 🧾 Audit-Log --- */
+    const auditRows = [];
+    if (want('audit')) {
+      for (const e of readJsonlTail(AUDIT_FILE, 800).reverse()) {
+        auditRows.push([dt(e.time), e.actor || '', e.action || '', e.target || '', e.result || '']);
+      }
+    }
+
+    /* --- 🧰 Admin-Aktionen --- */
+    const adminRows = [];
+    if (want('admin-actions')) {
+      for (const e of readJsonlTail(ADMIN_ACTION_LOG, 800).reverse()) {
+        adminRows.push([
+          dt(e.time),
+          e.actor || '', e.action || '', e.target || '',
+          JSON.stringify(Object.fromEntries(Object.entries(e).filter(([k]) => !['time', 'actor', 'action', 'target'].includes(k))))
+        ]);
+      }
+    }
+
+    /* --- 🗂️ Rollen-Matrix --- */
+    const roleRows = [];
+    if (want('rollen')) {
+      for (const r of rbac.ROLE_LIST) {
+        const perms = rbac.permsOf(r.id);
+        if (perms.includes('*')) {
+          roleRows.push([r.id, r.label, '*', 'Alle Berechtigungen (Owner)']);
+          continue;
+        }
+        for (const perm of perms) {
+          const meta = rbac.PERMISSIONS.find((p) => p.id === perm);
+          roleRows.push([r.id, r.label, perm, (meta && meta.label) || '']);
+        }
+      }
+    }
+
+    /* --- Blätter zusammenstellen (Übersicht kommt immer zuerst) --- */
+    const sheets = [];
+    if (want('gruppen')) sheets.push({ name: 'Gruppen', header: ['Gruppen-ID', 'Name', 'Status', 'Auto-DL', 'Welcome', 'Goodbye', 'Badwords', 'Anti-Link', 'Kick', 'Promote', 'Demote', 'Erstellt', 'Setup'], rows: groupsRows });
+    if (want('nutzer')) sheets.push({ name: 'Nutzer & Profile', header: ['Nummer', 'Profil-Name', 'Level', 'XP', 'Prestige', 'Kupfer', 'Silber', 'Gold', 'Platin', 'Verifiziert', 'DSGVO', 'Registriert', 'Alter', 'Status', 'Stadt', 'Registriert am', 'Verheiratet', 'Partner', 'Hochzeit am'], rows: userRows, widths: [16, 20, 7, 8, 8, 8, 8, 8, 8, 11, 8, 11, 7, 10, 12, 18, 11, 16, 18] });
+    if (want('nutzer')) sheets.push({ name: 'Nutzer-Details (Spiele · Bank)', header: ['Nummer', 'Profil-Name', 'Level', 'XP', 'Nächste Level', 'Kupfer', 'Silber', 'Gold', 'Platin', 'Bank aktiv', 'Bank (Summe)', 'Spiele gespielt', 'Höchster Gewinn', 'Beste Serie', 'Letzter Tagesbonus', 'Letzter Wochenbonus', 'Achievements', 'Verheiratet', 'Partner', 'Profil-Stadt'], rows: detailRows, widths: [16, 20, 7, 8, 12, 8, 8, 8, 8, 11, 12, 11, 12, 10, 18, 18, 11, 11, 16, 14] });
+    if (want('accounts')) sheets.push({ name: 'Accounts & Rechte', header: ['Konto-ID', 'Username', 'Nummer', 'Rolle', 'Rollen-Label', 'Scope', 'Status', 'PW-Wechsel', 'Erstellt', 'Letzter Login', 'Zusatzrechte', 'Entzogene Rechte', 'Einschränkungen', 'Effektive Rechte'], rows: accRows });
+    if (want('kontenhist')) sheets.push({ name: 'Konten-Historie', header: ['Zeit', 'Konto', 'Art', 'Änderung', 'Durch'], rows: histRows });
+    if (want('logins')) sheets.push({ name: 'Web-Sessions', header: ['Status', 'Nutzer', 'Rolle', 'Nummer', 'Name', 'Erstellt', 'Zuletzt gesehen', 'IP', 'Gerät (UA)', 'Scope'], rows: loginRows });
+    if (want('ips')) sheets.push({ name: 'IP-Übersicht & Standorte', header: ['IP-Adresse', 'Letzte Aktivität', 'Anmeldungen', 'Benutzer (Login)', 'Rollen', 'Gerät', 'Erster Kontakt', 'Profil-Stadt', 'Hinweis'], rows: ipRows, widths: [18, 18, 12, 30, 14, 26, 18, 22, 50] });
+    if (want('bans')) sheets.push({ name: 'Sperren & Bans', header: ['Schlüssel', 'Nummer/JID', 'LID', 'Grund', 'Von', 'Wann'], rows: banRows });
+    if (want('bot-sessions')) sheets.push({ name: 'Bot-Sessions', header: ['Name', 'ID', 'Status', 'Health', 'Quelle', 'Standard', 'Nummer', 'Uptime (s)', 'Uptime %', 'Nachrichten', 'Befehle', 'Gruppen', 'Reconnects', 'Fehler', 'RAM MB', 'Wartung', 'Zustand', 'Auto-Start', 'Letzter Kontakt', 'Angelegt'], rows: botRows });
+    if (want('audit')) sheets.push({ name: 'Audit-Log', header: ['Zeit', 'Akteur', 'Aktion', 'Ziel', 'Ergebnis'], rows: auditRows });
+    if (want('admin-actions')) sheets.push({ name: 'Admin-Aktionen', header: ['Zeit', 'Akteur', 'Aktion', 'Ziel', 'Details'], rows: adminRows });
+    if (want('rollen')) sheets.push({ name: 'Rollen-Matrix', header: ['Rolle', 'Rollen-Label', 'Berechtigung', 'Beschreibung'], rows: roleRows });
+
+    /* Übersichtsblatt: immer an erster Stelle */
+    const coverPairs = [
+      ['📦 Projekt', 'LoveBot ☾ Control-Panel — Gesamt-Export'],
+      ['🕒 Export erstellt', when],
+      ['👑 Exportiert von', actorLabel + ' (per Admin-Passwort authentifiziert)'],
+      ['', ''],
+      ['👥 Gruppen (db)', String(Object.keys(db.groups || {}).length)],
+      ['💜 WhatsApp-Nutzer (db)', String(Object.keys(db.users || {}).length)],
+      ['📁 Nutzer-Profile (LoveUser)', String(((() => { try { return fs.readdirSync(path.join('Database', 'LoveUser')).length; } catch (e) { return 0; } })()))],
+      ['🛡️ Panel-Accounts', String(rbac.listAccounts().length)],
+      ['🤖 Bot-Sessions (Registry)', String(((() => { try { return SessionManager.listSessions().length; } catch (e) { return 0; } })()))],
+      ['🚫 Bans', String(Object.keys(db.bans || {}).length)],
+      ['', ''],
+      ['📈 Live-Kennzahlen', ''],
+      ['💍 Paare (Love-System)', String(((() => { try { const lp = JSON.parse(fs.readFileSync(path.join('Database', 'loveplus.json'), 'utf8')); return Object.keys((lp && lp.couples) || {}).length; } catch (e) { return 0; } })()))],
+      ['💝 Aktive Gruppen', String(((() => { try { let n = 0; for (const g of fs.readdirSync(path.join('Database', 'LoveGroups'))) { try { const gp = JSON.parse(fs.readFileSync(path.join('Database', 'LoveGroups', g, g + '.json'), 'utf8')); if (gp && gp.active !== false) n++; } catch (e2) {} } return n; } catch (e) { return 0; } })()))],
+      ['🎮 Gespielte Spiele (alle Nutzer)', String(((() => { let n = 0; try { for (const bid of fs.readdirSync(path.join('Database', 'LoveUser')).slice(0, 5000)) { try { const p = JSON.parse(fs.readFileSync(path.join('Database', 'LoveUser', bid, bid + '.json'), 'utf8')); n += (p && p.games && p.games.gamesPlayed) || 0; } catch (e3) {} } } catch (e4) {} return n; })()))],
+      ['🏦 Aktive Bankkonten', String(((() => { let n = 0; try { for (const bid of fs.readdirSync(path.join('Database', 'LoveUser')).slice(0, 5000)) { try { const p = JSON.parse(fs.readFileSync(path.join('Database', 'LoveUser', bid, bid + '.json'), 'utf8')); if (p && p.bank && p.bank.active === true) n++; } catch (e5) {} } } catch (e6) {} return n; })()))],
+      ['🖥️ Web-Login-Sessions', String(((() => { try { return Object.keys(JSON.parse(fs.readFileSync(path.join('Database', 'websessions.json'), 'utf8'))).length; } catch (e7) { return 0; } })()))],
+      ['', ''],
+      ['📋 Blätter in dieser Datei', '']
+    ];
+    for (const s of sheets) coverPairs.push(['   • ' + s.name, s.rows.length + ' Zeilen']);
+    coverPairs.push(['', '']);
+    coverPairs.push(['🔐 Hinweise', 'Erstellt über die Owner-Zentrale (#/all) mit Admin-Passwort — Export wird protokolliert.']);
+    coverPairs.push(['', 'Keine Passwörter oder Passwort-Hashes sind in dieser Datei enthalten.']);
+    sheets.unshift({ name: 'Übersicht', header: ['LoveBot ☾ Gesamt-Export', 'Details'], rows: coverPairs, freeze: false, filter: false, widths: [34, 78] });
+    return { sheets, when };
+  }
+
+  if (pathname === '/api/export/xlsx' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf exportieren.' });
+    const body = await readBody(req);
+    const stepupActor = session.username || maskNumber(session.number) || 'Owner';
+    /* ⬇️ Download-Gate: NUR das separate Admin-Passwort.
+       (Bestehende Reauth-Bestätigung bleibt als zweiter Weg erhalten.) */
+    const _hasPw = String(body.password || '').length > 0;
+    if (!adminPasswordOk(String(body.password || ''))) {
+      if (!_hasPw && !requireStepUp(req, res, session, body, 'export.xlsx')) return;
+      if (_hasPw) {
+        securityEvent('DOWNLOAD_GATE_FAILED', { ip: reqIp(req), actor: stepupActor, action: 'export.xlsx', risk: 15 });
+        audit(stepupActor, 'download.gate_failed', 'export.xlsx', 'denied');
+        return sendJson(res, 401, { error: 'Admin-Passwort ungültig.' });
+      }
+    }
+    const payload = collectExportSheets(body, stepupActor);
+    const sheets = payload.sheets;
+    const when = payload.when;
+    let buf = null;
+    try {
+      buf = exportXlsx(sheets);
+    } catch (xe) {
+      return sendJson(res, 500, { error: 'Export fehlgeschlagen: ' + String(xe.message || xe) });
+    }
+    /* 🔐 Datei-Login: Live-Export beim Download verschlüsseln. */
+    buf = officeProtect(buf, 'single');
+    logAdminAction(stepupActor, 'export.xlsx', 'owner-export', { sheets: sheets.map((x) => x.name).join(', '), time: when, via: _hasPw ? 'admin-passwort' : 'reauth' });
+    res.writeHead(200, Object.assign({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="LoveBot-Export-' + new Date().toISOString().slice(0, 10) + '.xlsx"',
+      'Content-Length': buf.length
+    }, SECURITY_HEADERS));
+    return res.end(buf);
+  }
+
+
+  /* 📤 QR einer Session manuell als Bild an alle Gruppen des aktiven Bots
+     senden (zusätzlich zur automatischen Ankündigung). */
+  if (pathname === '/api/session/qr-to-group' && req.method === 'POST') {
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf QR-Codes senden.' });
+    const body = await readBody(req);
+    const id = String(body.id || '').trim();
+    if (!id) return sendJson(res, 400, { error: 'id fehlt.' });
+    const raw = SessionManager.getSessionRaw(id);
+    if (!raw) return sendJson(res, 404, { error: 'Session nicht gefunden.' });
+    if (!raw.qr) return sendJson(res, 200, { ok: false, error: raw.status === 'CONNECTED' ? 'Session ist bereits verbunden.' : 'Noch kein QR verfügbar — Moment, der QR läuft an.' });
+    queueMailbox({
+      id: newToken(), type: 'broadcast-qr', qr: raw.qr, status: 'pending', createdAt: new Date().toISOString(),
+      caption: '🔗 *QR ZUM VERBINDEN* 🔗\n\nSession „' + (raw.name || id) + '“\nScanne mit WhatsApp: Verknüpfte Geräte > Gerät verknüpfen.\n— LoveBot ☾ Dashboard'
+    });
+    logAdminAction(session.username || maskNumber(session.number) || 'web', 'session.qr_to_group', id, {});
+    return sendJson(res, 200, { ok: true, queued: true });
   }
 
   /* ---- Session-/System-Aktionen: über die Webmail-Queue an Love.js ------- */
@@ -2804,8 +3878,41 @@ async function handleApi(req, res, pathname) {
   /* 🖥️ Owner/Deputy: ALLE aktiven Dashboard-Sessions systemweit einsehen —
      mit IP, User-Agent, Nutzer, Erstellt/Zuletzt gesehen. Wie das
      Geräte/Verbindungs-Panel einer Fritzbox, aber für Login-Sessions. */
+  /* 🔑 Reauth-Verify: prüft das aktuelle (Admin-)Passwort ohne Nebenwirkung
+     und vermerkt auf der Session ein frisches Reauth-Fenster. Wird z. B. vom
+     Owner-Gate der Login-Sessions-Seite genutzt. */
+  if (pathname === '/api/reauth/verify' && req.method === 'POST') {
+    const body = await readBody(req);
+    const pw = String(body.reauth || '');
+    if (!pw) return sendJson(res, 401, { error: 'Passwort fehlt.', needsReauth: true, action: 'reauth.verify' });
+    if (!verifyReauth(session, pw)) {
+      securityEvent('STEP_UP_REAUTH_FAILED', { ip: reqIp(req), actor: session.username || maskNumber(session.number), action: 'reauth.verify', risk: 35 });
+      logAdminAction(session.username || maskNumber(session.number), 'reauth.failed', 'reauth.verify', { ip: maskIp(reqIp(req)) });
+      return sendJson(res, 401, { error: 'Passwort falsch.', needsReauth: true, action: 'reauth.verify' });
+    }
+    const sv = sessions.get(session.token) || null;
+    const tokenForMark = (() => {
+      const auth = req.headers.authorization || '';
+      return auth.startsWith('Bearer ') ? auth.slice(7) : new URL('http://x' + req.url).searchParams.get('token');
+    })();
+    const sve = sessions.get(tokenForMark);
+    if (sve) { sve.lastReauthAt = Date.now(); saveSessions(); }
+    securityEvent('STEP_UP_REAUTH_OK', { ip: reqIp(req), actor: session.username || maskNumber(session.number), action: 'reauth.verify', risk: 5 });
+    logAdminAction(session.username || maskNumber(session.number), 'reauth.ok', 'reauth.verify', { ip: maskIp(reqIp(req)) });
+    return sendJson(res, 200, { ok: true });
+  }
+
   if (pathname === '/api/sessions/all' && req.method === 'GET') {
-    if (!perm(session, 'sessions.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (sessions.view).' });
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf Login-Sessions sehen.' });
+    /* 👑 Owner-Gate: Die Übersicht der Login-Sessions (wer ist wo eingeloggt)
+       ist eine heikle Ansicht — sie öffnet sich nur mit frisch eingegebenem
+       Admin-Passwort (Reauth-Fenster 5 Minuten). Nicht-Owner sehen sie gemäß
+       ihrer eigenen Permission weiterhin normal. */
+    const gateFor = (acc => acc ? acc.role : (session.role || ''))(rbac.getAccountByNumber(session.number));
+    const freshReauth = session.lastReauthAt && (Date.now() - session.lastReauthAt) < 5 * 60 * 1000;
+    if (gateFor === 'owner' && !freshReauth) {
+      return sendJson(res, 401, { error: 'Bitte bestätige dich mit deinem Admin-Passwort, um die Login-Sessions zu sehen.', needsReauth: true, action: 'sessions.view' });
+    }
     const canManage = perm(session, 'sessions.control');
     const list = [...sessions.entries()].map(([tok, sv]) => ({
       tokenHint: tok.slice(0, 10) + '…',
@@ -2820,16 +3927,19 @@ async function handleApi(req, res, pathname) {
     return sendJson(res, 200, { ok: true, sessions: list });
   }
 
-  /* ⏹️ Owner/Deputy: eine einzelne Session gezielt beenden. */
+  /* ⏹️ Owner/Deputy: eine einzelne Session gezielt beenden.
+     Kritisch genug für eine erneute Passwort-Bestätigung (Admin-Passwort). */
   if (pathname === '/api/sessions/kill' && req.method === 'POST') {
-    if (!perm(session, 'sessions.control')) return sendJson(res, 403, { error: 'Keine Berechtigung (sessions.control).' });
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf Sessions beenden.' });
     const body = await readBody(req);
+    if (!requireStepUp(req, res, session, body, 'sessions.kill')) return;
     const tok = String(body.token || '');
     const sv = sessions.get(tok);
     if (!sv) return sendJson(res, 404, { error: 'Session nicht gefunden.' });
     sessions.delete(tok);
     saveSessions();
     audit(session.username || maskNumber(session.number), 'sessions.kill', maskNumber(sv.number) + ' (' + (sv.username || sv.name) + ')', 'success');
+    logAdminAction(session.username || maskNumber(session.number), 'websessions.kill', maskNumber(sv.number) + ' (' + (sv.username || sv.name) + ')', { ip: maskIp(reqIp(req)) });
     securityEvent('SESSION_KILLED', { ip: reqIp(req), actor: session.username || maskNumber(session.number), target: maskNumber(sv.number), risk: 10 });
     return sendJson(res, 200, { ok: true });
   }
@@ -2837,8 +3947,9 @@ async function handleApi(req, res, pathname) {
   /* ⏹️⏹️ Owner/Deputy: ALLE Sessions einer bestimmten IP beenden (z. B.
      nach einer Sperrung dieser IP) — kritisch, verlangt Step-up-Reauth. */
   if (pathname === '/api/sessions/kill-ip' && req.method === 'POST') {
-    if (!perm(session, 'sessions.control')) return sendJson(res, 403, { error: 'Keine Berechtigung (sessions.control).' });
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf IP-Sessions beenden.' });
     const body = await readBody(req);
+    if (!requireStepUp(req, res, session, body, 'sessions.kill_ip')) return;
     const targetIp = String(body.ip || '').trim();
     if (!targetIp) return sendJson(res, 400, { error: 'IP fehlt.' });
     let n = 0;
@@ -2847,6 +3958,7 @@ async function handleApi(req, res, pathname) {
     }
     if (n) saveSessions();
     audit(session.username || maskNumber(session.number), 'sessions.kill_ip', maskIp(targetIp) + ' — ' + n + ' Sessions', 'success');
+    logAdminAction(session.username || maskNumber(session.number), 'websessions.kill_ip', maskIp(targetIp), { killed: n, ip: maskIp(reqIp(req)) });
     securityEvent('SESSIONS_KILLED_FOR_IP', { ip: targetIp, actor: session.username || maskNumber(session.number), count: n, risk: 25 });
     return sendJson(res, 200, { ok: true, killed: n });
   }
@@ -2862,6 +3974,7 @@ async function handleApi(req, res, pathname) {
     for (const [tok] of [...sessions]) { if (tok !== session.token) { sessions.delete(tok); n++; } }
     saveSessions();
     audit(session.username || maskNumber(session.number), 'sessions.kill_all', String(n) + ' Sessions', 'success');
+    logAdminAction(session.username || maskNumber(session.number), 'websessions.kill_all', String(n) + ' Sessions', { ip: maskIp(reqIp(req)) });
     securityEvent('ALL_SESSIONS_KILLED', { actor: session.username || maskNumber(session.number), count: n, risk: 40 });
     return sendJson(res, 200, { ok: true, killed: n });
   }
@@ -2922,6 +4035,18 @@ const server = http.createServer(async (req, res) => {
        genauso erkannt werden wie API-Missbrauch. */
     recordAbuseCheck(reqIp(req));
 
+    /* 🖥️ Terminal: JEDE API-Anfrage wird nach Abschluss als schöne Zeile
+       geloggt (Status, Methode, Route, Dauer) — zusätzlich in server.log. */
+    if (url.pathname.startsWith('/api/')) {
+      const _t0 = Date.now();
+      const _m = String(req.method || 'GET');
+      const _r = url.pathname;
+      const _origEnd = res.end.bind(res);
+      res.end = (...a) => {
+        try { apiTermLine(_m, _r, res.statusCode || 200, Date.now() - _t0); } catch (e) {}
+        return _origEnd(...a);
+      };
+    }
     if (url.pathname.startsWith('/api/')) {
       return await handleApi(req, res, url.pathname);
     }
@@ -2947,13 +4072,25 @@ server.listen(PORT, HOST, () => {
   setInterval(() => {
     try { SessionManager.adoptAllHeartbeats(); } catch (e) {}
   }, 15000);
-  console.log('');
-  console.log('  💜 ────────────────────────────────────────── 💜');
-  console.log('  🌹  L O V E   B O T   —   D A S H B O A R D  🌹');
-  console.log('  💜 ────────────────────────────────────────── 💜');
-  console.log(`  🌐 http://localhost:${PORT}`);
-  console.log('  🔐 Login: erst WhatsApp-Code (2FA), dann Passwort');
-  console.log('  👑 Owner: Nummer ' + OWNER_NUMBER);
-  console.log('  📲 Andere Nutzer: Registrierung per WhatsApp-Code');
-  console.log('');
+  try { rotateServerLog(); } catch (e) {}
+  /* ═══════════════  LOVEBOT WEB — schönes Boot-Banner  ═══════════════ */
+  const _ln = '─'.repeat(54);
+  const _when = new Date().toLocaleString('de-DE');
+  const _acc = (() => { try { return rbac.listAccounts().length; } catch (e) { return 0; } })();
+  const _fleet = (() => { try { return SessionManager.fleetStats(); } catch (e) { return {}; } })();
+  termWrite('');
+  termWrite(`${TERM.pink}  ╭${_ln}╮${TERM.reset}`);
+  termWrite(`${TERM.pink}  │${TERM.reset}${TERM.bold}${TERM.pink}               ☾  L O V E B O T  ·  W E B`.padEnd(55) + `${TERM.pink}│${TERM.reset}`);
+  termWrite(`${TERM.pink}  │${TERM.reset}${TERM.dim}                        midnight control`.padEnd(55) + `${TERM.pink}│${TERM.reset}`);
+  termWrite(`${TERM.pink}  ├${_ln}┤${TERM.reset}`);
+  termWrite(`${TERM.pink}  │${TERM.reset}${TERM.dim}   💜  ${_when}`.padEnd(55) + `${TERM.pink}│${TERM.reset}`);
+  termWrite(`${TERM.pink}  │${TERM.reset}${TERM.dim}   node ${process.version} · ${process.platform} · dashboard`.padEnd(55) + `${TERM.pink}│${TERM.reset}`);
+  termWrite(`${TERM.pink}  ╰${_ln}╯${TERM.reset}`);
+  termWrite('');
+  termWrite(`${TERM.cyan}  🌐  http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}${TERM.reset}`);
+  termWrite(`${TERM.grey}  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)${TERM.reset}`);
+  termWrite(`${TERM.grey}  👑  Owner: ${OWNER_NUMBER}  ·  Panel-Accounts: ${_acc}  ·  Sessions live: ${_fleet.running || 0}/${_fleet.managed || 0}${TERM.reset}`);
+  termWrite(`${TERM.grey}  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.${TERM.reset}`);
+  termWrite('');
+  termLog('BOOT', 'Dashboard-Webserver gestartet (Port ' + PORT + ').');
 });

@@ -247,6 +247,50 @@
       "event": "ABUSE_AUTO_ESCALATED_BLOCK",
       "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T22:55:54.462Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
       "finishedAt": "2026-09-07T22:55:56.345Z"
+    },
+    {
+      "id": "2cb2eec29a7fdfd8fd987def761ca5d4c698770b6ec2fb2f",
+      "type": "owner-notice",
+      "status": "error",
+      "createdAt": "2026-09-10T06:39:19.912Z",
+      "to": [
+        "4915155894714@s.whatsapp.net"
+      ],
+      "text": "🗑️ *SESSION GELÖSCHT* 🗑️\n\n• Session: *test910* (test910)\n• Gelöscht von: 910maxi (Dashboard)\n• Zeit: 10.9.2026, 08:39:19\n\nDas verknüpfte WhatsApp-Konto bleibt unberührt.\n— LoveBot ☾ Dashboard",
+      "result": {
+        "sent": 0,
+        "targets": 14
+      },
+      "error": "Owner-Nachricht konnte an keine JID gesendet werden.",
+      "finishedAt": "2026-09-10T06:39:20.075Z"
+    },
+    {
+      "id": "b74bcc35705e664f092a83463eb401a55eaa35433f89baf0",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-10T06:39:19.912Z",
+      "text": "🗑️ *SESSION ENTFERNT* 🗑️\n\nBot „test910“ wurde über das Dashboard aus der Session-Verwaltung entfernt.\n— LoveBot ☾",
+      "mentions": [],
+      "result": {
+        "sent": 0,
+        "failed": 0,
+        "total": 0
+      },
+      "finishedAt": "2026-09-10T06:39:20.076Z"
+    },
+    {
+      "id": "58aa44ea4daae0b18b73ddb2be8ea183ffbde59666b93c98",
+      "type": "group-notice",
+      "status": "error",
+      "createdAt": "2026-09-10T10:02:37.825Z",
+      "gid": "120363411386930403",
+      "text": "🎛️ *FEATURE-ÄNDERUNG — DASHBOARD* 🎛️\n\n👥 *Gruppe:* 𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe\n⚙️ *Feature:* 🔗 Anti-Link (antilink)\n✅ *Status:* DEAKTIVIERT\n👤 *Von:* @Owner/910maxi (Dashboard)\n📝 *Grund:* Brauche ich ned\n\n🔐 Diese Änderung wurde über das Dashboard per *Admin-Passwort* authentifiziert.\n— LoveBot ☾",
+      "mentionAdmins": true,
+      "feature": "antilink",
+      "on": false,
+      "actor": "910maxi",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-10T10:02:39.243Z"
     }
   ]
 }

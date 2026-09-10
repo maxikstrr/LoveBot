@@ -1,14 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════════════
    🏓 L O V E B O T   P I N G   (pingcmd.js)
    ─────────────────────────────────────────────────────────────────────
-   $ping           → kompletter Live-Report: Bot-Ping (WebSocket / IQ /
-                     Sende-Roundtrip), Netzwerk-Ping (ICMP), Verbindungs-
-                     aufbau (DNS · TCP · TLS · TTFB), Edge-Infos (echte
-                     öffentliche IP), Speed und Systemwerte
-   $ping <url>     → Webseiten-Ping: DNS · TCP · TLS · TTFB · Gesamt,
-                     Status, HTTP-Version, Server, Größe, ICMP
+   $ping           → kompletter Live-Report:
+                     · Bot-Ping (WebSocket / IQ / Sende-Roundtrip)
+                     · WEBSITE-PING auf maxichen.de & maxichen.gamebot.me
+                     · Netzwerk-Ping (ICMP)
+                     · Verbindungsaufbau (DNS · TCP · TLS · TTFB)
+                     · Edge-Infos (echte öffentliche IP)
+                     · Speed (klein, Standard) und Systemwerte
+   $ping <url>     → Webseiten-Ping für eine beliebige Adresse
    $ping full      → zusätzlich großer Speedtest (24 MB down / 8 MB up)
-   $ping nospeed   → ohne Speedtest (nur Latenz)
+   $ping nospeed   → ohne Speedtest (nur Latenz/Websites/Netzwerk)
 
    Prinzip: ALLE Werte sind gemessen (netping.js). Was nicht messbar ist,
    wird als „nicht messbar“ + Grund angezeigt — nie geraten.
@@ -22,6 +24,9 @@ import {
   icmpPing, tcpPing, dnsPing, httpProbe, wsPing, iqPing, sendEchoPing,
   speedTest, edgeTrace, sysSnapshot, statsOf, sample
 } from './netping.js';
+
+/* Die Websites, die bei $ping (ohne Argument) immer mitgepingt werden. */
+const DEFAULT_SITES = ['maxichen.de', 'maxichen.gamebot.me'];
 
 /* ---------- Formatter ------------------------------------------------ */
 
@@ -37,7 +42,6 @@ function fmtRange(st) {
   if (!st) return null;
   return `Ø ${Math.round(st.avg)} · ${Math.round(st.min)}–${Math.round(st.max)} · Jitter ${Math.round(st.jitter)}`;
 }
-const label = (name, value, width = 15) => `   ${name.padEnd(width)} › ${value}`;
 
 /* ---------- Nachricht senden / bearbeiten ---------------------------- */
 
@@ -82,9 +86,23 @@ function normalizeUrl(token = '') {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   WEBSEITEN-PING
+   WEBSITE-MESSUNG (eine Adresse → alles was man wissen will)
    ═══════════════════════════════════════════════════════════════════════ */
 
+async function probeSite(rawHost) {
+  const url = normalizeUrl(rawHost);
+  let host = '';
+  try { host = new URL(url).hostname; } catch (e) { host = String(rawHost); }
+  const [probes, icmp, dns] = await Promise.all([
+    sample(() => httpProbe(url, { timeoutMs: 12000 }), 3, 200),
+    icmpPing(host, { count: 3, timeoutMs: 9000 }),
+    dnsPing(host, 6000)
+  ]);
+  const okProbes = probes.filter((p) => p.ok);
+  return { host, url, probes, okProbes, icmp, dns };
+}
+
+/* Webseiten-Ping als eigenständiger Befehl:  $ping <url>  */
 async function websitePing(sock, from, msg, rawUrl) {
   const url = normalizeUrl(rawUrl);
   let host = '';
@@ -96,13 +114,10 @@ async function websitePing(sock, from, msg, rawUrl) {
     key = s?.key || null;
   } catch (e) {}
 
-  const probes = await sample(() => httpProbe(url, { timeoutMs: 12000 }), 3, 200);
-  const okProbes = probes.filter((p) => p.ok);
-  const icmp = await icmpPing(host, { count: 3 });
-  const dns = await dnsPing(host);
+  const { probes, okProbes, icmp, dns } = await probeSite(host);
 
   if (!okProbes.length) {
-    const err = probes[0]?.error || 'unbekannter Fehler';
+    const err = probes?.[0]?.error || 'unbekannter Fehler';
     await put(sock, from, msg, key,
       `> ❌ *WEBSITE-PING FEHLGESCHLAGEN*\n\n` +
       `• *URL:* ${url}\n` +
@@ -113,43 +128,77 @@ async function websitePing(sock, from, msg, rawUrl) {
     return;
   }
 
-  const dnsS = statsOf(okProbes.map((p) => p.dnsMs));
-  const tcpS = statsOf(okProbes.map((p) => p.tcpMs));
-  const tlsS = statsOf(okProbes.map((p) => (p.tlsMs != null && p.tcpMs != null ? p.tlsMs - p.tcpMs : null)));
-  const ttfbS = statsOf(okProbes.map((p) => p.ttfbMs));
-  const totS = statsOf(okProbes.map((p) => p.totalMs));
+  const L = [];
+  L.push(`🌍 *WEBSITE-PING* — ${host}`);
+  L.push(`• *URL* › ${url}`);
+  L.push(`• *IP* › ${okProbes[okProbes.length - 1].address || 'unbekannt'}${dns.ok && dns.ms != null ? `  _(DNS ${fmtMsFine(dns.ms)})_` : ''}`);
+  L.push('');
+  L.push('⏱️ *ZEITEN*  _(letzte Messung · Ø · min–max aus 3 Läufen)_');
+  for (const [name, keyOf] of [
+    ['DNS', (p) => p.dnsMs],
+    ['TCP', (p) => p.tcpMs],
+    ['TLS', (p) => (p.tlsMs != null && p.tcpMs != null ? p.tlsMs - p.tcpMs : null)],
+    ['TTFB', (p) => p.ttfbMs],
+    ['Gesamt', (p) => p.totalMs]
+  ]) {
+    const st = statsOf(okProbes.map(keyOf));
+    L.push(st
+      ? `   ${name.padEnd(7)} › ${fmtMs(st.last).padEnd(8)}  _(Ø ${Math.round(st.avg)} ms · ${Math.round(st.min)}–${Math.round(st.max)})_`
+      : `   ${name.padEnd(7)} › nicht messbar`);
+  }
+  L.push('');
   const last = okProbes[okProbes.length - 1];
-  const line = (name, st, suffix = '') => st
-    ? `   ${name.padEnd(7)} › ${fmtMs(st.last).padEnd(8)} _(Ø ${Math.round(st.avg)} ms · ${Math.round(st.min)}–${Math.round(st.max)})${suffix}_`
-    : `   ${name.padEnd(7)} › nicht messbar`;
+  L.push('📄 *ANTWORT*');
+  L.push(`   Status  › ${last.status} ${last.statusText || ''}`);
+  L.push(`   HTTP    › ${last.httpVersion || '—'}`);
+  L.push(`   Server  › ${last.server || '—'}`);
+  L.push(`   Typ     › ${(last.contentType || '—').split(';')[0]}`);
+  L.push(`   Größe   › ${fmtBytes(last.bytes)}`);
+  if (last.location) L.push(`   Redirect › ${last.location}`);
+  L.push('');
+  L.push('🏓 *ICMP*');
+  L.push(icmp.ok
+    ? `   ${host.padEnd(7)} › ${fmtMsFine(icmp.avg)}  _(min ${icmp.min} / max ${icmp.max} · ${icmp.lossPct}% Verlust)_`
+    : `   ${host.padEnd(7)} › nicht messbar _(${icmp.error})_`);
+  L.push('');
+  L.push(`💡 _Alles echt gemessen · ${new Date().toLocaleTimeString('de-DE')}_`);
 
-  const text =
-    '╔══════════════════════════════╗\n' +
-    '║   🌍  WEBSITE  ·  PING       ║\n' +
-    '╚══════════════════════════════╝\n\n' +
-    `🔗 *URL* › ${url}\n` +
-    `📍 *IP* › ${last.address || 'unbekannt'}${dns.ok && dns.ms != null ? ` _(DNS ${fmtMsFine(dns.ms)})_` : ''}\n\n` +
-    '⏱️ *ZEITEN* _(letzte Messung · Ø · min–max aus 3 Läufen)_\n' +
-    line('DNS', dnsS) + '\n' +
-    line('TCP', tcpS) + '\n' +
-    line('TLS', tlsS) + '\n' +
-    line('TTFB', ttfbS) + '\n' +
-    line('Gesamt', totS) + '\n\n' +
-    '📄 *ANTWORT*\n' +
-    `   Status    › ${last.status} ${last.statusText || ''}\n` +
-    `   HTTP      › ${last.httpVersion || '—'}\n` +
-    `   Server    › ${last.server || '—'}\n` +
-    `   Typ       › ${(last.contentType || '—').split(';')[0]}\n` +
-    `   Größe     › ${fmtBytes(last.bytes)}\n` +
-    (last.location ? `   Redirect  › ${last.location}\n` : '') +
-    '\n🏓 *ICMP*\n' +
-    (icmp.ok
-      ? `   ${host.padEnd(7)} › ${fmtMsFine(icmp.avg)} _(min ${icmp.min} / max ${icmp.max} · ${icmp.lossPct}% Verlust)_\n`
-      : `   ${host.padEnd(7)} › nicht messbar _(${icmp.error})_\n`) +
-    `\n💡 _Alles echt gemessen · ${new Date().toLocaleTimeString('de-DE')}_`;
+  await put(sock, from, msg, key, L.join('\n'));
+  console.log(c.bold + c.brightGreen + `[ping] Website-Ping ${host}: TTFB ${statsOf(okProbes.map((p) => p.ttfbMs)) ? Math.round(statsOf(okProbes.map((p) => p.ttfbMs)).avg) : '?'} ms.` + c.reset);
+}
 
-  await put(sock, from, msg, key, text);
-  console.log(c.bold + c.brightGreen + `[ping] Website-Ping ${host}: TTFB ${ttfbS ? Math.round(ttfbS.avg) : '?'} ms.` + c.reset);
+/* ═══════════════════════════════════════════════════════════════════════
+   HÜBSCHER REPORT-BAUKASTEN
+   ═══════════════════════════════════════════════════════════════════════ */
+
+function siteBlock(res) {
+  const out = [];
+  const ok = res.okProbes.length > 0;
+  out.push(ok ? `▫️ *${res.host}* ✅` : `▫️ *${res.host}* ❌`);
+
+  if (!ok) {
+    const err = res.probes?.[0]?.error || 'unbekannter Fehler';
+    out.push(`   • Grund   › ${err}`);
+    if (res.dns.ok) out.push(`   • DNS     › ${res.dns.address} (${fmtMsFine(res.dns.ms)})`);
+    else out.push(`   • DNS     › nicht messbar _(${res.dns.error})_`);
+    if (res.icmp.ok) out.push(`   • ICMP    › ${fmtMsFine(res.icmp.avg)}`);
+    else out.push(`   • ICMP    › nicht messbar _(${res.icmp.error})_`);
+    return out;
+  }
+
+  const last = res.okProbes[res.okProbes.length - 1];
+  const st = (keyOf) => statsOf(res.okProbes.map(keyOf));
+  const dnsS = st((p) => p.dnsMs);
+  const tcpS = st((p) => p.tcpMs);
+  const tlsS = st((p) => (p.tlsMs != null && p.tcpMs != null ? p.tlsMs - p.tcpMs : null));
+  const ttfbS = st((p) => p.ttfbMs);
+  const totS = st((p) => p.totalMs);
+
+  out.push(`   • Status › ${last.status} ${(last.statusText || '').slice(0, 18)} · ${last.httpVersion || 'HTTP'} · ${last.server || '—'}`);
+  out.push(`   • DNS ${dnsS ? fmtMsFine(dnsS.avg) : '—'} · TCP ${tcpS ? fmtMsFine(tcpS.avg) : '—'} · TLS ${tlsS ? fmtMsFine(tlsS.avg) : '—'}  _(Ø)_`);
+  out.push(`   • TTFB ${ttfbS ? fmtMs(ttfbS.avg) : '—'} · Gesamt ${totS ? fmtMs(totS.avg) : '—'}  _(3 Läufe)_`);
+  out.push(`   • ICMP ${res.icmp.ok ? `${fmtMsFine(res.icmp.avg)} (min ${res.icmp.min} / max ${res.icmp.max} · ${res.icmp.lossPct}% Verlust)` : `nicht messbar _(${res.icmp.error})_`}`);
+  return out;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -173,14 +222,13 @@ export async function handlePingCommand({ sock, msg, from, args = [], pref = '$'
   let msgAge = null;
   try {
     const ts = Number(msg.messageTimestamp || 0);
-    /* messageTimestamp ist Sekunden → Differenz in Millisekunden */
     if (ts > 0) msgAge = Math.max(0, Math.round(Date.now() - ts * 1000));
   } catch (e) {}
 
   let key = null;
   try {
     const s = await sock.sendMessage(from, {
-      text: '> 🏓 *LOVE BOT — PING*\n\n⏳ _Messe Bot-, Netzwerk- und Systemwerte …_'
+      text: `> 🏓 *PING-REPORT* ⏳ _messe ${DEFAULT_SITES.length} Websites, Netzwerk & Bot …_`
     }, { quoted: msg });
     key = s?.key || null;
   } catch (e) {}
@@ -198,6 +246,9 @@ export async function handlePingCommand({ sock, msg, from, args = [], pref = '$'
 
   /* ── Netzwerk: ICMP (parallel) ─────────────────────────────────── */
   const icmpResults = await Promise.all(ICMP_TARGETS.map((h) => icmpPing(h, { count: 3, timeoutMs: 9000 })));
+
+  /* ── WEBSITES: maxichen.de + maxichen.gamebot.me (parallel) ────── */
+  const siteResults = await Promise.all(DEFAULT_SITES.map((h) => probeSite(h)));
 
   /* ── Verbindung: DNS · TCP · TLS · TTFB gegen cloudflare.com ───── */
   const probeHost = 'cloudflare.com';
@@ -221,88 +272,102 @@ export async function handlePingCommand({ sock, msg, from, args = [], pref = '$'
   let dbLine = '';
   try {
     const st = systemStats(readDb(), sys.uptimeMs);
-    dbLine = `   DB        › ${st.totalUsers} Nutzer · ${st.totalGroups} Gruppen · ${st.totalBans} Bans`;
+    dbLine = `• DB: ${st.totalUsers} Nutzer · ${st.totalGroups} Gruppen · ${st.totalBans} Bans`;
   } catch (e) {
-    dbLine = '   DB        › nicht lesbar';
+    dbLine = '• DB: nicht lesbar';
   }
 
-  /* ── Report bauen ──────────────────────────────────────────────── */
+  /* ── Report bauen (schöner Aufbau) ─────────────────────────────── */
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${now.getFullYear()}`;
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  let sec = 0;
+  const section = (emoji, title, hint = '') => {
+    sec++;
+    L.push(hint ? `*${sec} · ${title}* ${emoji}  _(${hint})_` : `*${sec} · ${title}* ${emoji}`);
+  };
   const L = [];
-  L.push('╔══════════════════════════════╗');
-  L.push('║   🏓  LOVE BOT  ·  PING      ║');
-  L.push('╚══════════════════════════════╝');
-  L.push('');
-  L.push('🤖 *BOT ↔ WHATSAPP*');
-  L.push(wsStats
-    ? `   WS-Ping       › ${fmtMs(wsStats.last)}   _(${fmtRange(wsStats)} ms · ${wsOk.length}/${wsSamples.length} OK)_`
-    : `   WS-Ping       › nicht messbar _(${wsSamples[0]?.error || '—'})_`);
-  L.push(iqStats
-    ? `   IQ-Ping       › ${fmtMs(iqStats.last)}   _(${fmtRange(iqStats)} ms · ${iqOk.length}/${iqSamples.length} OK)_`
-    : `   IQ-Ping       › nicht messbar _(${iqSamples[0]?.error || '—'})_`);
-  L.push(echo.ok
-    ? `   Sende-RTT     › ${fmtMs(echo.echoMs)}   _(Server-Echo · Senden ${fmtMs(echo.sendMs)})_`
-    : `   Sende-RTT     › nicht messbar _(${echo.error || '—'})_`);
-  if (msgAge != null) L.push(`   Nachricht→Bot › ${fmtMs(msgAge)}   _(Server-Zeitstempel)_`);
+  L.push(`🏓 *PING-REPORT*  ·  *LOVE BOT* 💜`);
+  L.push(`📅 ${dateStr} · ${timeStr} Uhr`);
   L.push('');
 
-  L.push('🌐 *NETZWERK (ICMP)*');
+  section('🤖', 'BOT ↔ WHATSAPP');
+  L.push(wsStats
+    ? `   • WS-Ping    › ${fmtMs(wsStats.last)}  _(${fmtRange(wsStats)} ms · ${wsOk.length}/${wsSamples.length} OK)_`
+    : `   • WS-Ping    › nicht messbar _(${wsSamples[0]?.error || '—'})_`);
+  L.push(iqStats
+    ? `   • IQ-Ping    › ${fmtMs(iqStats.last)}  _(${fmtRange(iqStats)} ms · ${iqOk.length}/${iqSamples.length} OK)_`
+    : `   • IQ-Ping    › nicht messbar _(${iqSamples[0]?.error || '—'})_`);
+  L.push(echo.ok
+    ? `   • Sende-RTT  › ${fmtMs(echo.echoMs)}  _(Server-Echo · Senden ${fmtMs(echo.sendMs)})_`
+    : `   • Sende-RTT  › nicht messbar _(${echo.error || '—'})_`);
+  if (msgAge != null) L.push(`   • Nachricht→Bot › ${fmtMs(msgAge)}  _(Server-Zeitstempel)_`);
+  L.push('');
+
+  /* 2 · Websites */
+  section('🌍', 'WEBSITES', DEFAULT_SITES.join(' + '));
+  for (const res of siteResults) {
+    L.push(...siteBlock(res));
+  }
+  L.push('');
+
+  /* 3 · Netzwerk (ICMP) */
+  section('🌐', 'NETZWERK');
   for (const r of icmpResults) {
     L.push(r.ok
-      ? `   ${r.host.padEnd(15)} › ${fmtMsFine(r.avg).padEnd(9)} _(min ${r.min} / max ${r.max} · ${r.lossPct}% Loss)_`
-      : `   ${r.host.padEnd(15)} › nicht messbar _(${r.error})_`);
+      ? `   • ${r.host.padEnd(15)} › ${fmtMsFine(r.avg).padEnd(9)}  _(min ${r.min} / max ${r.max} · ${r.lossPct}% Verlust)_`
+      : `   • ${r.host.padEnd(15)} › nicht messbar _(${r.error})_`);
   }
   L.push('');
 
-  L.push(`🔌 *VERBINDUNG* _(${probeHost})_`);
-  L.push(dnsRes.ok
-    ? `   DNS         › ${fmtMsFine(dnsRes.ms)}   _(${dnsRes.address})_`
-    : `   DNS         › nicht messbar _(${dnsRes.error})_`);
-  L.push(tcpRes.ok
-    ? `   TCP         › ${fmtMsFine(tcpRes.ms)}   _(Port 443)_`
-    : `   TCP         › nicht messbar _(${tcpRes.error})_`);
+  /* 4 · Verbindung (Referenz) */
+  section('🔌', 'VERBINDUNG', probeHost);
   if (httpRes.ok) {
     const tlsHandshake = httpRes.tlsMs != null && httpRes.tcpMs != null ? httpRes.tlsMs - httpRes.tcpMs : null;
-    L.push(tlsHandshake != null
-      ? `   TLS         › ${fmtMsFine(tlsHandshake)}   _(${edge.ok ? edge.tls || 'TLS' : 'TLS'})_`
-      : `   TLS         › nicht messbar`);
-    L.push(`   TTFB        › ${fmtMs(httpRes.ttfbMs)}   _(erste Antwort-Byte)_`);
-    L.push(`   Gesamt      › ${fmtMs(httpRes.totalMs)}   _(${httpRes.status} · HTTP ${httpRes.httpVersion})_`);
+    const tlsLine = tlsHandshake != null ? fmtMsFine(tlsHandshake) : '—';
+    L.push(`   • DNS ${dnsRes.ok ? fmtMsFine(dnsRes.ms) : '—'} · TCP ${fmtMsFine(httpRes.tcpMs)} · TLS ${tlsLine} · TTFB ${fmtMs(httpRes.ttfbMs)}`);
+    L.push(`   • Gesamt ${fmtMs(httpRes.totalMs)} · ${httpRes.status} · HTTP ${httpRes.httpVersion}`);
   } else {
-    L.push(`   HTTP        › nicht messbar _(${httpRes.error})_`);
+    L.push(`   • HTTP nicht messbar _(${httpRes.error})_`);
+    L.push(dnsRes.ok
+      ? `   • DNS ${fmtMsFine(dnsRes.ms)} _(${dnsRes.address})_`
+      : `   • DNS nicht messbar _(${dnsRes.error})_`);
   }
   L.push('');
 
-  L.push('🛰️ *SERVER-NETZ*');
+  /* 5 · Edge / Server-Netz */
+  section('🛰️', 'SERVER-NETZ');
   L.push(edge.ok
-    ? `   Öffentliche IP › ${edge.ip || '—'}`
-    : `   Öffentliche IP › nicht messbar _(${edge.error})_`);
-  if (edge.ok) {
-    L.push(`   Standort     › ${edge.loc || '—'}${edge.colo ? ` (Colo ${edge.colo})` : ''}`);
-    L.push(`   Protokoll    › ${edge.tls || '—'} · ${edge.http || '—'}`);
-  }
+    ? `   • Öffentliche IP › ${edge.ip || '—'}  ${edge.loc ? `(${edge.loc}${edge.colo ? ` · ${edge.colo}` : ''})` : ''}`
+    : `   • Öffentliche IP › nicht messbar _(${edge.error})_`);
+  if (edge.ok && (edge.tls || edge.http)) L.push(`   • Protokoll › ${edge.tls || '—'} · ${edge.http || '—'}`);
   const localIp = sys.localIps[0];
-  L.push(localIp ? `   Lokale IP    › ${localIp.address} _(${localIp.iface})_` : '   Lokale IP    › nicht ermittelbar');
+  L.push(localIp ? `   • Lokale IP › ${localIp.address}  _(${localIp.iface})_` : '   • Lokale IP › nicht ermittelbar');
   L.push('');
 
+  /* 6 · Speed */
   if (speed) {
-    L.push('⚡ *SPEED* _(gemessen, speed.cloudflare.com)_');
+    section('⚡', 'SPEED', 'gemessen, speed.cloudflare.com');
     L.push(speed.down
-      ? `   ↓ Download   › ${fmtMbps(speed.down.mbps)}   _(${fmtBytes(speed.down.bytes)} in ${(speed.down.ms / 1000).toFixed(2)}s)_`
-      : `   ↓ Download   › nicht messbar _(${speed.downError || '—'})_`);
+      ? `   • ↓ Download › ${fmtMbps(speed.down.mbps)}  _(${fmtBytes(speed.down.bytes)} in ${(speed.down.ms / 1000).toFixed(2)}s)_`
+      : `   • ↓ Download › nicht messbar _(${speed.downError || '—'})_`);
     L.push(speed.up
-      ? `   ↑ Upload     › ${fmtMbps(speed.up.mbps)}   _(${fmtBytes(speed.up.bytes)} in ${(speed.up.ms / 1000).toFixed(2)}s)_`
-      : `   ↑ Upload     › nicht messbar _(${speed.upError || '—'})_`);
+      ? `   • ↑ Upload   › ${fmtMbps(speed.up.mbps)}  _(${fmtBytes(speed.up.bytes)} in ${(speed.up.ms / 1000).toFixed(2)}s)_`
+      : `   • ↑ Upload   › nicht messbar _(${speed.upError || '—'})_`);
     L.push('');
   }
 
-  L.push('💻 *SYSTEM*');
-  L.push(`   Uptime     › ${formatDuration(sys.uptimeMs)}`);
-  L.push(`   RAM        › ${fmtBytes(sys.rssBytes)} _(Heap ${fmtBytes(sys.heapUsedBytes)} / ${fmtBytes(sys.heapTotalBytes)})_`);
-  L.push(`   CPU        › Load ${sys.load1} _(${sys.cpuCount} Kerne)_`);
-  L.push(`   Node       › ${sys.nodeVersion} · ${sys.platform} ${sys.arch}`);
+  /* 7 · System */
+  section('💻', 'SYSTEM');
+  L.push(`   • Uptime › ${formatDuration(sys.uptimeMs)}`);
+  L.push(`   • RAM    › ${fmtBytes(sys.rssBytes)}  _(Heap ${fmtBytes(sys.heapUsedBytes)} / ${fmtBytes(sys.heapTotalBytes)})_`);
+  L.push(`   • CPU    › Load ${sys.load1}  _(${sys.cpuCount} Kerne)_`);
+  L.push(`   • Node   › ${sys.nodeVersion} · ${sys.platform} ${sys.arch}`);
   L.push(dbLine);
   L.push('');
-  L.push(`💡 _${pref}ping <url> = Webseite prüfen · ${pref}ping full = großer Speedtest_`);
+  L.push(`💡 _Tipp: ${pref}ping full = großer Speedtest · ${pref}ping <url> = eine Website prüfen · ${pref}ping nospeed = ohne Speedtest_`);
+  L.push(`💡 _Alles live gemessen — ${pref}ping prüft ${DEFAULT_SITES.join(' & ')} immer mit._`);
 
   await put(sock, from, msg, key, L.join('\n'));
   await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);

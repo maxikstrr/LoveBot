@@ -148,7 +148,12 @@ function ensureSession(store, id, meta = {}) {
     desiredState: 'running',
     autoStart: id === 'main',
     tags: [],
-    env: 'production'
+    env: 'production',
+    qr: null,          /* aktueller QR (roh, von Love.js gesetzt) */
+    qrAt: null,
+    pairCode: null,    /* aktueller Pairing-Code */
+    pairAt: null,
+    announcedQr: false /* wurde der QR schon vom aktiven Bot in Gruppen geteilt? */
   };
   /* Nur explizit übergebene Felder überschreiben (Name bleibt sonst!) */
   if (meta.name) s.name = meta.name;
@@ -175,22 +180,31 @@ export function createSession(name, opts = {}) {
   /* Optional: echten zweiten Bot-Prozess starten (standardmäßig aus) */
   let spawned = false;
   if (opts.spawn && store.config.spawn.enabled) {
-    spawned = spawnSession(id);
+    spawned = spawnSession(id, { authMode: opts.authMode || 'qr', phone: opts.phone });
   }
   return { id, name: s.name, spawned };
 }
 
 /* Kind-Prozess starten — nur aktiv, wenn config.spawn.enabled */
-export function spawnSession(id) {
+export function spawnSession(id, opts = {}) {
   const store = loadStore();
   const cfg = store.config.spawn;
   if (!cfg.enabled) return false;
   const s = store.sessions[id];
   if (!s) return false;
   try {
+    /* authMode: qr | pairing — steuert, wie der Kind-Prozess sich anmeldet
+       (Love.js startet dann ohne interaktives Menü direkt in diesen Modus). */
+    const authMode = opts.authMode || 'qr';
     const child = cpSpawn(cfg.command, cfg.args, {
       cwd: process.cwd(),
-      env: { ...process.env, LOVEBOT_SESSION_ID: id, LOVEBOT_SESSION_DIR: 'Sessions/' + id },
+      env: {
+        ...process.env,
+        LOVEBOT_SESSION_ID: id,
+        LOVEBOT_SESSION_DIR: 'Sessions/' + id,
+        LOVEBOT_AUTH_MODE: authMode,
+        LOVEBOT_PAIR_PHONE: opts.phone ? String(opts.phone).replace(/\D/g, '') : ''
+      },
       detached: true,
       stdio: 'ignore'
     });
@@ -385,6 +399,54 @@ export function stopSpawned(id) {
   }
 }
 
+/* Aktuelle Auth-Daten einer Session ablegen (Love.js-Hooks). */
+export function setQr(id, qr) {
+  const store = loadStore();
+  const s = store.sessions[id];
+  if (!s) return;
+  const hadQr = !!s.qr;
+  s.qr = qr ? String(qr) : null;
+  s.qrAt = qr ? Date.now() : null;
+  /* Neuer QR nach einem vorherigen (anderer Wert) → wieder ankündigen,
+     aber nicht bei jedem Takt erneut. Leeren setzt das Flag zurück. */
+  if (!qr && hadQr) s.announcedQr = false;
+  saveStore(store);
+}
+
+export function setPairCode(id, code) {
+  const store = loadStore();
+  const s = store.sessions[id];
+  if (!s) return;
+  s.pairCode = code ? String(code) : null;
+  s.pairAt = code ? Date.now() : null;
+  saveStore(store);
+}
+
+/* Rohen Registry-Eintrag lesen (interner Zugriff für die Web-API —
+   enthält ggf. QR/Pairing-Code und wird NICHT über /api/sessions exponiert). */
+export function getSessionRaw(id) {
+  const store = loadStore();
+  const s = store.sessions[id];
+  if (!s) return null;
+  return { ...s };
+}
+
+/* Alle Registry-Einträge roh (intern; für QR-Ankündigungen durch den
+   aktiven Bot). Enthält QR-Daten — nie öffentlich ausliefern. */
+export function listSessionsRaw() {
+  const store = loadStore();
+  return Object.values(store.sessions).map((s) => ({ ...s }));
+}
+
+/* QR einer Session als „in Gruppen angekündigt“ markieren (einmalig). */
+export function markAnnounced(id) {
+  const store = loadStore();
+  const s = store.sessions[id];
+  if (!s) return;
+  s.announcedQr = true;
+  saveStore(store);
+}
+
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Views (für Befehle & Website — Nummern immer maskiert!)            */
 /* ═══════════════════════════════════════════════════════════════════ */
@@ -407,7 +469,7 @@ function publicView(s) {
   const up = uptimeFrom(s);
   return {
     id: s.id,
-    name: s.name,
+    name: (s.id === 'main' && (!s.name || s.name === 'MainBot')) ? 'LoveBot_Maxichen !' : s.name,
     status: s.status,
     health: healthOf(s),
     maintenance: !!s.maintenance,
@@ -451,6 +513,15 @@ export function recentActivity(limit = 30) {
 
 export function spawnConfigured() {
   return loadStore().config.spawn.enabled === true;
+}
+
+/* Multi-Session-Spawn im Store ein-/ausschalten (Owner-Aktion im Panel).
+   Bestehende laufende Instanzen bleiben davon unberührt. */
+export function setSpawnEnabled(on) {
+  const store = loadStore();
+  store.config.spawn.enabled = on === true;
+  saveStore(store);
+  return store.config.spawn.enabled;
 }
 
 /* ---------- Migration: vorhandene Heartbeat-Daten übernehmen ---------- */

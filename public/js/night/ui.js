@@ -9,9 +9,10 @@
 
   /* ---------- Formatter ------------------------------------------------------ */
   const fmt = {
-    num(n) { return Number(n || 0).toLocaleString('de-DE'); },
+    num(n) { const v = Number(n); return (Number.isFinite(v) ? v : 0).toLocaleString('de-DE'); },
+    pct(n) { const v = Number(n); return (Number.isFinite(v) ? v : 0).toFixed(1); },
     dur(sec) {
-      sec = Math.max(0, Math.floor(sec || 0));
+      sec = Math.max(0, Math.floor(Number(sec) || 0));
       const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600),
             m = Math.floor((sec % 3600) / 60), s = sec % 60;
       const p = [];
@@ -22,7 +23,7 @@
       return p.join(' ');
     },
     durLong(sec) {
-      sec = Math.max(0, Math.floor(sec || 0));
+      sec = Math.max(0, Math.floor(Number(sec) || 0));
       const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600),
             m = Math.floor((sec % 3600) / 60);
       const p = [];
@@ -31,7 +32,7 @@
       p.push(m + ' Min.');
       return p.join(', ');
     },
-    mb(n) { return Number(n || 0).toFixed(0) + ' MB'; },
+    mb(n) { const v = Number(n); return (Number.isFinite(v) ? v : 0).toFixed(0) + ' MB'; },
     esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -75,22 +76,90 @@
   function reauthModal(actionLabel, why) {
     return new Promise((resolve) => {
       const m = modal(
-        '<h3>🔐 Sicherheitsbestätigung</h3>' +
-        '<p class="small dim">' + fmt.esc(why || 'Diese Aktion ist kritisch — bitte bestätige sie mit deinem aktuellen Passwort.') + '</p>' +
-        '<label class="fld">Passwort</label><input id="reauthPw" type="password" autocomplete="current-password" placeholder="Aktuelles Passwort">' +
+        '<div style="text-align:center;padding:2px 4px">' +
+          '<div style="width:66px;height:66px;margin:0 auto 12px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(145deg,rgba(255,120,190,.16),rgba(130,95,255,.16));border:1px solid rgba(255,255,255,.14);box-shadow:0 0 26px rgba(255,120,190,.12)">🔐</div>' +
+          '<h3 style="margin:0 0 6px">Admin bestätigen</h3>' +
+          '<p class="small dim" style="margin:0 auto;max-width:370px;line-height:1.5">' + fmt.esc(why || 'Diese Aktion braucht eine erneute Bestätigung mit deinem Admin-Passwort.') + '</p>' +
+          '<p class="small" style="margin:10px auto 0;color:#8fe3ff;opacity:.9">Du bleibst eingeloggt — nur diese Aktion wird freigeschaltet.</p>' +
+        '</div>' +
+        '<label class="fld" style="margin-top:12px">Admin-Passwort</label>' +
+        '<div class="row" style="gap:6px">' +
+          '<input id="reauthPw" type="password" autocomplete="current-password" placeholder="••••••••••••" style="flex:1">' +
+          '<button class="btn ghost" id="reauthEye" type="button" title="Passwort anzeigen/verbergen" style="padding:0 12px">👁</button>' +
+        '</div>' +
         '<div class="msg" id="reauthMsg"></div>',
         [
           { label: 'Abbrechen', cls: 'ghost', onClick: (bg, close) => { close(); resolve(null); } },
           { label: '🔓 Bestätigen', cls: 'danger', onClick: (bg, close) => {
               const pw = bg.querySelector('#reauthPw').value || '';
-              if (!pw) { bg.querySelector('#reauthMsg').className = 'msg error'; bg.querySelector('#reauthMsg').textContent = 'Bitte Passwort eingeben.'; return; }
+              if (!pw) { bg.querySelector('#reauthMsg').className = 'msg error'; bg.querySelector('#reauthMsg').textContent = 'Bitte gib dein Admin-Passwort ein.'; bg.querySelector('#reauthPw').focus(); return; }
               close(); resolve(pw);
             } }
         ]
       );
-      setTimeout(() => { const i = m.el.querySelector('#reauthPw'); if (i) { i.focus(); i.onkeydown = (e) => { if (e.key === 'Enter') m.el.querySelectorAll('.actions button')[1]?.click(); }; } }, 30);
+      const doEnter = (bg) => { bg.querySelectorAll('.actions button')[1]?.click(); };
+      setTimeout(() => {
+        const i = m.el.querySelector('#reauthPw');
+        const eye = m.el.querySelector('#reauthEye');
+        if (i) {
+          i.focus();
+          i.onkeydown = (e) => { if (e.key === 'Enter') doEnter(m.el); };
+          if (eye) eye.onclick = () => { const show = i.type === 'password'; i.type = show ? 'text' : 'password'; eye.textContent = show ? '🙈' : '👁'; i.focus(); };
+        }
+      }, 30);
     });
   }
+
+  /* ---------- ⬇️ Download-Gate: Admin-Passwort (einstufig, im MS-Stil) --------
+   Beim Herunterladen wird NUR das separate Admin-Passwort (aus .env) verlangt —
+   KEIN Benutzername mehr. Die Datei selbst lässt sich zusätzlich mit einem
+   „Datei-Login“ (Benutzername + Passwort beim Öffnen) schützen.
+   Liefert {password} oder null bei Abbruch. */
+  function adminPwModal(why, fileName) {
+    return new Promise((resolve) => {
+      const m = modal(
+        '<div style="max-width:440px;margin:0 auto">' +
+          /* Kopf */
+          '<div style="text-align:center;margin-bottom:12px">' +
+            '<img src="/assets/img/lovebot-logo.png" alt="LoveBot" style="width:76px;height:76px;border-radius:22px;border:1px solid rgba(255,255,255,.14);box-shadow:0 0 30px rgba(255,120,190,.22)">' +
+          '</div>' +
+          '<h3 style="margin:0 0 2px;text-align:center">Admin bestätigen</h3>' +
+          '<p class="small dim" style="text-align:center;margin:0 auto 16px;max-width:370px;line-height:1.55">' +
+            fmt.esc(why || 'Dieser Download ist nur für den Owner.') +
+            (fileName ? '<br><span class="mono neon-pink" style="font-size:12px">' + fmt.esc(fileName) + '</span>' : '') +
+          '</p>' +
+          '<label class="fld">Admin-Passwort</label>' +
+          '<div class="row" style="gap:6px">' +
+            '<input id="apPw" type="password" autocomplete="current-password" placeholder="••••••••••••" style="flex:1">' +
+            '<button class="btn ghost" id="apEye" type="button" title="Passwort anzeigen/verbergen" style="padding:0 12px">👁</button>' +
+          '</div>' +
+          '<div class="msg" id="apMsg"></div>' +
+          '<div class="row" style="justify-content:flex-end;margin-top:12px">' +
+            '<button class="btn" id="apGo" style="min-width:190px">⬇️ Freigeben & herunterladen</button>' +
+          '</div>' +
+          '<p class="small dim center" style="text-align:center;margin:14px 0 2px;color:#8fe3ff;opacity:.85">🔐 Nur für den Owner · jeder Download wird geloggt · das Passwort wird nirgends gespeichert.</p>' +
+        '</div>',
+        [
+          { label: 'Abbrechen', cls: 'ghost', onClick: (bg, close) => { close(); resolve(null); } }
+        ]
+      );
+      const el = m.el;
+      const $1 = (s) => el.querySelector(s);
+      const go = () => {
+        const pw = $1('#apPw').value || '';
+        if (!pw) { $1('#apMsg').className = 'msg error'; $1('#apMsg').textContent = 'Bitte gib dein Admin-Passwort ein.'; $1('#apPw').focus(); return; }
+        m.close(); resolve({ password: pw });
+      };
+      setTimeout(() => {
+        const pw = $1('#apPw'), eye = $1('#apEye');
+        pw.focus();
+        $1('#apGo').onclick = go;
+        pw.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+        eye.onclick = () => { const s = pw.type === 'password'; pw.type = s ? 'text' : 'password'; eye.textContent = s ? '🙈' : '👁'; pw.focus(); };
+      }, 30);
+    });
+  }
+
 
   function confirmBox(title, text, dangerLabel) {
     return new Promise((resolve) => {
@@ -136,6 +205,8 @@
   /* ---------- Chrome: Sidebar + Topbar ---------------------------------------------- */
   const NAV = [
     { grp: '☾ Overview' },
+    { id: 'all',       icon: '👑', label: 'Alles (Owner)', owner: true },
+    { id: 'downloads', icon: '⬇️', label: 'Downloads', owner: true },
     { id: 'dashboard', icon: '🌃', label: 'Dashboard' },
     { id: 'monitor',   icon: '📡', label: 'Live Monitor' },
     { id: 'sessions',  icon: '🔗', label: 'Sessions' },
@@ -158,8 +229,13 @@
     { id: 'bans',     icon: '⛔', label: 'Bans' },
     { id: 'badwords', icon: '🤬', label: 'Badwords' },
     { id: 'owners',   icon: '👑', label: 'Owner' },
+    { grp: '✨ Full-Update' },
+    { id: 'charts',  icon: '📈', label: 'Charts' },
+    { id: 'doku',    icon: '📚', label: 'Doku & Hilfe' },
+    { id: 'updates', icon: '🗞️', label: 'Neuigkeiten' },
     { grp: '👤 Account & Team' },
     { id: 'account',  icon: '🪪', label: 'Mein Account', perm: 'self.view' },
+    { id: 'history',  icon: '📜', label: 'Verlauf', perm: 'self.view' },
     { id: 'accounts', icon: '👥', label: 'Accounts', perm: 'accounts.view' },
     { id: 'roles',    icon: '', label: 'Rollen & Rechte', perm: 'accounts.view' },
     { id: 'system',   icon: '🖧', label: 'System' },
@@ -168,11 +244,22 @@
 
   function chrome(opts) {
     const perms = (opts && opts.perms) || ['*'];
-    const allowed = (n) => !n.perm || perms.includes('*') || perms.includes(n.perm);
-    const nav = NAV.filter(allowed).map((n) => {
-      if (n.grp) return '<div class="grp">' + fmt.esc(n.grp) + '</div>';
-      return '<a href="#/' + n.id + '" data-route="' + n.id + '"><span class="ic">' + n.icon + '</span>' + fmt.esc(n.label) + (n.badge ? '<span class="badge-n">' + n.badge + '</span>' : '') + '</a>';
-    }).join('');
+    const role = (opts && opts.role) || '';
+    /* 👑 Dieses Control-Panel ist ausschließlich für den Owner. Andere
+       Rollen (deputy/admin/supporter/user) sehen in der Leiste keinerlei
+       Control-Tabs — und alle Routen sind zusätzlich gesperrt. */
+    const isOwner = role === 'owner' || perms.includes('*');
+    const allowed = (n) => {
+      if (!isOwner) return false;
+      if (n.grp) return true;
+      return !n.perm || perms.includes('*') || perms.includes(n.perm);
+    };
+    const nav = isOwner
+      ? NAV.filter(allowed).map((n) => {
+          if (n.grp) return '<div class="grp">' + fmt.esc(n.grp) + '</div>';
+          return '<a href="#/' + n.id + '" data-route="' + n.id + '"><span class="ic">' + n.icon + '</span>' + fmt.esc(n.label) + (n.badge ? '<span class="badge-n">' + n.badge + '</span>' : '') + '</a>';
+        }).join('')
+      : '<div class="lock-msg">🔒 <b>Nur für den Owner</b><br><span>Dieses Control-Panel ist exklusiv dem Owner vorbehalten.</span></div>';
 
     document.body.innerHTML =
       '<div id="bgCity"></div><div id="bgVignette"></div>' +
@@ -229,5 +316,5 @@
     $('#side').classList.remove('open');
   }
 
-  window.UI = { $, $$, fmt, toast, modal, confirmBox, reauthModal, stat, pill, table, panel, chrome, setActiveNav, NAV };
+  window.UI = { $, $$, fmt, toast, modal, confirmBox, reauthModal, adminPwModal, stat, pill, table, panel, chrome, setActiveNav, NAV };
 })();

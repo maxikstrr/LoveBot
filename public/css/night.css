@@ -190,6 +190,22 @@ body.nightmode-low #bgRain, body.nightmode-low #bgStars { opacity: .35; }
   border: 1px solid rgba(0, 240, 255, .25);
 }
 
+/* 🔒 Nur-Owner-Hinweis in der Seitenleiste (Nicht-Owner sehen keine Tabs) */
+.nav .lock-msg {
+  padding: 16px 12px;
+  margin: 8px 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(145deg, rgba(255,120,190,.08), rgba(130,95,255,.08));
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255,255,255,.78);
+  text-align: center;
+}
+.nav .lock-msg b { display: block; margin-bottom: 4px; color: #fff; font-size: 13px; }
+.nav .lock-msg span { font-size: 11px; opacity: .75; }
+
+
 .side .foot {
   padding: 12px 16px 16px;
   border-top: 1px solid var(--border-soft);
@@ -615,7 +631,9 @@ select option { background: var(--panel-2); }
 }
 .toast.ok    { border-left-color: var(--ok); }
 .toast.err   { border-left-color: var(--danger); }
+.toast.error { border-left-color: var(--danger); }
 .toast.warn  { border-left-color: var(--warn); }
+.toast.info  { border-left-color: var(--cyan); }
 .toast b { color: var(--text); display: block; margin-bottom: 2px; }
 
 /* ---------- Progress / Bars ------------------------------------------------------------- */

@@ -368,9 +368,9 @@ klickbaren Buttons (iOS **und** Android) anzeigt und **`Bilder/Menu.png`** als A
 
 ### 11.1 Allgemein
 
-- `$ping` – **echte Live-Messung**: Bot-Ping (WebSocket, WhatsApp-IQ, Sende-Roundtrip), Netzwerk-Ping (ICMP), Verbindungsaufbau (DNS/TCP/TLS/TTFB), öffentliche IP, Speed und Systemwerte – alles gemessen, nichts geschätzt
-- `$ping <url>` – Webseiten-Ping (DNS · TCP · TLS · TTFB · Status · HTTP-Version · ICMP)
-- `$ping full` – zusätzlich großer Speedtest · `$ping nospeed` – nur Latenz
+- `$ping` – **echte Live-Messung** in 7 übersichtlichen Blöcken: ① Bot-Ping (WebSocket / IQ / Sende-RTT), ② **Website-Ping auf `maxichen.de` UND `maxichen.gamebot.me`** (Status, DNS/TCP/TLS/TTFB, ICMP – immer dabei), ③ Netzwerk-Ping (ICMP), ④ Verbindungsaufbau (DNS · TCP · TLS · TTFB), ⑤ öffentliche IP/Edge, ⑥ Speed, ⑦ System – alles gemessen, nichts geschätzt
+- `$ping <url>` – Webseiten-Ping für eine **beliebige** Adresse (DNS · TCP · TLS · TTFB · Status · HTTP-Version · ICMP)
+- `$ping full` – zusätzlich großer Speedtest · `$ping nospeed` – ohne Speedtest
 - `$me` – zeigt eigene Infos + Profilbild
 - `$register <Name.Alter.Status.Stadt>` – Registrierung
 - `$username` – zeigt Username-Infos
@@ -387,6 +387,41 @@ klickbaren Buttons (iOS **und** Android) anzeigt und **`Bilder/Menu.png`** als A
 - `$owner` – zeigt Owner-Kontakt
 - `$love` / `$socials` – zeigt Love-/Social-Links
 - `$gits` – zeigt GitHub-Repos
+
+#### 📡 Kanal-Spiegel (automatisch, kein Befehl nötig) — `channelrelay.js`
+
+Jede neue Veröffentlichung im **LoveBot-Kanal** (`whatsapp.com/channel/0029Vb8EH4IBqbrAu9LxUH3X`)
+wird automatisch in die Chats gespiegelt, in denen LoveBot mit dem **Owner** aktiv ist:
+
+- **Privater Owner-Chat** → der Post kommt nur dort an (Owner-Chat ist immer Ziel).
+- **Gruppen**, in denen der Owner mit LoveBot schreibt, werden automatisch angemeldet
+  → der Post kommt nur in genau dieser Gruppe an.
+- Weitergeleitet wird **alles**: Bilder, Videos, Audios/Sprachnachrichten, Sticker,
+  Dokumente, Texte, Kontakte, Standorte … (keine Reaktionen/Systemmeldungen).
+- Läuft **immer**, sobald der Bot verbunden ist — ohne Befehl, ohne doppelte Zustellung.
+- Konfiguration in `Database/Database.json` → `meta.channelRelay`:
+  `enabled` (Standard `true`), `sources` (Kanal-JIDs), `targets` (zusätzliche feste Ziele).
+  Der Owner-Chat lässt sich nicht entfernen.
+- **Live-Empfang**: Beim Verbindungsaufbau folgt der Bot dem Kanal automatisch **und**
+  abonniert die Live-Updates (`subscribeNewsletterUpdates` — wird regelmäßig erneuert).
+  Ohne dieses Abo kommen neue Kanal-Posts nicht zuverlässig beim Bot an.
+- **`$kanal` (Owner)**: `$kanal` = Status (Quelle, Ziele) · `$kanal on/off` = An/Aus ·
+  `$kanal test` = Testnachricht, an der du siehst, ob die Kanal-Markierung aktiv ist.
+
+#### 🏷️ JEDE Bot-Nachricht erscheint als „über den LoveBot-Kanal weitergeleitet"
+
+Der LoveBot markiert **wirklich jede ausgehende Nachricht** mit dem Kanal-Kontext
+(`contextInfo.forwardedNewsletterMessageInfo`, forwardScore 999) — so zeigt WhatsApp
+bei **jeder** Antwort den Kanal-Namen/-Link an:
+
+- **Alle Medien**: Bilder, Videos, Audios/Sprachnachrichten, Sticker, Dokumente, Kontakte, Standorte
+- **Alle Texte**: normale Antworten, Menüs, Listen, Buttons, Rich-Responses (Meta-AI-Karten, Ban-Check u. a.)
+- **Bearbeitungen**: auch Live-Bearbeitungen (z. B. der fertige `$ping`-Report) behalten die Markierung
+- **Nicht markiert** werden nur interne Steuer-Nachrichten (Reaktionen, Nachrichten löschen, echte Weiterleitungen)
+
+Die Markierung wird zentral auf `sock.relayMessage` (der Wurzel jeder ausgehenden Nachricht)
+in `Love.js` angewendet — Text-`conversation` wird automatisch in `extendedTextMessage`
+umgewandelt, damit der Kanal-Kontext auch dort ankommt.
 
 ### 11.1a Extra-Befehle (Spaß, Tools, Love) — `extracmds.js`
 

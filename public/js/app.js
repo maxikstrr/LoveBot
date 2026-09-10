@@ -80,7 +80,7 @@ async function refreshOverview() {
   const fresh = hb.time && Date.now() - new Date(hb.time).getTime() < 40000;
   const online = hb.online === true && fresh;
   const lp = stats.loveplus || {};
-  const cmdStats = stats.commands || {};
+  const cmdStats = stats.commandStats || stats.commands || {};
   const fleet = stats.fleet || {};
 
   document.getElementById('botStat').className = 'stat ' + (online ? 'online' : 'offline');

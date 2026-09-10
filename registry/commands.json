@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "updated": "2026-09-06",
+  "version": 3,
+  "updated": "2026-09-09",
   "meta": {
     "description": "LoveBot Command Registry — die eine Quelle für Bot-Help, Website, Tester & Doku.",
     "permsNote": "perms = abgeleitet: (Owner)-Marker + Whitelists (OWNER_EXTRA/GROUP_ADMIN) — manuell in dieser Datei korrigierbar.",
@@ -106,7 +106,8 @@
         "keptIn": "ownertools",
         "droppedFrom": "tools"
       }
-    ]
+    ],
+    "note": "Full-Update 2026: +12 neue Offline-Befehle (Kategorie fullupdate)"
   },
   "categories": [
     {
@@ -209,7 +210,7 @@
         {
           "name": "ping",
           "usage": "$ping [url | full | nospeed]",
-          "desc": "Echte Live-Messung: Bot-, Netzwerk- & Webseiten-Ping 🏓",
+          "desc": "🏓 Ping auf maxichen.de + maxichen.gamebot.me, Netzwerk & Bot (echte Messwerte)",
           "aliases": [
             "pong",
             "latenz"
@@ -1383,6 +1384,18 @@
           "perms": "all",
           "cooldown": 3,
           "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "kanal",
+          "usage": "$kanal [status | on | off | test]",
+          "desc": "Kanal-Spiegel: alle Kanal-Posts (Bild/Audio/Sticker/Text) automatisch weiterleiten 📡",
+          "aliases": [
+            "channelrelay",
+            "kanalspiegel"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "Bot-Code"
         },
         {
           "name": "toimg",
@@ -2907,6 +2920,150 @@
           "perms": "all",
           "cooldown": 3,
           "source": "Bot-Code"
+        }
+      ]
+    },
+    {
+      "id": "fullupdate",
+      "slug": "fullupdate",
+      "emoji": "✨",
+      "title": "Full-Update 2026",
+      "web": "FULL-UPDATE 2026",
+      "cmds": [
+        {
+          "name": "münzwurf",
+          "usage": "$münzwurf",
+          "desc": "Kopf oder Zahl — der Münzwurf entscheidet 🪙",
+          "aliases": [
+            "muenzwurf"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "würfel",
+          "usage": "$würfel [anzahl]",
+          "desc": "Würfeln — 1–6 Würfel gleichzeitig 🎲",
+          "aliases": [
+            "wuerfel"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "scheresteinpapier",
+          "usage": "$scheresteinpapier <schere|stein|papier>",
+          "desc": "Schere-Stein-Papier gegen den Bot ✂️🪨📄",
+          "aliases": [
+            "sps",
+            "steinpapierschere"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "wahrheitoderpflicht",
+          "usage": "$wahrheitoderpflicht [@user]",
+          "desc": "Wahrheit oder Pflicht — der Klassiker 🎭",
+          "aliases": [
+            "wop"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "mantra",
+          "usage": "$mantra",
+          "desc": "Positives Mantra für den Tag 🕯️",
+          "aliases": [
+            "affirmation",
+            "affirmationen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "lottoschein",
+          "usage": "$lottoschein",
+          "desc": "Lotto-Tipp: 6 aus 49 + Superzahl 🎟️",
+          "aliases": [
+            "lotto"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "zufallszahl",
+          "usage": "$zufallszahl [min] [max]",
+          "desc": "Zufallszahl zwischen zwei Werten 🔢",
+          "aliases": [
+            "zufall"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "morse",
+          "usage": "$morse <text>",
+          "desc": "Text in Morsecode umwandeln 📡",
+          "aliases": [
+            "morsen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "schicksal",
+          "usage": "$schicksal [frage]",
+          "desc": "Das Orakel antwortet 🔮",
+          "aliases": [
+            "omen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "geschenkidee",
+          "usage": "$geschenkidee [für wen]",
+          "desc": "Persönliche Geschenk-Idee 🎁",
+          "aliases": [
+            "geschenk"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "essen",
+          "usage": "$essen",
+          "desc": "Essens-Idee für heute 🍽️",
+          "aliases": [
+            "kochen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
+        },
+        {
+          "name": "entspannung",
+          "usage": "$entspannung",
+          "desc": "1-Minuten-Atemübung & Mini-Auszeit 🌿",
+          "aliases": [
+            "entspanne",
+            "atemuebung"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "extracmds.js"
         }
       ]
     }

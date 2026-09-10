@@ -1,0 +1,14 @@
+LOVEBOT ☾ — Brand-Kit 2026
+==========================================
+
+Inhalt dieses Ordners:
+  • LoveBot-Firmenprofil-2026.docx    – Unternehmensprofil (Word)
+  • LoveBot-Praesentation-2026.pptx  – Vorstellung (PowerPoint)
+  • LoveBot-Factsheet-2026.rtf       – Fact-Sheet (RTF / WordPad)
+  • LoveBot-Logo.png                        – Logo (transparent, 1024 px)
+  • LoveBot-Logo.svg                        – Logo (Vektor, skalierbar)
+
+Kennzahlen in den Dateien: Stand 08.09.2026.
+Neu erzeugen (nur für die Entwicklung): python3 scripts/make-brandkit.py
+
+Marke: LoveBot by Maxichen  ·  maxichen.gamebot.me  ·  maxichen.de

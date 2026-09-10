@@ -275,7 +275,13 @@
     if (demoMode) return { status: 200, data: demoHandle(method, path, body) };
     try {
       const r = await raw(method, path, body);
-      if (r.status === 401 && getToken()) { setToken(''); location.href = '/login.html'; }
+      /* Nur eine ECHT ungültige/abgelaufene Session loggt aus. Wenn der Server
+         nur die Passwort-Bestätigung verlangt (needsReauth), bleibt man
+         eingeloggt und gibt das Admin-Passwort direkt im Dialog ein. */
+      if (r.status === 401 && getToken() && !(r.data && r.data.needsReauth)) {
+        setToken('');
+        location.href = '/login.html';
+      }
       return r;
     } catch (e) {
       demoMode = true;

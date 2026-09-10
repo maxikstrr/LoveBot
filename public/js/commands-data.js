@@ -1,6 +1,6 @@
 /* LoveBot — eingebettete Befehlsdaten (Fallback).
    GENERIERT aus registry/commands.json — nicht von Hand editieren!
-   Build: node scripts/build-registry.mjs · 2026-09-06 */
+   Build: node scripts/build-registry.mjs · 2026-09-09 */
 window.LOVEBOT_COMMANDS = [
   {
     "emoji": "🐣",
@@ -55,7 +55,7 @@ window.LOVEBOT_COMMANDS = [
       {
         "cmd": "ping",
         "usage": "$ping [url | full | nospeed] / $pong / $latenz",
-        "desc": "Echte Live-Messung: Bot-, Netzwerk- & Webseiten-Ping 🏓"
+        "desc": "🏓 Ping auf maxichen.de + maxichen.gamebot.me, Netzwerk & Bot (echte Messwerte)"
       },
       {
         "cmd": "speed",
@@ -575,6 +575,16 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "fp",
         "usage": "$fp",
         "desc": "Fake Payment"
+      },
+      {
+        "cmd": "offline",
+        "usage": "$offline <grund>",
+        "desc": "Aktiviert den globalen Wartungsmodus — Bot nur noch für den Owner, Website für alle gesperrt mit Grund-Anzeige (Owner) 🛠️"
+      },
+      {
+        "cmd": "online",
+        "usage": "$online",
+        "desc": "Beendet den globalen Wartungsmodus — Bot & Website wieder für alle offen (Owner) ✅"
       }
     ]
   },
@@ -631,6 +641,11 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "metaforward",
         "usage": "$metaforward / $metafw",
         "desc": "Nachrichten an Meta AI weiterleiten 🤖"
+      },
+      {
+        "cmd": "kanal",
+        "usage": "$kanal [status | on | off | test] / $channelrelay / $kanalspiegel",
+        "desc": "Kanal-Spiegel: alle Kanal-Posts (Bild/Audio/Sticker/Text) automatisch weiterleiten 📡"
       },
       {
         "cmd": "toimg",
@@ -1394,6 +1409,72 @@ window.LOVEBOT_COMMANDS = [
         "cmd": "zeitzone",
         "usage": "$zeitzone <stadt>",
         "desc": "Zeigt die aktuelle Uhrzeit in einer Zeitzone"
+      }
+    ]
+  },
+  {
+    "emoji": "✨",
+    "title": "FULL-UPDATE 2026",
+    "cmds": [
+      {
+        "cmd": "münzwurf",
+        "usage": "$münzwurf / $muenzwurf",
+        "desc": "Kopf oder Zahl — der Münzwurf entscheidet 🪙"
+      },
+      {
+        "cmd": "würfel",
+        "usage": "$würfel [anzahl] / $wuerfel",
+        "desc": "Würfeln — 1–6 Würfel gleichzeitig 🎲"
+      },
+      {
+        "cmd": "scheresteinpapier",
+        "usage": "$scheresteinpapier <schere|stein|papier> / $sps / $steinpapierschere",
+        "desc": "Schere-Stein-Papier gegen den Bot ✂️🪨📄"
+      },
+      {
+        "cmd": "wahrheitoderpflicht",
+        "usage": "$wahrheitoderpflicht [@user] / $wop",
+        "desc": "Wahrheit oder Pflicht — der Klassiker 🎭"
+      },
+      {
+        "cmd": "mantra",
+        "usage": "$mantra / $affirmation / $affirmationen",
+        "desc": "Positives Mantra für den Tag 🕯️"
+      },
+      {
+        "cmd": "lottoschein",
+        "usage": "$lottoschein / $lotto",
+        "desc": "Lotto-Tipp: 6 aus 49 + Superzahl 🎟️"
+      },
+      {
+        "cmd": "zufallszahl",
+        "usage": "$zufallszahl [min] [max] / $zufall",
+        "desc": "Zufallszahl zwischen zwei Werten 🔢"
+      },
+      {
+        "cmd": "morse",
+        "usage": "$morse <text> / $morsen",
+        "desc": "Text in Morsecode umwandeln 📡"
+      },
+      {
+        "cmd": "schicksal",
+        "usage": "$schicksal [frage] / $omen",
+        "desc": "Das Orakel antwortet 🔮"
+      },
+      {
+        "cmd": "geschenkidee",
+        "usage": "$geschenkidee [für wen] / $geschenk",
+        "desc": "Persönliche Geschenk-Idee 🎁"
+      },
+      {
+        "cmd": "essen",
+        "usage": "$essen / $kochen",
+        "desc": "Essens-Idee für heute 🍽️"
+      },
+      {
+        "cmd": "entspannung",
+        "usage": "$entspannung / $entspanne / $atemuebung",
+        "desc": "1-Minuten-Atemübung & Mini-Auszeit 🌿"
       }
     ]
   }

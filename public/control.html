@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOUL ECHO — CONTROL CENTER</title>
+<meta name="theme-color" content="#07050f">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="stylesheet" href="/css/control.css">
+<link rel="stylesheet" href="/css/consent.css">
+<script src="/js/maintgate.js"></script>
+</head>
+<body>
+<div class="cc-aurora"></div>
+<div class="cc-grid"></div>
+
+<!-- ═══ GUARD ═══ -->
+<div id="ccGuard" class="cc-guard" style="display:none">
+  <div class="cc-guard-card">
+    <div class="cc-guard-ico">🛸</div>
+    <h1>SOUL ECHO</h1>
+    <h2>CONTROL CENTER</h2>
+    <p id="ccGuardText">Bitte anmelden.</p>
+    <a class="cc-btn" href="/login.html">→ Zum Login</a>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="ccApp" style="display:none">
+
+  <!-- Top-Statusleiste -->
+  <header class="cc-top">
+    <div class="cc-brand">
+      <span class="cc-logo">🛸</span>
+      <div><b>SOUL ECHO</b><small>CONTROL CENTER</small></div>
+    </div>
+    <div class="cc-tiles" id="ccTiles"><!-- Tiles: BOT WEB DB WA SEC SESS USERS IP --></div>
+    <div class="cc-topright">
+      <button class="cc-icobtn" id="ccSearchBtn" title="Globale Suche">🔎</button>
+      <button class="cc-icobtn" title="Neu laden" onclick="CC.reload()">↻</button>
+      <div class="cc-who" id="ccWho"></div>
+      <div class="cc-clock" id="ccClock" style="font-family:var(--mono);font-size:12px;color:var(--mut);text-align:right;line-height:1.2"><span id="ccClockT"></span><br><span id="ccClockD" style="font-size:10px;color:var(--dim)"></span></div>
+      <button class="cc-icobtn" title="Abmelden" onclick="CC.logout()">⎋</button>
+    </div>
+  </header>
+
+  <div class="cc-body">
+    <!-- Sidebar -->
+    <aside class="cc-side" id="ccSide"></aside>
+
+    <!-- Content -->
+    <main class="cc-main">
+      <div class="cc-crumb" id="ccCrumb"></div>
+      <div id="ccView" class="cc-view"><div class="cc-loading">🛸 Lade …</div></div>
+    </main>
+  </div>
+</div>
+
+<!-- Globale Suche -->
+<div class="cc-overlay" id="ccSearchOv" style="display:none">
+  <div class="cc-searchcard">
+    <div class="cc-searchhead">🔎 <input id="ccSearchInput" placeholder="Benutzer, IP, Session, Case, Audit … (mind. 2 Zeichen)" autocomplete="off">
+      <button class="cc-icobtn" onclick="CC.closeSearch()">✕</button></div>
+    <div class="cc-searchres" id="ccSearchRes"></div>
+  </div>
+</div>
+
+<!-- Modal-Host (Bestätigungen, Akte, Dialoge) -->
+<div class="cc-overlay" id="ccModal" style="display:none">
+  <div class="cc-modal" id="ccModalCard"></div>
+</div>
+
+<!-- Reauth / Step-up -->
+<div class="cc-overlay" id="ccReauth" style="display:none">
+  <div class="cc-modal cc-modal-sm">
+    <div class="cc-modal-title">🔐 KRITISCHE AKTION</div>
+    <div class="cc-modal-body" id="ccReauthBody"></div>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script src="/js/cc-core.js"></script>
+<script src="/js/cc-dash.js"></script>
+<script src="/js/cc-users.js"></script>
+<script src="/js/cc-sec.js"></script>
+<script src="/js/cc-sys.js"></script>
+</body>
+</html>

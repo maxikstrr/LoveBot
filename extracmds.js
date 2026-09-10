@@ -49,7 +49,16 @@ export const EXTRA_COMMANDS = new Set([
   'duell', 'wuerfelduell', 'würfelduell', 'sternzeichen', 'emoji',
   'advice', 'lebensrat', 'chucknorris', 'kanye', 'activity', 'langeweile',
   'iss', 'meineip', 'meinip', 'githubzen', 'bmi', 'countdown', 'tagderwoche',
-  'zeitzone', 'liebescheck', 'kuschelvorschlag', 'komplimentgenerator'
+  'zeitzone', 'liebescheck', 'kuschelvorschlag', 'komplimentgenerator',
+  /* ✨ FULL-UPDATE: neue Offline-Befehle (Spiele, Fun, Wellness) */
+  'münzwurf', 'muenzwurf', 'würfel', 'wuerfel',
+  'scheresteinpapier', 'sps', 'steinpapierschere',
+  'wahrheitoderpflicht', 'wop',
+  'mantra', 'affirmation', 'affirmationen',
+  'lottoschein', 'lotto', 'zufallszahl', 'zufall',
+  'morse', 'morsen', 'schicksal', 'omen',
+  'geschenkidee', 'geschenk', 'essen', 'kochen',
+  'entspannung', 'entspanne', 'atemuebung'
 ]);
 
 /* ───────────────────────────── Helfer ────────────────────────────── */
@@ -405,6 +414,162 @@ async function cmdKomplimentgenerator({ sock, msg, from, senderName, mentionedJi
   await sock.sendMessage(from, { text: `> 💌 *KOMPLIMENT-GENERATOR*\n\n${name} ${pick(COMPLIMENTS)}` }, { quoted: msg });
 }
 
+/* ✨ FULL-UPDATE 2026 — neue Offline-Befehle (keine externen APIs) */
+
+async function cmdMuenzwurf({ sock, msg, from }) {
+  const side = pick(['KOPF', 'ZAHL']);
+  const emoji = side === 'KOPF' ? '🪙👑' : '🪙🔢';
+  await sock.sendMessage(from, { text: `> 🪙 *MÜNZWURF*\n\nDie Münze dreht sich... ${emoji}\n\n🎲 Ergebnis: *${side}*\n\n${randInt(1, 100) <= 3 ? '👀 Boah — die Münze ist auf der Kante gelandet?! Neu werfen: nochmal $münzwurf!' : '_Nochmal? Einfach $münzwurf tippen._'}` }, { quoted: msg });
+}
+
+async function cmdWuerfel({ sock, msg, from, args }) {
+  const n = Math.max(1, Math.min(6, Number.parseInt(String(args[0] || '1'), 10) || 1));
+  const rolls = Array.from({ length: n }, () => randInt(1, 6));
+  const faces = { 1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅' };
+  const sum = rolls.reduce((a, b) => a + b, 0);
+  const special = n === 1 && rolls[0] === 6 ? '\n🎉 Sechser! Glückswurf!' : (sum >= (n * 3.5 + 0.5) ? '\n✨ Stark gewürfelt!' : '');
+  await sock.sendMessage(from, { text: `> 🎲 *WÜRFEL${n > 1 ? ' x' + n : ''}*\n\n${rolls.map((r) => faces[r] + ' ' + r).join('   ·   ')}${n > 1 ? '\n\n➗ Summe: *' + sum + '*' : ''}${special}` }, { quoted: msg });
+}
+
+async function cmdSchereSteinPapier({ sock, msg, from, args }) {
+  const u = String((args[0] || '')).toLowerCase().replace(/[äöüß]/g, (x) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[x]));
+  const map = { schere: '✂️ Schere', stein: '🪨 Stein', papier: '📄 Papier' };
+  const norm = (s) => ({ scissors: 'schere', rock: 'stein', paper: 'papier', s: 'schere', r: 'stein', p: 'papier' }[s] || s);
+  const u2 = norm(u);
+  if (!map[u2]) {
+    return sock.sendMessage(from, { text: `> ✂️🪨📄 *SCHERE-STEIN-PAPIER*\n\nBenutzung: \`$scheresteinpapier schere|stein|papier\`\n\nDu gegen den Bot — wer gewinnt? 👀` }, { quoted: msg });
+  }
+  const b = pick(['schere', 'stein', 'papier']);
+  const beat = { schere: 'papier', stein: 'schere', papier: 'stein' };
+  let out;
+  if (u2 === b) out = '🤝 *Unentschieden!* Beide zeigen ' + map[u2] + '.';
+  else if (beat[u2] === b) out = '🎉 *Du gewinnst!* ' + map[u2] + ' schlägt ' + map[b] + '.';
+  else out = '🤖 *Bot gewinnt!* ' + map[b] + ' schlägt ' + map[u2] + '.';
+  await sock.sendMessage(from, { text: `> ✂️🪨📄 *SCHERE-STEIN-PAPIER*\n\nDu: ${map[u2]}   ·   Bot: ${map[b]}\n\n${out}\n\n_Revanche? $scheresteinpapier papier_` }, { quoted: msg });
+}
+
+async function cmdWahrheitOderPflicht({ sock, msg, from, senderName, mentionedJid, args }) {
+  const name = mentionedJid ? '@' + String(mentionedJid).replace(/@s\.whatsapp\.net$/, '') : (args.join(' ').trim() || (senderName || 'du'));
+  const wOp = pick(['wahrheit', 'pflicht']);
+  const TRUTHS = [
+    'Was ist das Peinlichste, das dir je passiert ist? 😳',
+    'Hattest du schon mal einen Promi-Crush? Wer? 🌟',
+    'Was war deine schlimmste Note und in welchem Fach?',
+    'Wen aus der Gruppe würdest du für 24h in ein Zimmer sperren? 🚪',
+    'Hast du schon mal jemandem eine Nachricht geschickt, die du sofort bereut hast?',
+    'Was ist dein größter „unpopular opinion“ in Sachen Musik? 🎵'
+  ];
+  const DARES = [
+    'Schick der Gruppe deinen letzten Suchbegriff bei Google! 🔍',
+    'Sing die erste Zeile deines Lieblingsliedes als Sprachnachricht 🎤',
+    'Nenne 3 Dinge, die du noch nie getan hast (und nie tun würdest).',
+    'Schick das witzigste Emoji-Pärchen, das dein Leben beschreibt. 😂',
+    'Erfinde sofort einen Werbeslogan für die Gruppe 🛒',
+    'Tippe 10 Sekunden mit geschlossenen Augen — Ergebnis posten! 🎹'
+  ];
+  const line = wOp === 'wahrheit' ? pick(TRUTHS) : pick(DARES);
+  await sock.sendMessage(from, { text: `> 🎭 *WAHRHEIT ODER PFLICHT*\n\nDran ist: ${name}\n\nDu wählst: *${wOp.toUpperCase()}*\n\n${line}` }, { quoted: msg });
+}
+
+const MANTRA_LIST = [
+  'Ich bin genug — genau so, wie ich bin. 💜',
+  'Heute ist ein guter Tag, um freundlich zu mir selbst zu sein.',
+  'Ich muss nicht perfekt sein, um wertvoll zu sein. ✨',
+  'Meine Gefühle sind willkommen — ich muss sie nicht wegschieben.',
+  'Kleine Schritte zählen auch. Ein Schritt genügt. 🐾',
+  'Ich darf Pausen machen und trotzdem stark sein. 🌿',
+  'Was ich heute tue, ist genug — der Rest darf warten.',
+  'Ich bin nicht allein, auch wenn es sich manchmal so anfühlt. ☾'
+];
+async function cmdMantra({ sock, msg, from }) {
+  await sock.sendMessage(from, { text: `> 🕯️ *DEIN MANTRA* (nimm es mit in den Tag)\n\n„${pick(MANTRA_LIST)}“\n\n_Ganz tief einatmen … ausatmen … wiederholen, wenn du magst._` }, { quoted: msg });
+}
+
+async function cmdLottoSchein({ sock, msg, from }) {
+  const nums = new Set();
+  while (nums.size < 6) nums.add(randInt(1, 49));
+  const six = [...nums].sort((a, b) => a - b);
+  const superzahl = randInt(0, 9);
+  const tip = '„Gewinnen ist schön, aber der Spaß am Tippen auch“ 💸';
+  await sock.sendMessage(from, { text: `> 🎟️ *LOTTOSCHEIN* (6 aus 49)\n\nZahlen: ${six.join(' · ')}\nSuperzahl: *${superzahl}*\n\n✨ Viel Glück! ${tip}` }, { quoted: msg });
+}
+
+async function cmdZufallszahl({ sock, msg, from, args }) {
+  let a = Number.parseInt(String(args[0] || ''), 10);
+  let b = Number.parseInt(String(args[1] || ''), 10);
+  if (!Number.isFinite(a) && !Number.isFinite(b)) { a = 1; b = 100; }
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return sock.sendMessage(from, { text: `> 🔢 *ZUFALLSZAHL*\n\nBenutzung: \`$zufallszahl [min] [max]\`\n\nBeispiel: \`$zufallszahl 1 10\`` }, { quoted: msg });
+  if (a > b) [a, b] = [b, a];
+  if (b - a > 100000000) b = a + 100000000;
+  await sock.sendMessage(from, { text: `> 🔢 *ZUFALLSZAHL*\n\nVon *${a}* bis *${b}* → 🎱 *${randInt(a, b)}*` }, { quoted: msg });
+}
+
+const MORSE_MAP = {
+  a: '.-', b: '-...', c: '-.-.', d: '-..', e: '.', f: '..-.', g: '--.', h: '....',
+  i: '..', j: '.---', k: '-.-', l: '.-..', m: '--', n: '-.', o: '---', p: '.--.',
+  q: '--.-', r: '.-.', s: '...', t: '-', u: '..-', v: '...-', w: '.--', x: '-..-',
+  y: '-.--', z: '--..', 0: '-----', 1: '.----', 2: '..---', 3: '...--', 4: '....-',
+  5: '.....', 6: '-....', 7: '--...', 8: '---..', 9: '----.'
+};
+async function cmdMorse({ sock, msg, from, args }) {
+  const text = args.join(' ').trim();
+  if (!text) return sock.sendMessage(from, { text: `> 📡 *MORSE*\n\nBenutzung: \`$morse <text>\`\n\nWandelt Text in Morsecode um.\n_Beispiel: \`$morse LoveBot\`_` }, { quoted: msg });
+  if (text.length > 120) return sock.sendMessage(from, { text: '> 📡 *MORSE*\n\nBitte maximal 120 Zeichen — sonst wird die Nachricht zu lang.' }, { quoted: msg });
+  const out = text.toLowerCase().split('').map((ch) => (/[a-z0-9]/.test(ch) ? MORSE_MAP[ch] : ch === ' ' ? '/' : '')).join(' ');
+  await sock.sendMessage(from, { text: `> 📡 *MORSE-CODE*\n\n\`${text}\`\n\n→ \`${out}\`` }, { quoted: msg });
+}
+
+async function cmdSchicksal({ sock, msg, from, args }) {
+  const frage = args.join(' ').trim();
+  const ANSWERS = [
+    '🍀 Ja — das Schicksal meint es gut mit dir.',
+    '🔮 Zeichen deuten auf ja hin.',
+    '🤔 Vielleicht. Frag in einer ruhigen Minute nochmal.',
+    '🌫️ Die Nebel sind dicht — komm später wieder.',
+    '❄️ Eher nein, tut mir leid.',
+    '🌑 Nein. Aber manchmal ist „nein“ der bessere Weg.',
+    '🎲 Frag die Würfel: heute sagt das Schicksal … ja!'
+  ];
+  const antwort = pick(ANSWERS);
+  await sock.sendMessage(from, { text: `> 🔮 *SCHICKSAL*\n\n${frage ? 'Frage: *' + frage + '*\n\n' : ''}${antwort}\n\n_Das Orakel hat gesprochen — entscheiden musst trotzdem du._` }, { quoted: msg });
+}
+
+const GIFT_IDEAS = [
+  '📖 Ein persönlich beschriftetes Buch, das sie/er mag — mit Widmung drin.',
+  '🌱 Eine kleine Pflanze mit einem selbst gebastelten Namensschild.',
+  '🎧 Ein Lieder-„Mix“ als Playlist mit einer Nachricht zu jedem Song.',
+  '📸 Ein gerahmtes Foto von einem gemeinsamen Moment.',
+  '🍫 Lieblingssüßigkeit im hübsch verpackten Geschenkbeutel.',
+  '🕯️ Ein Duftkerzen-Set + ein selbstgeschriebener Brief.',
+  '🎮 Ein Gutschein für einen gemeinsamen Spieleabend.',
+  '☕ Lieblingsgetränk im Mehrweg-Becher mit persönlichem Aufkleber.'
+];
+async function cmdGeschenkidee({ sock, msg, from, args }) {
+  const fuer = args.join(' ').trim();
+  await sock.sendMessage(from, { text: `> 🎁 *GESCHENK-IDEE*\n\n${fuer ? 'Für *' + fuer + '*: ' : ''}${pick(GIFT_IDEAS)}\n\n_Ideen sind wie Herzen — am schönsten, wenn sie persönlich sind. 💜_` }, { quoted: msg });
+}
+
+const FOOD_IDEAS = [
+  '🍝 Spaghetti mit selbstgemachter Tomatensoße + Parmesan',
+  '🥗 Bowl: Reis, gebratenes Gemüse, Hähnchen/Tofu, Erdnusssauce',
+  '🍲 Kartoffelsuppe mit Würstchen und frischem Brot',
+  '🍕 Pizza selber belegen — mit Rucola und Parmesan nach dem Backen',
+  '🥘 One-Pot-Pasta mit Cherrytomaten und Basilikum',
+  '🌮 Taco-Abend mit allen Füllungen (auch vegetarisch)',
+  '🍳 Shakshuka: Eier in Tomaten-Paprika-Soße mit Fladenbrot',
+  '🍚 Gebratener Reis mit Ei, Erbsen und Sojasoße',
+  '🥪 Clubsandwich mit Pommes — und ganz viel Ketchup',
+  '🍜 Nudelsuppe (Ramyeon-Style) mit Ei und Frühlingszwiebeln'
+];
+async function cmdEssen({ sock, msg, from }) {
+  const dish = pick(FOOD_IDEAS);
+  await sock.sendMessage(from, { text: `> 🍽️ *ESSENS-IDEE*\n\nHeute: ${dish}\n\n${randInt(1, 100) <= 20 ? '\n😋 (Koch-Vorschlag von LoveBot — guten Appetit!)' : '\n_Guten Appetit! 💜_ Noch eine Idee? Nochmal $essen.'}` }, { quoted: msg });
+}
+
+async function cmdEntspannung({ sock, msg, from }) {
+  await sock.sendMessage(from, { text: `> 🌿 *MINI-AUSZEIT* (ca. 1 Minute)\n\n1) Bequem hinsetzen oder liegen. 👟\n2) Augen schließen.\n3) 4 Sekunden durch die Nase einatmen …\n4) 4 Sekunden halten …\n5) 6 Sekunden langsam durch den Mund ausatmen.\n\nWiederhole das *5-mal*.\n\n_Du schaffst das. Der Rest kann warten. ☾_` }, { quoted: msg });
+}
+
 /* ───────────────────────────── Router ────────────────────────────── */
 
 const HANDLERS = {
@@ -431,7 +596,20 @@ const HANDLERS = {
   zeitzone: cmdZeitzone,
   liebescheck: cmdLiebescheck,
   kuschelvorschlag: cmdKuschelvorschlag,
-  komplimentgenerator: cmdKomplimentgenerator
+  komplimentgenerator: cmdKomplimentgenerator,
+  /* ✨ FULL-UPDATE */
+  'münzwurf': cmdMuenzwurf, muenzwurf: cmdMuenzwurf,
+  'würfel': cmdWuerfel, wuerfel: cmdWuerfel,
+  scheresteinpapier: cmdSchereSteinPapier, sps: cmdSchereSteinPapier, steinpapierschere: cmdSchereSteinPapier,
+  wahrheitoderpflicht: cmdWahrheitOderPflicht, wop: cmdWahrheitOderPflicht,
+  mantra: cmdMantra, affirmation: cmdMantra, affirmationen: cmdMantra,
+  lottoschein: cmdLottoSchein, lotto: cmdLottoSchein,
+  zufallszahl: cmdZufallszahl, zufall: cmdZufallszahl,
+  morse: cmdMorse, morsen: cmdMorse,
+  schicksal: cmdSchicksal, omen: cmdSchicksal,
+  geschenkidee: cmdGeschenkidee, geschenk: cmdGeschenkidee,
+  essen: cmdEssen, kochen: cmdEssen,
+  entspannung: cmdEntspannung, entspanne: cmdEntspannung, atemuebung: cmdEntspannung
 };
 
 /**

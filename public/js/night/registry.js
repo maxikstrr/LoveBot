@@ -112,7 +112,21 @@
     C('owner', 'unban',    'Ban aufheben', { perm: 'owner' }),
     C('owner', 'banlist',  'Ban-Liste anzeigen', { perm: 'owner' }),
     C('owner', 'broadcast','Broadcast an alle Gruppen', { perm: 'owner' }),
-    C('owner', 'nightmode','Bot-Nachtmodus umschalten', { perm: 'owner', status: 'plan', neu: true })
+    C('owner', 'nightmode','Bot-Nachtmodus umschalten', { perm: 'owner', status: 'plan', neu: true }),
+
+    /* ---------- ✨ Full-Update 2026 (neu) ---------- */
+    C('fun',   'münzwurf',  'Kopf oder Zahl — der Münzwurf entscheidet', { aliases: ['muenzwurf'], neu: true }),
+    C('fun',   'würfel',    'Würfeln — 1–6 Würfel gleichzeitig', { aliases: ['wuerfel'], neu: true }),
+    C('fun',   'scheresteinpapier', 'Schere-Stein-Papier gegen den Bot', { aliases: ['sps', 'steinpapierschere'], neu: true }),
+    C('fun',   'wahrheitoderpflicht', 'Wahrheit oder Pflicht — der Klassiker', { aliases: ['wop'], neu: true }),
+    C('fun',   'lottoschein', 'Lotto-Tipp: 6 aus 49 + Superzahl', { aliases: ['lotto'], neu: true }),
+    C('fun',   'schicksal', 'Das Orakel antwortet auf deine Frage', { aliases: ['omen'], neu: true }),
+    C('fun',   'essen',     'Essens-Idee für heute', { aliases: ['kochen'], neu: true }),
+    C('tools', 'zufallszahl', 'Zufallszahl zwischen zwei Werten', { aliases: ['zufall'], neu: true }),
+    C('tools', 'morse',     'Text in Morsecode umwandeln', { aliases: ['morsen'], neu: true }),
+    C('tools', 'geschenkidee', 'Persönliche Geschenk-Idee', { aliases: ['geschenk'], neu: true }),
+    C('tools', 'entspannung', '1-Minuten-Atemübung & Mini-Auszeit', { aliases: ['entspanne', 'atemuebung'], neu: true }),
+    C('tools', 'mantra',    'Positives Mantra für den Tag', { aliases: ['affirmation', 'affirmationen'], neu: true })
   ];
 
   const CATS = [
