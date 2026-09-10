@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "updated": "2026-09-09",
+  "version": 4,
+  "updated": "2026-09-10",
   "meta": {
     "description": "LoveBot Command Registry — die eine Quelle für Bot-Help, Website, Tester & Doku.",
     "permsNote": "perms = abgeleitet: (Owner)-Marker + Whitelists (OWNER_EXTRA/GROUP_ADMIN) — manuell in dieser Datei korrigierbar.",
@@ -1744,7 +1744,7 @@
         {
           "name": "daily",
           "usage": "$daily",
-          "desc": "Tägliche Belohnung 🎁",
+          "desc": "Tägliche Belohnung 🎁 — +50 XP (Level-Ups möglich) 💎",
           "aliases": [],
           "perms": "all",
           "cooldown": 3,
@@ -1753,7 +1753,7 @@
         {
           "name": "work",
           "usage": "$work",
-          "desc": "Arbeiten gehen 💼",
+          "desc": "Arbeiten gehen 💼 — Kupfer + 10 XP 💼",
           "aliases": [
             "arbeiten"
           ],
@@ -1789,7 +1789,7 @@
         {
           "name": "top",
           "usage": "$top",
-          "desc": "Top 10 Level 🏆",
+          "desc": "Top 10 nach Prestige, Level & XP — mit Rängen 🏆",
           "aliases": [
             "leaderboard",
             "rangliste",
@@ -1802,11 +1802,24 @@
         {
           "name": "level",
           "usage": "$level",
-          "desc": "Dein Level + XP-Fortschritt 📈",
-          "aliases": [],
+          "desc": "Dein komplettes Level-Profil: Level, Prestige, Rang, XP-Balken & XP-Quellen 📈",
+          "aliases": [
+            "xp"
+          ],
           "perms": "all",
           "cooldown": 3,
-          "source": "code-entdeckt (registry-sync)"
+          "source": "levelsystem v1"
+        },
+        {
+          "name": "rank",
+          "usage": "$rank [ @user ]",
+          "desc": "Dein Rang (oder der von jemandem mit @user) — Level, Prestige & Titel 🏅",
+          "aliases": [
+            "rang"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "levelsystem v1"
         }
       ]
     },

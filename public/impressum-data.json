@@ -1,0 +1,23 @@
+{
+  "_kommentar": "IMPRESSUM-DATEN — NUR ECHTE ANGABEN HINTERLEGEN. Leere Felder = Platzhalter auf der Website + roter Produktionscheck. Keine erfundenen Daten!",
+  "updated": "",
+  "betreiber": {
+    "vorname": "",
+    "nachname": "",
+    "strasse": "",
+    "plz": "",
+    "ort": "",
+    "email": "",
+    "telefon": ""
+  },
+  "status": {
+    "kommerziell": false,
+    "hinweis": "LoveBot ist ein privat betriebenes Hobbyprojekt und wird ohne kommerzielle Gewinnerzielungsabsicht betrieben."
+  },
+  "gewerblich": {
+    "ustIdNr": "",
+    "registergericht": "",
+    "registernummer": "",
+    "aufsichtsbehoerde": ""
+  }
+}

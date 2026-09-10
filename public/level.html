@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Level-System 💜 — XP, Ränge & Prestige | LoveBot by Maxichen 2026</title>
+<meta name="description" content="Das komplette Level-System von LoveBot: XP für nette Nachrichten, Komplimente, Befehle, Dailies & Spiele — 15 Ränge, 743 Level, Prestige-Titel, Anti-Spam und Live-Bestenliste.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<meta property="og:title" content="Level-System 💜 — XP, Ränge & Prestige | LoveBot by Maxichen 2026">
+<meta property="og:description" content="Jede nette Nachricht bringt XP. 15 Ränge, 743 Level pro Prestige-Zyklus, Kupfer-Belohnungen & Live-Bestenliste.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+<style>
+  .lvl-hero { padding: 84px 0 10px; text-align: center; }
+  .lvl-hero .kicker { margin-bottom: 14px; }
+  .lvl-hero h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 900; line-height: 1.15; margin-bottom: 16px; }
+  .lvl-hero p.lead { color: var(--muted); font-size: 16px; max-width: 720px; margin: 0 auto; line-height: 1.7; }
+  .lvl-hero .demo-row { margin: 34px auto 0; max-width: 640px; }
+  .sec2 { padding-top: 46px; }
+  .sec2 .sec-head { margin-bottom: 22px; }
+  .sec2 .sec-head p { color: var(--muted); font-size: 14.5px; max-width: 760px; }
+  .curve-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 920px) { .curve-grid { grid-template-columns: 1fr; } }
+  .curve-note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; font-size: 13.5px; color: var(--muted); line-height: 1.7; }
+  .curve-note b { color: var(--text); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+  .all-ranks { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+  .all-ranks .lvl-rank-row { padding: 13px 16px; }
+  .prestige-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .prestige-card { background: var(--grad-soft); border: 1px solid rgba(244,114,182,.3); border-radius: var(--r-md); padding: 18px; text-align: center; }
+  .prestige-card .p-emoji { font-size: 30px; }
+  .prestige-card .p-name { font-weight: 800; margin-top: 8px; font-size: 15px; }
+  .prestige-card .p-sub { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .lb-list { display: flex; flex-direction: column; gap: 8px; }
+  .lb-row2 { display: flex; align-items: center; gap: 14px; padding: 13px 18px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); }
+  .lb-row2 .rank2 { width: 40px; text-align: center; font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--faint); }
+  .lb-row2 .lb2-name { font-weight: 700; font-size: 14.5px; }
+  .lb-row2 .lb2-rank { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .lb-row2 .lb2-vals { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+  .lb-row2 .lb2-vals b { font-size: 15px; }
+  .lb-row2 .lb2-vals span { display: block; color: var(--faint); font-size: 11.5px; }
+  .lb-row2.gold { background: var(--grad-soft); border-color: rgba(244,114,182,.4); }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/spiele.html">Spiele</a>
+    <a href="/level.html" class="active">Level</a>
+    <a href="/regeln.html">Regeln</a>
+    <a href="/status.html">Status</a><a href="/statistics.html">Statistiken</a><a href="/leaderboard.html">Bestenliste</a><a href="/sessions.html">Sessions</a><a href="/docs.html">Docs</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+
+  <!-- ══════════ HERO ══════════ -->
+  <section class="lvl-hero">
+    <div class="kicker">💜 Level-System</div>
+    <h1>Jede nette Nachricht<br>macht dich <span class="grad-text">besser</span>.</h1>
+    <p class="lead">Schreib was Herzliches, nutze den Bot, gewinne Spiele, hole dein Daily — und du leitest.
+    <b>743 Level</b> pro Prestige-Zyklus, <b>15 Ränge</b>, <b>Prestige-Titel</b> und Kupfer bei jedem Level-Up.
+    Alles wird echt gezählt: keine Zufalls-XP, keine erfundenen Werte.</p>
+
+    <div class="demo-row lvl-card">
+      <div class="lvl-top">
+        <div class="lvl-avatar">💜</div>
+        <div>
+          <div class="lvl-name">maxichen <span class="lvl-rank-badge">🌷 Flirter</span></div>
+          <div class="lvl-sub">Prestige 0 · Level 24 · 🔥 3 Tage Streak · Σ 5.481 XP</div>
+        </div>
+      </div>
+      <div class="lvl-xp">
+        <div class="lvl-xp-labels"><span><b>1.284 XP</b></span><span>Level 25 — noch 612 XP</span></div>
+        <div class="lvl-bar"><div class="lvl-bar-fill" style="--target:68%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ XP-QUELLEN ══════════ -->
+  <section class="sec2" id="quellen">
+    <div class="sec-head reveal">
+      <div class="kicker">So bekommst du XP</div>
+      <h2>XP-Quellen — <span class="grad-text">alles zählt</span>.</h2>
+      <p>Das System belohnt genau das, was LoveBot ausmacht: <b>nettes Zueinander</b> plus Aktivität. Die Erkennung läuft lokal im Bot — keine externe KI, keine Cloud.</p>
+    </div>
+    <div class="xp-grid">
+      <div class="xp-card reveal"><div class="x-ico">💬</div><h3>Normale Nachricht</h3><p>Jede Textnachricht im 1:1-Chat. In Gruppen zählt halber Einsatz (Anti-Farm-Schutz).</p><span class="x-val">+5 XP (1:1) · +3 (Gruppe)</span></div>
+      <div class="xp-card bonus reveal"><div class="x-ico">💕</div><h3>Nette Nachricht</h3><p>Mit 1–2 Liebes-Wörtern oder Herz-Emojis (z. B. „Gute Nacht, Schatz ❤️").</p><span class="x-val">Basis ×2</span></div>
+      <div class="xp-card bonus reveal"><div class="x-ico">💜</div><h3>Liebesnachricht</h3><p>Ab 3 Liebes-Wörtern/Emojis zahlt das Maximum — „Ich liebe dich, du bist mein Herz 💖".</p><span class="x-val">Basis ×3</span></div>
+      <div class="xp-card bonus reveal"><div class="x-ico">🌹</div><h3>Kompliment-Bonus</h3><p>Muster wie „du bist so schön/toll/sweet …" gibt obendrauf einen Flat-Bonus.</p><span class="x-val">+5 XP extra</span></div>
+      <div class="xp-card reveal"><div class="x-ico">⚙️</div><h3>Jeder Befehl</h3><p>Bot nutzen = Fortschritt. Liebes-Aktionen ($kiss, $hug, $compliment …) zählen mehr.</p><span class="x-val">+2 XP · Liebes-Aktion +5</span></div>
+      <div class="xp-card reveal"><div class="x-ico">💎</div><h3>Dailies</h3><p>$daily (50 XP) und $dailylove (25 XP + 50 Kupfer) — einmal pro Tag, mit Streak-Anzeige.</p><span class="x-val">+50 / +25 XP</span></div>
+      <div class="xp-card reveal"><div class="x-ico">💼</div><h3>Arbeiten</h3><p>$work gibt Kupfer <b>und</b> ein kleines XP-Nebengeschenk.</p><span class="x-val">+10 XP</span></div>
+      <div class="xp-card reveal"><div class="x-ico">🎮</div><h3>Spiele</h3><p>Galgenmännchen, Rätsel, Raub & Co.: Sieg zahlt kräftig, Niederlage gibt Trost-XP.</p><span class="x-val">Sieg +15 · Verlust +2</span></div>
+    </div>
+  </section>
+
+  <!-- ══════════ KURVE ══════════ -->
+  <section class="sec2" id="kurve">
+    <div class="sec-head reveal">
+      <div class="kicker">Die Kurve</div>
+      <h2>Level 0 → 743, <span class="grad-text">dann neues Kapitel</span>.</h2>
+      <p>Die Progressions-Kurve ist fest definiert (identisch zur offiziellen SQL-Referenz im Projekt): Basis <b>743 XP</b> fürs erste Level, jedes nächste Level kostet <b>+0,743 %</b> mehr. Bei Level 743 + vollem XP ist der Zyklus durch — <b>Prestige-Up</b>, Level 0, neue Kurven-Höhe, +10.000 Kupfer.</p>
+    </div>
+    <div class="curve-grid">
+      <div class="table-wrap reveal">
+        <table class="curve-table">
+          <thead><tr><th>Level</th><th>XP für dieses Level</th><th>Gesamt-XP (Zyklus)</th></tr></thead>
+          <tbody>
+            <tr><td><b>0 → 1</b></td><td class="mono">743</td><td class="mono">743</td></tr>
+            <tr><td><b>1 → 2</b></td><td class="mono">749</td><td class="mono">1.492</td></tr>
+            <tr><td><b>5 → 6</b></td><td class="mono">773</td><td class="mono">3.775</td></tr>
+            <tr><td><b>10 → 11</b></td><td class="mono">803</td><td class="mono">8.503</td></tr>
+            <tr><td><b>25 → 26</b></td><td class="mono">907</td><td class="mono">22.287</td></tr>
+            <tr><td><b>50 → 51</b></td><td class="mono">1.077</td><td class="mono">55.459</td></tr>
+            <tr><td><b>100 → 101</b></td><td class="mono">1.414</td><td class="mono">136.450</td></tr>
+            <tr><td><b>500 → 501</b></td><td class="mono">5.189</td><td class="mono">1.917.991</td></tr>
+            <tr><td><b>743</b> 👑</td><td class="mono">180.321.467</td><td class="mono">≈ 4,94 Mrd. → Prestige 1</td></tr>
+            <tr><td><b>P1 · 0 → 1</b> 🕊️</td><td class="mono">199.419</td><td class="mono">neues Kapitel</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="curve-note reveal">
+        <p>📐 <b>Formel (pro Schritt):</b> <code style="font-family:var(--mono);font-size:12px">nötig = ceil( vorherige · 100743 / 100000 )</code> — berechnet mit BigInt, exakt wie die Tabelle <code style="font-family:var(--mono);font-size:12px">neededXpForLvOrPrestigeUp.sql</code> im Projekt.</p>
+        <p style="margin-top:12px">🔥 <b>Streak:</b> Aktiv an aufeinanderfolgenden Tagen zahlt eine Streak, die im Level-Profil sichtbar ist.</p>
+        <p style="margin-top:12px">🤎 <b>Belohnung:</b> Jedes Level-Up schenkt <b>20 + 5·Level Kupfer</b> (max. 400). Prestige-Up: <b>+10.000 Kupfer</b> + neuer Prestige-Titel.</p>
+        <p style="margin-top:12px">️ <b>Anti-Spam:</b> Nachrichten max. <b>300 XP/Stunde</b>, Befehle max. <b>150 XP/Stunde</b> (gleitendes 60-Minuten-Fenster). Dailies, Arbeit &amp; Spiele sind davon ausgenommen.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ RÄNGE ══════════ -->
+  <section class="sec2" id="raenge">
+    <div class="sec-head reveal">
+      <div class="kicker">Ränge</div>
+      <h2>Vom 🐣 Neuling zur 💖 <span class="grad-text">Mythischen Legende</span>.</h2>
+      <p>Jeder Rangwechsel ist im Chat sichtbar — dein Rang steht neben deinem Level im Profil ($level) und in der Bestenliste ($top).</p>
+    </div>
+    <div class="all-ranks reveal">
+      <div class="lvl-rank-row"><span class="r-emoji">🐣</span><span class="r-name">Neuling</span><span class="r-lv">Level 0</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🌱</span><span class="r-name">Einsteiger</span><span class="r-lv">Level 5</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🌸</span><span class="r-name">Herzling</span><span class="r-lv">Level 10</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🌷</span><span class="r-name">Flirter</span><span class="r-lv">Level 25</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">💕</span><span class="r-name">Romantiker</span><span class="r-lv">Level 50</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">💌</span><span class="r-name">Liebespoet(in)</span><span class="r-lv">Level 75</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🌹</span><span class="r-name">Rose des Herzens</span><span class="r-lv">Level 100</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">❤️</span><span class="r-name">Herzensbrecher(in)</span><span class="r-lv">Level 150</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🔥</span><span class="r-name">Flammenherz</span><span class="r-lv">Level 200</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">⚡</span><span class="r-name">Liebesblitz</span><span class="r-lv">Level 300</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🌟</span><span class="r-name">Liebesstern</span><span class="r-lv">Level 400</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">👑</span><span class="r-name">Herzfürst(in)</span><span class="r-lv">Level 500</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">🎩</span><span class="r-name">Love-Magnat</span><span class="r-lv">Level 600</span></div>
+      <div class="lvl-rank-row"><span class="r-emoji">💎</span><span class="r-name">Legende des Herzens</span><span class="r-lv">Level 700</span></div>
+      <div class="lvl-rank-row hot"><span class="r-emoji">💖</span><span class="r-name">Mythisch</span><span class="r-lv">Level 743</span></div>
+    </div>
+  </section>
+
+  <!-- ══════════ PRESTIGE ══════════ -->
+  <section class="sec2" id="prestige">
+    <div class="sec-head reveal">
+      <div class="kicker">Prestige</div>
+      <h2>Jeder Zyklus ist <span class="grad-text">ein Kapitel deines Herzens</span>.</h2>
+      <p>Wer einen ganzen Zyklus (743 Level) durchspielt, startet bei Level 0 — aber mit <b>ehemaligem Ruhm</b>: Der Prestige-Titel bleibt für immer sichtbar, die Kurve wird steiler, die Legende wächst.</p>
+    </div>
+    <div class="prestige-grid reveal">
+      <div class="prestige-card"><div class="p-emoji">🕊️</div><div class="p-name">Herzengel</div><div class="p-sub">Prestige 1 · nach Zyklus 1</div></div>
+      <div class="prestige-card"><div class="p-emoji">🌹</div><div class="p-name">Rosenritter(in)</div><div class="p-sub">Prestige 2 · nach Zyklus 2</div></div>
+      <div class="prestige-card"><div class="p-emoji">💜</div><div class="p-name">Liebe-As</div><div class="p-sub">Prestige 3 · nach Zyklus 3</div></div>
+      <div class="prestige-card"><div class="p-emoji">🌙</div><div class="p-name">Stern der Liebe</div><div class="p-sub">Prestige 4 · nach Zyklus 4</div></div>
+      <div class="prestige-card"><div class="p-emoji">🌌</div><div class="p-name">Love-Mythos</div><div class="p-sub">Prestige 5 · nach Zyklus 5</div></div>
+      <div class="prestige-card"><div class="p-emoji">✨</div><div class="p-name">Unsterbliches Herz</div><div class="p-sub">Prestige 6+ · für Ewigkeits-Spieler</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════ BESTENLISTE ══════════ -->
+  <section class="sec2" id="live">
+    <div class="sec-head reveal">
+      <div class="kicker">Live aus dem Bot</div>
+      <h2>Bestenliste — <span class="grad-text">echt, nicht gestellt</span>.</h2>
+      <p>Top 10 nach Prestige, Level und XP — direkt aus der Profil-Datenbank des Bots. <code style="font-family:var(--mono);font-size:12px">$top</code> zeigt dir das gleiche im Chat.</p>
+    </div>
+    <div class="lb-list" id="lbList"><div class="lb-row2"><div class="rank2">…</div><div class="lb2-name">Lade …</div></div></div>
+  </section>
+
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Der WhatsApp-Bot mit Herz — gebaut von Maxichen. Liebe, Spiele, Economy, KI und ein Live-Dashboard in einem.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/level.html">Level-System</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/statistics.html">Statistiken</a>
+        <a href="/leaderboard.html">Bestenliste</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/impressum.html">Impressum</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p id="footOwner"></p>
+    <p style="margin-top:6px">© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+(function () {
+  var MEDALS = ['🥇', '🥈', '🥉'];
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function de(n) { return Number(n || 0).toLocaleString('de-DE'); }
+  function render(list) {
+    var el = document.getElementById('lbList');
+    if (!list || !list.length) {
+      el.innerHTML = '<div class="lb-row2"><div class="rank2">💤</div><div class="lb2-name">Noch niemand ist aufgestiegen.</div><div class="lb2-vals"><span>Sei der Erste — nette Nachrichten zählen!</span></div></div>';
+      return;
+    }
+    el.innerHTML = list.map(function (u, i) {
+      var cls = i < 3 ? ' lb-row2 gold' : ' lb-row2';
+      var prestige = (u.prestige || 0) > 0 ? ('P' + u.prestige + ' · ') : '';
+      return '<div class="' + cls.trim() + '">' +
+        '<div class="rank2">' + (MEDALS[i] || (i + 1)) + '</div>' +
+        '<div><div class="lb2-name">' + esc(u.name) + '</div><div class="lb2-rank">' + esc(u.rank || '') + '</div></div>' +
+        '<div class="lb2-vals"><b>' + prestige + 'Level ' + de(u.level) + '</b><span>' + de(u.xp) + ' XP im Level · Σ ' + de(u.totalXp) + ' XP' + (u.streak ? ' · 🔥 ' + de(u.streak) + 'd' : '') + '</span></div>' +
+        '</div>';
+    }).join('');
+  }
+  fetch('/api/leaderboard').then(function (r) { return r.json(); }).then(function (d) { render(d.topLevel); }).catch(function () {
+    render([{ name: 'maxichen', rank: '🌷 Flirter', level: 24, prestige: 0, xp: 1284, totalXp: 5481, streak: 3 }]);
+  });
+})();
+</script>
+<script src="/js/landing.js"></script>
+</body>
+</html>

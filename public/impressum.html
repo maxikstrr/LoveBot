@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impressum 💜 — LoveBot by Maxichen 2026</title>
+<meta name="description" content="Impressum von LoveBot by Maxichen 2026 — Angaben zum Anbieter, Kontakt und rechtliche Hinweise.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#07050f">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+<style>
+  .legal { max-width: 880px; margin: 0 auto; padding: 70px 0 60px; }
+  .legal h1 { font-size: clamp(28px, 4.5vw, 40px); font-weight: 900; margin-bottom: 10px; }
+  .legal > p.lead { color: var(--muted); font-size: 14.5px; margin-bottom: 26px; }
+  .legal h2 { margin: 34px 0 12px; font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .legal h3 { margin: 20px 0 8px; font-size: 15.5px; font-weight: 800; color: var(--brand-2); }
+  .legal p, .legal li { color: var(--muted); font-size: 14px; line-height: 1.75; }
+  .legal ul { padding-left: 20px; margin: 8px 0 12px; }
+  .legal a { color: var(--brand-2); }
+  .legal .box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 18px 20px; margin: 14px 0; }
+  .legal .box p { margin: 0; }
+  .legal .box p + p { margin-top: 8px; }
+  .legal b, .legal strong { color: var(--text); }
+  .banner-warn {
+    margin: 22px 0; padding: 16px 20px; border-radius: var(--r-md);
+    background: rgba(251,113,133,.08); border: 1px solid rgba(251,113,133,.4);
+    color: var(--err); font-weight: 700; font-size: 14px; line-height: 1.6;
+  }
+  .banner-ok {
+    margin: 22px 0; padding: 16px 20px; border-radius: var(--r-md);
+    background: rgba(52,211,153,.08); border: 1px solid rgba(52,211,153,.4);
+    color: var(--ok); font-weight: 700; font-size: 14px; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/spiele.html">Spiele</a>
+    <a href="/level.html">Level</a>
+    <a href="/regeln.html">Regeln</a>
+    <a href="/status.html">Status</a><a href="/statistics.html">Statistiken</a><a href="/leaderboard.html">Bestenliste</a><a href="/sessions.html">Sessions</a><a href="/docs.html">Docs</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+  <div class="legal">
+    <h1>💜 Impressum</h1>
+    <p class="lead">Angaben gemäß § 5 TMG — wer hinter LoveBot steckt und wie man uns erreicht.</p>
+
+    <div id="impBanner" class="banner-warn" style="display:none"></div>
+
+    <div class="legal-check" id="impCheck">
+      <div class="lc-head red" id="impCheckHead">🔴 PUBLICATION CHECK — wird geladen …</div>
+      <div id="impCheckRows"></div>
+      <div class="lc-foot" id="impCheckFoot">Produktionscheck: Diese Seite zeigt nur echte, hinterlegte Angaben. Solange Felder leer sind, erscheinen markierte Platzhalter — erfundene Daten werden nie ausgegeben.</div>
+    </div>
+
+    <h2>1. Anbieter</h2>
+    <div class="box">
+      <p id="impName"></p>
+      <p id="impAddress"></p>
+    </div>
+
+    <h2>2. Kontakt</h2>
+    <div class="box">
+      <p id="impEmail"></p>
+      <p id="impPhone"></p>
+    </div>
+
+    <h2>3. Betreiberstatus</h2>
+    <div class="box">
+      <p id="impStatus"></p>
+      <div id="impGewerbe" style="display:none"></div>
+    </div>
+
+    <h2>4. EU-Streitschlichtung</h2>
+    <div class="box">
+      <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit. Als Privatperson ohne kommerzielle Tätigkeit sind wir nicht verpflichtet oder berechtigt, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+    </div>
+
+    <h2>5. Haftung für Inhalte</h2>
+    <div class="box">
+      <p>Als Anbieter sind wir für die eigenen Inhalte dieser Website nach den allgemeinen Gesetzen verantwortlich. Von diesen Inhalten sind die externen Links, auf die von dieser Website aus verwiesen wird, ausdrücklich ausgenommen. Für diese fremden Inhalte kann keine Gewähr übernommen werden; für sie ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die Website wurde sorgfältig geprüft, es gab bei Veröffentlichung keine Rechtsverstöße. Sollte sich der Inhalt im Laufe der Zeit ändern, wird der Link nach Kenntnisnahme sofort entfernt.</p>
+    </div>
+
+    <h2>6. Haftung für Links</h2>
+    <div class="box">
+      <p>Unser Angebot enthält ggf. Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen.</p>
+    </div>
+
+    <h2>7. Urheberrecht</h2>
+    <div class="box">
+      <p>Die durch den Seiteninhaber erstellten Inhalte und Werke auf dieser Website unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Beiträge Dritter sind als solche gekennzeichnet. Die Wiedergabe von Inhalten in Bildung und für Wissenschaft ist, auch ohne Zustimmung, nur im Rahmen der gesetzlichen Zitatreglementierung zulässig.</p>
+    </div>
+
+    <h2>8. Hinweis</h2>
+    <div class="box">
+      <p>Ob und in welchem Umfang für diese Website weitere Informationspflichten bestehen, hängt von der konkreten Ausgestaltung des Angebots ab. Diese Fassung ist eine technische Vorlage und wurde nicht anwaltlich geprüft — vor einer kommerziellen Nutzung sollte sie rechtlich gecheckt werden.</p>
+    </div>
+
+    <p style="margin-top:26px">🔒 Mehr zu den gespeicherten Daten: <a href="/datenschutz.html">Datenschutzerklärung</a> · <a href="/level.html">Level-System</a> · <a href="/">Startseite</a></p>
+  </div>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer>
+  <div class="foot-inner">
+    <div>
+      <div class="foot-brand"><span class="h">💜</span><b>LOVEBOT</b></div>
+      <p class="foot-desc">Der WhatsApp-Bot mit Herz — gebaut von Maxichen. Liebe, Spiele, Economy, KI und ein Live-Dashboard in einem.</p>
+    </div>
+    <div>
+      <h4>Navigation</h4>
+      <div class="flinks">
+        <a href="/">Start</a>
+        <a href="/features.html">Features</a>
+        <a href="/cmd.html">Befehle</a>
+        <a href="/level.html">Level-System</a>
+        <a href="/status.html">Live-Status</a>
+        <a href="/statistics.html">Statistiken</a>
+        <a href="/leaderboard.html">Bestenliste</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/impressum.html">Impressum</a>
+      </div>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <div class="socials" id="socials"></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <p id="footOwner"></p>
+    <p style="margin-top:6px">© <span id="year">2026</span> LoveBot by Maxichen 2026 · <a href="https://maxichen.gamebot.me" target="_blank" rel="noopener">maxichen.gamebot.me</a> · <a href="https://maxichen.de" target="_blank" rel="noopener">maxichen.de</a> · Made with 💜</p>
+  </div>
+</footer>
+
+<script src="/js/common.js"></script>
+<script>
+(function () {
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function ph(label) { return '<span class="imp-ph">[' + label + ']</span>'; }
+  function val(v, fallbackLabel) { var t = String(v == null ? '' : v).trim(); return t ? esc(t) : ph(fallbackLabel); }
+
+  function render(data) {
+    var b = data.betreiber || {};
+    var name = [b.vorname, b.nachname].filter(function (x) { return String(x || '').trim(); }).join(' ');
+    var street = [b.strasse, b.plz + ' ' + b.ort].filter(function (x) { return String(x || '').trim(); });
+    var nameOk = !!name, addrOk = street.length === 2, emailOk = !!String(b.email || '').trim(), phoneOk = !!String(b.telefon || '').trim();
+
+    document.getElementById('impName').innerHTML = nameOk ? ('<b>' + esc(name) + '</b>') : (val(b.vorname, 'Dein Vorname') + ' ' + val(b.nachname, 'Dein Nachname'));
+    document.getElementById('impAddress').innerHTML = addrOk ? (esc(street[0]) + '<br>' + esc(street[1])) : (val(b.strasse, 'Deine Straße + Hausnummer') + '<br>' + val(b.plz, 'PLZ') + ' ' + val(b.ort, 'Ort'));
+    document.getElementById('impEmail').innerHTML = emailOk ? ('E-Mail: <a href="mailto:' + esc(b.email) + '">' + esc(b.email) + '</a>') : ('E-Mail: ' + val(b.email, 'Deine E-Mail-Adresse'));
+    document.getElementById('impPhone').innerHTML = phoneOk ? ('Telefon: <a href="tel:' + esc(b.telefon) + '">' + esc(b.telefon) + '</a>') : ('Telefon: ' + val(b.telefon, 'Deine Telefonnummer (optional)'));
+
+    var status = document.getElementById('impStatus');
+    if (data.status && data.status.kommerziell) {
+      var g = data.gewerblich || {};
+      status.innerHTML = esc(data.status.hinweis || 'LoveBot wird gewerblich betrieben.');
+      var gbox = document.getElementById('impGewerbe');
+      gbox.style.display = '';
+      gbox.innerHTML = '<div style="margin-top:10px">' +
+        '<p>' + (String(g.ustIdNr || '').trim() ? 'USt-IdNr.: <b>' + esc(g.ustIdNr) + '</b>' : 'USt-IdNr.: ' + val(g.ustIdNr, 'USt-IdNr.')) + '</p>' +
+        '<p>' + (String(g.registergericht || '').trim() && String(g.registernummer || '').trim() ? 'Registereintrag: <b>' + esc(g.registergericht) + ', ' + esc(g.registernummer) + '</b>' : 'Registereintrag: ' + val(g.registergericht, 'Registergericht') + ' / ' + val(g.registernummer, 'Registernummer')) + '</p>' +
+        (String(g.aufsichtsbehoerde || '').trim() ? '<p>Aufsichtsbehörde: <b>' + esc(g.aufsichtsbehoerde) + '</b></p>' : '') +
+        '</div>';
+    } else {
+      status.innerHTML = esc((data.status && data.status.hinweis) || 'LoveBot ist ein privat betriebenes Hobbyprojekt und wird ohne kommerzielle Gewinnerzielungsabsicht betrieben.') +
+        ' <span style="color:var(--faint);font-size:12.5px">_(Privatanbieter — keine Gewerbeanmeldung.)_</span>';
+    }
+
+    /* Produktionscheck */
+    var gewOk = data.status && data.status.kommerziell ? false : true;
+    if (data.status && data.status.kommerziell) {
+      var g2 = data.gewerblich || {};
+      gewOk = !!(String(g2.ustIdNr || '').trim() && String(g2.registergericht || '').trim() && String(g2.registernummer || '').trim());
+    }
+    var rows = [
+      ['Betreiber (Name)', nameOk],
+      ['Adresse', addrOk],
+      ['E-Mail', emailOk],
+      ['Telefon', phoneOk],
+      ['Betreiberstatus', true]
+    ];
+    if (data.status && data.status.kommerziell) rows.push(['Gewerbe-Angaben (USt-IdNr. etc.)', gewOk]);
+    var ready = nameOk && addrOk && emailOk && (data.status && data.status.kommerziell ? gewOk : true);
+    var rowsHtml = rows.map(function (r) {
+      return '<div class="lc-row"><span>' + r[0] + '</span><span class="lc-state ' + (r[1] ? 'ok' : 'missing') + '">' + (r[1] ? '✓ hinterlegt' : '⚠ fehlt') + '</span></div>';
+    }).join('');
+    document.getElementById('impCheckRows').innerHTML = rowsHtml;
+    var head = document.getElementById('impCheckHead');
+    if (ready) {
+      head.className = 'lc-head green';
+      head.textContent = '🟢 PUBLICATION CHECK — Impressum vollständig & veröffentlichungsbereit';
+      var banner = document.getElementById('impBanner');
+      banner.className = 'banner-ok'; banner.style.display = '';
+      banner.textContent = '✅ Alle Anbieterangaben sind hinterlegt — die Seite zeigt ausschließlich echte Angaben.';
+    } else {
+      head.className = 'lc-head red';
+      head.textContent = '🔴 PUBLICATION CHECK — Impressum noch nicht veröffentlichungsbereit';
+      var banner = document.getElementById('impBanner');
+      banner.className = 'banner-warn'; banner.style.display = '';
+      banner.innerHTML = '⚠ <b>IMPRESSUM UNVOLLSTÄNDIG</b> — Bitte echte Betreiberangaben in <code style="font-family:var(--mono);font-size:12px">public/impressum-data.json</code> hinterlegen, bevor die Website veröffentlicht wird. Diese Seite zeigt bewusst <b>keine erfundenen Daten</b> — leere Felder erscheinen als markierte Platzhalter.';
+    }
+  }
+
+  fetch('/impressum-data.json')
+    .then(function (r) { return r.json(); })
+    .catch(function () { return null; })
+    .then(function (d) { render(d || { betreiber: {}, status: {} }); });
+})();
+</script>
+<script src="/js/landing.js"></script>
+</body>
+</html>

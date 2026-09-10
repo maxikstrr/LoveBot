@@ -39,6 +39,7 @@
     <a href="/">Start</a>
     <a href="/features.html">Features</a>
     <a href="/cmd.html">Befehle</a>
+    <a href="/level.html">Level</a>
     <a href="/faq.html">FAQ</a>
     <a href="/datenschutz.html" class="active">Datenschutz</a>
     <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
@@ -83,9 +84,23 @@
       <tr><td>Gruppen-Metadaten (Gruppenname, Mitgliederliste über WhatsApp)</td><td>Moderations-Funktionen (falls vom Gruppen-Admin aktiviert)</td><td>lokale Bot-Datenbank</td></tr>
     </table>
 
+    <h3>💜 Level-System, Economy &amp; Games (ab 10.09.2026)</h3>
+    <p>Das neue Level-System verarbeitet die <b>Art</b> deiner Nachrichten, um XP zu vergeben. Wichtig im Detail:</p>
+    <table>
+      <tr><th>Daten</th><th>Zweck</th><th>Rechtsgrundlage</th></tr>
+      <tr><td>XP-Wert, Level, Prestige, Streak, benötigtes XP</td><td>Level-System &amp; Bestenlisten</td><td>Art. 6 Abs. 1 lit. a DSGVO (deine Zustimmung per <span class="mono">$dsgvo accept</span>)</td></tr>
+      <tr><td>XP-Quellen-Zähler (Nachrichten, nette Nachrichten, Befehle, Spiele, Dailies, Arbeit)</td><td>Transparenz im Level-Profil (<span class="mono">$level</span>)</td><td>Art. 6 Abs. 1 lit. a DSGVO</td></tr>
+      <tr><td>Gleitendes XP-Zeitfenster (Zeitstempel + XP-Betrag, max. 60 Minuten alt)</td><td>Anti-Spam: begrenzt XP auf 300/Std. (Nachrichten) bzw. 150/Std. (Befehle)</td><td>Art. 6 Abs. 1 lit. a DSGVO</td></tr>
+      <tr><td>Wallet (Kupfer/Silber/Gold/Platin), Bank, Inventar, Geschenke-Historie</td><td>Economy-System ($shop, $buy, $gift, $pay, $rob)</td><td>Art. 6 Abs. 1 lit. a DSGVO</td></tr>
+      <tr><td>Spiel-Statistiken (Galgen-/Rätsel-Siege, Streaks, letzte Spiele)</td><td>Spiele &amp; Achievements</td><td>Art. 6 Abs. 1 lit. a DSGVO</td></tr>
+    </table>
+    <p><b>Erkennung „nett“ vs. „normal“:</b> Der Bot prüft Nachrichtentexte ausschließlich <b>lokal im Bot-Prozess</b> gegen eine feste Liste deutscher Liebes-Wörter und Emojis (keine KI, keine externe Analyse, keine Cloud). <b>Gespeichert wird nur das Ergebnis (XP-Betrag + Quelle) — der Textinhalt selbst wird nie aufgezeichnet oder archiviert.</b> Nachrichten ohne Liebes-Markern geben weniger XP, werden aber genauso ignoriert wie vorher: es findet keine Inhaltsauswertung statt.</p>
+    <p>Wer der Bestenliste (<span class="mono">$top</span>, Website-Bestenliste) nicht erscheinen will, kann die Verarbeitung über die in Abschnitt „Löschung“ genannten Wege einfordern.</p>
+
     <h3>Was wird NICHT gespeichert?</h3>
     <ul>
       <li>Keine privaten Chat-Inhalte, die nicht an den Bot gerichtet sind</li>
+      <li>Kein Nachrichtentext: Die Nette-Erkennung des Level-Systems liest den Text nur flüchtig im Arbeitsspeicher aus, um XP zu werten — er landet in keinem Speicher</li>
       <li>Durch den WhatsApp-Bot selbst kein Standort und keine Kontaktliste</li>
       <li>Bei Minderjährigen (unter 18, laut Selbstangabe) kein exaktes Alter — nur „unter 18“</li>
     </ul>
@@ -159,6 +174,8 @@
         <a href="/cmd.html">Befehle</a>
         <a href="/faq.html">FAQ</a>
         <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/level.html">Level-System</a>
+        <a href="/impressum.html">Impressum</a>
       </div>
     </div>
     <div>

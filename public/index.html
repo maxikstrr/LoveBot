@@ -29,6 +29,7 @@
     <a href="/features.html">Features</a>
     <a href="/cmd.html">Befehle</a>
     <a href="/spiele.html">Spiele</a>
+    <a href="/level.html">Level</a>
     <a href="/regeln.html">Regeln</a>
     <a href="/status.html">Status</a><a href="/statistics.html">Statistiken</a><a href="/leaderboard.html">Bestenliste</a><a href="/sessions.html">Sessions</a><a href="/docs.html">Docs</a>
     <a href="/faq.html">FAQ</a>
@@ -44,7 +45,7 @@
     <span class="badge"><span class="dot"></span> Läuft gerade · <span data-clock-brief>—</span></span>
     <img class="hero-logo" src="/assets/img/logo.png" alt="LoveBot Logo" onerror="this.outerHTML='<span class=&quot;hero-emoji&quot;>💜</span>'">
     <h1>Der WhatsApp-Bot,<br>mit dem man sich <span class="grad">verliebt</span>.</h1>
-    <p class="sub"><b>LoveBot by Maxichen 2026</b> bringt Herzen, Spiele und Ordnung in deine Gruppen — heirate, spiele Slot, verdiene Kupfer, lass KI Bilder malen. Alles direkt im Chat, ohne App. <b>232+ Befehle</b>, ein Präfix: <b>$</b></p>
+    <p class="sub"><b>LoveBot by Maxichen 2026</b> bringt Herzen, Spiele und Ordnung in deine Gruppen — heirate, spiele Slot, verdiene Kupfer, lass KI Bilder malen. Jede nette Nachricht bringt <b>XP & Level</b>. Alles direkt im Chat, ohne App. <b>232+ Befehle</b>, ein Präfix: <b>$</b></p>
     <div class="cta-row">
       <a class="btn" href="/cmd.html">📜 Alle Befehle ansehen</a>
       <a class="btn ghost" href="/login.html">💜 Zum Dashboard</a>
@@ -66,6 +67,50 @@
       <div class="cell"><div class="num" id="cntGroups">…</div><div class="lbl">Gruppen</div></div>
       <div class="cell"><div class="num" id="cntCmds">…</div><div class="lbl">Befehle</div></div>
       <div class="cell"><div class="st on" id="cntBot"><span class="dot"></span> LIVE</div><div class="lbl">Bot-Status</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════ LEVEL SYSTEM ══════════ -->
+  <section id="levelsystem" style="padding-top:34px">
+    <div class="sec-head reveal">
+      <div class="kicker">💜 Neu: Level-System</div>
+      <h2>Jede nette Nachricht bringt <span class="grad-text">Level</span>.</h2>
+      <p>XP für Nachrichten, Komplimente, Befehle, Dailies &amp; Spiele — 15 Ränge, 743 Level pro Prestige-Zyklus und Kupfer-Belohnungen bei jedem Level-Up. <b>Level 0 → 743, dann ein neues Kapitel.</b></p>
+    </div>
+    <div class="lvl-wrap reveal">
+      <div class="lvl-card">
+        <div class="lvl-top">
+          <div class="lvl-avatar">💜</div>
+          <div>
+            <div class="lvl-name">maxichen <span class="lvl-rank-badge">🌷 Flirter</span></div>
+            <div class="lvl-sub">Prestige 0 · Level 24 · 🔥 3 Tage Streak</div>
+          </div>
+        </div>
+        <div class="lvl-xp">
+          <div class="lvl-xp-labels"><span><b>1.284 XP</b></span><span>Level 25 — noch 612 XP</span></div>
+          <div class="lvl-bar"><div class="lvl-bar-fill" style="--target:68%"></div></div>
+        </div>
+        <div class="lvl-chips">
+          <span class="chip">💬 Nachricht +5 XP</span>
+          <span class="chip">💜 Nette Nachricht ×2–×3</span>
+          <span class="chip">🌹 „Du bist so schön“ +5 Bonus</span>
+          <span class="chip">⚙️ Jeder Befehl +2 XP</span>
+          <span class="chip">💋 Liebes-Aktion +5 XP</span>
+          <span class="chip">🎮 Spiel-Sieg +15 XP</span>
+          <span class="chip">💎 $daily +50 XP</span>
+        </div>
+      </div>
+      <div class="lvl-ranks">
+        <div class="lvl-rank-row"><span class="r-emoji">🐣</span><span class="r-name">Neuling</span><span class="r-lv">Level 0</span></div>
+        <div class="lvl-rank-row"><span class="r-emoji">🌸</span><span class="r-name">Herzling</span><span class="r-lv">Level 10</span></div>
+        <div class="lvl-rank-row hot"><span class="r-emoji">🌷</span><span class="r-name">Flirter</span><span class="r-lv">Level 25</span></div>
+        <div class="lvl-rank-row"><span class="r-emoji">💕</span><span class="r-name">Romantiker</span><span class="r-lv">Level 50</span></div>
+        <div class="lvl-rank-row"><span class="r-emoji">🌹</span><span class="r-name">Rose des Herzens</span><span class="r-lv">Level 100</span></div>
+        <div class="lvl-rank-row"><span class="r-emoji">👑</span><span class="r-name">Herzfürst(in) <small style="color:var(--faint)">→ bis 💖 Mythisch (743) &amp; 🕊️ Prestige-Titel</small></span><span class="r-lv">Level 500</span></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:26px" class="reveal">
+      <a class="btn" href="/level.html">💜 Level-System im Detail</a>
     </div>
   </section>
 
@@ -98,7 +143,7 @@
     <div class="cards">
       <div class="card reveal"><div class="ico">💍</div><h3>Liebe &amp; Ehe</h3><p>Echte Anträge mit Ja/Nein-Antwort, Scheidung, Ship &amp; Love-o-Meter, Küsse, Umarmungen und Komplimente.</p><a class="card-link" href="/cmd.html">Befehle ansehen →</a></div>
       <div class="card reveal"><div class="ico">🎰</div><h3>Spiele &amp; Slot</h3><p>Slot-Machine mit Sound, Mini-Slot, Würfeln, 8-Ball, Quiz, Wahrheit oder Pflicht, Schere-Stein-Papier &amp; mehr.</p><a class="card-link" href="/cmd.html">Befehle ansehen →</a></div>
-      <div class="card reveal"><div class="ico">💰</div><h3>Economy &amp; Level</h3><p>Tägliche Belohnung, Arbeiten, Gamble-Kupfer, Wallet, Top-10-Rangliste, Level &amp; Prestige-System.</p><a class="card-link" href="/cmd.html">Befehle ansehen →</a></div>
+      <div class="card reveal"><div class="ico">💰</div><h3>Economy &amp; Level</h3><p>XP für nette Nachrichten (bis ×3!), Dailies, Spiele &amp; Arbeit — 15 Ränge, 743 Level, Prestige-Titel, Kupfer-Belohnungen und eine Live-Bestenliste.</p><a class="card-link" href="/level.html">Level-System ansehen →</a></div>
       <div class="card reveal"><div class="ico">👥</div><h3>Gruppen-Tools</h3><p>TagAll, Umfragen, Gruppen-Infos, Regeln, Willkommens-Nachrichten — 14 Features per <b>$an / $aus</b> schaltbar.</p><a class="card-link" href="/features.html">Alle Features →</a></div>
       <div class="card reveal"><div class="ico">🛡️</div><h3>Automod &amp; Schutz</h3><p>Badword-Filter mit Warn-Kette, Anti-Link, Auto-Kick, Ban-System mit JID- &amp; LID-Erkennung überall.</p><a class="card-link" href="/features.html">Mehr erfahren →</a></div>
       <div class="card reveal"><div class="ico">🎨</div><h3>Medien &amp; KI</h3><p>AI-Bilder &amp; Videos, Audio-Effekte, Musik laden, YouTube-, TikTok- &amp; Instagram-Auto-Download.</p><a class="card-link" href="/features.html">Mehr erfahren →</a></div>
@@ -149,11 +194,13 @@
         <a href="/">Start</a>
         <a href="/features.html">Features</a>
         <a href="/cmd.html">Befehle</a>
+        <a href="/level.html">Level-System</a>
         <a href="/status.html">Live-Status</a>
         <a href="/statistics.html">Statistiken</a>
         <a href="/leaderboard.html">Bestenliste</a>
         <a href="/faq.html">FAQ</a>
         <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/impressum.html">Impressum</a>
       </div>
     </div>
     <div>

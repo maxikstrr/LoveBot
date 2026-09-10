@@ -230,12 +230,39 @@ async function renderOverview(v) {
     '<div class="box"><h3>🏆 Top Paare</h3>' + (d.topCouples.length ? '<table><tr><th>#</th><th>Paar</th><th>Love-XP</th></tr>' +
       d.topCouples.map((x, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc2(x.n1) + ' 💞 ' + esc2(x.n2) + '</td><td class="mono">' + fmtN(x.loveXp) + '</td></tr>').join('') + '</table>' : '<p class="desc">Noch keine Paare.</p>') + '</div>' +
     '<div class="box"><h3>💎 Reichste Nutzer</h3>' + (d.topRich.length ? '<table><tr><th>#</th><th>Name</th><th>Kupfer</th><th>Level</th></tr>' +
-      d.topRich.map((x, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc2(x.name) + '</td><td class="mono">' + fmtN(x.copper) + '</td><td>' + x.level + '</td></tr>').join('') + '</table>' : '<p class="desc">Noch keine Wallets.</p>') + '</div>' +
+      d.topRich.map((x, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc2(x.name) + '</td><td class="mono">' + fmtN(x.copper) + '</td><td>' + (x.prestige > 0 ? 'P' + x.prestige + ' · ' : '') + x.level + '</td></tr>').join('') + '</table>' : '<p class="desc">Noch keine Wallets.</p>') + '</div>' +
+    '<div class="box" id="legalBox"><h3>⚖️ Impressum-Produktionscheck</h3><p class="desc">Wird geladen …</p></div>' +
     '<div class="box"><h3>📜 Live-Aktivität</h3><div class="feed">' +
       (d.activity || []).map(a => '<div class="feed-row"><span class="t">' + new Date(a.ts).toLocaleTimeString('de-DE') + '</span><span class="x">' + esc2(a.text) + '</span></div>').join('') || '<p class="desc">Ruhig hier.</p>' +
       '</div></div>' +
     '</div>';
   await appendFleetCards(v, d);
+  renderLegalCheck(v);
+}
+
+async function renderLegalCheck(v) {
+  const box = v.querySelector('#legalBox');
+  if (!box) return;
+  try {
+    const d = await api('/api/legal-check');
+    if (!d || d.error) { box.innerHTML = '<h3>⚖️ Impressum-Produktionscheck</h3><p class="desc">Nicht verfügbar.</p>'; return; }
+    const rows = [
+      ['Betreiber (Name)', d.checks.name],
+      ['Adresse', d.checks.adresse],
+      ['E-Mail', d.checks.email],
+      ['Telefon', d.checks.telefon],
+      ['Betreiberstatus', true]
+    ];
+    if (d.gewerblich) rows.push(['Gewerbe-Angaben', d.gewerblichOk]);
+    const head = d.ok
+      ? '<div style="padding:10px 14px;border-radius:10px;background:rgba(52,211,153,.1);color:var(--ok);font-weight:800;font-size:13px;margin-bottom:10px">🟢 Veröffentlichungsbereit</div>'
+      : '<div style="padding:10px 14px;border-radius:10px;background:rgba(251,113,133,.1);color:var(--err);font-weight:800;font-size:13px;margin-bottom:10px">🔴 NOCH NICHT veröffentlichungsbereit</div>';
+    box.innerHTML = '<h3>⚖️ Impressum-Produktionscheck</h3>' + head +
+      '<table>' + rows.map(([k, okk]) => '<tr><td>' + k + '</td><td>' + (okk ? '<span class="pill on">✓ hinterlegt</span>' : '<span class="pill off">⚠ fehlt</span>') + '</td></tr>').join('') + '</table>' +
+      '<p class="desc">Daten: <span class="mono">public/impressum-data.json</span> · Seite: <a href="/impressum.html" style="color:var(--accent)">/impressum.html</a> — nur echte Angaben, keine Platzhalter-Daten im Live-Betrieb.</p>';
+  } catch (e) {
+    box.innerHTML = '<h3>⚖️ Impressum-Produktionscheck</h3><p class="desc">Fehler beim Laden.</p>';
+  }
 }
 
 function stat(ico, num, lbl) {

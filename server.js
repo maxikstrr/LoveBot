@@ -23,6 +23,7 @@ import * as SecurityCases from './night/security-cases.js';
 import { exportXlsx } from './xlsxwriter.js';
 import { makeZip } from './zipwriter.js';
 import { migrateRegistration, isMinor, cityLabel, ageLabel, publicProfileAllowed } from './privacy.js';
+import { rankFor } from './levelsystem.js';
 
 /* 🔐 Minimaler .env-Loader (keine Zusatz-Abhängigkeit nötig): lädt
    Werte aus einer .env-Datei im Projektordner in process.env, aber
@@ -1726,10 +1727,14 @@ async function handleApi(req, res, pathname) {
       for (const bid of fs.readdirSync(dir).slice(0, 3000)) {
         try {
           const prof = JSON.parse(fs.readFileSync(path.join(dir, bid, bid + '.json'), 'utf8'));
+          const prog = prof?.progression || {};
           profiles.push({
             name: prof?.registration?.name || prof?.identity?.username || maskNumGlobal(bid.split('jid')[0]),
-            level: prof?.progression?.level || 0,
-            xp: prof?.progression?.xp || 0,
+            level: prog.level || 0,
+            prestige: prog.prestige || 0,
+            xp: prog.xp || 0,
+            totalXp: prog.totalXp || 0,
+            streak: prog.streak || 0,
             copper: prof?.wallet?.copper || 0
           });
         } catch (e) {}
@@ -1737,14 +1742,49 @@ async function handleApi(req, res, pathname) {
     } catch (e) {}
     const lp = readLoveplusGlobal();
     const couples = Object.values(lp.couples || {});
+    const byProgression = (a, b) =>
+      (b.prestige || 0) - (a.prestige || 0) || (b.level || 0) - (a.level || 0) || (b.xp || 0) - (a.xp || 0) || (b.totalXp || 0) - (a.totalXp || 0);
+    /* Nur Nutzer mit echtem Fortschritt in die Level-Bestenliste (sonst füllt sich
+       die Liste mit 0-XP-Platzhaltern). Fallback: alle, wenn niemand gestartet hat. */
+    const progressed = profiles.filter((p) => (p.level || 0) > 0 || (p.xp || 0) > 0 || (p.totalXp || 0) > 0);
+    const levelPool = progressed.length ? progressed : profiles;
     return sendJson(res, 200, {
-      topLevel: profiles.slice().sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 10)
-        .map((p) => ({ name: p.name, level: p.level, xp: p.xp })),
+      topLevel: levelPool.slice().sort(byProgression).slice(0, 10)
+        .map((p) => ({ name: p.name, level: p.level, prestige: p.prestige, xp: p.xp, totalXp: p.totalXp, streak: p.streak, rank: rankFor(p.prestige || 0, p.level || 0).full })),
       topRich: profiles.slice().sort((a, b) => (b.copper || 0) - (a.copper || 0)).slice(0, 10)
-        .map((p) => ({ name: p.name, copper: p.copper })),
+        .map((p) => ({ name: p.name, copper: p.copper, level: p.level, prestige: p.prestige })),
       topCouples: couples.slice().sort((a, b) => (b.loveXp || 0) - (a.loveXp || 0)).slice(0, 10)
         .map((c) => ({ n1: safeDisplayName(c.n1) || '💜', n2: safeDisplayName(c.n2) || '💜', loveXp: c.loveXp || 0, level: c.level || 1, streak: c.streak || 0 })),
       generatedAt: new Date().toISOString()
+    });
+  }
+
+  /* ⚖️ Impressum-Produktionscheck: ist die Impressum-Seite veröffentlichungsbereit?
+     Liest public/impressum-data.json — leere Felder = fehlt. NIE erfundene Daten! */
+  if (pathname === '/api/legal-check') {
+    let data = null;
+    try { data = JSON.parse(fs.readFileSync(path.join('public', 'impressum-data.json'), 'utf8')); } catch (e) {}
+    const b = data?.betreiber || {};
+    const checks = {
+      name: !!(String(b.vorname || '').trim() && String(b.nachname || '').trim()),
+      adresse: !!(String(b.strasse || '').trim() && String(b.plz || '').trim() && String(b.ort || '').trim()),
+      email: !!(String(b.email || '').trim()),
+      telefon: !!(String(b.telefon || '').trim())
+    };
+    const gewerblich = !!data?.status?.kommerziell;
+    let gewerblichOk = !gewerblich;
+    if (gewerblich) {
+      const g = data?.gewerblich || {};
+      gewerblichOk = !!(String(g.ustIdNr || '').trim() && String(g.registergericht || '').trim() && String(g.registernummer || '').trim());
+    }
+    const ready = checks.name && checks.adresse && checks.email && gewerblichOk;
+    return sendJson(res, 200, {
+      ok: ready,
+      checks,
+      gewerblich,
+      gewerblichOk,
+      status: data?.status?.hinweis || 'LoveBot ist ein privat betriebenes Hobbyprojekt und wird ohne kommerzielle Gewinnerzielungsabsicht betrieben.',
+      updated: data?.updated || null
     });
   }
 
@@ -2632,16 +2672,20 @@ async function handleApi(req, res, pathname) {
     const db = readDb();
     const leaderboard = Object.values(db.users || {})
       .filter((u) => u && u.progression)
-      .sort((a, b) => (b.progression.xp || 0) - (a.progression.xp || 0))
+      .sort((a, b) =>
+        (b.progression.prestige || 0) - (a.progression.prestige || 0) ||
+        (b.progression.level || 0) - (a.progression.level || 0) ||
+        (b.progression.xp || 0) - (a.progression.xp || 0))
       .slice(0, 10)
-      .map((u) => ({ name: u.identity?.username || maskNumber(u.identity?.cleanJid || ''), level: u.progression.level || 0, xp: u.progression.xp || 0, title: u.identity?.title || '' }));
+      .map((u) => ({ name: u.identity?.username || maskNumber(u.identity?.cleanJid || ''), level: u.progression.level || 0, prestige: u.progression.prestige || 0, xp: u.progression.xp || 0, title: u.identity?.title || '' }));
     return sendJson(res, 200, {
       ok: true,
       levels: [
-        { lv: 1, title: 'Newbie', icon: '❤️' }, { lv: 5, title: 'Admirer', icon: '💕' },
-        { lv: 10, title: 'Romantic', icon: '💗' }, { lv: 20, title: 'Lover', icon: '💞' },
-        { lv: 30, title: 'Soulmate', icon: '💘' }, { lv: 50, title: 'Eternal Love', icon: '💎' },
-        { lv: 100, title: 'Love Legend', icon: '👑' }
+        { lv: 0, title: 'Neuling', icon: '🐣' }, { lv: 5, title: 'Einsteiger', icon: '🌱' },
+        { lv: 10, title: 'Herzling', icon: '🌸' }, { lv: 25, title: 'Flirter', icon: '🌷' },
+        { lv: 50, title: 'Romantiker', icon: '💕' }, { lv: 100, title: 'Rose des Herzens', icon: '🌹' },
+        { lv: 200, title: 'Flammenherz', icon: '🔥' }, { lv: 500, title: 'Herzfürst(in)', icon: '👑' },
+        { lv: 743, title: 'Mythisch', icon: '💖' }
       ],
       achievements: [
         { id: 'firstlove', icon: '💌', name: 'First Love', desc: 'Erste Liebesnachricht gesendet' },

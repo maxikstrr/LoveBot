@@ -12,6 +12,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { levelUpAnnounce, prestigeAnnounce } from './levelsystem.js';
 
 /* ---------- Speicher -------------------------------------------------- */
 const STORE_PATH = path.join('Database', 'loveplus.json');
@@ -76,9 +77,18 @@ const ACHIEVEMENTS = [
   { id: 'streak_7',     emoji: '🔥', name: 'Eine Woche dabei',    desc: '7 Tage Login-Streak.' },
   { id: 'streak_30',    emoji: '☄️', name: 'Unaufhaltsam',        desc: '30 Tage Login-Streak.' },
   { id: 'rich_1000',    emoji: '💎', name: 'Kupferkönig',         desc: '1.000 Kupfer besessen.' },
-  { id: 'hangman_win',  emoji: '🪢', name: 'Worträtsler',         desc: 'Galgenmännchen gewonnen.' },
-  { id: 'riddle_ok',    emoji: '🧠', name: 'Denker',              desc: 'Rätsel gelöst.' },
-  { id: 'big_spender',  emoji: '💸', name: 'Big Spender',         desc: '500+ Kupfer im Shop ausgegeben.' }
+  { id: 'hangman_win',  emoji: '🪢', name: 'Worträtsler',          desc: 'Galgenmännchen gewonnen.' },
+  { id: 'riddle_ok',    emoji: '🧠', name: 'Denker',               desc: 'Rätsel gelöst.' },
+  { id: 'big_spender',  emoji: '💸', name: 'Big Spender',          desc: '500+ Kupfer im Shop ausgegeben.' },
+  { id: 'level_10',     emoji: '🌸', name: 'Herzling',             desc: 'Level 10 erreicht.' },
+  { id: 'level_25',     emoji: '🌷', name: 'Flirter',              desc: 'Level 25 erreicht.' },
+  { id: 'level_50',     emoji: '💕', name: 'Romantiker',           desc: 'Level 50 erreicht.' },
+  { id: 'level_100',    emoji: '🌹', name: 'Rose des Herzens',     desc: 'Level 100 erreicht.' },
+  { id: 'level_250',    emoji: '🔥', name: 'Flammenherz',          desc: 'Level 250 erreicht.' },
+  { id: 'level_500',    emoji: '👑', name: 'Herzfürst(in)',        desc: 'Level 500 erreicht.' },
+  { id: 'prestige_1',   emoji: '🕊️', name: 'Herzengel',            desc: 'Erstes Prestige-Up!' },
+  { id: 'prestige_2',   emoji: '🌹', name: 'Rosenritter(in)',      desc: 'Prestige 2 erreicht.' },
+  { id: 'prestige_3',   emoji: '💜', name: 'Liebe-As',             desc: 'Prestige 3 erreicht.' }
 ];
 
 const RIDDLES = [
@@ -209,7 +219,35 @@ function checkAchievements(store, uid, profile, events = []) {
   if ((u.lovebonus.streak || 0) >= 30) unlock(store, uid, 'streak_30', now);
   if (u.pet && u.pet.level >= 5) unlock(store, uid, 'pet_lv5', now);
   if ((u.counters.shopSpent || 0) >= 500) unlock(store, uid, 'big_spender', now);
+  /* 💜 Level-System-Achievements: Gesamtfortschritt = Prestige·744 + Level */
+  const prog = profile?.progression;
+  if (prog) {
+    const totalLvl = (prog.prestige || 0) * 744 + (prog.level || 0);
+    if (totalLvl >= 10) unlock(store, uid, 'level_10', now);
+    if (totalLvl >= 25) unlock(store, uid, 'level_25', now);
+    if (totalLvl >= 50) unlock(store, uid, 'level_50', now);
+    if (totalLvl >= 100) unlock(store, uid, 'level_100', now);
+    if (totalLvl >= 250) unlock(store, uid, 'level_250', now);
+    if (totalLvl >= 500) unlock(store, uid, 'level_500', now);
+    if ((prog.prestige || 0) >= 1) unlock(store, uid, 'prestige_1', now);
+    if ((prog.prestige || 0) >= 2) unlock(store, uid, 'prestige_2', now);
+    if ((prog.prestige || 0) >= 3) unlock(store, uid, 'prestige_3', now);
+  }
   return now;
+}
+
+/* Kleiner XP-Helfer für Spiele: gewährt XP über das Level-System und
+   liefert einen Anzeigeteil (inkl. Level-Up-Ankündigung) zurück. */
+function gameXpLine(ctx, xp, source = 'games') {
+  if (!ctx.helpers?.grantGameXp) return ' · 💜 +' + xp + ' XP';
+  const res = ctx.helpers.grantGameXp(xp, source);
+  if (!res) return '';
+  let line = ' · 💜 +' + xp + ' XP';
+  if (res.events?.length) {
+    const isPrestige = res.events.some((e) => e.type === 'prestige');
+    line += '\n\n' + (isPrestige ? prestigeAnnounce(ctx.userProfile, ctx.name) : levelUpAnnounce(ctx.userProfile, ctx.name));
+  }
+  return line;
 }
 
 function achievementPopup(list) {
@@ -603,10 +641,12 @@ cmd('rob raub', async (ctx, store) => {
     const stolen = Math.min(loot, tCopper);
     if (tWallet) { tWallet.copper -= stolen; ctx.helpers.saveUserProfile(tp); }
     wallet.copper = (wallet.copper || 0) + stolen;
+    const xpLine = gameXpLine(ctx, 15, 'games');
     ctx.helpers.saveUserProfile(userProfile);
     await send('> 🏃‍♂️💨 *RAUB ERFOLGREICH!*\n\nDu hast *@' + ctx.helpers.cleanId(target.jid || target.lid) + '* *' + stolen + ' Kupfer* abgenommen! 😈\n\n_Aber Achtung: was kommt, geht auch._ Karma beobachtet dich.');
   } else {
     wallet.copper = Math.max(0, (wallet.copper || 0) - stake);
+    const xpLine = gameXpLine(ctx, 2, 'games');
     ctx.helpers.saveUserProfile(userProfile);
     await send('> 🚨 *GESCHNAPPT!*\n\nDer Raub ging schief — du zahlst *' + stake + ' Kupfer* Strafe und wartest 1 Stunde. 🚔\n\n_Ehrlich währt am längsten. Meistens._');
   }
@@ -680,11 +720,12 @@ cmd('hangman galgen', async (ctx, store) => {
         if (!sess.shown.includes('_')) {
           const reward = 50;
           userProfile.wallet ||= { copper: 0 }; userProfile.wallet.copper += reward;
+          const xpLine = gameXpLine(ctx, 15, 'games');
           ctx.helpers.saveUserProfile(userProfile);
           const u = user(store, uid); u.counters.hangmanWins = (u.counters.hangmanWins || 0) + 1;
           delete games['hangman:' + from];
           const unlocked = checkAchievements(store, uid, userProfile, ['hangman_win']);
-          await send('> 🎉 *GELÖST: ' + sess.word + '!*\n\n' + sess.word.split('').join(' ') + '\n\n🪙 +' + reward + ' Kupfer' + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+          await send('> 🎉 *GELÖST: ' + sess.word + '!*\n\n' + sess.word.split('').join(' ') + '\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
           return true;
         }
         await send('> ✅ *Treffer!*\n\n`' + sess.shown.join(' ') + '`\n\n❤️ ' + '❤️'.repeat(Math.max(0, 8 - sess.wrong)) + '🖤'.repeat(sess.wrong) + '\n_Weiter raten oder aufgeben: ' + ctx.pref + 'hangman stop_');
@@ -693,8 +734,10 @@ cmd('hangman galgen', async (ctx, store) => {
       sess.wrong++;
       if (sess.wrong >= 8) {
         const word = sess.word;
+        const xpLine = gameXpLine(ctx, 2, 'games');
+        ctx.helpers.saveUserProfile(userProfile);
         delete games['hangman:' + from];
-        await send('> 💀 *Verloren!* Das Wort war *' + word + '*.\n\n_neue Runde: ' + ctx.pref + 'hangman_');
+        await send('> 💀 *Verloren!* Das Wort war *' + word + '*.' + xpLine + '\n\n_neue Runde: ' + ctx.pref + 'hangman_');
         return true;
       }
       await send('> ❌ *Kein „' + guess + '“ drin!*\n\n`' + sess.shown.join(' ') + '`\n\n❤️'.repeat(8 - sess.wrong) + '🖤'.repeat(sess.wrong));
@@ -710,11 +753,12 @@ cmd('hangman galgen', async (ctx, store) => {
       if (guess.replace(/\s/g, '') === sess.word.replace(/\s/g, '')) {
         const reward = 50;
         userProfile.wallet ||= { copper: 0 }; userProfile.wallet.copper += reward;
+        const xpLine = gameXpLine(ctx, 15, 'games');
         ctx.helpers.saveUserProfile(userProfile);
         const u = user(store, uid); u.counters.hangmanWins = (u.counters.hangmanWins || 0) + 1;
         delete games['hangman:' + from];
         const unlocked = checkAchievements(store, uid, userProfile, ['hangman_win']);
-        await send('> 🎉 *RICHTIG! Das Wort war ' + sess.word + '!*\n\n🪙 +' + reward + ' Kupfer' + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+        await send('> 🎉 *RICHTIG! Das Wort war ' + sess.word + '!*\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
       } else {
         sess.wrong += 2;
         await send('> ❌ *Falsches Wort!* (+2 Fehler)\n\n`' + sess.shown.join(' ') + '`\n\n' + '❤️'.repeat(Math.max(0, 8 - sess.wrong)) + '🖤'.repeat(Math.min(8, sess.wrong)));
@@ -748,17 +792,21 @@ cmd('riddle raetsel', async (ctx, store) => {
       const reward = 30;
       userProfile.wallet ||= { copper: 0 }; userProfile.wallet.copper += reward;
       ctx.helpers.saveUserProfile(userProfile);
+      const xpLine = gameXpLine(ctx, 15, 'games');
+      ctx.helpers.saveUserProfile(userProfile);
       delete games[key];
       const unlocked = checkAchievements(store, uid, userProfile, ['riddle_ok']);
-      await send('> 🧠✨ *RICHTIG!*\n\nDie Antwort war wirklich *' + sess.a + '*.\n\n🪙 +' + reward + ' Kupfer' + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+      await send('> 🧠✨ *RICHTIG!*\n\nDie Antwort war wirklich *' + sess.a + '*.\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
     } else if (/hint|tipp/i.test(answerRaw)) {
       await send('> 💡 *Tipp:* Die Antwort hat *' + sess.a.length + ' Buchstaben* und beginnt mit *„' + sess.a[0].toUpperCase() + '“*.');
     } else {
       sess.tries = (sess.tries || 0) + 1;
       if (sess.tries >= 5) {
         const a = sess.a;
+        const xpLine = gameXpLine(ctx, 2, 'games');
+        ctx.helpers.saveUserProfile(userProfile);
         delete games[key];
-        await send('> 😵 *5 Versuche vorbei!* Die Antwort war *' + a + '*.\nNeues Rätsel: *' + ctx.pref + 'riddle*');
+        await send('> 😵 *5 Versuche vorbei!* Die Antwort war *' + a + '*.' + xpLine + '\nNeues Rätsel: *' + ctx.pref + 'riddle*');
       } else {
         await send('> ❌ Leider falsch! _(Versuch ' + sess.tries + '/5)_\n💡 Tipp: *' + ctx.pref + 'riddle tipp*');
       }

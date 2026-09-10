@@ -582,6 +582,49 @@ erreichbar, sagt der Bot das ehrlich – es werden keine Werte erfunden.
 
 ---
 
+## 11.1 Level-System (XP, Level, Ränge, Prestige) — neu ab 10.09.2026
+
+Das komplette Level-System steckt in **`levelsystem.js`** (losgekoppelt, wie `lovecore.js`/`loveplus.js`).
+Die ausführliche Doku mit allen Werten: **`Dokumente/LEVEL-SYSTEM.md`**.
+
+**Kurzfassung:**
+
+- **XP-Quellen:** Nachricht 1:1 **+5**, Gruppe **+3**, nette Nachricht **×2**, Liebesnachricht **×3**,
+  Kompliment („du bist so schön …") **+5**, jeder Befehl **+2**, Liebes-Aktion **+5**, `$daily` **+50**,
+  `$dailylove` **+25**, `$work` **+10**, Spiel-Sieg **+15**, Spiel-Niederlage **+2**.
+- **Kurven-Konstante:** identisch zur SQL-Referenz `neededXpForLvOrPrestigeUp.sql` —
+  Basis 743 XP, je Level ×1.00743, 744 Level pro Prestige-Zyklus (0–743), danach Prestige-Up.
+- **Ränge:** 🐣 Neuling (0) → 🌸 Herzling (10) → 🌷 Flirter (25) → 💕 Romantiker (50) →
+  🌹 Rose des Herzens (100) → 🔥 Flammenherz (200) → 🌟 Liebesstern (400) → 👑 Herzfürst(in) (500)
+  → 💖 Mythisch (743).
+- **Prestige-Titel:** 🕊️ Herzengel (P1) · 🌹 Rosenritter(in) (P2) · 💜 Liebe-As (P3) ·
+  🌙 Stern der Liebe (P4) · 🌌 Love-Mythos (P5) · ✨ Unsterbliches Herz (P6+).
+- **Belohnungen:** Level-Up = 20 + 5·Level Kupfer (max. 400) + Chat-Ankündigung;
+  Prestige-Up = +10.000 Kupfer + großer Feiertext.
+- **Anti-Spam:** 300 XP/Stunde aus Nachrichten, 150 XP/Stunde aus Befehlen (gleitendes 60-Min-Fenster).
+- **DSGVO:** XP nur mit `$dsgvo accept` + Registrierung. Die Nette-Erkennung läuft lokal
+  (Wörterliste + Emojis), **keine Inhalte werden gespeichert**.
+- **Befehle:** `$level` (komplettes Profil), `$rank [@user]`, `$top` (Bestenliste mit Rängen).
+- **Website:** `public/level.html` (Detailseite mit Live-Bestenliste) + Sektion auf der Startseite.
+
+**Impressum & DSGVO (Web):**
+
+- Neue Seite **`public/impressum.html`** — vollständiges Impressum (§ 5 TMG, Haftung, Urheberrecht).
+- Daten **zentral in `public/impressum-data.json`**: dort werden **nur echte Angaben**
+  (Name, Adresse, E-Mail, Telefon) hinterlegt. Leere Felder zeigen markierte Platzhalter,
+  und der **Produktionscheck** (Seite + Admin-Dashboard + `/api/legal-check`) warnt,
+  solange das Impressum nicht veröffentlichungsbereit ist: **🔴 fehlt** ↔ **🟢 bereit**.
+  Es werden **nie** erfundene Daten ausgegeben.
+- `public/datenschutz.html` hat einen neuen Abschnitt „Level-System, Economy & Games"
+  (Daten, Zwecke, Rechtsgrundlagen, Text-Inhalte werden nicht gespeichert).
+
+> ⚠️ **Sicherheitshinweis:** Die Datei `.env` (Passwörter) sollte **niemals** ins öffentliche
+> Repository gelangen. Sie ist in `.gitignore` — wenn sie schon mal hochgeladen wurde:
+> Passwörter sofort ändern und die Datei aus der Historie entfernen
+> (`git rm --cached .env`, danach ggf. Historie bereinigen).
+
+---
+
 ## 12. . Neue Features: AFK, Auto-Mod, Setup, Ban, System
 
 Diese Module sind neu und speichern **alles** in `Database/Database.json` (zusätzliche
@@ -879,6 +922,7 @@ Für weiterführende Informationen gibt es in diesem Projekt zusätzlich Dokumen
 
 - `Dokumente/datenschutz.md`
 - `Dokumente/datenverarbeitung.md`
+- `Dokumente/LEVEL-SYSTEM.md` — komplettes Level-System (XP, Kurve, Ränge, Prestige, Anti-Spam, DSGVO)
 - `handbuch.md`
 
 Diese Dateien ergänzen diese README und erklären die datenschutzrechtlichen und betrieblichen Aspekte ausführlicher.

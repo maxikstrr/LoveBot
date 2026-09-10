@@ -72,6 +72,18 @@ import makeWASocket, {
 import { qrToPng } from './qrpng.js';
 /* ═══ 💖 LOVEPLUS-MODUL (Beziehung, Pets, Economy, Achievements, Games) ═══ */
 import { handleLovePlus, LOVEPLUS_HELP_CMDS, getLoveSnapshot, onMarriageAccepted } from './loveplus.js';
+import {
+  grantXp as grantLevelXp,
+  applyMessageXp,
+  applyCommandXp,
+  xpEligible,
+  ensureProgression,
+  levelUpAnnounce,
+  prestigeAnnounce,
+  profileCard,
+  rankLine,
+  topProgression
+} from './levelsystem.js';
 import { handleMediaCommand } from './mediacmds.js';
 
 /* ═══ 🏓 PING (echte Messwerte) + 🧭 ALLTAGS-TOOLS ═══ */
@@ -4914,6 +4926,27 @@ async function startBot(options = {}) {
           }
 
           if (!trimmed.startsWith(pref)) {
+            /* 💜 LEVEL SYSTEM: XP für jede Nachricht — nette/Liebesnachrichten
+               bringen das 2–3-Fache. Nur registrierte Nutzer mit DSGVO-Zustimmung,
+               Anti-Spam-Fenster (300 XP/Std.) ist in applyMessageXp drin. */
+            try {
+              if (!msg.key?.fromMe) {
+                const xpSender = await userMapping.resolveSender(msg, sock, sessionPath);
+                const xpProfile = await loadUserProfileForSender(xpSender, msg.key.participantUsername || msg.key.remoteJidUsername || '');
+                if (xpEligible(xpProfile)) {
+                  const xpRes = applyMessageXp(xpProfile, { text: trimmed, isGroup: from.endsWith('@g.us') });
+                  if (xpRes.granted > 0) {
+                    saveUserProfile(xpProfile);
+                    if (xpRes.events?.length) {
+                      const xpName = getProfileDisplayName(xpProfile, msg.pushName || cleanId(xpSender?.jid || xpSender?.lid || msg.key?.participant || from) || 'Jemand');
+                      const isPrestige = xpRes.events.some((e) => e.type === 'prestige');
+                      await sock.sendMessage(from, { text: isPrestige ? prestigeAnnounce(xpProfile, xpName) : levelUpAnnounce(xpProfile, xpName) }, { quoted: msg });
+                    }
+                  }
+                }
+              }
+            } catch (xpErr) { /* Level-System darf Nachrichten niemals blockieren */ }
+
             /* 💍 Offene Heiratsanträge können per normalem "Ja"/"Nein"
                beantwortet werden — ganz ohne Befehl. */
             const marryAnswered = await handleMarryPlainTextAnswer(sock, msg, from, trimmed);
@@ -5044,6 +5077,23 @@ async function startBot(options = {}) {
 
           /* 📡 SessionManager: Befehlszähler */
           try { SessionManager.trackCommand(SESSION_ID, command); } catch (smErr) {}
+
+          /* 💜 LEVEL SYSTEM: XP für Befehlsnutzung (+ Liebes-Aktionen zählen ×2.5).
+             Anti-Spam-Fenster: max. 150 XP/Std. aus Befehlen. */
+          if (userProfile && xpEligible(userProfile)) {
+            try {
+              const cmdXp = applyCommandXp(userProfile, { loveAction: isLoveAction(command) });
+              if (cmdXp.granted > 0) {
+                saveUserProfile(userProfile);
+                if (cmdXp.events?.length) {
+                  const cmdXpPrestige = cmdXp.events.some((e) => e.type === 'prestige');
+                  await sock.sendMessage(from, {
+                    text: cmdXpPrestige ? prestigeAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid))) : levelUpAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)))
+                  }, { quoted: msg });
+                }
+              }
+            } catch (cmdXpErr) { /* XP darf den Befehl nie blockieren */ }
+          }
 
           /* ❤️ LOVE CORE: Liebes-Aktionen zählen ($kiss, $hug, $compliment …)
              Der Couple-Key kommt aus dem loveplus-Snapshot, damit beide
@@ -7529,15 +7579,23 @@ break;
               break;
             }
             case 'dailylove': {
-              /* 🌹 Täglicher Impuls: Tipp · Kompliment · Challenge · Zitat */
+              /* 🌹 Täglicher Impuls: Tipp · Kompliment · Challenge · Zitat
+                 XP läuft jetzt durch die Level-Engine (Level-Ups möglich!). */
               const claim = claimDailyLove(userProfile?.identity?.bid || '');
-              if (claim.ok) {
-                userProfile.progression = userProfile.progression || {};
-                userProfile.progression.xp = (userProfile.progression.xp || 0) + claim.reward.xp;
-                saveUserProfile(userProfile);
+              let dlXpLine = '';
+              if (claim.ok && userProfile) {
                 try { addWalletCoins(userProfile, { copper: claim.reward.copper }); } catch (walletErr) {}
+                const dlRes = grantLevelXp(userProfile, claim.reward.xp, { source: 'dailies' });
+                saveUserProfile(userProfile);
+                if (dlRes.events?.length) {
+                  const dlPrestige = dlRes.events.some((e) => e.type === 'prestige');
+                  await sock.sendMessage(from, {
+                    text: dlPrestige ? prestigeAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid))) : levelUpAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)))
+                  }, { quoted: msg });
+                  dlXpLine = '\n\n' + (dlPrestige ? '✨ *PRESTIGE UP!* — siehe oben 👆' : '🎉 *LEVEL UP!* — siehe oben 👆');
+                }
               }
-              await sock.sendMessage(from, { text: renderDailyLove(claim, { pref }) }, { quoted: msg });
+              await sock.sendMessage(from, { text: renderDailyLove(claim, { pref }) + (claim.ok ? dlXpLine : '') }, { quoted: msg });
               await sendReaction(sock, from, claim.ok ? reactions.completion.reactions.withoutAnyProblems : '⏳', msg.key);
               console.log(c.bold + c.magenta + `[dailylove] ${claim.ok ? 'Bonus vergeben' : 'schon abgeholt'} (Serie ${claim.streak}).` + c.reset);
               break;
@@ -10486,32 +10544,53 @@ break;
               break;
             }
 
-            case 'level': {
+            case 'level':
+            case 'xp': {
+              /* 💜 Kompletes Level-Profil: Level, Prestige, Rang, XP-Balken, Quellen */
               const pP = userProfile || {};
-              const progP = pP.progression || { level: 0, xp: 0, prestige: 0, neededXpForLvOrPrestigeUp: 743 };
               const loveP = pP.love || {};
+              const nameP = getProfileDisplayName(pP, msg.pushName || cleanId(senderJid));
+              const levelCard = profileCard(pP, nameP, pref);
               await sock.sendMessage(from, {
-                text: '> 💎 *PROFIL*\n\n' +
-                  `• *Name:* ${msg.pushName || cleanId(senderJid)}\n` +
-                  `• *Level:* ${progP.level} · *Prestige:* ${progP.prestige}\n` +
-                  `• *XP:* ${progP.xp} / ${progP.neededXpForLvOrPrestigeUp}\n` +
-                  `• *Streak:* ${progP.streak || 0} 🔥\n` +
-                  `• *Titel:* ${pP.identity?.title || '—'}\n` +
-                  `• *Bio:* ${pP.identity?.bio || '—'}\n` +
-                  (loveP.spouseName ? `• *💍 verheiratet mit:* ${loveP.spouseName}\n` : '') +
-                  '\n☾ every soul has a story.'
+                text: levelCard +
+                  (pP.identity?.title ? `\n📛 Titel: *${pP.identity.title}*` : '') +
+                  (pP.identity?.bio ? `\n📝 Bio: *${pP.identity.bio}*` : '') +
+                  (loveP.spouseName ? `\n💍 verheiratet mit: *${loveP.spouseName}*` : '') +
+                  '\n\n☾ every soul has a story.'
               }, { quoted: msg });
+              break;
+            }
+
+            case 'rank':
+            case 'rang': {
+              /* 🏅 Rang zeigen: $rank (eigener) oder $rank @user (fremder) */
+              const rankMe = !args[0];
+              let rankProfile = userProfile;
+              let rankName = getProfileDisplayName(userProfile || {}, msg.pushName || cleanId(senderJid));
+              if (!rankMe) {
+                const tR = await resolveBanTarget(sock, args, sessionPath);
+                if (!tR || (!tR.jid && !tR.lid)) {
+                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden. Nutze *' + pref + 'rank @person*.' }, { quoted: msg });
+                  break;
+                }
+                rankProfile = await loadUserProfileForSender({ jid: tR.jid || '', lid: tR.lid || '' });
+                rankName = getProfileDisplayName(rankProfile || {}, tR.name || cleanId(tR.jid || tR.lid));
+              }
+              if (!rankProfile) {
+                await sock.sendMessage(from, { text: '> ☾ kein profil gefunden. die nacht vergisst niemand — aber dieses hier ist leer.' }, { quoted: msg });
+                break;
+              }
+              await sock.sendMessage(from, { text: rankLine(rankProfile, rankName) + '\n\n♡ rank is earned, not given.' }, { quoted: msg });
+              await sendReaction(sock, from, '🏅', msg.key);
               break;
             }
 
             case 'leaderboard':
             case 'lb':
             case 'top': {
+              /* 🏆 Leaderboard: jetzt nach (Prestige, Level, XP) mit Rängen */
               const dbL = readDb();
-              const rowsL = Object.values(dbL.users || {})
-                .filter((u) => u && u.progression)
-                .sort((a, b) => (b.progression.xp || 0) - (a.progression.xp || 0))
-                .slice(0, 10);
+              const rowsL = topProgression(dbL.users || {}, 10);
               if (!rowsL.length) {
                 await sock.sendMessage(from, { text: '☾ leaderboard is empty.\nnobody is awake yet.' }, { quoted: msg });
                 break;
@@ -10519,28 +10598,36 @@ break;
               const medalsL = ['👑', '', '💜'];
               await sock.sendMessage(from, {
                 text: '> 🏆 *LOVE-LEADERBOARD*\n\n' + rowsL.map((u, i) =>
-                  `${medalsL[i] || '•'} *${i + 1}.* ${u.identity?.username || cleanId(u.identity?.jid || '?')} — Lv ${u.progression.level} · ${u.progression.xp} XP`
-                ).join('\n') + '\n\n♡ stay a little longer.'
+                  `${medalsL[i] || '•'} *${i + 1}.* ${u.name} — ${u.prestige > 0 ? `P${u.prestige} · ` : ''}Lv ${u.level} · ${u.rankFull}`
+                ).join('\n') + '\n\n💡 _Nette Nachrichten bringen bis ×3 XP — aufholen leicht gemacht._\n♡ stay a little longer.'
               }, { quoted: msg });
               break;
             }
 
             case 'daily': {
-              const dbD = readDb();
-              const bidD = userProfile?.identity?.bid || cleanId(senderJid);
-              if (!dbD.users[bidD]) dbD.users[bidD] = { identity: { bid: bidD } };
-              const uD = dbD.users[bidD];
-              uD.progression = uD.progression || { level: 0, xp: 0, prestige: 0, neededXpForLvOrPrestigeUp: 743 };
+              /* 💎 Täglicher Bonus: +50 XP — jetzt mit Level-Up-Logik */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const progD = ensureProgression(userProfile);
               const todayD = new Date().toISOString().slice(0, 10);
-              if (uD.progression.lastDaily === todayD) {
+              if (progD.lastDaily === todayD) {
                 await sock.sendMessage(from, { text: '☾ you already collected today.\nthe night rewards patience.' }, { quoted: msg });
                 break;
               }
-              uD.progression.lastDaily = todayD;
-              uD.progression.xp = (uD.progression.xp || 0) + 50;
-              writeDb(dbD);
+              progD.lastDaily = todayD;
+              const dailyRes = grantLevelXp(userProfile, 50, { source: 'dailies' });
+              saveUserProfile(userProfile);
+              const dailyNameD = getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid));
+              if (dailyRes.events?.length) {
+                const dailyPrestige = dailyRes.events.some((e) => e.type === 'prestige');
+                await sock.sendMessage(from, {
+                  text: dailyPrestige ? prestigeAnnounce(userProfile, dailyNameD) : levelUpAnnounce(userProfile, dailyNameD)
+                }, { quoted: msg });
+              }
               await sock.sendMessage(from, {
-                text: `> 💎 *DAILY*\n\n+50 XP gesammelt.\n• *Gesamt:* ${uD.progression.xp} XP\n\n♡ come back tomorrow. I'll be here.`
+                text: `> 💎 *DAILY*\n\n+50 XP gesammelt.\n• *Level:* ${progD.level} · *Prestige:* ${progD.prestige}\n• *Gesamt:* ${Number(progD.xp).toLocaleString('de-DE')} / ${Number(progD.neededXpForLvOrPrestigeUp).toLocaleString('de-DE')} XP\n• *Lifetime:* ${Number(progD.totalXp).toLocaleString('de-DE')} XP\n\n♡ come back tomorrow. I'll be here.`
               }, { quoted: msg });
               await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
               break;
@@ -11418,9 +11505,20 @@ break;
               addWalletCoins(userProfile, { copper: earned });
               if (!userProfile.rewards) userProfile.rewards = {};
               userProfile.rewards.lastWorkAt = new Date().toISOString();
+              let workXpLine = '';
+              try {
+                const workXpRes = grantLevelXp(userProfile, 10, { source: 'work' });
+                if (workXpRes.events?.length) {
+                  const workPrestige = workXpRes.events.some((e) => e.type === 'prestige');
+                  await sock.sendMessage(from, {
+                    text: workPrestige ? prestigeAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid))) : levelUpAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)))
+                  }, { quoted: msg });
+                  workXpLine = workPrestige ? '\n✨ *PRESTIGE UP!* 👆' : '\n🎉 *LEVEL UP!* 👆';
+                }
+              } catch (workXpErr) {}
               saveUserProfile(userProfile);
               await sock.sendMessage(from, {
-                text: `> 💼 *ARBEITEN*\n\n${task.job}\n\n• 🤎 *+${earned} Kupfer*\n💰 *Wallet:* ${walletText(userProfile)}`
+                text: `> 💼 *ARBEITEN*\n\n${task.job}\n\n• 🤎 *+${earned} Kupfer*\n• 💜 *+10 XP*${workXpLine}\n💰 *Wallet:* ${walletText(userProfile)}`
               }, { quoted: msg });
               await sendReaction(sock, from, '💼', msg.key);
               break;
@@ -11796,7 +11894,15 @@ break;
                 senderJid, senderLid, userProfile, groupProfile, isGroup, isHost,
                 helpers: {
                   loadUserProfileForSender, saveUserProfile, resolveBanTarget,
-                  identityKey, cleanId, sendReaction, reactions
+                  identityKey, cleanId, sendReaction, reactions,
+                  /* 💜 Level-System: Spiele geben XP (Sieg +15, Niederlage +2) */
+                  grantGameXp: (amount, source = 'games') => {
+                    try {
+                      return userProfile && xpEligible(userProfile) ? grantLevelXp(userProfile, amount, { source }) : null;
+                    } catch (gameXpErr) {
+                      return null;
+                    }
+                  }
                 }
               });
               if (loveplusHandled) {
