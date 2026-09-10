@@ -251,3 +251,207 @@
 15:46:55  200 ✓ GET  /api/maintenance  · 1 ms
 15:46:55  200 ✓ GET  /api/commands  · 2 ms
 15:46:55  200 ✓ GET  /api/siteinfo  · 2 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 15:48:51       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+15:48:51  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+15:48:56  200 ✓ GET  /api/leaderboard  · 7 ms
+15:48:56  200 ✓ GET  /api/legal-check  · 1 ms
+15:48:56  200 ✓ GET  /api/legal-check
+15:48:56  200 ✓ GET  /api/leaderboard  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 15:49:14       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+15:49:14  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+15:49:21  200 ✓ GET  /api/leaderboard  · 8 ms
+15:50:10  200 ✓ GET  /api/legal-check  · 1 ms
+15:50:10  200 ✓ GET  /api/leaderboard  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:06:23       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:06:23  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:06:28  500 !! GET  /api/health  · 7 ms
+16:07:10  500 !! GET  /api/health  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:07:21       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:07:21  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:07:24  200 ✓ GET  /api/health  · 9 ms
+16:07:31  200 ✓ GET  /api/xp  · 7 ms
+16:07:42  AUDIT      › 910maxi › xp.adjusted · 4915155894714jid269574108926096lid: +100 XP — Test Phase 1: LoveCore-Integration → success
+16:07:42  200 ✓ POST /api/xp/adjust  · 4 ms
+16:07:42  400 ✕ POST /api/xp/adjust  · 2 ms
+16:07:49  200 ✓ GET  /api/security/rules  · 1 ms
+16:07:49  401 ✕ POST /api/security/rules  · 1 ms
+16:07:56  ABUSE_BURST_DETECTED       127.0.0.1                risk 35
+16:08:03  200 ✓ GET  /api/admin/overview  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:08:37       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:08:37  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:08:39  200 ✓ GET  /api/xp  · 14 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:09:56       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:09:56  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:10:07  200 ✓ GET  /api/xp  · 12 ms
+16:10:07  200 ✓ GET  /api/health  · 1 ms
+16:10:07  200 ✓ GET  /api/security/rules
+16:10:07  200 ✓ GET  /api/admin/overview  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:27:46       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:27:46  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:27:53  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail/full  · 12 ms
+16:27:53  200 ✓ GET  /api/owner-alerts  · 2 ms
+16:27:53  200 ✓ GET  /api/features
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:28:07       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:28:07  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:28:13  200 ✓ GET  /api/owner-alerts  · 9 ms
+16:28:13  200 ✓ POST /api/owner-alerts/read  · 2 ms
+16:29:11  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail/full  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:56:30       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:56:30  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:56:44  401 ✕ GET  /api/notifications  · 8 ms
+16:56:44  401 ✕ GET  /api/xp/rules  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 19:16:13       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+19:16:13  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+19:18:18  200 ✓ GET  /api/maintenance  · 10 ms
+19:18:18  200 ✓ GET  /api/commands  · 1 ms
+19:18:18  200 ✓ GET  /api/siteinfo  · 5 ms
+19:18:18  200 ✓ GET  /api/statistics  · 11 ms
+19:18:27  200 ✓ GET  /api/maintenance  · 1 ms
+19:18:27  200 ✓ GET  /api/commands  · 33 ms
+19:18:27  200 ✓ GET  /api/siteinfo  · 6 ms
+19:18:27  200 ✓ GET  /api/statistics  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 19:19:41       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+19:19:41  BOOT       › Dashboard-Webserver gestartet (Port 7777).

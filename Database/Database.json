@@ -202,9 +202,130 @@
       "progression": {
         "level": 0,
         "prestige": 0,
-        "xp": 50,
+        "xp": 71,
         "neededXpForLvOrPrestigeUp": 743,
-        "lastDaily": "2026-09-05"
+        "lastDaily": "2026-09-05",
+        "totalXp": 21,
+        "streak": 1,
+        "xpWindow": [
+          {
+            "t": 1789060619244,
+            "a": 2,
+            "s": "cmd"
+          },
+          {
+            "t": 1789060640733,
+            "a": 2,
+            "s": "cmd"
+          },
+          {
+            "t": 1789060650745,
+            "a": 2,
+            "s": "cmd"
+          },
+          {
+            "t": 1789060662308,
+            "a": 2,
+            "s": "cmd"
+          },
+          {
+            "t": 1789062387870,
+            "a": 2,
+            "s": "cmd"
+          },
+          {
+            "t": 1789062400399,
+            "a": 2,
+            "s": "cmd"
+          },
+          {
+            "t": 1789062412432,
+            "a": 9,
+            "s": "msg"
+          }
+        ],
+        "xpSources": {
+          "messages": 0,
+          "love": 9,
+          "commands": 12,
+          "games": 0,
+          "dailies": 0,
+          "work": 0,
+          "compliments": 0,
+          "media": 0
+        },
+        "streaks": {
+          "daily": {
+            "c": 1,
+            "last": "2026-09-10"
+          },
+          "chat": {
+            "c": 1,
+            "last": "2026-09-10"
+          },
+          "xp": {
+            "c": 1,
+            "last": "2026-09-10"
+          }
+        },
+        "xpLog": [
+          {
+            "s": "commands",
+            "a": 2,
+            "t": 1789060619244
+          },
+          {
+            "s": "commands",
+            "a": 2,
+            "t": 1789060640733
+          },
+          {
+            "s": "commands",
+            "a": 2,
+            "t": 1789060650745
+          },
+          {
+            "s": "commands",
+            "a": 2,
+            "t": 1789060662308
+          },
+          {
+            "s": "commands",
+            "a": 2,
+            "t": 1789062387870
+          },
+          {
+            "s": "commands",
+            "a": 2,
+            "t": 1789062400399
+          },
+          {
+            "s": "love",
+            "a": 9,
+            "t": 1789062412432
+          }
+        ],
+        "xpDaily": [
+          {
+            "d": "2026-09-10",
+            "a": 21
+          }
+        ],
+        "recentMsgs": [
+          {
+            "h": "82123f44",
+            "t": 1789062412432
+          }
+        ],
+        "unlocks": {},
+        "lastXpAt": 1789062412432,
+        "lastActiveDay": "2026-09-10",
+        "recentMsgsAllDay": [
+          {
+            "h": "82123f44",
+            "d": "2026-09-10"
+          }
+        ]
       },
       "games": {
         "gamesPlayed": 0,
@@ -263,6 +384,14 @@
         "marriedAt": "2026-04-01T00:00:00.000Z",
         "divorcedAt": null,
         "marriages": 2
+      },
+      "flags": {
+        "media": {
+          "first": null,
+          "providers": {},
+          "day": "",
+          "count": 0
+        }
       }
     },
     "245161749663894jid245161749663894lid": {
