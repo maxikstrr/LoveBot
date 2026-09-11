@@ -77,7 +77,7 @@ export function normalizeRegistration(raw = {}) {
       ageBracket,          /* 'minor' | 'adult' | 'unknown'           */
       status,
       city: cityRaw || null,
-      privacy: { hideCity: false, hideAge: false, publicProfile: false },
+      privacy: { hideCity: false, hideAge: false, publicProfile: false, hideEconomy: false },
       registeredAt: new Date().toISOString()
     }
   };
@@ -86,7 +86,7 @@ export function normalizeRegistration(raw = {}) {
 /** Bestandsdaten auf das neue Format heben (idempotent). */
 export function migrateRegistration(reg = {}) {
   const out = { ...(reg || {}) };
-  const privacy = { hideCity: false, hideAge: false, publicProfile: false, ...(out.privacy || {}) };
+  const privacy = { hideCity: false, hideAge: false, publicProfile: false, hideEconomy: false, ...(out.privacy || {}) };
 
   let age = out.age ?? null;
   let bracket = out.ageBracket || 'unknown';
@@ -164,7 +164,9 @@ const TOGGLES = {
   alter: 'hideAge',
   age: 'hideAge',
   profil: 'publicProfile',
-  profile: 'publicProfile'
+  profile: 'publicProfile',
+  economy: 'hideEconomy',
+  kupfer: 'hideEconomy'
 };
 
 /**
@@ -184,11 +186,13 @@ export async function handlePrivacyCommand({ sock, msg, from, args = [], pref = 
       `• Alter: ${ageLabel(reg, { reveal: true })}${isMinor(reg) ? ' _(geschützt)_' : ''}`,
       `• Stadt: ${cityLabel(reg, { privateChat: true })} → in Gruppen: *${cityLabel(reg, { privateChat: false })}*`,
       `• Öffentliches Profil: ${publicProfileAllowed(reg) ? '✅ aktiv' : (isMinor(reg) ? '⛔ nicht möglich (unter 18)' : '☑️ aus')}`,
+      `• Economy für andere: ${reg.privacy?.hideEconomy ? '⚫ versteckt' : '🟢 sichtbar'}`,
       '',
       `*Einstellungen:*`,
       `• \`${pref}privacy stadt an|aus\` — Stadt verstecken`,
       `• \`${pref}privacy alter an|aus\` — Alter verstecken`,
       `• \`${pref}privacy profil an|aus\` — öffentliches Profil (ab 18)`,
+      `• \`${pref}privacy economy an|aus\` — Kupfer vor anderen verstecken`,
       '',
       '💡 _Minderjährige Profile werden nie öffentlich angezeigt und speichern kein exaktes Alter._'
     ];
@@ -202,7 +206,7 @@ export async function handlePrivacyCommand({ sock, msg, from, args = [], pref = 
   if (!field) {
     await sock.sendMessage(from, {
       text: '> ❌ *UNBEKANNTE OPTION*\n\n' +
-        `Nutze: \`${pref}privacy stadt an|aus\`, \`${pref}privacy alter an|aus\` oder \`${pref}privacy profil an|aus\`.`
+        `Nutze: \`${pref}privacy stadt|alter|profil|economy an|aus\`.`
     }, { quoted: msg });
     await sendReaction(sock, from, reactions.input.reactions.invalidInput, msg.key);
     return true;
@@ -231,7 +235,7 @@ export async function handlePrivacyCommand({ sock, msg, from, args = [], pref = 
   const next = { ...(userProfile || {}), registration: { ...reg, privacy: { ...reg.privacy } } };
   if (typeof saveProfile === 'function') saveProfile(next);
 
-  const labelMap = { hideCity: 'Stadt verstecken', hideAge: 'Alter verstecken', publicProfile: 'Öffentliches Profil' };
+  const labelMap = { hideCity: 'Stadt verstecken', hideAge: 'Alter verstecken', publicProfile: 'Öffentliches Profil', hideEconomy: 'Economy verstecken' };
   await sock.sendMessage(from, {
     text: `> ✅ *PRIVATSPHÄRE AKTUALISIERT*\n\n• ${labelMap[field]}: *${on ? 'AN' : 'AUS'}*`
   }, { quoted: msg });

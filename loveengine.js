@@ -13,6 +13,8 @@
         XP_GRANTED · LEVEL_UP · PRESTIGE_UP · COINS_EARNED
         GAME_WIN · GAME_LOSS · ACHIEVEMENT_UNLOCKED
         XP_ADJUSTED (Owner) · USER_BANNED · LOGIN_FAILED
+        MILESTONE_REACHED · GOAL_COMPLETED · BADGE_UNLOCKED ·
+        TITLE_EARNED · STREAK_MILESTONE · RANK_CHANGED (Progression 4.0/5.0)
         MAINTENANCE_ON · MAINTENANCE_OFF · SESSION_EVENT
 
    2. XP-STATS (für Owner-Center & Live-Dashboard)
@@ -81,7 +83,7 @@ export function emit(type, payload = {}) {
       type: String(type || 'UNKNOWN').slice(0, 40),
       data: {}
     };
-    const allowed = ['bid', 'name', 'level', 'prestige', 'xp', 'granted', 'source', 'reason', 'delta', 'game', 'item', 'session'];
+    const allowed = ['bid', 'name', 'level', 'prestige', 'xp', 'granted', 'source', 'reason', 'delta', 'game', 'item', 'session', 'kind', 'target', 'streak', 'pos', 'total', 'prev', 'achievement', 'badge', 'title', 'amount']; /* + Progression 4.0/5.0 */
     for (const k of allowed) {
       const v = payload[k];
       if (v !== undefined && v !== null) {

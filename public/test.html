@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>System-Test 💜 — LoveBot</title>
+<meta name="description" content="LoveBot System-Test: ausschließlich echte Live-Daten via /api/health. Keine Demo-Werte.">
+<meta name="theme-color" content="#0b0614">
+<style>
+/* ═══ Liquid Glass (exakt aus Vorgabe) ═══ */
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:transparent;
+  font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue','Segoe UI',sans-serif;
+  min-height:100svh;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:contain;
+  color:#fff;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+.page{
+  max-width:380px;
+  width:100%;
+  margin:0 auto;
+  padding:10px 10px 28px;
+  contain:layout style;
+}
+
+.hero{
+  position:relative;
+  width:100%;
+  margin-bottom:18px;
+  border-radius:22px;
+  isolation:isolate;
+  contain:layout style paint;
+}
+.hero img{
+  width:100%;
+  border-radius:22px;
+  display:block;
+}
+.hero__inner{
+  position:absolute;inset:5px;border-radius:17px;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:
+    inset 0 1px 1.5px rgba(255,255,255,.14),
+    inset 0 -1px 1.5px rgba(0,0,0,.18);
+  pointer-events:none;
+}
+.hero__counter{
+  position:absolute;inset:1.5px;border-radius:20.5px;
+  border:1px solid rgba(0,0,0,.24);
+  pointer-events:none;
+}
+.hero__outer{
+  position:absolute;inset:0;border-radius:22px;
+  border:1px solid rgba(255,255,255,.32);
+  pointer-events:none;
+}
+.hero__hl-tl{
+  position:absolute;top:2px;left:8%;width:52%;height:14px;border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,0) 100%);
+  mix-blend-mode:screen;pointer-events:none;
+}
+.hero__hl-br{
+  position:absolute;bottom:2px;right:10%;width:36%;height:10px;border-radius:50%;
+  background:linear-gradient(0deg,rgba(255,255,255,.22),rgba(255,255,255,0) 100%);
+  mix-blend-mode:screen;pointer-events:none;
+}
+.hero__rim{
+  position:absolute;top:2px;left:14%;width:44%;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.60),transparent);
+  pointer-events:none;
+}
+
+.hdr{padding:0 6px 20px}
+.hdr__brand{
+  font-size:9px;font-weight:600;letter-spacing:4px;
+  background:linear-gradient(90deg,#c4b5fd,#67e8f9);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-transform:uppercase;
+}
+.hdr__title{
+  font-size:34px;font-weight:800;letter-spacing:-1px;line-height:1.05;margin-top:6px;
+  background:linear-gradient(120deg,#fff 20%,#b6c2ff 55%,#67e8f9 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hdr__meta{
+  font-size:9px;font-weight:500;letter-spacing:2px;color:rgba(255,255,255,.30);
+  text-transform:uppercase;margin-top:10px;
+}
+
+.sec{margin-bottom:18px;contain:layout style}
+.sec__hdr{display:flex;align-items:center;gap:9px;padding:0 4px 12px}
+.sec__dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 12px currentColor}
+.sec__label{font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase}
+.sec__count{
+  margin-left:auto;font-size:8px;font-weight:600;letter-spacing:1px;
+  color:rgba(255,255,255,.28);padding:3px 9px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);
+}
+
+.rows{display:flex;flex-direction:column;gap:9px;contain:layout style}
+
+.row{
+  display:flex;align-items:center;gap:12px;
+  width:100%;padding:13px 15px;
+  text-align:left;
+  border-radius:18px;
+  position:relative;overflow:hidden;
+
+  background:
+    radial-gradient(140% 130% at 50% -20%,
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,.025) 38%,
+      rgba(255,255,255,0) 72%),
+    linear-gradient(180deg,
+      rgba(255,255,255,.045) 0%,
+      rgba(255,255,255,.010) 45%,
+      rgba(0,0,0,.055) 100%);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.26),
+    inset 0 1px 0 rgba(255,255,255,.34),
+    inset 0 -1px 0 rgba(0,0,0,.24),
+    0 12px 30px rgba(0,0,0,.30),
+    0 2px 8px rgba(0,0,0,.18);
+
+  transition:transform .08s ease;
+  contain:layout style paint;
+  -webkit-user-select:none;user-select:none;
+}
+.row:active{transform:scale(.985)}
+.row:focus-visible{
+  outline:2px solid rgba(255,255,255,.55);
+  outline-offset:2px;
+}
+
+.row__inner{
+  position:absolute;inset:3px;border-radius:15px;
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.12),
+    inset 0 -1px 1px rgba(0,0,0,.15);
+  pointer-events:none;
+}
+.row__counter{
+  position:absolute;inset:1px;border-radius:17px;
+  border:1px solid rgba(0,0,0,.22);
+  pointer-events:none;
+}
+.row__hl-tl{
+  position:absolute;top:1px;left:9%;width:54%;height:6px;border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.50),rgba(255,255,255,.14) 55%,rgba(255,255,255,0) 100%);
+  pointer-events:none;
+}
+.row__hl-br{
+  position:absolute;bottom:1px;right:11%;width:38%;height:4px;border-radius:50%;
+  background:linear-gradient(0deg,rgba(255,255,255,.24),rgba(255,255,255,0) 100%);
+  pointer-events:none;
+}
+.row__rim{
+  position:absolute;top:1px;left:14%;width:46%;height:1px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.62),transparent);
+  pointer-events:none;
+}
+.row__acc{
+  position:relative;width:3px;align-self:stretch;border-radius:3px;flex-shrink:0;
+  box-shadow:0 0 10px currentColor;z-index:1;
+}
+.row__cmd{
+  font-family:'SF Mono','Fira Code','JetBrains Mono',Consolas,'Courier New',monospace;
+  font-size:12px;font-weight:700;letter-spacing:.3px;min-width:64px;flex-shrink:0;
+  text-shadow:0 1px 8px rgba(0,0,0,.45);position:relative;z-index:1;
+}
+.row__desc{
+  font-size:11px;font-weight:400;color:rgba(255,255,255,.55);letter-spacing:.2px;
+  margin-left:auto;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-shadow:0 1px 8px rgba(0,0,0,.55);position:relative;z-index:1;
+}
+.row__copied{
+  display:none;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  margin-left:auto;position:relative;z-index:1;
+}
+.row.is-copied .row__cmd,
+.row.is-copied .row__desc{display:none}
+.row.is-copied .row__copied{display:block}
+
+.toast{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:999;
+  background:rgba(20,22,28,.55);
+  -webkit-backdrop-filter:blur(14px) saturate(180%) brightness(1.05);
+  backdrop-filter:blur(14px) saturate(180%) brightness(1.05);
+  color:#fff;font-family:'SF Mono',Consolas,monospace;
+  font-size:10px;font-weight:600;letter-spacing:1.5px;
+  padding:11px 22px;border-radius:999px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.22),
+    inset 0 1.5px 0 rgba(255,255,255,.32),
+    inset 0 -1px 0 rgba(0,0,0,.20),
+    0 12px 32px rgba(0,0,0,.45);
+  opacity:0;pointer-events:none;
+  transition:opacity .12s ease;
+  contain:layout style paint;
+}
+.toast.is-visible{opacity:1}
+
+.ftr{padding:6px 0 0;text-align:center}
+.ftr__text{
+  font-size:8px;font-weight:600;letter-spacing:3px;
+  color:rgba(255,255,255,.16);text-transform:uppercase;
+}
+.ftr__dot{
+  display:inline-block;width:3px;height:3px;border-radius:50%;
+  background:rgba(255,255,255,.16);vertical-align:middle;margin:0 8px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .row{transition:none}
+  .row:active{transform:none}
+  .toast{transition:none}
+}
+/* ═══ LoveBot-Zusatz (einzige Abweichung): fixer Hintergrund, da Vorgabe body:transparent
+     für eigenständige Seite einen dunklen Untergrund braucht ═══ */
+.bg{position:fixed;inset:0;z-index:-1;
+  background:url('/test-bg.jpg') center/cover no-repeat fixed,#0b0614;}
+</style>
+<style id="catcss"></style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="page" id="page"></div>
+<script src="/js/common.js"></script>
+<script>
+'use strict';
+/* ═══ Liquid Glass (exakt aus Vorgabe) ═══ */
+const PALETTE = {
+    games: {
+        dot:   '#a78bfa',
+        label: 'linear-gradient(90deg,#c4b5fd,#818cf8)',
+        acc:   'linear-gradient(180deg,#a78bfa,#6366f1)',
+        cmd:   'linear-gradient(90deg,#e9d5ff,#a78bfa)',
+        check: '#a78bfa'
+    },
+    info: {
+        dot:   '#22d3ee',
+        label: 'linear-gradient(90deg,#67e8f9,#38bdf8)',
+        acc:   'linear-gradient(180deg,#22d3ee,#0ea5e9)',
+        cmd:   'linear-gradient(90deg,#a5f3fc,#22d3ee)',
+        check: '#22d3ee'
+    },
+    tools: {
+        dot:   '#fbbf24',
+        label: 'linear-gradient(90deg,#fcd34d,#fbbf24)',
+        acc:   'linear-gradient(180deg,#fbbf24,#f59e0b)',
+        cmd:   'linear-gradient(90deg,#fde68a,#fbbf24)',
+        check: '#fbbf24'
+    },
+    ops: {
+        dot:   '#fb7185',
+        label: 'linear-gradient(90deg,#fda4af,#fb7185)',
+        acc:   'linear-gradient(180deg,#fb7185,#e11d48)',
+        cmd:   'linear-gradient(90deg,#fecdd3,#fb7185)',
+        check: '#fb7185'
+    }
+};
+
+const escapeHTML = (() => {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return s => String(s ?? '').replace(/[&<>"']/g, c => map[c]);
+})();
+
+function categoryCSS() {
+    return Object.entries(PALETTE).map(([k, c]) => `
+.cat-${k} .sec__dot{background:${c.dot};color:${c.dot}}
+.cat-${k} .sec__label{background:${c.label};-webkit-background-clip:text;background-clip:text;color:transparent}
+.cat-${k} .row__acc{background:${c.acc};color:${c.dot}}
+.cat-${k} .row__cmd{background:${c.cmd};-webkit-background-clip:text;background-clip:text;color:transparent}
+.cat-${k} .row__copied{color:${c.check}}
+`).join('');
+}
+
+const ROW_LAYERS =
+    '<span class="row__inner"></span>' +
+    '<span class="row__counter"></span>' +
+    '<span class="row__hl-tl"></span>' +
+    '<span class="row__hl-br"></span>' +
+    '<span class="row__rim"></span>' +
+    '<span class="row__acc"></span>';
+
+/* renderRow aus Vorgabe + optionaler copy-Text (Default = Verhalten der Vorgabe).
+   Status-Seite: Kopiert wird "label: wert" statt nur dem Label. */
+function renderRow(cmd, desc, copyText) {
+    const c = escapeHTML(cmd);
+    const d = escapeHTML(desc);
+    const cp = escapeHTML(copyText ?? cmd);
+    return `<button class="row" type="button" data-cmd="${cp}" aria-label="${c}${d ? ' – ' + d : ''}">
+${ROW_LAYERS}<span class="row__cmd">${c}</span><span class="row__desc">${d}</span><span class="row__copied">Copied</span>
+</button>`;
+}
+
+function renderSection(sec) {
+    const key = PALETTE[sec.key] ? sec.key : 'info';
+    const zen = sec.zen ? sec.zen + ' ' : '';
+    const rows = Array.isArray(sec.rows) ? sec.rows : [];
+
+    const body = rows.map(r =>
+        Array.isArray(r) ? renderRow(r[0], r[1], r[2]) : renderRow(r, '')
+    ).join('');
+
+    return `<div class="sec cat-${key}">
+<div class="sec__hdr">
+<span class="sec__dot"></span>
+<span class="sec__label">${escapeHTML(zen + (sec.name || ''))}</span>
+<span class="sec__count">${rows.length}</span>
+</div>
+<div class="rows">${body}</div>
+</div>`;
+}
+
+function renderHero(url) {
+    if (!url) return '';
+    return `<div class="hero">
+<img src="${escapeHTML(url)}" alt="" decoding="async" loading="eager" />
+<span class="hero__inner"></span>
+<span class="hero__hl-tl"></span>
+<span class="hero__hl-br"></span>
+<span class="hero__rim"></span>
+<span class="hero__counter"></span>
+<span class="hero__outer"></span>
+</div>`;
+}
+
+/* ═══ LoveBot Live-Daten (statt Demo-Inhalt der Vorgabe — REAL DATA ONLY) ═══ */
+const tokenFn = (typeof getToken === 'function') ? getToken : (() => { try { return localStorage.getItem('love_token'); } catch (e) { return null; } });
+const $ = (id) => document.getElementById(id);
+document.getElementById('catcss').textContent = categoryCSS();
+
+let lastOkAt = 0, lastCheckedAt = null, lastVersion = null, inFlight = false, pollFail = false;
+
+const V = (v) => (v === null || v === undefined || v === '' || (typeof v === 'number' && !Number.isFinite(v))) ? '–' : String(v);
+const num = (v) => (v === null || v === undefined || !Number.isFinite(Number(v))) ? null : Number(v).toLocaleString('de-DE');
+const fmtDur = (sec) => {
+  if (sec === null || sec === undefined || !Number.isFinite(Number(sec))) return null;
+  const s = Math.max(0, Math.floor(Number(sec)));
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  if (d > 0) return d + 'd ' + h + 'h';
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + (s % 60) + 's';
+  return s + 's';
+};
+const fmtTime = (iso) => {
+  if (!iso) return null;
+  const t = new Date(iso).getTime();
+  return Number.isFinite(t) ? new Date(iso).toLocaleString('de-DE') : null;
+};
+/* R = Row-Tripel [label, wert, kopiertext] — alles aus Live-API, nie erfunden */
+const R = (label, wert) => [label, V(wert), label + ': ' + V(wert)];
+
+async function fetchHealth() {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 8000);
+  const headers = {};
+  const tok = tokenFn();
+  if (tok) headers['Authorization'] = 'Bearer ' + tok;
+  try {
+    const res = await fetch('/api/health', { headers, signal: ctrl.signal });
+    const data = await res.json().catch(() => null);
+    return { status: res.status, data };
+  } catch (e) {
+    return { status: (e && e.name === 'AbortError') ? 'timeout' : 'network', data: null };
+  } finally { clearTimeout(to); }
+}
+
+function buildSections(d) {
+  const comps = Array.isArray(d.components) ? d.components : [];
+  const allOk = comps.length > 0 && comps.every((c) => c.ok);
+  const wa = comps.find((c) => c.id === 'whatsapp');
+  const c = d.counts || {};
+  const s = d.system || {};
+  const ai = d.ai || {};
+  const sess = Array.isArray(d.sessions) ? d.sessions : [];
+  const files = Array.isArray(d.dbFiles) ? d.dbFiles : [];
+
+  let aiState = '–';
+  if (ai.online && ai.ready) aiState = '🟢 online';
+  else if (ai.online && !ai.ready) aiState = '🟡 konfiguration';
+  else if (!ai.online && ai.code === 'timeout') aiState = '🔴 timeout';
+  else if (!ai.online) aiState = '🔴 offline';
+
+  return [
+    { key: 'info', zen: '🤖', name: 'BOT', rows: [
+      R('version', d.version),
+      R('status', comps.length === 0 ? '–' : (allOk ? '🟢 alle ok' : '🔴 störung')),
+      R('whatsapp', wa ? ((wa.ok ? '🟢 ' : '🔴 ') + V(wa.detail)) : '–'),
+      R('nutzer', num(c.users) !== null ? num(c.users) : '–'),
+      R('gruppen', num(c.groups) !== null ? num(c.groups) : '–'),
+      R('befehle', num(c.commands) !== null ? num(c.commands) : '–'),
+      R('aliase', num(c.aliases) !== null ? num(c.aliases) : '–')
+    ]},
+    { key: 'games', zen: '🖥', name: 'SERVER', rows: [
+      R('node', s.node),
+      R('plattform', s.platform ? s.platform + (s.arch ? ' · ' + s.arch : '') : '–'),
+      R('uptime', fmtDur(s.uptimeSec)),
+      R('cpu', (s.cpu === null || s.cpu === undefined) ? '–' : s.cpu + ' %'),
+      R('ram', (s.ramMb === null || s.ramMb === undefined) ? '–' : s.ramMb + ' MB' + (s.ramTotalMb ? ' / ' + s.ramTotalMb : '')),
+      R('heap', (s.heapMb === null || s.heapMb === undefined) ? '–' : s.heapMb + ' MB'),
+      R('pid', s.pid)
+    ]},
+    { key: 'tools', zen: '💾', name: 'DATENBANK', rows: [
+      R('nutzer', num(c.users) !== null ? num(c.users) : '–'),
+      R('gruppen', num(c.groups) !== null ? num(c.groups) : '–')
+    ].concat(files.map((f) => R('📄 ' + f.name, f.sizeKb + ' KB · ' + (fmtTime(f.mtime) || '–')))) },
+    { key: 'ops', zen: '📡', name: 'SESSIONS', rows: sess.length === 0 ? [R('–', 'keine registriert')] : sess.map((x) => {
+      const on = x.status === 'CONNECTED' || x.status === 'ONLINE';
+      const up = x.uptime || (fmtDur(x.uptimeSec) || '–');
+      return R(V(x.name || x.id), (on ? '🟢 ' : '⚫ ') + V(x.status) + ' · ' + up +
+        ' · 💬' + (num(x.messages) ?? '–') + ' ⌨' + (num(x.commands) ?? '–'));
+    })},
+    { key: 'info', zen: '✨', name: 'LOVEAI', rows: [
+      R('status', aiState),
+      R('modell', ai.model),
+      R('latenz', ai.online ? ((ai.latencyMs !== null && ai.latencyMs !== undefined) ? ai.latencyMs + ' ms' : '–') : '–'),
+      R('modelle', (ai.models !== null && ai.models !== undefined) ? ai.models : '–'),
+      R('code', ai.online ? '–' : ai.code)
+    ].concat(ai.hint ? [R('hinweis', ai.hint)] : []) },
+    { key: 'games', zen: '🧩', name: 'KOMPONENTEN', rows: comps.length === 0 ? [R('–', 'keine gemeldet')] : comps.map((x) =>
+      R(V(x.label || x.id), (x.ok ? '🟢 ' : '🔴 ') + V(x.detail))) },
+    { key: 'tools', zen: '⚙', name: 'SYSTEM', rows: [
+      ['↻ aktualisieren', 'tippen', '__refresh__'],
+      R('stand', fmtTime(d.checkedAt)),
+      R('quelle', 'GET /api/health')
+    ]}
+  ];
+}
+
+function errorSections(kind) {
+  const defs = {
+    401:   { t: '🔐 Nicht eingeloggt', m: 'Owner-Session nötig.', code: 'HTTP 401', login: true },
+    403:   { t: '⛔ Owner only', m: 'Keine Owner-Rechte.', code: 'HTTP 403' },
+    404:   { t: '❓ Nicht gefunden', m: 'Kein Health-Endpoint.', code: 'HTTP 404' },
+    429:   { t: '⏳ Rate-Limit', m: 'Zu viele Anfragen — warten.', code: 'HTTP 429' },
+    503:   { t: '🛠 Wartung', m: 'Server überlastet/in Wartung.', code: 'HTTP 503' },
+    timeout: { t: '🔴 Timeout', m: 'Keine Antwort in 8 s.', code: 'Timeout' },
+    network: { t: '🔴 Backend unavailable', m: 'Server nicht erreichbar.', code: 'Netzwerkfehler' }
+  };
+  const e = defs[kind] || { t: '⚠️ Fehler', m: 'Unerwartete Antwort.', code: 'HTTP ' + kind };
+  const rows = [R('fehler', e.t + ' ' + e.m), R('code', e.code), ['↻ erneut versuchen', 'tippen', '__retry__']];
+  if (e.login) rows.push(['🔐 login', 'tippen zum Öffnen', '__login__']);
+  return [{ key: 'ops', zen: '⚠', name: 'FEHLER', rows }];
+}
+
+/* Komposition wie buildLiquidGlass der Vorgabe (Body-Teile), Branding LoveBot */
+function renderPage(subtitle, sections) {
+  const body = sections.map(renderSection).join('');
+  $('page').innerHTML =
+    renderHero('/test-bg.jpg') +
+    '<div class="hdr">' +
+    '<div class="hdr__brand">Lovebot System</div>' +
+    '<div class="hdr__title">Live-Test</div>' +
+    '<div class="hdr__meta" id="meta">' + escapeHTML(subtitle) + '</div>' +
+    '</div>' +
+    body +
+    '<div class="ftr"><div class="ftr__text">Quelle: GET /api/health · 💜 Lovebot</div></div>';
+}
+
+function subtitleText() {
+  if (!lastOkAt) return 'Verbinde …';
+  const age = Math.max(0, Math.round((Date.now() - lastOkAt) / 1000));
+  const ver = lastVersion ? 'v' + lastVersion + ' · ' : '';
+  if (pollFail) return ver + '⚠ Update fehlgeschlagen · Stand ' + (fmtTime(lastCheckedAt) || '–');
+  return ver + 'Stand ' + (fmtTime(lastCheckedAt) || '–') + ' · Aktualisiert vor ' + age + ' s';
+}
+
+function refreshMeta() {
+  const m = $('meta');
+  if (m) m.textContent = subtitleText();
+}
+
+async function load() {
+  if (inFlight) return;
+  inFlight = true;
+  try {
+    const r = await fetchHealth();
+    if (r.status === 200 && r.data && r.data.ok) {
+      lastOkAt = Date.now();
+      lastCheckedAt = r.data.checkedAt || null;
+      lastVersion = r.data.version || null;
+      pollFail = false;
+      renderPage(subtitleText(), buildSections(r.data));
+      return;
+    }
+    if (!lastOkAt) renderPage('Fehler', errorSections(r.status));
+    else { pollFail = true; refreshMeta(); }
+  } finally { inFlight = false; }
+}
+
+/* Interaktion aus Vorgabe (Toast + Copy) + Aktionen für Aktions-Rows */
+(() => {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  document.body.appendChild(toast);
+  let toastTimer = 0;
+
+  const showToast = text => {
+    toast.textContent = text;
+    toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 800);
+  };
+
+  const legacyCopy = text => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch {}
+    ta.remove();
+    return ok;
+  };
+
+  const copy = async text => {
+    if (navigator.clipboard?.writeText) {
+      try { await navigator.clipboard.writeText(text); return true; }
+      catch {}
+    }
+    return legacyCopy(text);
+  };
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest?.('.row');
+    if (!btn || btn.dataset.busy === '1') return;
+    const cmd = btn.dataset.cmd;
+    if (!cmd) return;
+
+    /* LoveBot-Aktionen (einzige Handler-Erweiterung): kein Copy, sondern Aktion */
+    if (cmd === '__refresh__' || cmd === '__retry__') { load(); return; }
+    if (cmd === '__login__') { location.href = '/login.html'; return; }
+
+    btn.dataset.busy = '1';
+    btn.classList.add('is-copied');
+    showToast(cmd);
+
+    try { await copy(cmd); } catch {}
+
+    setTimeout(() => {
+      btn.classList.remove('is-copied');
+      btn.dataset.busy = '0';
+    }, 800);
+  }, { passive: true });
+})();
+
+renderPage('Verbinde …', [{ key: 'info', zen: '…', name: 'STATUS', rows: [R('…', 'Verbinde mit Backend …')] }]);
+load();
+setInterval(() => { if (!document.hidden) load(); }, 10000);
+setInterval(refreshMeta, 5000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+</script>
+</body>
+</html>

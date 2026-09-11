@@ -119,6 +119,40 @@ Aliase: `$pong`, `$latenz`.
 💡 _Alles echt gemessen · 22:55:24_
 ```
 
+### 1.5 Statusbewertung, Health-Score & Issues (NEU — 10.09.2026)
+
+Betrifft nur: `pingcmd.js` (Messungen in `netping.js` unverändert wiederverwendet).
+
+**Abschnitte des Reports** (in dieser Reihenfolge, WhatsApp-optimiert):
+
+| Abschnitt | Inhalt |
+|---|---|
+| 🤖 BOT | WhatsApp-WebSocket-Status (OPEN/CLOSED + readyState), WS-Ping, IQ-Ping, Sende-RTT, Nachricht→Bot (Info) |
+| 🌐 WEBSITES | `maxichen.de` + `maxichen.gamebot.me`: ONLINE/INSTABIL/OFFLINE, HTTP-Status, DNS·TCP·TLS·TTFB·Gesamt (je Ø aus 3 Läufen), ICMP |
+| 🔗 CONNECTION | Referenz `cloudflare.com`: DNS, TCP-Connect (:443), TLS-Handshake, TTFB, Gesamt |
+| 📡 NETWORK | ICMP gegen `1.1.1.1` / `8.8.8.8` / `web.whatsapp.net`, öffentliche + lokale IP, Speedtest (entfällt bei `nospeed`) |
+| 🖥 SYSTEM | Uptime, RAM (RSS + Heap mit Limit), CPU (Load gesamt + pro Kern), Node, DB-Zähler |
+| 📊 HEALTH | ❤️ Health-Score (Balken + % + Gesamtbewertung) mit allen Teil-Scores |
+| ⚠️ ISSUES | Jede Auffälligkeit einzeln (🔴 Fehler, 🟠 Warnung) — oder „Keine Probleme erkannt“ |
+
+**Bewertung:** Jede Kennzahl wird aus ihrem Messwert bewertet —
+🟢 Excellent · 🟢 Good · 🟡 Fair · 🟠 Slow · 🔴 Critical.
+Schwellen stehen dokumentiert in `pingcmd.js` (`TH`-Tabellen), z. B.
+Bot-Latenz ≤120/250/500/1000 ms, Website-Gesamt ≤400/900/1800/3500 ms.
+
+**Health-Score (0–100, gewichtet aus echten Teil-Scores):**
+Bot 25 · Websites 25 · Netzwerk 15 · Verbindung 10 · Speed 10 · System 15.
+Fehlschlag = 0 Punkte in der Komponente; `nospeed` schließt Speed aus der
+Wertung aus (Gewicht wird umverteilt). Gesamt: ≥90 Excellent, ≥75 Good,
+≥55 Fair, ≥35 Slow, darunter Critical.
+
+**Fehler-Isolation:** Alle Messblöcke laufen parallel und fangen eigene
+Fehler ab. Beispiel: Website A ONLINE + Website B TIMEOUT →
+vollständiger Report mit `🟢 A — ONLINE` und `🔴 B — OFFLINE (+Grund)`.
+
+**Abschluss-Reaction:** ✅ bei Good/Excellent, ☑️ bei Fair, ⚠️ bei
+Slow/Critical (bestehende Reaction-Emojis aus `waApi.js`).
+
 ---
 
 ## 2. Neue Befehle: Alltag & Web

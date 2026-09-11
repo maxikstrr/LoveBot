@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="reports">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>📊 Reports</h1>
+    <p class="subline">Heute · Woche · Monat · Jahr · Lifetime.</p>
+    <div class="tabs" id="tabs"></div>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('reports');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+let ME = null, ECO = null;
+const TABS = [['day', 'Heute'], ['week', 'Woche'], ['month', 'Monat'], ['year', 'Jahr'], ['life', 'Lifetime']];
+function card(t, v, s) { return '<div class="stat-card"><div class="t">' + t + '</div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>'; }
+function show(k) {
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.k === k));
+  const P = (ECO.periods || {})[k] || {};
+  const xp = k === 'day' ? ME.reports.dayXp : k === 'week' ? ME.reports.weekXp : k === 'month' ? ME.reports.monthXp : k === 'year' ? ME.reports.yearXp : null;
+  let html = '<div class="stat-grid">';
+  if (k === 'life') {
+    html += card('Total-XP', f(ME.progression.totalXp), 'alle Zeit') + card('Erfolge', ME.progression.achievements.count + '/' + ME.progression.achievements.total, 'freigeschaltet') + card('Badges', f(ME.progression.badges), 'gesammelt') + card('Best-Streak', ME.progression.bestStreak, 'Tage');
+  } else {
+    html += card('XP', f(xp), k) + card('Verdient', '+' + f(P.e), 'Kupfer') + card('Ausgegeben', '−' + f(P.s), 'Kupfer') + card('Netto', f((P.e || 0) - (P.s || 0)), 'Kupfer');
+  }
+  html += '</div>';
+  if (k === 'day') html += '<div class="panel"><h2>🔥 Daily</h2><div class="kv"><span class="k">Serie</span><span>' + (ECO.daily.streak || 0) + ' Tage (Best: ' + (ECO.daily.best || 0) + ')</span></div></div>';
+  document.getElementById('view').innerHTML = html;
+}
+(async () => {
+  ME = await api('/api/profile/me');
+  ECO = await api('/api/economy');
+  if (!ME || !ME.ok || !ECO || !ECO.ok) { document.getElementById('view').innerHTML = '<p>Konnte nicht geladen werden.</p>'; return; }
+  document.getElementById('tabs').innerHTML = TABS.map(([k, l], i) => '<button data-k="' + k + '" class="' + (i === 0 ? 'on' : '') + '">' + l + '</button>').join('');
+  document.querySelectorAll('#tabs button').forEach((b) => b.addEventListener('click', () => show(b.dataset.k)));
+  show('day');
+})();
+</script>
+</body>
+</html>

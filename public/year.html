@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahr 2026 — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="year">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>📅 2026 — Year in Review</h1>
+    <p class="subline">Dein LoveBot-Jahr in Zahlen. 💜</p>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('year');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+(async () => {
+  const me = await api('/api/profile/me');
+  const eco = await api('/api/economy');
+  if (!me || !me.ok || !eco || !eco.ok) { document.getElementById('view').innerHTML = '<p>Konnte nicht geladen werden.</p>'; return; }
+  const Y = (eco.periods || {}).year || {};
+  const net = (Y.e || 0) - (Y.s || 0);
+  document.getElementById('view').innerHTML =
+    '<div class="panel glow"><h2>💜 ' + esc(me.profile.name || 'Herz') + ' — dein 2026</h2>' +
+    '<div class="kv"><span class="k">Dabei seit</span><span>' + esc(me.profile.registeredAt ? new Date(me.profile.registeredAt).toLocaleDateString('de-DE') : '–') + '</span></div></div>' +
+    '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Jahres-XP</div><div class="v">' + f(me.reports.yearXp) + '</div><div class="s">2026</div></div>' +
+    '<div class="stat-card"><div class="t">Verdient</div><div class="v">+' + f(Y.e) + '</div><div class="s">Kupfer</div></div>' +
+    '<div class="stat-card"><div class="t">Netto</div><div class="v">' + f(net) + '</div><div class="s">Kupfer</div></div>' +
+    '<div class="stat-card"><div class="t">Level</div><div class="v">' + me.progression.level + '</div><div class="s">Prestige ' + me.progression.prestige + '</div></div>' +
+    '<div class="stat-card"><div class="t">Erfolge</div><div class="v">' + me.progression.achievements.count + '</div><div class="s">von ' + me.progression.achievements.total + '</div></div>' +
+    '<div class="stat-card"><div class="t">Rang</div><div class="v">' + (me.progression.rank.pos ? '#' + me.progression.rank.pos : '–') + '</div><div class="s">global</div></div>' +
+    '<div class="stat-card"><div class="t">Best-Streak</div><div class="v">🔥 ' + me.progression.bestStreak + '</div><div class="s">Tage</div></div>' +
+    '<div class="stat-card"><div class="t">Daily-Best</div><div class="v">📅 ' + ((eco.daily || {}).best || 0) + '</div><div class="s">Tage Serie</div></div>' +
+    '</div>' +
+    '<div class="panel"><h2>🎯 Weiter so!</h2><p>Vergleiche dich live: <span class="pill">$rank</span> <span class="pill">$compare @user</span> <span class="pill">$yearly</span></p></div>';
+})();
+</script>
+</body>
+</html>

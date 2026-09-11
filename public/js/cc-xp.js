@@ -9,11 +9,13 @@ const XP_SRC_LABEL = {
   messages: '💬 Nachrichten', commands: '⚡ Befehle', love: '💜 Love-Actions',
   dailies: '📅 $daily / $dailylove', work: '💼 $work',
   games: '🎮 Spiele (Sieg +15 / Niederlage +2)', admin: '👑 Owner-Manipulation',
+  gifts: '🎁 Geschenke', achievements: '🏆 Achievements', monthlybonus: '📅 Monatsziel-Bonus',
+  compliments: '💜 Komplimente', media: '📺 Media',
   terminal: '🖥️ Terminal', other: 'Sonstiges'
 };
 
 /* ═══  XP & LEVEL ═══ */
-/* Progression 2.0: XP-Regel-Editor (Kategorien / Multiplikatoren / Anti-Farm) */
+/* Progression 3.0: XP-Regel-Editor (Kategorien / Multiplikatoren / Anti-Farm / Boni) */
 function buildRulesSection(rules, canAdjust) {
   if (!rules || !rules.ok) return '<div class="cc-section"><h3>⚙️ XP-Regeln (Progression 2.0)</h3><div class="cc-empty">Regel-Engine nicht erreichbar.</div></div>';
   const catMeta = {
@@ -35,15 +37,54 @@ function buildRulesSection(rules, canAdjust) {
   }).join('');
   const m = rules.multipliers || {};
   const a = rules.antiFarm || {};
+  const bo = rules.bonuses || {};
+  const stm = m.streak || {};
+  const g = rules.goals || {};
+  const rw = rules.rewards || {};
+  const xr = rules.xpRewards || {};
+  const eco = rules.economy || {};
+  const ob = m.ownerBonus || {};
   const num = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-multi="' + k + '" type="' + (k === 'eventActive' ? 'checkbox' : 'number') + '"' + (k === 'eventActive' ? (v ? ' checked' : '') : ' value="' + v + '"') + ' style="width:86px"' + (canAdjust ? '' : ' disabled') + '></label>';
   const anum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-anti="' + k + '" type="number" value="' + v + '" style="width:96px"' + (canAdjust ? '' : ' disabled') + '></label>';
-  return '<div class="cc-section" style="margin-top:14px"><h3>⚙️ XP-Regeln (Progression 2.0) <span class="cc-key">v' + rules.version + '</span></h3>' +
-    '<div class="cc-tip" style="margin-bottom:10px">XP-Qualitäts-Regeln: Kategorien mit Werten &amp; Schaltern, Multiplikatoren (Wochenende/Event/Prestige) und Anti-Farm-Grenzen. Änderungen sind <b>kritisch</b>: Grund + Passwort + Audit (<span class="cc-key">xp.rules.changed</span>) + Versionierung. Gilt ab sofort für alle XP-Pfade (WhatsApp &amp; Website).</div>' +
+  const bnum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-bonus="' + k + '" type="number" value="' + (v ?? '') + '" style="width:96px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const snum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-streak="' + k + '" type="' + (k === 'enabled' ? 'checkbox' : 'number') + '"' + (k === 'enabled' ? (v ? ' checked' : '') : ' value="' + (v ?? '') + '" step="0.01"') + ' style="width:86px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const gnum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-goal="' + k + '" type="number" value="' + (v ?? '') + '" style="width:96px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const rnum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-reward="' + k + '" type="number" value="' + (v ?? '') + '" style="width:96px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const cnum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-chest="' + k + '" type="number" value="' + (v ?? '') + '" style="width:86px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const xnum = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-xreward="' + k + '" type="number" value="' + (v ?? '') + '" style="width:86px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const ecoN = (k, v, step) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-eco="' + k + '" type="number" value="' + (v ?? '') + '"' + (step ? ' step="' + step + '"' : '') + ' style="width:104px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const ecoM = (k, v) => '<label class="cc-rule-field">' + esc(k) + ' <input class="cc-input" data-ecoms="' + k + '" type="number" value="' + (v ?? '') + '" style="width:86px"' + (canAdjust ? '' : ' disabled') + '></label>';
+  const evDate = m.eventEndsAt ? new Date(Number(m.eventEndsAt)).toISOString().slice(0, 16) : '';
+  return '<div class="cc-section" style="margin-top:14px"><h3>⚙️ XP-Regeln (Progression 6.0) <span class="cc-key">v' + rules.version + '</span></h3>' +
+    '<div class="cc-tip" style="margin-bottom:10px">XP-Qualitäts-Regeln: Kategorien, Multiplikatoren (inkl. Cap + Owner-Bonus + Event), Boni, Anti-Farm, Ziele (Tages-/Wochen-/Monatsziele), Rewards, soziale XP-Belohnungen und Economy-Regeln. Änderungen sind <b>kritisch</b>: Grund + Passwort + Audit (<span class="cc-key">xp.rules.changed</span>) + Versionierung. Gilt ab sofort für alle XP-Pfade (WhatsApp &amp; Website).</div>' +
     '<div class="cc-tablewrap"><table class="cc-table"><thead><tr><th>Kategorie</th><th>Werte</th><th>AN</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
     '<div class="cc-grid2" style="margin-top:10px"><div><div class="cc-subline">Multiplikatoren</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
-      ['weekend', 'event', 'eventActive', 'prestigePerLevel', 'prestigeCap'].map((k) => num(k, m[k])).join('') + '</div></div>' +
+      ['weekend', 'event', 'eventActive', 'prestigePerLevel', 'prestigeCap', 'totalCap'].map((k) => num(k, m[k])).join('') +
+      '<label class="cc-rule-field">eventName <input class="cc-input" data-multi="eventName" data-istext="1" type="text" value="' + esc(m.eventName || '') + '" style="width:130px" maxlength="40"' + (canAdjust ? '' : ' disabled') + '></label>' +
+      '<label class="cc-rule-field">eventEndsAt <input class="cc-input" data-multi="eventEndsAt" data-isdate="1" type="datetime-local" value="' + evDate + '" style="width:170px"' + (canAdjust ? '' : ' disabled') + '></label>' +
+      '<label class="cc-rule-field">👑 Owner-Bonus <input type="checkbox" data-obonus="enabled"' + (ob.enabled !== false ? ' checked' : '') + (canAdjust ? '' : ' disabled') + '></label>' +
+      '<label class="cc-rule-field">bonus <input class="cc-input" data-obonus="bonus" type="number" value="' + (ob.bonus ?? 0.1) + '" step="0.01" style="width:80px"' + (canAdjust ? '' : ' disabled') + '></label>' + '</div></div>' +
     '<div><div class="cc-subline">Anti-Farm</div><div style="display:flex;flex-wrap:wrap;gap:8px">' +
       ['msgCapPerHour', 'cmdCapPerHour', 'duplicateWindowSec', 'duplicateMaxPerDay', 'mutualFarmMaxPerHour', 'suspiciousXpPerDay'].map((k) => anum(k, a[k])).join('') + '</div></div></div>' +
+    '<div class="cc-grid2" style="margin-top:10px"><div><div class="cc-subline">🎁 Boni (erste Aktion/Tag, Streak-Meilensteine)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['firstActionDaily', 'streak7', 'streak30', 'streak100'].map((k) => bnum(k, bo[k])).join('') +
+      '<label class="cc-rule-field">aktiv <input type="checkbox" data-bonus="enabled"' + (bo.enabled !== false ? ' checked' : '') + (canAdjust ? '' : ' disabled') + '></label></div></div>' +
+    '<div><div class="cc-subline">🔥 Streak-Multiplikator (Anteil, z. B. 0.1 = +10 %)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['enabled', 'd3', 'd7', 'd30', 'cap'].map((k) => snum(k, stm[k])).join('') + '</div></div></div>' +
+    '<div class="cc-grid2" style="margin-top:10px"><div><div class="cc-subline">🎯 Ziele (XP/Msg/Cmd/Spiele → Kupfer, keine XP)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['dailyXp', 'weeklyXp', 'monthlyXp', 'dailyCopper', 'weeklyCopper', 'monthlyCopper', 'monthlyXpBonus', 'dailyMessages', 'dailyCommands', 'weeklyMessages', 'weeklyGames'].map((k) => gnum(k, g[k])).join('') +
+      '<label class="cc-rule-field">aktiv <input type="checkbox" data-goal="enabled"' + (g.enabled !== false ? ' checked' : '') + (canAdjust ? '' : ' disabled') + '></label></div></div>' +
+    '<div><div class="cc-subline">🎁 Rewards (Level-/Prestige-Kupfer + Truhen)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['levelCopperBase', 'levelCopperPerLevel', 'levelCopperCap', 'prestigeCopper', 'goalMinorCopper'].map((k) => rnum(k, rw[k])).join('') + '</div>' +
+      '<div class="cc-subline" style="margin-top:6px">🎁 Truhen (einmalig, claimbar)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      Object.keys((rw.chests || {})).map((k) => cnum(k, rw.chests[k])).join('') + '</div></div></div>' +
+    '<div class="cc-grid2" style="margin-top:10px"><div><div class="cc-subline">🎁 Soziale XP-Belohnungen (6.0, klein + gedeckelt)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['achievement', 'giftGiven', 'giftReceived'].map((k) => xnum(k, xr[k])).join('') + '</div></div>' +
+    '<div><div class="cc-subline">🏆 Daily-Streak-Meilensteine (Kupfer)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['d7', 'd30', 'd100', 'd365'].map((k) => ecoM(k, (eco.dailyMilestones || {})[k])).join('') + '</div></div></div>' +
+    '<div class="cc-subline" style="margin-top:10px">💰 Economy-Regeln (6.0)</div><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+      ['coinCap', 'transferMin', 'transferMax', 'transferDailyCap', 'bankBase', 'bankPerLevel', 'bankPerPrestige', 'bankPerAchievement', 'interestCap', 'interestCooldownH', 'starterCopper', 'starterXp', 'dailyBase', 'dailyBestBonus', 'weeklyBase', 'monthlyBase', 'yearlyBase'].map((k) => ecoN(k, eco[k])).join('') +
+      ecoN('interestPct', eco.interestPct, '0.1') + ecoN('dailyStreakPct', eco.dailyStreakPct, '0.5') + ecoN('dailyStreakCapPct', eco.dailyStreakCapPct, '1') + '</div>' +
     (canAdjust ?
       '<div class="cc-xpform" style="margin-top:10px"><div class="cc-field" style="flex:1;min-width:260px"><label>Grund für die Regeländerung (Pflicht — wird auditiert)</label><input class="cc-input" id="xpRulesReason" placeholder="z. B. Anti-Farm verschärft nach Spike-Analyse" maxlength="200"></div></div>' +
       '<div class="cc-btnrow"><button class="cc-btn primary" id="xpRulesSave">💾 Regeln speichern</button></div><div id="xpRulesOut"></div>'
@@ -114,7 +155,7 @@ CC.reg('xp', async () => {
         const reason = (document.getElementById('xpRulesReason') || {}).value || '';
         if (String(reason).trim().length < 5) { CC.toast('❌ Grund ist Pflicht (mind. 5 Zeichen)'); return; }
         const body = { reason: String(reason).trim() };
-        const cats = {}; const multi = {}; const anti = {};
+        const cats = {}; const multi = {}; const anti = {}; const bonus = {}; const streak = {};
         document.querySelectorAll('[data-cat]').forEach((inp) => {
           const c = inp.dataset.cat;
           cats[c] = cats[c] || {};
@@ -122,10 +163,31 @@ CC.reg('xp', async () => {
           else cats[c][inp.dataset.field] = Number(inp.value);
         });
         document.querySelectorAll('[data-multi]').forEach((inp) => {
-          multi[inp.dataset.multi] = inp.classList.contains('cc-rule-en') || inp.type === 'checkbox' ? inp.checked : Number(inp.value);
+          if (inp.dataset.istext) multi[inp.dataset.multi] = String(inp.value || '');
+          else if (inp.dataset.isdate) multi[inp.dataset.multi] = inp.value ? new Date(inp.value).getTime() : null;
+          else multi[inp.dataset.multi] = inp.classList.contains('cc-rule-en') || inp.type === 'checkbox' ? inp.checked : Number(inp.value);
+        });
+        document.querySelectorAll('[data-obonus]').forEach((inp) => {
+          multi.ownerBonus = multi.ownerBonus || {};
+          multi.ownerBonus[inp.dataset.obonus] = inp.type === 'checkbox' ? inp.checked : Number(inp.value);
         });
         document.querySelectorAll('[data-anti]').forEach((inp) => { anti[inp.dataset.anti] = Number(inp.value); });
-        body.categories = cats; body.multipliers = multi; body.antiFarm = anti;
+        document.querySelectorAll('[data-bonus]').forEach((inp) => { bonus[inp.dataset.bonus] = inp.type === 'checkbox' ? inp.checked : Number(inp.value); });
+        document.querySelectorAll('[data-streak]').forEach((inp) => { streak[inp.dataset.streak] = inp.type === 'checkbox' ? inp.checked : Number(inp.value); });
+        const goals = {}; const rewards = {}; const chests = {};
+        document.querySelectorAll('[data-goal]').forEach((inp) => { goals[inp.dataset.goal] = inp.type === 'checkbox' ? inp.checked : Number(inp.value); });
+        document.querySelectorAll('[data-reward]').forEach((inp) => { rewards[inp.dataset.reward] = Number(inp.value); });
+        document.querySelectorAll('[data-chest]').forEach((inp) => { chests[inp.dataset.chest] = Number(inp.value); });
+        const xrewards = {}; const ecoR = {}; const ecoms = {};
+        document.querySelectorAll('[data-xreward]').forEach((inp) => { xrewards[inp.dataset.xreward] = Number(inp.value); });
+        document.querySelectorAll('[data-eco]').forEach((inp) => { ecoR[inp.dataset.eco] = Number(inp.value); });
+        document.querySelectorAll('[data-ecoms]').forEach((inp) => { ecoms[inp.dataset.ecoms] = Number(inp.value); });
+        body.categories = cats; body.multipliers = multi; body.antiFarm = anti; body.bonuses = bonus;
+        if (Object.keys(streak).length) body.multipliers.streak = streak;
+        if (Object.keys(goals).length) body.goals = goals;
+        if (Object.keys(rewards).length || Object.keys(chests).length) { body.rewards = rewards; if (Object.keys(chests).length) body.rewards.chests = chests; }
+        if (Object.keys(xrewards).length) body.xpRewards = xrewards;
+        if (Object.keys(ecoR).length || Object.keys(ecoms).length) { body.economy = ecoR; if (Object.keys(ecoms).length) body.economy.dailyMilestones = ecoms; }
         const ans = await CC.confirm({
           ico: '⚙️',
           title: 'XP-Regeln ändern?',
@@ -181,13 +243,19 @@ CC.reg('economy', async () => {
   const t = ov.totals || {};
   const rich = ov.topRich || [];
   const couples = ov.topCouples || [];
+  const eh = ov.economy || null;
+  const srcRows = eh && eh.topSources ? eh.topSources.map((x) =>
+    '<span class="k">' + esc(x.label || x.source) + '</span><span class="v">+' + Number(x.amount || 0).toLocaleString('de-DE') + ' 🪙</span>').join('') : '';
   CC.page('💰 Economy', 'Love-Ökonomie im Überblick — Werte kommen aus dem gemeinsamen Datenmodell (eine Quelle für WhatsApp &amp; Website).',
     '<div class="cc-statgrid">' +
       '<div class="cc-stat"><div class="ic">🪙</div><div class="num">' + Number(t.copper || 0).toLocaleString('de-DE') + '</div><div class="lab">Kupfer gesamt (alle Wallets)</div></div>' +
+      (eh ? '<div class="cc-stat"><div class="ic">🏦</div><div class="num">' + Number(eh.totalBank || 0).toLocaleString('de-DE') + '</div><div class="lab">Kupfer auf Banken</div></div>' +
+      '<div class="cc-stat"><div class="ic">📈</div><div class="num st-ok">+' + Number(eh.generated || 0).toLocaleString('de-DE') + '</div><div class="lab">Erzeugt (Lifetime)</div></div>' +
+      '<div class="cc-stat"><div class="ic">📉</div><div class="num">' + Number(eh.spent || 0).toLocaleString('de-DE') + '</div><div class="lab">Ausgegeben (Lifetime)</div></div>' : '') +
       '<div class="cc-stat"><div class="ic">💞</div><div class="num">' + (t.couples ?? 0) + '</div><div class="lab">Paare aktiv</div></div>' +
       '<div class="cc-stat"><div class="ic">❤️</div><div class="num">' + Number(t.loveXp || 0).toLocaleString('de-DE') + '</div><div class="lab">Paar-XP gesamt</div></div>' +
       '<div class="cc-stat"><div class="ic">🐾</div><div class="num">' + (t.pets ?? 0) + '</div><div class="lab">Pets in Besitz</div></div>' +
-    '</div><br>' +
+    '</div>' + (eh ? '<div class="cc-tip" style="margin:10px 0">Netto-Bilanz: <b>' + (Number(eh.net || 0) >= 0 ? '+' : '') + Number(eh.net || 0).toLocaleString('de-DE') + ' 🪙</b> · Quellen aus den letzten ' + (eh.txSampled || 0) + ' Buchungen (Stichprobe).</div>' : '') + '<br>' +
     '<div class="cc-grid2">' +
       '<div class="cc-section"><h3>👛 Top 10 reichste Nutzer</h3>' +
       (rich.length ? CC.table([
@@ -201,6 +269,7 @@ CC.reg('economy', async () => {
         { t: 'Paar-XP', f: (r) => Number(r.loveXp || 0).toLocaleString('de-DE') }
       ], couples) : '<div class="cc-empty">Noch keine Paare.</div>') + '</div>' +
     '</div>' +
+    (srcRows ? '<div class="cc-section" style="margin-top:14px"><h3>🪙 Top-Kupferquellen (Stichprobe)</h3><div class="cc-kv">' + srcRows + '</div></div>' : '') +
     (t.petTypes && Object.keys(t.petTypes).length ?
       '<div class="cc-section" style="margin-top:14px"><h3>🐾 Pet-Verteilung</h3><div class="cc-kv">' +
       Object.entries(t.petTypes).map(([k, v]) => '<span class="k">' + esc(k) + '</span><span class="v">' + v + '</span>').join('') + '</div></div>' : '')

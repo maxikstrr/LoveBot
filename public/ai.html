@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoveAI — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="ai">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>🤖 LoveAI</h1>
+    <p class="subline">Deine eigene LoveBot-KI — lokal, kostenlos, mit Gedächtnis.</p>
+    <div id="status"><p>Lädt …</p></div>
+    <div class="panel"><h2>💬 Chat</h2><div class="chatlog" id="chat"></div>
+      <div class="chatbox"><input id="inp" type="text" maxlength="2000" placeholder="Frag LoveAI … (Enter sendet)" autocomplete="off"><button class="btn" id="send">➤</button></div>
+    </div>
+    <div class="panel"><h2>🧠 Memory</h2><div id="mem"><p>Lädt …</p></div>
+      <p><button class="btn ghost sm" id="clearMem">🧹 Memory löschen</button></p>
+    </div>
+    <div id="owner"></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('ai');
+const chat = document.getElementById('chat');
+const inp = document.getElementById('inp');
+function bubble(who, text, meta) {
+  const d = document.createElement('div');
+  d.className = 'bubble ' + who;
+  d.innerHTML = esc(text) + (meta ? '<span class="meta">' + esc(meta) + '</span>' : '');
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+  return d;
+}
+async function loadStatus() {
+  const s = await api('/api/ai/status');
+  const el = document.getElementById('status');
+  if (!s || !s.ok) { el.innerHTML = '<div class="panel"><p>Status nicht verfügbar.</p></div>'; return; }
+  el.innerHTML = '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Provider</div><div class="v" style="font-size:18px">' + esc(s.provider === 'mock' ? 'Mock' : 'Local') + '</div><div class="s">' + esc(s.model || '') + '</div></div>' +
+    '<div class="stat-card"><div class="t">Status</div><div class="v">' + (s.online ? '🟢' : '🔴') + '</div><div class="s">' + (s.online ? s.latencyMs + ' ms' : esc(s.code || s.error || 'offline')) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Bereit</div><div class="v">' + (s.ready ? '✅' : '❌') + '</div><div class="s">' + (s.models || 0) + ' Modelle · ' + (s.modelFound ? 'Modell da' : 'Modell fehlt') + '</div></div>' +
+    '</div>' +
+    (s.online ? (s.ready ? '' : '<div class="panel"><h2>⚠️ Modell fehlt</h2><p>Backend erreichbar, aber <b>' + esc(s.model || '') + '</b> ist nicht installiert.</p></div>') : '<div class="panel"><h2>⚠️ AI offline</h2><p>Lokales Modell nicht erreichbar (' + esc(s.code || s.error || '') + '). ' + esc(s.hint || '') + ' Der Bot läuft normal weiter — nur LoveAI antwortet gerade nicht.</p></div>');
+  if (s.analytics) {
+    const a = s.analytics;
+    document.getElementById('owner').innerHTML = '<div class="panel"><h2>👑 Owner — AI-Analytics</h2><div class="stat-grid">' +
+      '<div class="stat-card"><div class="t">Heute</div><div class="v">' + a.today + '</div><div class="s">Fehler: ' + a.errorsToday + ' · Ø ' + a.avgLatencyMs + ' ms</div></div>' +
+      '<div class="stat-card"><div class="t">Gesamt</div><div class="v">' + a.total + '</div><div class="s"> aktive Nutzer: ' + a.activeUsers + '</div></div>' +
+      '<div class="stat-card"><div class="t">Limits</div><div class="v" style="font-size:16px">' + s.limits.perMin + '/' + s.limits.perHour + '/' + s.limits.perDay + '</div><div class="s">Min/Std/Tag — $aiconfig</div></div>' +
+      '</div></div>';
+  }
+}
+async function loadMem() {
+  const m = await api('/api/ai/memory');
+  const el = document.getElementById('mem');
+  if (!m || !m.ok) { el.innerHTML = '<p>Nicht verfügbar.</p>'; return; }
+  el.innerHTML = '<div class="kv"><span class="k">Kontext</span><span>' + m.conversation.length + ' Nachrichten (letzte 10 einsehbar)</span></div>' +
+    '<div class="kv"><span class="k">Fakten</span><span>' + (m.facts.length ? m.facts.map((x) => esc(x.text)).join(' · ') : '–') + '</span></div>' +
+    '<div class="kv"><span class="k">Chatmodus</span><span>' + (m.prefs.chatMode ? 'an' : 'aus') + ' · Sprache: ' + esc(m.prefs.lang || 'de') + '</span></div>';
+}
+async function send() {
+  const t = inp.value.trim();
+  if (!t) return;
+  inp.value = '';
+  bubble('me', t);
+  const typing = document.createElement('div');
+  typing.className = 'bubble ai typing';
+  typing.innerHTML = '<i></i><i></i><i></i>';
+  chat.appendChild(typing);
+  chat.scrollTop = chat.scrollHeight;
+  let r = null;
+  try { r = await api('/api/ai/chat', { method: 'POST', body: { text: t } }); } catch (e) {}
+  typing.remove();
+  if (r && r.ok) bubble('ai', r.text, '⏱ ' + r.ms + ' ms · ' + (r.model || ''));
+  else if (r && r.reason === 'limited') bubble('ai', '⏳ Kurz pausieren: Limit erreicht (' + (r.detail || '') + ').');
+  else bubble('ai', '🤖 AI gerade nicht erreichbar (' + ((r && r.detail) || 'offline') + '). Der Bot läuft normal weiter.');
+}
+document.getElementById('send').addEventListener('click', send);
+inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+document.getElementById('clearMem').addEventListener('click', async () => {
+  await api('/api/ai/memory/clear', { method: 'POST', body: {} });
+  chat.innerHTML = '';
+  loadMem();
+  bubble('ai', '🧹 Memory gelöscht — frisch starten! 💜');
+});
+loadStatus();
+loadMem();
+(async () => {
+  const m = await api('/api/ai/memory');
+  if (m && m.ok && m.conversation) {
+    for (const c of m.conversation.slice(-6)) bubble(c.role === 'ai' ? 'ai' : 'me', c.text);
+  }
+  if (!chat.children.length) bubble('ai', 'Hey! Ich bin LoveAI 💜 Frag mich z. B.: „Wie bekomme ich XP?“ oder „Wie funktioniert die Bank?“');
+})();
+</script>
+</body>
+</html>

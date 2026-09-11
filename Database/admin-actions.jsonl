@@ -1,6 +1,0 @@
-{"time":"2026-09-10T06:39:03.299Z","actor":"910maxi","action":"reauth.ok","target":"reauth.verify","ip":"185.47.•.•"}
-{"time":"2026-09-10T06:39:19.911Z","actor":"910maxi","action":"session.delete","target":"test910","name":"test910"}
-{"time":"10.9.2026, 11:15:07","actor":"910maxi","action":"download.zip","target":"LoveBot-All-in-One","files":8,"size":657970,"ip":"185.47.•.•"}
-{"time":"2026-09-10T10:01:34.133Z","actor":"910maxi","action":"reauth.ok","target":"reauth.verify","ip":"185.47.•.•"}
-{"time":"10.9.2026, 12:01:42","actor":"910maxi","action":"export.xlsx","target":"owner-export","sheets":"Übersicht, Gruppen, Nutzer & Profile, Nutzer-Details (Spiele · Bank), Accounts & Rechte, Konten-Historie, Web-Sessions, IP-Übersicht & Standorte, Sperren & Bans, Bot-Sessions, Audit-Log, Admin-Aktionen, Rollen-Matrix","via":"reauth"}
-{"time":"2026-09-10T10:02:37.824Z","actor":"910maxi","action":"feature.toggle","target":"120363411386930403 | 𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe | antilink","key":"antilink","on":false,"before":true,"reason":"Brauche ich ned","group":"𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe"}

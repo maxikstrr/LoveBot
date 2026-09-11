@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gruppen — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="group">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>👥 Gruppen</h1>
+    <p class="subline">Level · XP · Ziele · Top-Mitglieder · Kasse.</p>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('group');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+const q = new URLSearchParams(location.search);
+const GID = q.get('id') || '';
+const hb = (label, v, max) => '<div class="hbar-row"><span>' + esc(label) + '</span><span class="tr"><i style="width:' + (max > 0 ? Math.round((v / max) * 100) : 0) + '%"></i></span><span class="n">' + f(v) + '</span></div>';
+(async () => {
+  const view = document.getElementById('view');
+  if (!GID) {
+    const all = await api('/api/groups');
+    if (!all || !all.ok) { view.innerHTML = '<div class="panel"><h2>👥 Gruppenprofile</h2><p>Die Gruppenliste ist nur für Owner sichtbar. Öffne das Profil deiner Gruppe direkt — die ID steht in <span class="pill">$ginfo</span> bzw. jede Gruppe ist per Link teilbar: <span class="pill">/group.html?id=…</span></p></div>'; return; }
+    view.innerHTML = '<div class="panel"><h2>Alle Gruppen</h2>' + (all.groups.map((g) => '<div class="hbar-row"><span><a href="/group.html?id=' + encodeURIComponent(g.id) + '">👥 ' + esc(g.name || g.id) + '</a></span><span class="tr"><i style="width:' + Math.min(100, Math.round((g.xp / Math.max(1, all.groups[0].xp)) * 100)) + '%"></i></span><span class="n">Lv ' + g.level + '</span></div>').join('') || '<p>–</p>') + '</div>';
+    return;
+  }
+  const g = await api('/api/groups/' + encodeURIComponent(GID));
+  const st = await api('/api/groups/' + encodeURIComponent(GID) + '/stats');
+  if (!g || !g.ok) { view.innerHTML = '<p>Gruppe nicht gefunden.</p>'; return; }
+  const G = g.group;
+  const pct = G.xpNeed > 0 ? Math.min(100, Math.round((G.xpHave / G.xpNeed) * 100)) : 0;
+  const hist = st && st.ok ? Object.entries(st.history || {}).sort().slice(-14) : [];
+  const hmax = Math.max(1, ...hist.map(([, v]) => v));
+  const tmax = Math.max(1, ...((st && st.top ? st.top : []).map((t) => t.xp)));
+  const dGoal = (G.goals || {}).daily || {}, wGoal = (G.goals || {}).weekly || {};
+  view.innerHTML =
+    '<div class="panel glow"><h2>👥 ' + esc(G.name || GID) + '</h2>' +
+    '<div class="kv"><span class="k">Mitglieder</span><span>' + f(G.members) + ' · ' + f(G.admins) + ' Admins</span></div>' +
+    '<div class="kv"><span class="k">Level ' + G.level + '</span><span>' + f(G.xpHave) + ' / ' + f(G.xpNeed) + ' XP</span></div>' +
+    '<div class="xpbar"><i style="width:' + pct + '%"></i></div></div>' +
+    '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Group-XP</div><div class="v">' + f(G.xp) + '</div><div class="s">gesamt</div></div>' +
+    '<div class="stat-card"><div class="t">Nachrichten</div><div class="v">' + f(G.msgs) + '</div><div class="s">🔥 ' + f(G.streak) + ' Tage Serie</div></div>' +
+    '<div class="stat-card"><div class="t">Woche / Monat</div><div class="v">' + f(G.weekXp) + '</div><div class="s">' + f(G.monthXp) + ' Monats-XP</div></div>' +
+    '<div class="stat-card"><div class="t">Kasse</div><div class="v">' + f(G.treasury) + '</div><div class="s">Kupfer</div></div>' +
+    '</div>' +
+    '<div class="panel"><h2>🎯 Ziele</h2>' +
+    '<div class="kv"><span class="k">Daily</span><span>' + f(dGoal.progress) + ' / ' + f(dGoal.target) + ' ' + (dGoal.claimed ? '✅' : '') + '</span></div>' +
+    '<div class="xpbar"><i style="width:' + (dGoal.target > 0 ? Math.min(100, Math.round(((dGoal.progress || 0) / dGoal.target) * 100)) : 0) + '%"></i></div>' +
+    '<div class="kv"><span class="k">Weekly</span><span>' + f(wGoal.progress) + ' / ' + f(wGoal.target) + ' XP ' + (wGoal.claimed ? '✅' : '') + '</span></div>' +
+    '<div class="xpbar"><i style="width:' + (wGoal.target > 0 ? Math.min(100, Math.round(((wGoal.progress || 0) / wGoal.target) * 100)) : 0) + '%"></i></div></div>' +
+    ((G.events || []).length ? '<div class="panel"><h2>🔥 Events</h2><p>' + G.events.map((e) => '<span class="pill">' + esc(e.name) + ' ×' + e.mult + '</span>').join(' ') + '</p></div>' : '') +
+    '<div class="panel"><h2>🏆 Top-Mitglieder</h2>' + (((st && st.top ? st.top : []).slice(0, 10).map((t) => hb(t.name, t.xp, tmax)).join('')) || '<p>–</p>') + '</div>' +
+    '<div class="panel"><h2>📈 Aktivität (14 Tage)</h2>' + (hist.map(([k, v]) => hb(k.slice(5), v, hmax)).join('') || '<p>–</p>') + '</div>' +
+    '<div class="panel"><h2>🏅 Abzeichen & Erfolge</h2><p>' + (st && st.ok ? Object.keys(st.badges || {}).map((b) => '<span class="pill">🏅 ' + esc(b) + '</span>').join(' ') : '') + ' <span class="pill">🏆 ' + (st ? Object.keys(st.achievements || {}).length : 0) + ' Achievements</span></p></div>' +
+    (g.audit ? '<div class="panel"><h2>🧾 Audit (Owner)</h2><div class="timeline">' + g.audit.map((a) => '<div><span class="tt">' + esc(new Date(a.ts).toLocaleString('de-DE')) + ' · ' + esc(a.actor || '') + '</span><br><b>' + esc(a.action) + '</b> ' + esc(a.detail || '') + '</div>').join('') + '</div></div>' : '');
+})();
+</script>
+</body>
+</html>

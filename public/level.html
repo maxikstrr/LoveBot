@@ -60,6 +60,7 @@
     <a href="/cmd.html">Befehle</a>
     <a href="/spiele.html">Spiele</a>
     <a href="/level.html" class="active">Level</a>
+    <a href="/account.html">Mein Account</a>
     <a href="/regeln.html">Regeln</a>
     <a href="/status.html">Status</a><a href="/statistics.html">Statistiken</a><a href="/leaderboard.html">Bestenliste</a><a href="/sessions.html">Sessions</a><a href="/docs.html">Docs</a>
     <a href="/faq.html">FAQ</a>
@@ -79,6 +80,7 @@
     Alles wird echt gezählt: keine Zufalls-XP, keine erfundenen Werte.</p>
 
     <div class="demo-row lvl-card">
+      <div style="display:inline-block;font-size:11px;letter-spacing:2px;font-weight:700;color:#ffd1e8;background:rgba(255,77,141,.14);border:1px solid rgba(255,77,141,.45);border-radius:999px;padding:4px 12px;margin-bottom:12px">BEISPIEL-DARSTELLUNG · KEINE ECHTDATEN</div>
       <div class="lvl-top">
         <div class="lvl-avatar">💜</div>
         <div>
@@ -196,6 +198,7 @@
       <h2>Bestenliste — <span class="grad-text">echt, nicht gestellt</span>.</h2>
       <p>Top 10 nach Prestige, Level und XP — direkt aus der Profil-Datenbank des Bots. <code style="font-family:var(--mono);font-size:12px">$top</code> zeigt dir das gleiche im Chat.</p>
     </div>
+    <div id="lbEvent"></div>
     <div class="lb-list" id="lbList"><div class="lb-row2"><div class="rank2">…</div><div class="lb2-name">Lade …</div></div></div>
   </section>
 
@@ -251,13 +254,23 @@
       var prestige = (u.prestige || 0) > 0 ? ('P' + u.prestige + ' · ') : '';
       return '<div class="' + cls.trim() + '">' +
         '<div class="rank2">' + (MEDALS[i] || (i + 1)) + '</div>' +
-        '<div><div class="lb2-name">' + esc(u.name) + '</div><div class="lb2-rank">' + esc(u.rank || '') + '</div></div>' +
-        '<div class="lb2-vals"><b>' + prestige + 'Level ' + de(u.level) + '</b><span>' + de(u.xp) + ' XP im Level · Σ ' + de(u.totalXp) + ' XP' + (u.streak ? ' · 🔥 ' + de(u.streak) + 'd' : '') + '</span></div>' +
+        '<div><div class="lb2-name">' + esc(u.name) + '</div><div class="lb2-rank">' + esc(u.rank || '') + (u.title ? ' · 📛 ' + esc((u.title.emoji || '') + ' ' + (u.title.name || '')) : '') + (u.badges ? ' · 🎖️ ' + u.badges : '') + (u.achievements ? ' · 🏆 ' + u.achievements : '') + '</div></div>' +
+        '<div class="lb2-vals"><b>' + prestige + 'Level ' + de(u.level) + '</b><span>' + de(u.xp) + ' XP im Level · Σ ' + de(u.totalXp) + ' XP' + (u.streak ? ' · 🔥 ' + de(u.streak) + 'd' : '') + (u.weekXp ? '<br>7d: +' + de(u.weekXp) + ' XP' : '') + '</span></div>' +
         '</div>';
     }).join('');
   }
-  fetch('/api/leaderboard').then(function (r) { return r.json(); }).then(function (d) { render(d.topLevel); }).catch(function () {
-    render([{ name: 'maxichen', rank: '🌷 Flirter', level: 24, prestige: 0, xp: 1284, totalXp: 5481, streak: 3 }]);
+  fetch('/api/leaderboard').then(function (r) { return r.json(); }).then(function (d) {
+    render(d.topLevel);
+    if (d && d.event && d.event.active) {
+      var txt = '🎪 <b>Event aktiv' + (d.event.name ? ': ' + esc(d.event.name) : '') + '</b> — ×' + (d.event.mult || 1) + ' XP';
+      if (d.event.endsAt) {
+        var left = d.event.endsAt - Date.now();
+        if (left > 0) txt += ' · noch ' + Math.floor(left / 3600000) + ' Std. ' + Math.round((left % 3600000) / 60000) + ' Min.';
+      }
+      document.getElementById('lbEvent').innerHTML = '<div class="lb-row2 gold" style="margin-bottom:10px"><div class="rank2">🎪</div><div class="lb2-name">' + txt + '</div></div>';
+    }
+  }).catch(function () {
+    document.getElementById('lbList').innerHTML = '<div class="lb-row2"><div class="rank2">⚠️</div><div><div class="lb2-name">Bestenliste gerade nicht erreichbar.</div><div class="lb2-rank">Bitte später erneut versuchen — im Chat zeigt $top den Live-Stand.</div></div></div>';
   });
 })();
 </script>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progression — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="progression">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>🏆 Progression</h1>
+    <p class="subline">Level · Titel · Badges · Erfolge · Prestige · Ziele.</p>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('progression');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+(async () => {
+  const d = await api('/api/progression/me');
+  if (!d || !d.ok) { document.getElementById('view').innerHTML = '<p>Konnte nicht geladen werden.</p>'; return; }
+  const pct = d.needed > 0 ? Math.min(100, Math.round((d.xp / d.needed) * 100)) : 0;
+  const unlocked = (d.achievements || []).filter((a) => a.unlocked);
+  const prog = (d.achievements || []).filter((a) => !a.unlocked && a.need > 0).sort((a, b) => b.pct - a.pct).slice(0, 8);
+  const srcMax = Math.max(1, ...Object.values(d.xpSources || {}));
+  document.getElementById('view').innerHTML =
+    '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Level</div><div class="v">' + d.level + '</div><div class="s">' + f(d.xp) + ' / ' + f(d.needed) + ' XP</div></div>' +
+    '<div class="stat-card"><div class="t">Prestige</div><div class="v">' + d.prestige + '</div><div class="s">' + f(d.totalXp) + ' Total-XP</div></div>' +
+    '<div class="stat-card"><div class="t">Streak</div><div class="v">🔥 ' + d.streak + '</div><div class="s">Best: ' + d.bestStreak + '</div></div>' +
+    '<div class="stat-card"><div class="t">Multiplikator</div><div class="v">×' + (d.multiplier ? d.multiplier.total.toFixed(2) : '1.00') + '</div><div class="s">' + (d.multiplier && d.multiplier.capped ? 'am Cap ×3' : 'aktuelle Boni') + '</div></div>' +
+    '</div>' +
+    '<div class="panel"><h2>✨ Fortschritt</h2><div class="xpbar"><i style="width:' + pct + '%"></i></div>' +
+    '<div class="kv"><span class="k">Titel</span><span>' + esc(d.title.custom || ((d.title.level || {}).emoji || '') + ' ' + ((d.title.level || {}).name || '')) + '</span></div></div>' +
+    '<div class="panel"><h2>🏅 Badges (' + d.badges.length + ')</h2><p>' +
+    (d.badges.map((b) => '<span class="pill" title="' + esc(b.desc || '') + '">' + esc(b.emoji) + ' ' + esc(b.name) + '</span>').join(' ') || 'Noch keine.') + '</p></div>' +
+    '<div class="panel"><h2>🏆 Erfolge (' + d.achCount + '/' + d.achTotal + ')</h2>' +
+    '<h3>Freigeschaltet</h3><p>' + (unlocked.slice(0, 30).map((a) => '<span class="pill g">' + esc(a.emoji) + ' ' + esc(a.name) + '</span>').join(' ') || '–') + (unlocked.length > 30 ? ' <span class="pill">+' + (unlocked.length - 30) + '</span>' : '') + '</p>' +
+    '<h3>In Arbeit</h3>' + (prog.map((a) => '<div class="hbar-row"><span>' + esc(a.emoji) + ' ' + esc(a.name) + '</span><span class="tr"><i style="width:' + a.pct + '%"></i></span><span class="n">' + a.pct + '%</span></div>').join('') || '<p>–</p>') + '</div>' +
+    '<div class="panel"><h2>🗿 Meilensteine</h2><p>' + d.milestones.map((m) => '<span class="pill ' + (m.reached ? 'g' : '') + '">' + (m.reached ? '✅' : '🔒') + ' Lv ' + m.level + ' — ' + esc(m.label) + '</span>').join(' ') + '</p></div>' +
+    '<div class="panel"><h2>🎁 Truhen &amp; Ziele</h2>' +
+    '<div class="kv"><span class="k">Truhen</span><span>' + d.pendingRewards.length + ' offen ' + (d.pendingRewards.length ? '<span class="pill">$reward claim</span>' : '') + '</span></div>' +
+    '<div class="kv"><span class="k">Ziel-Streak</span><span>' + ((d.goalStreak || {}).c || 0) + ' (Best: ' + ((d.goalStreak || {}).best || 0) + ')</span></div></div>' +
+    '<div class="panel"><h2>📊 XP-Quellen</h2>' +
+    (Object.entries(d.xpSources || {}).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => '<div class="hbar-row"><span>' + esc(k) + '</span><span class="tr"><i style="width:' + Math.round((v / srcMax) * 100) + '%"></i></span><span class="n">' + f(v) + '</span></div>').join('') || '<p>Noch keine XP.</p>') + '</div>';
+})();
+</script>
+</body>
+</html>

@@ -18,6 +18,7 @@ import { spawnSync } from 'child_process';
 import * as rbac from './night/rbac.js';
 import * as SessionManager from './sessionManager.js';
 import * as CommandRegistry from './commandRegistry.js';
+import { collectSystem, collectDbCounts, statStore, readPackageVersion } from './health.js';
 import { getMaintenance, setMaintenanceOn, setMaintenanceOff } from './night/maintenance.js';
 import * as SecurityCases from './night/security-cases.js';
 import { exportXlsx } from './xlsxwriter.js';
@@ -26,7 +27,12 @@ import { migrateRegistration, isMinor, cityLabel, ageLabel, publicProfileAllowed
 import { rankFor } from './levelsystem.js';
 import * as LoveEngine from './loveengine.js';
 import * as NotifCenter from './notifications.js';
-import { xpRules, saveXpRules, XP_RULES_DEFAULTS } from './levelsystem.js';
+import { xpRules, saveXpRules, XP_RULES_DEFAULTS, xpAnalytics, TITLES, BADGES, MILESTONES, SPECIAL_TITLES, monthXpSum, yearXpSum, weekXpSum, xpMultiplierBreakdown, globalRank } from './levelsystem.js';
+import { economyAnalytics, getBalance, capacityFor, ensureEconomy, sourceLabel, economyRules } from './economy.js';
+import { ensureGroupExtras, groupLevelInfo, topMembers, activeEvents, groupPublic } from './groups.js';
+import { aiChat, aiHealth, getProvider } from './ai/engine.js';
+import { aiConfig, aiAnalytics, getConversation, getFacts, getAiPrefs, clearAiUser, dmScope } from './ai/memory.js';
+import { achievementProgress, ACHIEVEMENTS } from './loveplus.js';
 
 /* 🔐 Minimaler .env-Loader (keine Zusatz-Abhängigkeit nötig): lädt
    Werte aus einer .env-Datei im Projektordner in process.env, aber
@@ -1876,14 +1882,30 @@ async function handleApi(req, res, pathname) {
         try {
           const prof = JSON.parse(fs.readFileSync(path.join(dir, bid, bid + '.json'), 'utf8'));
           const prog = prof?.progression || {};
+          let weekXp = 0, monthXp = 0;
+          try {
+            const startToday = new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z').getTime();
+            for (const e of (prog.xpDaily || [])) {
+              if (!e || !e.d) continue;
+              const age = Math.round((startToday - new Date(e.d + 'T00:00:00Z').getTime()) / 86400000);
+              if (!Number.isFinite(age) || age < 0) continue;
+              if (age < 7) weekXp += Number(e.a) || 0;
+              if (age < 30) monthXp += Number(e.a) || 0;
+            }
+          } catch (e) {}
           profiles.push({
+            bid,
             name: prof?.registration?.name || prof?.identity?.username || maskNumGlobal(bid.split('jid')[0]),
             level: prog.level || 0,
             prestige: prog.prestige || 0,
             xp: prog.xp || 0,
             totalXp: prog.totalXp || 0,
             streak: prog.streak || 0,
-            copper: prof?.wallet?.copper || 0
+            title: prog.title || null,
+            badges: Object.keys(prog.badges || {}).length,
+            copper: prof?.wallet?.copper || 0,
+            bank: prof?.bank?.copper || 0,
+            weekXp, monthXp
           });
         } catch (e) {}
       }
@@ -1898,12 +1920,16 @@ async function handleApi(req, res, pathname) {
     const levelPool = progressed.length ? progressed : profiles;
     return sendJson(res, 200, {
       topLevel: levelPool.slice().sort(byProgression).slice(0, 10)
-        .map((p) => ({ name: p.name, level: p.level, prestige: p.prestige, xp: p.xp, totalXp: p.totalXp, streak: p.streak, rank: rankFor(p.prestige || 0, p.level || 0).full })),
-      topRich: profiles.slice().sort((a, b) => (b.copper || 0) - (a.copper || 0)).slice(0, 10)
-        .map((p) => ({ name: p.name, copper: p.copper, level: p.level, prestige: p.prestige })),
+        .map((p) => ({ name: p.name, level: p.level, prestige: p.prestige, xp: p.xp, totalXp: p.totalXp, weekXp: p.weekXp || 0, monthXp: p.monthXp || 0, streak: p.streak, title: p.title || null, badges: p.badges || 0, achievements: Object.keys(lp.users?.[p.bid]?.achievements || {}).length, rank: rankFor(p.prestige || 0, p.level || 0).full })),
+      topRich: profiles.slice().sort((a, b) => ((b.copper || 0) + (b.bank || 0)) - ((a.copper || 0) + (a.bank || 0))).slice(0, 10)
+        .map((p) => ({ name: p.name, copper: p.copper, bank: p.bank || 0, total: (p.copper || 0) + (p.bank || 0), level: p.level, prestige: p.prestige })),
       topCouples: couples.slice().sort((a, b) => (b.loveXp || 0) - (a.loveXp || 0)).slice(0, 10)
         .map((c) => ({ n1: safeDisplayName(c.n1) || '💜', n2: safeDisplayName(c.n2) || '💜', loveXp: c.loveXp || 0, level: c.level || 1, streak: c.streak || 0 })),
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      event: (() => { try {
+        const m = xpRules().multipliers || {};
+        return { active: !!m.eventActive, name: String(m.eventName || ''), endsAt: m.eventEndsAt || null, mult: Number(m.event) || 1 };
+      } catch (e) { return { active: false }; } })()
     });
   }
 
@@ -2095,6 +2121,7 @@ async function handleApi(req, res, pathname) {
             xp: prof?.progression?.xp || 0,
             totalXp: prof?.progression?.totalXp || 0,
             xpSources: prof?.progression?.xpSources || {},
+            xpDaily: prof?.progression?.xpDaily || [],
             neededXp: prof?.progression?.neededXpForLvOrPrestigeUp || 0,
             copper: prof?.wallet?.copper || 0,
             silver: prof?.wallet?.silver || 0,
@@ -2114,6 +2141,36 @@ async function handleApi(req, res, pathname) {
   function maskNum(n) {
     const x = String(n || '');
     return x.length <= 5 ? x : x.slice(0, 4) + '•••' + x.slice(-3);
+  }
+
+  /* 💜 Progression-5.0-Zusammenfassung: echte Katalogzahlen + Regeln + Analytik */
+  async function buildProgressionSummary(profiles) {
+    const usersMap = {};
+    for (const x of (profiles || [])) {
+      usersMap[x.bid] = { progression: {
+        level: x.level || 0, prestige: x.prestige || 0, xp: x.xp || 0,
+        totalXp: x.totalXp || 0, xpSources: x.xpSources || {}, xpDaily: x.xpDaily || []
+      } };
+    }
+    let analytics = null;
+    try { analytics = xpAnalytics(usersMap); } catch (e) { analytics = null; }
+    let achTotal = 0, achCats = 0, achTiers = 0;
+    try {
+      const plus = await import('./loveplus.js');
+      achTotal = (plus.ACHIEVEMENTS || []).length;
+      achCats = (plus.ACHIEVEMENT_CATS || []).length;
+      achTiers = (plus.ACHIEVEMENT_TIERS || []).length;
+    } catch (e) {}
+    const rules = xpRules();
+    return {
+      catalog: {
+        achievements: achTotal, achievementCats: achCats, achievementTiers: achTiers,
+        badges: (BADGES || []).length, titles: (TITLES || []).length,
+        specialTitles: (SPECIAL_TITLES || []).length, milestones: (MILESTONES || []).length
+      },
+      rules: { rewards: rules.rewards || null, goals: rules.goals || null, version: rules.version || 1 },
+      analytics
+    };
   }
 
   function adminGuard() {
@@ -2168,6 +2225,8 @@ async function handleApi(req, res, pathname) {
         achievements
       },
       xp: LoveEngine.xpStats(profiles),
+      economy: (() => { try { return economyAnalytics(db.users || {}); } catch (e) { return null; } })(),
+      ai: (() => { try { return aiAnalytics(); } catch (e) { return null; } })(),
       topRich: profiles.sort((a, b) => b.copper - a.copper).slice(0, 10)
         .map((x) => ({ name: x.name || maskNum(x.bid.split('_')[0]), copper: x.copper, level: x.level })),
       topCouples: couples.sort((a, b) => (b.loveXp || 0) - (a.loveXp || 0)).slice(0, 10)
@@ -2212,6 +2271,88 @@ async function handleApi(req, res, pathname) {
     fs.writeFileSync(profPath, JSON.stringify(prof, null, 2), 'utf8');
     return sendJson(res, 200, { ok: true, prefs });
   }
+
+  /* 👤 MEIN ACCOUNT (Progression 6.0): persönliches Dashboard — nur eigene Daten,
+     nur nach Login (Session-Nummer → Profil). Keine JIDs, keine fremden Profile. */
+  if (pathname === '/api/profile/me' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil zu dieser Nummer gefunden.' });
+    const prof = found.data || {};
+    const bid = found.bid;
+    const prog = prof.progression || {};
+    const eco = ensureEconomy(prof) || {};
+    const bal = getBalance(prof) || {};
+    let ach = { count: 0, total: ACHIEVEMENTS.length };
+    try { const ap = achievementProgress(bid, prof); ach = { count: ap.count, total: ap.total }; } catch (e) {}
+    let rank = { pos: null, total: 0 };
+    try { rank = globalRank(readDb().users || {}, bid) || rank; } catch (e) {}
+    let mult = null;
+    try { mult = xpMultiplierBreakdown(prof, Date.now(), {}); } catch (e) {}
+    const tx = (eco.tx || []).slice(0, 10).map((t) => ({
+      t: t.t, vault: t.v, delta: t.d, source: t.s, label: sourceLabel(t.s), reason: t.r || ''
+    }));
+    const dayXp = (prog.xpDaily || []).find((x) => x && x.d === new Date().toISOString().slice(0, 10))?.a || 0;
+    return sendJson(res, 200, {
+      ok: true,
+      profile: {
+        bid,
+        name: prof.registration?.name || '',
+        registeredAt: prof.registration?.registeredAt || null,
+        privacy: {
+          hideCity: !!prof.registration?.privacy?.hideCity,
+          hideAge: !!prof.registration?.privacy?.hideAge,
+          publicProfile: !!prof.registration?.privacy?.publicProfile,
+          hideEconomy: !!prof.registration?.privacy?.hideEconomy
+        }
+      },
+      progression: {
+        level: prog.level || 0, prestige: prog.prestige || 0,
+        xp: prog.xp || 0, needed: prog.neededXpForLvOrPrestigeUp || 0,
+        totalXp: prog.totalXp || 0,
+        streak: prog.streak || 0, bestStreak: prog.bestStreak || 0,
+        badges: Object.keys(prog.badges || {}).length,
+        achievements: ach,
+        pendingRewards: (prog.pendingRewards || []).length,
+        rank
+      },
+      economy: {
+        wallet: bal.wallet || 0, bank: bal.bank || 0, total: bal.total || 0,
+        capacity: capacityFor(prof, ach.count),
+        periods: eco.periods || {},
+        stats: eco.stats || {},
+        daily: { streak: eco.daily?.streak || 0, best: eco.daily?.best || 0, last: eco.daily?.last || '' },
+        interestAt: eco.interest?.lastAt || 0
+      },
+      transactions: tx,
+      reports: {
+        dayXp,
+        weekXp: (() => { try { return weekXpSum(prof); } catch (e) { return 0; } })(),
+        monthXp: (() => { try { return monthXpSum(prof); } catch (e) { return 0; } })(),
+        yearXp: (() => { try { return yearXpSum(prof); } catch (e) { return 0; } })()
+      },
+      multiplier: mult ? { total: mult.total, capped: mult.capped, parts: mult.parts } : null
+    });
+  }
+
+  /* 🔒 Eigene Economy-Sichtbarkeit umschalten (Dashboard-Parität zu $settings/$privacy) */
+  if (pathname === '/api/profile/me/privacy' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    const body = await readBody(req);
+    const prof = found.data || {};
+    prof.registration = prof.registration || {};
+    prof.registration.privacy = prof.registration.privacy || {};
+    if (body.hideEconomy !== undefined) prof.registration.privacy.hideEconomy = !!body.hideEconomy;
+    if (body.hideCity !== undefined) prof.registration.privacy.hideCity = !!body.hideCity;
+    if (body.hideAge !== undefined) prof.registration.privacy.hideAge = !!body.hideAge;
+    try { fs.writeFileSync(path.join('Database', 'LoveUser', found.bid, found.bid + '.json'), JSON.stringify(prof, null, 2), 'utf8'); } catch (e) {
+      return sendJson(res, 500, { error: 'Speichern fehlgeschlagen.' });
+    }
+    audit(session.username || maskNumber(session.number), 'profile.privacy', 'eigene Sichtbarkeit geändert', 'success');
+    return sendJson(res, 200, { ok: true, privacy: prof.registration.privacy });
+  }
   if (pathname === '/api/notifications/read' && req.method === 'POST') {
     if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
     const number = String(session.number || '');
@@ -2223,6 +2364,183 @@ async function handleApi(req, res, pathname) {
     if (!bid) return sendJson(res, 200, { ok: true });
     const body = await readBody(req);
     NotifCenter.markRead(bid, body.ids || (body.all === true ? 'all' : []));
+    return sendJson(res, 200, { ok: true });
+  }
+
+  /* 💜 7.0 GROUPS + ECONOMY APIs */
+  function groupRecord(gid) {
+    try {
+      const db = readDb();
+      const g = db.groups?.[String(gid).replace(/@g\.us$/, '')];
+      if (!g) return null;
+      ensureGroupExtras(g);
+      return g;
+    } catch (e) { return null; }
+  }
+  if (pathname === '/api/groups' && req.method === 'GET') {
+    if (!adminGuard()) return;
+    const db = readDb();
+    const list = Object.entries(db.groups || {}).map(([gid, g]) => {
+      try {
+        ensureGroupExtras(g);
+        const li = groupLevelInfo(g);
+        return { id: gid, name: g.subject || '', members: g.memberCount || 0, level: li.level, xp: li.total, msgs: g.xp?.msgs || 0, treasury: g.gtreasury?.balance || 0 };
+      } catch (e) { return { id: gid, name: '', members: 0, level: 0, xp: 0, msgs: 0, treasury: 0 }; }
+    });
+    list.sort((a, b) => b.xp - a.xp);
+    return sendJson(res, 200, { ok: true, groups: list });
+  }
+  {
+    const mG = pathname.match(/^\/api\/groups\/([^/]+)(\/stats)?$/);
+    if (mG && req.method === 'GET') {
+      if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+      const g = groupRecord(decodeURIComponent(mG[1]));
+      if (!g) return sendJson(res, 404, { error: 'Gruppe nicht gefunden.' });
+      const users = readDb().users || {};
+      const nameOf = (bid) => users[bid]?.registration?.name || users[String(bid).split('@')[0]]?.registration?.name || String(bid);
+      if (mG[2] === '/stats') {
+        const top = topMembers(g, 'xp', 25).map((t) => ({ bid: t.bid, name: nameOf(t.bid), xp: t.xp, m: t.m, games: t.games }));
+        return sendJson(res, 200, {
+          ok: true,
+          top, history: g.xp?.history || {}, goals: g.goals || {},
+          achievements: g.gach || {}, badges: g.gbadges || {},
+          treasuryLog: (g.gtreasury?.log || []).slice(-20).reverse(),
+          events: activeEvents(g)
+        });
+      }
+      const pub = groupPublic(g, { id: decodeURIComponent(mG[1]), subject: g.subject || '', count: g.memberCount || 0, admins: g.adminCount || 0, creation: g.creation || null });
+      const out = { ok: true, group: pub, top5: topMembers(g, 'xp', 5).map((t) => ({ name: nameOf(t.bid), xp: t.xp })) };
+      try { if (roleOf(session) === 'owner') out.audit = (g.gaudit || []).slice(-20).reverse(); } catch (e) {}
+      return sendJson(res, 200, out);
+    }
+  }
+  if (pathname === '/api/economy' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    const prof = found.data || {};
+    const eco = ensureEconomy(prof) || {};
+    const bal = getBalance(prof) || {};
+    let achCount = 0;
+    try { achCount = achievementProgress(found.bid, prof).count || 0; } catch (e) {}
+    const tx = (eco.tx || []).slice(0, 50).map((t) => ({ t: t.t, vault: t.v, delta: t.d, source: t.s, label: sourceLabel(t.s), reason: t.r || '' }));
+    const src = {}, sink = {};
+    for (const t of (eco.tx || [])) {
+      if (Number(t.d) >= 0) src[t.s] = (src[t.s] || 0) + Number(t.d);
+      else sink[t.s] = (sink[t.s] || 0) - Number(t.d);
+    }
+    const topOf = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => ({ source: k, label: sourceLabel(k), amount: v }));
+    let rules = {};
+    try { rules = economyRules(); } catch (e) {}
+    const rate = Number(rules.interestRate ?? 0.01), cap = Number(rules.interestCap ?? 5000);
+    const lastI = Number(eco.interest?.lastAt) || 0;
+    return sendJson(res, 200, {
+      ok: true,
+      wallet: bal.wallet || 0, bank: bal.bank || 0, total: bal.total || 0,
+      capacity: capacityFor(prof, achCount),
+      periods: eco.periods || {}, stats: eco.stats || {},
+      daily: eco.daily || {}, interest: { lastAt: lastI, nextAt: lastI + 24 * 3600 * 1000, preview: Math.min(cap, Math.floor((bal.bank || 0) * rate)), rate, cap },
+      transactions: tx, topSources: topOf(src), topSinks: topOf(sink)
+    });
+  }
+
+  if (pathname === '/api/progression/me' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    const prof = found.data || {};
+    const prog = prof.progression || {};
+    const lv = Number(prog.level) || 0, pr = Number(prog.prestige) || 0;
+    let ach = { count: 0, total: 0, list: [] };
+    try { ach = achievementProgress(found.bid, prof); } catch (e) {}
+    const myBadges = Object.entries(prog.badges || {}).map(([id, ts]) => {
+      const d = BADGES.find((b) => b.id === id) || {};
+      return { id, emoji: d.emoji || '🏅', name: d.name || id, desc: d.desc || '', area: d.area || '', at: ts || 0 };
+    });
+    const levelTitle = [...TITLES].reverse().find((t) => lv >= (t.min || 0)) || TITLES[0] || {};
+    const miles = (MILESTONES || []).map((m) => ({ level: m.level, label: m.label, coins: m.coins, reached: pr > 0 || lv >= (m.level || 0) }));
+    let mult = null;
+    try { mult = xpMultiplierBreakdown(prof, Date.now(), {}); } catch (e) {}
+    return sendJson(res, 200, {
+      ok: true,
+      level: lv, prestige: pr, xp: prog.xp || 0, needed: prog.neededXpForLvOrPrestigeUp || 0,
+      totalXp: prog.totalXp || 0, streak: prog.streak || 0, bestStreak: prog.bestStreak || 0,
+      title: { custom: prof.identity?.title || '', level: levelTitle, special: SPECIAL_TITLES || [] },
+      badges: myBadges, achievements: ach.list || [], achCount: ach.count || 0, achTotal: ach.total || 0,
+      milestones: miles, goals: prog.goals || {}, goalStreak: prog.goalStreak || {},
+      pendingRewards: prog.pendingRewards || [],
+      xpSources: prog.xpSources || {},
+      multiplier: mult ? { total: mult.total, capped: mult.capped, parts: mult.parts } : null
+    });
+  }
+
+  /* 💜 7.0 AI APIs */
+  if (pathname === '/api/ai/status' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    let h = { ok: false, error: 'unavailable' }, cfg = {};
+    try { h = await aiHealth(); } catch (e) {}
+    try { cfg = aiConfig(); } catch (e) {}
+    /* 7.0.2: dieselbe Health-Quelle wie $aistatus (aiHealth) — identische Werte. */
+    const out = {
+      ok: true, provider: cfg.provider || 'local', model: cfg.model || '',
+      online: !!h.ok, latencyMs: h.ms ?? 0, error: h.ok ? '' : (h.error || 'unreachable'),
+      code: h.ok ? null : (h.code || h.error || 'unreachable'),
+      ready: h.ok ? h.ready !== false : false,
+      modelFound: h.ok ? h.modelFound !== false : false,
+      models: h.ok ? (h.modelCount ?? (Array.isArray(h.models) ? h.models.length : 0)) : 0,
+      hint: h.ok ? '' : (h.hint || '')
+    };
+    try {
+      if (roleOf(session) === 'owner') {
+        out.analytics = aiAnalytics();
+        out.limits = { perMin: cfg.perMin, perHour: cfg.perHour, perDay: cfg.perDay };
+        out.baseUrl = cfg.baseUrl || '';
+      }
+    } catch (e) {}
+    return sendJson(res, 200, out);
+  }
+  if (pathname === '/api/ai/models' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    let models = [], cfg = {};
+    try { models = await getProvider().models(); } catch (e) {}
+    try { cfg = aiConfig(); } catch (e) {}
+    const names = models.map((m) => m.name).filter(Boolean);
+    return sendJson(res, 200, { ok: true, models, configured: cfg.model || '', found: names.includes(cfg.model) });
+  }
+  if (pathname === '/api/ai/chat' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    const body = await readBody(req);
+    const text = String(body.text || '').slice(0, 2000);
+    if (!text.trim()) return sendJson(res, 400, { error: 'Leere Nachricht.' });
+    let rank = { pos: null, total: 0 };
+    try { rank = globalRank(readDb().users || {}, found.bid) || rank; } catch (e) {}
+    let r;
+    try {
+      r = await aiChat({ bid: found.bid, text, profile: found.data || {}, rank });
+    } catch (e) {
+      r = { ok: false, reason: 'unavailable', detail: String(e?.message || e).slice(0, 150) };
+    }
+    return sendJson(res, 200, r);
+  }
+  if (pathname === '/api/ai/memory' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    const scope = dmScope(found.bid);
+    let conv = [];
+    try { conv = getConversation(scope).slice(-10); } catch (e) {}
+    let facts = [], prefs = {};
+    try { facts = getFacts(found.bid); } catch (e) {}
+    try { prefs = getAiPrefs(found.bid); } catch (e) {}
+    return sendJson(res, 200, { ok: true, conversation: conv, facts, prefs });
+  }
+  if (pathname === '/api/ai/memory/clear' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
+    const found = findProfileByNumber(String(session.number || ''));
+    if (!found) return sendJson(res, 404, { error: 'Kein Bot-Profil gefunden.' });
+    try { clearAiUser(found.bid, { keepPrefs: true }); } catch (e) {}
     return sendJson(res, 200, { ok: true });
   }
 
@@ -2243,7 +2561,12 @@ async function handleApi(req, res, pathname) {
     const next = {
       multipliers: Object.assign({}, cur.multipliers, body.multipliers || {}),
       categories: Object.fromEntries(Object.keys(cur.categories).map((k) => [k, Object.assign({}, cur.categories[k], (body.categories || {})[k] || {})])),
-      antiFarm: Object.assign({}, cur.antiFarm, body.antiFarm || {})
+      antiFarm: Object.assign({}, cur.antiFarm, body.antiFarm || {}),
+      bonuses: Object.assign({}, cur.bonuses, body.bonuses || {}),
+      goals: Object.assign({}, cur.goals, body.goals || {}),
+      rewards: Object.assign({}, cur.rewards, body.rewards || {}),
+      xpRewards: Object.assign({}, cur.xpRewards, body.xpRewards || {}),
+      economy: Object.assign({}, cur.economy, body.economy || {})
     };
     /* Grenzen, damit keine Regel das System brechen kann */
     next.multipliers.weekend = Math.max(1, Math.min(5, Number(next.multipliers.weekend) || 1));
@@ -2251,6 +2574,30 @@ async function handleApi(req, res, pathname) {
     next.multipliers.eventActive = !!next.multipliers.eventActive;
     next.multipliers.prestigePerLevel = Math.max(0, Math.min(0.5, Number(next.multipliers.prestigePerLevel) || 0));
     next.multipliers.prestigeCap = Math.max(0, Math.min(2, Number(next.multipliers.prestigeCap) || 0));
+    /* ✖️👑🎪 Cap + Owner-Bonus + Event-Meta (Progression 6.0) */
+    next.multipliers.totalCap = Math.max(1, Math.min(10, Number(next.multipliers.totalCap) || 3));
+    next.multipliers.eventName = String(next.multipliers.eventName || '').slice(0, 40);
+    next.multipliers.eventEndsAt = next.multipliers.eventEndsAt ? Math.max(0, Number(next.multipliers.eventEndsAt) || 0) : null;
+    {
+      const obDef = (cur.multipliers && cur.multipliers.ownerBonus) || {};
+      const obIn = (next.multipliers && next.multipliers.ownerBonus) || {};
+      next.multipliers.ownerBonus = {
+        enabled: obIn.enabled !== undefined ? !!obIn.enabled : obDef.enabled !== false,
+        bonus: Math.max(0, Math.min(1, Number(obIn.bonus ?? obDef.bonus ?? 0.1) || 0))
+      };
+    }
+    /* 🔥 Streak-Multiplikatoren (Progression 3.0) — Tiefen-Merge, sonst würde
+       ein partielles Update das Objekt zerlegen (Object.assign ist flach) */
+    {
+      const stDef = (cur.multipliers && cur.multipliers.streak) || {};
+      const stIn = (next.multipliers && next.multipliers.streak) || {};
+      const stNum = (v, fb) => Math.max(0, Math.min(1, Number(v ?? fb) || 0));
+      next.multipliers.streak = {
+        enabled: stIn.enabled !== undefined ? !!stIn.enabled : stDef.enabled !== false,
+        d3: stNum(stIn.d3, stDef.d3), d7: stNum(stIn.d7, stDef.d7),
+        d30: stNum(stIn.d30, stDef.d30), cap: stNum(stIn.cap, stDef.cap)
+      };
+    }
     for (const [k, v] of Object.entries(next.categories)) {
       if (v.enabled === undefined) v.enabled = true;
       v.enabled = !!v.enabled;
@@ -2262,6 +2609,69 @@ async function handleApi(req, res, pathname) {
     next.antiFarm.duplicateMaxPerDay = Math.max(1, Math.min(100, Number(next.antiFarm.duplicateMaxPerDay) || 5));
     next.antiFarm.mutualFarmMaxPerHour = Math.max(2, Math.min(100, Number(next.antiFarm.mutualFarmMaxPerHour) || 6));
     next.antiFarm.suspiciousXpPerDay = Math.max(100, Math.min(100000, Number(next.antiFarm.suspiciousXpPerDay) || 1500));
+    /* 🎁 Boni (Progression 3.0) */
+    next.bonuses.enabled = next.bonuses.enabled !== false;
+    for (const f of ['firstActionDaily', 'streak7', 'streak30', 'streak100']) {
+      next.bonuses[f] = Math.max(0, Math.min(100000, Number(next.bonuses[f]) || 0));
+    }
+    /* 🎯 Ziele (Progression 4.0/5.0) — Kupfer-Belohnungen, keine XP */
+    next.goals.enabled = next.goals.enabled !== false;
+    for (const f of ['dailyXp', 'weeklyXp', 'dailyCopper', 'weeklyCopper', 'dailyMessages', 'dailyCommands', 'weeklyMessages', 'weeklyGames', 'monthlyXp', 'monthlyCopper', 'monthlyXpBonus']) {
+      next.goals[f] = Math.max(0, Math.min(1000000, Number(next.goals[f]) || 0));
+    }
+    /* 🎁 Soziale XP-Belohnungen (Progression 6.0) — klein, gedeckelt */
+    if (!next.xpRewards || typeof next.xpRewards !== 'object') next.xpRewards = {};
+    for (const f of ['achievement', 'giftGiven', 'giftReceived']) {
+      next.xpRewards[f] = Math.max(0, Math.min(1000, Number(next.xpRewards[f]) || 0));
+    }
+    /* 💰 Economy-Regeln (Progression 6.0) */
+    if (!next.economy || typeof next.economy !== 'object') next.economy = {};
+    {
+      const ecoClamp = (k, fb, mx) => { next.economy[k] = Math.max(0, Math.min(mx, Number(next.economy[k] ?? fb) || 0)); };
+      ecoClamp('coinCap', 999999999999, 999999999999);
+      ecoClamp('transferMin', 1, 1000000);
+      ecoClamp('transferMax', 10000, 100000000);
+      ecoClamp('transferDailyCap', 50000, 1000000000);
+      ecoClamp('bankBase', 100000, 1000000000);
+      ecoClamp('bankPerLevel', 100, 1000000);
+      ecoClamp('bankPerPrestige', 5000, 100000000);
+      ecoClamp('bankPerAchievement', 50, 1000000);
+      next.economy.interestPct = Math.max(0, Math.min(100, Number(next.economy.interestPct ?? 1) || 0));
+      ecoClamp('interestCap', 5000, 10000000);
+      ecoClamp('interestCooldownH', 24, 720);
+      ecoClamp('starterCopper', 500, 1000000);
+      ecoClamp('starterXp', 25, 100000);
+      ecoClamp('dailyBase', 200, 100000);
+      next.economy.dailyStreakPct = Math.max(0, Math.min(100, Number(next.economy.dailyStreakPct ?? 5) || 0));
+      next.economy.dailyStreakCapPct = Math.max(0, Math.min(1000, Number(next.economy.dailyStreakCapPct ?? 100) || 0));
+      ecoClamp('dailyBestBonus', 500, 1000000);
+      ecoClamp('weeklyBase', 1000, 10000000);
+      ecoClamp('monthlyBase', 5000, 100000000);
+      ecoClamp('yearlyBase', 50000, 1000000000);
+      const dmDef = (cur.economy && cur.economy.dailyMilestones) || {};
+      const dmIn = (next.economy && next.economy.dailyMilestones) || {};
+      const dmOut = {};
+      for (const k of new Set([...Object.keys(dmDef), ...Object.keys(dmIn), 'd7', 'd30', 'd100', 'd365'])) {
+        dmOut[k] = Math.max(0, Math.min(100000000, Number(dmIn[k] ?? dmDef[k]) || 0));
+      }
+      next.economy.dailyMilestones = dmOut;
+    }
+    /* 🎁 Rewards (Progression 5.0) — Level-/Prestige-Kupfer + Truhen, gedeckelt */
+    if (!next.rewards || typeof next.rewards !== 'object') next.rewards = {};
+    next.rewards.levelCopperBase = Math.max(0, Math.min(10000, Number(next.rewards.levelCopperBase ?? 20) || 0));
+    next.rewards.levelCopperPerLevel = Math.max(0, Math.min(1000, Number(next.rewards.levelCopperPerLevel ?? 5) || 0));
+    next.rewards.levelCopperCap = Math.max(0, Math.min(100000, Number(next.rewards.levelCopperCap ?? 400) || 0));
+    next.rewards.prestigeCopper = Math.max(0, Math.min(10000000, Number(next.rewards.prestigeCopper ?? 10000) || 0));
+    next.rewards.goalMinorCopper = Math.max(0, Math.min(100000, Number(next.rewards.goalMinorCopper ?? 25) || 0));
+    {
+      const chDef = (cur.rewards && cur.rewards.chests) || {};
+      const chIn = (next.rewards && next.rewards.chests) || {};
+      const chOut = {};
+      for (const k of new Set([...Object.keys(chDef), ...Object.keys(chIn)])) {
+        chOut[k] = Math.max(0, Math.min(1000000, Number(chIn[k] ?? chDef[k]) || 0));
+      }
+      next.rewards.chests = chOut;
+    }
     const saved = saveXpRules(next, actor);
     audit(actor, 'xp.rules.changed', 'XP-Regeln → v' + saved.version + ' — ' + reason.slice(0, 160), 'success');
     securityEvent('XP_RULES_CHANGED', { actor, risk: 40, reason: reason.slice(0, 200), newVersion: saved.version });
@@ -2279,7 +2689,17 @@ async function handleApi(req, res, pathname) {
       .sort((a, b) => b.prestige - a.prestige || b.level - a.level || b.xp - a.xp)
       .slice(0, 15)
       .map((x) => ({ ...x, rank: rankFor(x.prestige, x.level).full }));
-    return sendJson(res, 200, { ok: true, stats, top, table: LoveEngine.levelTable(50, 0) });
+    let progression = null;
+    try { progression = await buildProgressionSummary(profiles); } catch (e) { progression = null; }
+    return sendJson(res, 200, { ok: true, stats, top, table: LoveEngine.levelTable(50, 0), progression });
+  }
+
+  /* 💜 PROGRESSION 5.0: Katalog + Regeln + Analytik fürs Dashboard — nur mit xp.view */
+  if (pathname === '/api/progression/summary' && req.method === 'GET') {
+    if (!perm(session, 'xp.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (xp.view).' });
+    const profiles = scanUserProfiles();
+    const progression = await buildProgressionSummary(profiles);
+    return sendJson(res, 200, { ok: true, progression, generatedAt: new Date().toISOString() });
   }
 
   /* ⭐ XP ADJUST (LoveCore, kritisch): Grund PFLICHT + Audit + Event.
@@ -2353,7 +2773,27 @@ async function handleApi(req, res, pathname) {
     const blocks = listBlockedIps().length;
     const bans = listManualBans().length;
     components.push({ id: 'security', label: 'Security', ok: true, detail: blocks + ' aktive IP-Blocks · ' + bans + ' manuelle Bans' });
-    return sendJson(res, 200, { ok: true, components, checkedAt: new Date().toISOString() });
+    /* REAL DATA ONLY: zentrale Runtime-Health (additiv — components/checkedAt bleiben). */
+    let sys = null;
+    try { sys = await collectSystem(); } catch (e) {}
+    let ai = { online: false, ready: false, code: null, model: null, models: 0, latencyMs: 0, hint: '' };
+    try {
+      const h = await aiHealth();
+      ai = { online: !!h.ok, ready: h.ok ? h.ready !== false : false, code: h.ok ? null : (h.code || h.error || null), model: h.model || null, models: h.ok ? (h.modelCount ?? 0) : 0, latencyMs: h.ok ? (h.ms ?? 0) : 0, hint: h.ok ? '' : (h.hint || '') };
+    } catch (e) {}
+    const counts = { users: null, groups: null, commands: null, aliases: null, categories: null };
+    try {
+      const dc = collectDbCounts(readDb());
+      counts.users = dc.users; counts.groups = dc.groups;
+    } catch (e) {}
+    try {
+      const st = CommandRegistry.stats();
+      counts.commands = st.commands; counts.aliases = st.aliases; counts.categories = st.categories;
+    } catch (e) {}
+    let dbFiles = [];
+    try { dbFiles = ['Database.json', 'loveplus.json', 'ai.json', 'websessions.json'].map(statStore).filter(Boolean); } catch (e) {}
+    const sessPub = sess.map((x) => ({ id: x.id, name: x.name, status: x.status, health: x.health, uptimeSec: x.uptimeSec, uptime: x.uptime, messages: x.messages, commands: x.commands, reconnects: x.reconnects, errors: x.errors, memoryMb: x.memoryMb, lastSeen: x.lastSeen }));
+    return sendJson(res, 200, { ok: true, components, checkedAt: new Date().toISOString(), version: readPackageVersion(), system: sys, ai, counts, dbFiles, sessions: sessPub });
   }
   /* 👤 Nutzer-Suche + Profil */
   if (pathname === '/api/admin/users' && req.method === 'GET') {
@@ -3073,20 +3513,18 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === '/api/system' && req.method === 'GET') {
-    const mem = process.memoryUsage();
-    const os = await import('node:os');
-    const cpus = os.cpus() || [];
-    const load = os.loadavg ? os.loadavg()[0] : 0;
-    const totalMb = Math.round(os.totalmem() / 1048576);
+    /* REAL DATA ONLY: CPU per Sampling (Windows-fähig); Disk ehrlich null. */
+    let sys = null;
+    try { sys = await collectSystem(); } catch (e2) {}
     return sendJson(res, 200, {
       ok: true,
-      node: process.version, platform: process.platform, arch: process.arch,
-      uptimeSec: Math.round(process.uptime()),
-      ramMb: Number((mem.rss / 1048576).toFixed(1)),
-      ramTotalMb: totalMb,
-      heapMb: Number((mem.heapUsed / 1048576).toFixed(1)),
-      cpu: Number((Math.min(100, (load / Math.max(1, cpus.length)) * 100)).toFixed(1)),
-      diskPct: 0,
+      node: sys?.node ?? null, platform: sys?.platform ?? null, arch: sys?.arch ?? null,
+      uptimeSec: sys?.uptimeSec ?? null,
+      ramMb: sys?.ramMb ?? null,
+      ramTotalMb: sys?.ramTotalMb ?? null,
+      heapMb: sys?.heapMb ?? null,
+      cpu: sys?.cpu ?? null,
+      diskPct: null,
       sessions: sessions.size
     });
   }

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bank — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏦</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="bank">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>🏦 Bank</h1>
+    <p class="subline">Guthaben · Zinsen · Kapazität · Verlauf.</p>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('bank');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+(async () => {
+  const d = await api('/api/economy');
+  if (!d || !d.ok) { document.getElementById('view').innerHTML = '<p>Konnte nicht geladen werden.</p>'; return; }
+  const i = d.interest || {};
+  const ready = Date.now() >= (i.nextAt || 0);
+  const pct = d.capacity > 0 ? Math.min(100, Math.round((d.bank / d.capacity) * 100)) : 0;
+  const bankTx = (d.transactions || []).filter((t) => t.vault === 'bank');
+  document.getElementById('view').innerHTML =
+    '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Guthaben</div><div class="v">' + f(d.bank) + '</div><div class="s">Kupfer</div></div>' +
+    '<div class="stat-card"><div class="t">Kapazität</div><div class="v">' + f(d.capacity) + '</div><div class="s">' + pct + '% belegt</div></div>' +
+    '<div class="stat-card"><div class="t">Zinsen</div><div class="v">' + ((i.rate || 0) * 100).toFixed(0) + '%</div><div class="s">alle 24h, max ' + f(i.cap) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Nächste Zinsen</div><div class="v">' + (ready ? '✅' : '⏳') + '</div><div class="s">' + (ready ? 'bereit — $interest' : esc(new Date(i.nextAt).toLocaleString('de-DE'))) + '</div></div>' +
+    '</div>' +
+    '<div class="panel"><h2>🏦 Auslastung</h2><div class="xpbar"><i style="width:' + pct + '%"></i></div>' +
+    '<div class="kv"><span class="k">Vorschau</span><span>+' + f(i.preview) + ' Kupfer bei Abholung (Kapazität wächst mit Level, Prestige &amp; Erfolgen)</span></div></div>' +
+    '<div class="panel"><h2>🧾 Bank-Verlauf</h2><div class="timeline">' +
+    (bankTx.slice(0, 20).map((t) => '<div><span class="tt">' + esc(new Date(t.t).toLocaleString('de-DE')) + '</span><br>' + (t.delta >= 0 ? '+' : '') + f(t.delta) + ' — ' + esc(t.label || t.source) + (t.reason ? ' (' + esc(t.reason) + ')' : '') + '</div>').join('') || '<div>Noch keine Bank-Buchungen. Tipp: <span class="pill">$deposit all</span></div>') +
+    '</div></div>';
+})();
+</script>
+</body>
+</html>

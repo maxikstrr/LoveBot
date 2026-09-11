@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Economy — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="economy">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1>💰 Economy</h1>
+    <p class="subline">Wallet · Bank · Verdienst · Ausgaben · Verlauf.</p>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('economy');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+const hb = (label, v, max) => '<div class="hbar-row"><span>' + esc(label) + '</span><span class="tr"><i style="width:' + (max > 0 ? Math.round((v / max) * 100) : 0) + '%"></i></span><span class="n">' + f(v) + '</span></div>';
+(async () => {
+  const d = await api('/api/economy');
+  if (!d || !d.ok) { document.getElementById('view').innerHTML = '<p>Konnte nicht geladen werden.</p>'; return; }
+  const P = d.periods || {};
+  const per = (k, t) => { const o = P[k] || {}; return '<div class="stat-card"><div class="t">' + t + '</div><div class="v">' + f((o.e || 0) - (o.s || 0)) + '</div><div class="s">+' + f(o.e) + ' / −' + f(o.s) + '</div></div>'; };
+  const smax = Math.max(1, ...((d.topSources || []).map((x) => x.amount)), ...((d.topSinks || []).map((x) => x.amount)));
+  document.getElementById('view').innerHTML =
+    '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Wallet</div><div class="v">' + f(d.wallet) + '</div><div class="s">Kupfer</div></div>' +
+    '<div class="stat-card"><div class="t">Bank</div><div class="v">' + f(d.bank) + '</div><div class="s">von ' + f(d.capacity) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Gesamt</div><div class="v">' + f(d.total) + '</div><div class="s">Kupfer</div></div>' +
+    '<div class="stat-card"><div class="t">Daily-Serie</div><div class="v">🔥 ' + ((d.daily || {}).streak || 0) + '</div><div class="s">Best: ' + ((d.daily || {}).best || 0) + '</div></div>' +
+    '</div>' +
+    '<div class="panel"><h2>📅 Perioden (Netto)</h2><div class="stat-grid">' + per('day', 'Heute') + per('week', 'Woche') + per('month', 'Monat') + per('year', 'Jahr') + '</div></div>' +
+    '<div class="panel"><h2>📈 Top-Quellen</h2>' + ((d.topSources || []).map((x) => hb(x.label, x.amount, smax)).join('') || '<p>–</p>') + '</div>' +
+    '<div class="panel"><h2>📉 Top-Ausgaben</h2>' + ((d.topSinks || []).map((x) => hb(x.label, x.amount, smax)).join('') || '<p>–</p>') + '</div>' +
+    '<div class="panel"><h2>🧾 Verlauf</h2><div class="timeline">' +
+    ((d.transactions || []).slice(0, 30).map((t) => '<div><span class="tt">' + esc(new Date(t.t).toLocaleString('de-DE')) + ' · ' + esc(t.vault === 'bank' ? 'Bank' : 'Wallet') + '</span><br>' + (t.delta >= 0 ? '+' : '') + f(t.delta) + ' — ' + esc(t.label || t.source) + (t.reason ? ' (' + esc(t.reason) + ')' : '') + '</div>').join('') || '<div>–</div>') +
+    '</div></div>';
+})();
+</script>
+</body>
+</html>

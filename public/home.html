@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — LoveBot</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="home">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Mein Bereich</div>
+    <h1 id="hello">🏠 Dashboard</h1>
+    <p class="subline">Dein LoveBot auf einen Blick — alles live aus deinem Profil.</p>
+    <div id="event"></div>
+    <div id="view"><p>Lädt …</p></div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('home');
+const f = (n) => Number(n || 0).toLocaleString('de-DE');
+(async () => {
+  const me = await api('/api/profile/me');
+  if (!me || !me.ok) { document.getElementById('view').innerHTML = '<p>Profil konnte nicht geladen werden.</p>'; return; }
+  document.getElementById('hello').textContent = '🏠 Willkommen, ' + (me.profile.name || 'Herz') + '!';
+  const p = me.progression, e = me.economy, r = me.reports;
+  const pct = p.needed > 0 ? Math.min(100, Math.round((p.xp / p.needed) * 100)) : 0;
+  document.getElementById('view').innerHTML =
+    '<div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Level</div><div class="v">' + p.level + '</div><div class="s">Prestige ' + p.prestige + '</div></div>' +
+    '<div class="stat-card"><div class="t">Rang</div><div class="v">' + (p.rank.pos ? '#' + p.rank.pos : '–') + '</div><div class="s">von ' + f(p.rank.total) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Wallet</div><div class="v">' + f(e.wallet) + '</div><div class="s">+ Bank ' + f(e.bank) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Streak</div><div class="v">🔥 ' + p.streak + '</div><div class="s">Best: ' + p.bestStreak + '</div></div>' +
+    '</div>' +
+    '<div class="panel"><h2>✨ XP-Fortschritt</h2>' +
+    '<div class="kv"><span class="k">Level ' + p.level + '</span><span>' + f(p.xp) + ' / ' + f(p.needed) + ' XP</span></div>' +
+    '<div class="xpbar"><i style="width:' + pct + '%"></i></div>' +
+    '<div class="kv"><span class="k">Total</span><span>' + f(p.totalXp) + ' XP · 🏅 ' + p.badges + ' Badges · 🏆 ' + p.achievements.count + '/' + p.achievements.total + ' Erfolge</span></div>' +
+    (p.pendingRewards ? '<p>🎁 <b>' + p.pendingRewards + ' Belohnungstruhe(n)</b> warten — <span class="pill">$reward claim</span></p>' : '') +
+    '</div>' +
+    '<div class="panel"><h2>📅 Perioden</h2><div class="stat-grid">' +
+    '<div class="stat-card"><div class="t">Heute</div><div class="v">' + f(r.dayXp) + '</div><div class="s">XP · Daily-Serie ' + (e.daily.streak || 0) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Woche</div><div class="v">' + f(r.weekXp) + '</div><div class="s">XP</div></div>' +
+    '<div class="stat-card"><div class="t">Monat</div><div class="v">' + f(r.monthXp) + '</div><div class="s">XP</div></div>' +
+    '<div class="stat-card"><div class="t">Jahr</div><div class="v">' + f(r.yearXp) + '</div><div class="s">XP</div></div>' +
+    '</div></div>' +
+    '<div class="panel"><h2>🧾 Letzte Bewegungen</h2><div class="timeline">' +
+    ((me.transactions || []).slice(0, 5).map((t) => '<div><span class="tt">' + esc(new Date(t.t).toLocaleString('de-DE')) + '</span><br>' + (t.delta >= 0 ? '+' : '') + f(t.delta) + ' Kupfer — ' + esc(t.label || t.source) + (t.reason ? ' (' + esc(t.reason) + ')' : '') + '</div>').join('') || '<div>Noch keine Bewegungen.</div>') +
+    '</div></div>' +
+    '<div class="panel"><h2>🚀 Schnellstart</h2><p><span class="pill">$daily</span> <span class="pill">$me</span> <span class="pill">$ai hallo</span> <span class="pill">$am</span> <span class="pill">$gxp</span></p></div>';
+  try {
+    const lb = await api('/api/leaderboard');
+    if (lb && lb.event) document.getElementById('event').innerHTML = '<div class="panel glow"><h2>🔥 ' + esc(lb.event.name || 'Event') + '</h2><p>' + esc(lb.event.text || 'Bonus-XP aktiv!') + '</p></div>';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

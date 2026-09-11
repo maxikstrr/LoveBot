@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mein Account 💜 — Level, Kupfer & Reports | LoveBot</title>
+<meta name="description" content="Dein persönlicher LoveBot-Account: Level, Kupfer, Bank, Daily-Serie, Transaktionen und Reports — nur für dich nach Login sichtbar.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💜</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+<style>
+  .acc-hero { padding: 84px 0 6px; text-align: center; }
+  .acc-hero h1 { font-size: clamp(26px, 5vw, 40px); font-weight: 900; margin-bottom: 8px; }
+  .acc-hero p { color: var(--muted); font-size: 14px; }
+  .acc-tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 22px 0 18px; position: sticky; top: 0; z-index: 5; padding: 10px 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); }
+  .acc-tab { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .acc-tab.active { background: var(--grad-soft); border-color: rgba(244,114,182,.5); }
+  .acc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+  .acc-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 18px; }
+  .acc-card h3 { margin: 0 0 10px; font-size: 15px; }
+  .acc-big { font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .acc-sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .acc-bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; margin: 8px 0 4px; }
+  .acc-bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f472b6, #a78bfa); }
+  .acc-kv { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px dashed var(--line); font-size: 13.5px; }
+  .acc-kv:first-of-type { border-top: 0; }
+  .acc-kv b { font-variant-numeric: tabular-nums; }
+  .acc-tx { display: flex; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px dashed var(--line); font-size: 13px; }
+  .acc-tx:first-of-type { border-top: 0; }
+  .acc-tx .amt { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .acc-tx .pos { color: #4ade80; } .acc-tx .neg { color: #f87171; }
+  .acc-tx small { color: var(--faint); display: block; }
+  .acc-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px dashed var(--line); font-size: 13.5px; }
+  .acc-row:first-of-type { border-top: 0; }
+  .acc-row .r { width: 30px; text-align: center; font-weight: 800; color: var(--faint); }
+  .acc-row .v { margin-left: auto; text-align: right; font-variant-numeric: tabular-nums; }
+  .acc-login { text-align: center; padding: 40px 10px; }
+  .acc-event { border: 1px solid rgba(244,114,182,.45); background: var(--grad-soft); border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 12px; font-size: 13.5px; text-align: center; }
+  .acc-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1px dashed var(--line); font-size: 13.5px; }
+  .acc-toggle:first-of-type { border-top: 0; }
+  .switch { position: relative; width: 44px; height: 24px; flex: none; }
+  .switch input { opacity: 0; width: 100%; height: 100%; position: absolute; margin: 0; cursor: pointer; }
+  .switch i { position: absolute; inset: 0; border-radius: 999px; background: rgba(255,255,255,.14); transition: .2s; }
+  .switch i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: .2s; }
+  .switch input:checked + i { background: #f472b6; }
+  .switch input:checked + i::after { left: 23px; }
+  @media (max-width: 560px) { .acc-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grid-overlay"></div>
+<div class="hearts" id="hearts"></div>
+
+<header class="topnav">
+  <a class="brand" href="/"><span class="h">💜</span><b>LOVEBOT</b></a>
+  <button class="nav-burger" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menü">☰</button>
+  <nav class="nav-links">
+    <a href="/">Start</a>
+    <a href="/features.html">Features</a>
+    <a href="/cmd.html">Befehle</a>
+    <a href="/level.html">Level</a>
+    <a href="/home.html">Dashboard</a>
+    <a href="/account.html" class="active">Mein Account</a>
+    <a href="/group.html">Gruppen</a>
+    <a href="/ai.html">AI</a>
+    <a href="/leaderboard.html">Bestenliste</a>
+    <a href="/faq.html">FAQ</a>
+    <a class="cta-mobile" href="/login.html"><span class="btn" style="padding:10px 22px">Einloggen</span></a>
+  </nav>
+  <a href="/login.html" class="cta">Einloggen →</a>
+</header>
+
+<div class="wrap-page">
+  <section class="acc-hero">
+    <div class="kicker">💜 Mein Account</div>
+    <h1 id="accTitle">Dein LoveBot-Konto</h1>
+    <p>Nur für dich sichtbar — Level, Kupfer, Bank, Serien & Reports.</p>
+  </section>
+
+  <div id="accLogin" class="acc-login" style="display:none">
+    <p style="font-size:16px;margin-bottom:14px">🔒 <b>Bitte einloggen</b>, um deinen Account zu sehen.</p>
+    <a class="btn" href="/login.html">Zum Login →</a>
+  </div>
+
+  <div id="accApp" style="display:none">
+    <div id="accEvent"></div>
+    <nav class="acc-tabs" id="accTabs">
+      <button class="acc-tab active" data-tab="overview">👤 Übersicht</button>
+      <button class="acc-tab" data-tab="economy">🪙 Economy</button>
+      <button class="acc-tab" data-tab="reports">📊 Reports</button>
+      <button class="acc-tab" data-tab="top">🏆 Bestenliste</button>
+      <button class="acc-tab" data-tab="privacy">🔒 Privatsphäre</button>
+    </nav>
+    <div id="accView"></div>
+  </div>
+</div>
+
+<footer class="footer"><div class="wrap-page"><p>💜 LoveBot by Maxichen 2026 · <a href="/datenschutz.html">Datenschutz</a> · <a href="/impressum.html">Impressum</a></p></div></footer>
+
+<script>
+(function () {
+  'use strict';
+  var de = function (n) { return Number(n || 0).toLocaleString('de-DE'); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var tab = 'overview', me = null, lb = null;
+
+  function bar(pct) {
+    pct = Math.max(0, Math.min(100, Number(pct) || 0));
+    return '<div class="acc-bar"><i style="width:' + pct + '%"></i></div>';
+  }
+  function kv(k, v) { return '<div class="acc-kv"><span>' + k + '</span><b>' + v + '</b></div>'; }
+
+  function vOverview() {
+    var p = me.progression || {}, e = me.economy || {};
+    var pct = p.needed ? Math.round((p.xp / p.needed) * 100) : 0;
+    var m = me.multiplier, mRows = '';
+    if (m && m.parts) {
+      mRows = m.parts.map(function (x) {
+        return kv((x.active ? '✅ ' : '⚪ ') + esc(x.label), '×' + Number(x.mult).toFixed(2));
+      }).join('') + kv('<b>Gesamt</b>', '<b>×' + Number(m.total).toFixed(2) + '</b>' + (m.capped ? ' (Cap)' : ''));
+    }
+    return '<div class="acc-grid">' +
+      '<div class="acc-card"><h3>👤 ' + esc(me.profile.name || 'Du') + '</h3>' +
+        '<div class="acc-big">Lv ' + de(p.level) + (p.prestige ? ' · 👑 P' + de(p.prestige) : '') + '</div>' +
+        bar(pct) + '<div class="acc-sub">' + de(p.xp) + ' / ' + de(p.needed) + ' XP · Σ ' + de(p.totalXp) + ' XP</div>' +
+        (p.rank && p.rank.pos ? kv('🏅 Globaler Rang', '#' + de(p.rank.pos) + ' von ' + de(p.rank.total)) : kv('🏅 Globaler Rang', 'noch unplatziert')) +
+        kv('🔥 Streak', de(p.streak) + ' Tage (Rekord ' + de(p.bestStreak) + ')') +
+        kv('🏆 Achievements', de(p.achievements.count) + ' / ' + de(p.achievements.total)) +
+        kv('🏅 Badges', de(p.badges)) +
+        (p.pendingRewards ? kv('🎁 Truhen bereit', de(p.pendingRewards) + ' <span class="acc-sub">($reward in WhatsApp)</span>') : '') +
+      '</div>' +
+      '<div class="acc-card"><h3>🪙 Kontostand</h3>' +
+        '<div class="acc-big">' + de(e.total) + ' <span style="font-size:15px">Kupfer</span></div>' +
+        kv('🤎 Wallet', de(e.wallet)) + kv('🏦 Bank', de(e.bank) + ' / ' + de(e.capacity)) +
+        bar(e.capacity ? (e.bank / e.capacity) * 100 : 0) +
+        kv('🔥 Daily-Serie', de(e.daily.streak) + ' (Rekord ' + de(e.daily.best) + ')') +
+      '</div>' +
+      (mRows ? '<div class="acc-card"><h3>✖️ XP-Multiplikator</h3>' + mRows + '</div>' : '') +
+    '</div>';
+  }
+
+  function vEconomy() {
+    var e = me.economy || {}, per = e.periods || {}, st = e.stats || {};
+    var tx = (me.transactions || []).map(function (t) {
+      var cls = Number(t.delta) >= 0 ? 'pos' : 'neg';
+      var sign = Number(t.delta) >= 0 ? '+' : '';
+      return '<div class="acc-tx"><span style="font-size:18px">' + (t.vault === 'bank' ? '🏦' : '🤎') + '</span>' +
+        '<div><span class="amt ' + cls + '">' + sign + de(t.delta) + '</span> · ' + esc(t.label || t.source) +
+        (t.reason ? '<small>' + esc(t.reason) + '</small>' : '') + '</div></div>';
+    }).join('') || '<p class="acc-sub">Noch keine Buchungen.</p>';
+    return '<div class="acc-grid">' +
+      '<div class="acc-card"><h3>💰 Übersicht</h3>' +
+        kv('🤎 Wallet', de(e.wallet) + ' 🪙') + kv('🏦 Bank', de(e.bank) + ' / ' + de(e.capacity) + ' 🪙') +
+        kv('💎 Gesamt', '<b>' + de(e.total) + ' 🪙</b>') +
+        kv('♾️ Lifetime verdient', '+' + de(st.earned)) + kv('♾️ Lifetime ausgegeben', '−' + de(st.spent)) +
+        kv('🏆 Rekord-Vermögen', de(st.highBal)) +
+      '</div>' +
+      '<div class="acc-card"><h3>📅 Zeiträume (verdient / ausgegeben)</h3>' +
+        kv('Heute', '+' + de(per.day && per.day.e) + ' / −' + de(per.day && per.day.s)) +
+        kv('Woche', '+' + de(per.week && per.week.e) + ' / −' + de(per.week && per.week.s)) +
+        kv('Monat', '+' + de(per.month && per.month.e) + ' / −' + de(per.month && per.month.s)) +
+        kv('Jahr', '+' + de(per.year && per.year.e) + ' / −' + de(per.year && per.year.s)) +
+      '</div>' +
+      '<div class="acc-card"><h3>🧾 Letzte Buchungen</h3>' + tx + '</div>' +
+    '</div>';
+  }
+
+  function vReports() {
+    var r = me.reports || {}, e = me.economy || {}, per = e.periods || {};
+    return '<div class="acc-grid">' +
+      '<div class="acc-card"><h3>⭐ XP-Reports</h3>' +
+        kv('📅 Heute', '+' + de(r.dayXp) + ' XP') + kv('🗓️ Woche', '+' + de(r.weekXp) + ' XP') +
+        kv('📆 Monat', '+' + de(r.monthXp) + ' XP') + kv('🎆 Jahr (12 Monate)', '+' + de(r.yearXp) + ' XP') +
+      '</div>' +
+      '<div class="acc-card"><h3>🪙 Kupfer-Reports</h3>' +
+        kv('📅 Heute', '+' + de(per.day && per.day.e) + ' / −' + de(per.day && per.day.s)) +
+        kv('🗓️ Woche', '+' + de(per.week && per.week.e) + ' / −' + de(per.week && per.week.s)) +
+        kv('📆 Monat', '+' + de(per.month && per.month.e) + ' / −' + de(per.month && per.month.s)) +
+        kv('🎆 Jahr', '+' + de(per.year && per.year.e) + ' / −' + de(per.year && per.year.s)) +
+      '</div>' +
+      '<div class="acc-card"><h3>🔥 Daily-Serie</h3>' +
+        kv('Aktuell', de(e.daily.streak) + ' Tage') + kv('Rekord', de(e.daily.best) + ' Tage') +
+        kv('Zuletzt', esc(e.daily.last || '–')) +
+        '<p class="acc-sub">In WhatsApp: <b>$daily</b> · <b>$weekly</b> · <b>$monthly</b> · <b>$yearly</b> · <b>$report</b></p>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function vTop() {
+    if (!lb) return '<p class="acc-sub">Bestenliste lädt …</p>';
+    var medals = ['🥇', '🥈', '🥉'];
+    var lv = (lb.topLevel || []).map(function (r, i) {
+      return '<div class="acc-row"><span class="r">' + (medals[i] || (i + 1)) + '</span><span><b>' + esc(r.name) + '</b><br><span class="acc-sub">' + esc(r.rank || '') + '</span></span><span class="v"><b>Lv ' + de(r.level) + '</b><br><span class="acc-sub">Σ ' + de(r.totalXp) + ' XP</span></span></div>';
+    }).join('') || '<p class="acc-sub">Noch leer.</p>';
+    var rich = (lb.topRich || []).map(function (r, i) {
+      return '<div class="acc-row"><span class="r">' + (medals[i] || (i + 1)) + '</span><span><b>' + esc(r.name) + '</b></span><span class="v"><b>' + de(r.total != null ? r.total : r.copper) + ' 🪙</b></span></div>';
+    }).join('') || '<p class="acc-sub">Noch leer.</p>';
+    return '<div class="acc-grid"><div class="acc-card"><h3>⭐ Top Level</h3>' + lv + '</div>' +
+      '<div class="acc-card"><h3>💰 Top Vermögen</h3>' + rich + '</div></div>';
+  }
+
+  function vPrivacy() {
+    var pr = (me.profile && me.profile.privacy) || {};
+    function tgl(key, label, hint) {
+      return '<div class="acc-toggle"><span>' + label + '<br><span class="acc-sub">' + hint + '</span></span>' +
+        '<label class="switch"><input type="checkbox" data-priv="' + key + '"' + (pr[key] ? ' checked' : '') + '><i></i></label></div>';
+    }
+    return '<div class="acc-grid"><div class="acc-card"><h3>🔒 Sichtbarkeit</h3>' +
+      tgl('hideEconomy', '🪙 Kupfer verstecken', 'Andere sehen dein Vermögen nicht ($profile/$compare)') +
+      tgl('hideCity', '📍 Stadt verstecken', 'Stadt in Gruppen maskieren') +
+      tgl('hideAge', '🎂 Alter verstecken', 'Alter vor anderen verbergen') +
+      '<p class="acc-sub">Änderungen werden sofort gespeichert. Mehr: <b>$privacy</b> · <b>$settings</b> in WhatsApp.</p>' +
+      '<p class="acc-sub" id="privOut"></p>' +
+    '</div></div>';
+  }
+
+  function render() {
+    var v = document.getElementById('accView');
+    document.querySelectorAll('#accTabs .acc-tab').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    v.innerHTML = tab === 'economy' ? vEconomy() : tab === 'reports' ? vReports() : tab === 'top' ? vTop() : tab === 'privacy' ? vPrivacy() : vOverview();
+    if (tab === 'privacy') {
+      v.querySelectorAll('[data-priv]').forEach(function (inp) {
+        inp.onchange = function () {
+          var body = {}; body[inp.dataset.priv] = inp.checked;
+          fetch('/api/profile/me/privacy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              document.getElementById('privOut').textContent = d && d.ok ? '✅ Gespeichert.' : '❌ ' + ((d && d.error) || 'Fehler');
+              if (me && me.profile) me.profile.privacy = Object.assign({}, me.profile.privacy, body);
+            })
+            .catch(function () { document.getElementById('privOut').textContent = '❌ Netzwerkfehler.'; });
+        };
+      });
+    }
+  }
+
+  document.getElementById('accTabs').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-tab]');
+    if (b) { tab = b.dataset.tab; render(); }
+  });
+
+  fetch('/api/profile/me', { credentials: 'same-origin' })
+    .then(function (r) {
+      if (r.status === 401) { document.getElementById('accLogin').style.display = ''; return null; }
+      return r.json();
+    })
+    .then(function (d) {
+      if (!d) return;
+      if (!d.ok) {
+        document.getElementById('accLogin').style.display = '';
+        document.getElementById('accLogin').innerHTML = '<p>❌ ' + esc(d.error || 'Fehler') + '</p>';
+        return;
+      }
+      me = d;
+      document.getElementById('accTitle').textContent = 'Hallo, ' + (d.profile.name || 'Du') + ' 💜';
+      document.getElementById('accApp').style.display = '';
+      render();
+    })
+    .catch(function () {
+      document.getElementById('accLogin').style.display = '';
+      document.getElementById('accLogin').innerHTML = '<p>❌ Netzwerkfehler.</p>';
+    });
+
+  fetch('/api/leaderboard', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      lb = d;
+      if (d && d.event && d.event.active) {
+        var txt = '🎪 <b>Event aktiv' + (d.event.name ? ': ' + esc(d.event.name) : '') + '</b> — ×' + (d.event.mult || 1) + ' XP';
+        if (d.event.endsAt) {
+          var left = d.event.endsAt - Date.now();
+          if (left > 0) txt += ' · noch ' + Math.floor(left / 3600000) + ' Std. ' + Math.round((left % 3600000) / 60000) + ' Min.';
+        }
+        document.getElementById('accEvent').innerHTML = '<div class="acc-event">' + txt + '</div>';
+      }
+      if (tab === 'top') render();
+    })
+    .catch(function () {});
+})();
+</script>
+<script src="/js/common.js"></script>
+<script src="/js/consent.js"></script>
+</body>
+</html>

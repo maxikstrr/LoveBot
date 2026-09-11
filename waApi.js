@@ -86,6 +86,9 @@ import {
   path,
   process
 } from './nodeApi.js';
+/* 💜 Level-Engine (EINE Quelle für Kurve + XP-Vergabe — kein Zyklus:
+   levelsystem.js hängt nur an loveengine/notifications, nie an waApi). */
+import { neededXp as progressionNeededXp, PROGRESSION as PROGRESSION_SOURCE, grantXp as progressionGrantXp } from './levelsystem.js';
 import c from './colorApi.js';
 import qrcode from 'qrcode-terminal';
 import { Boom } from '@hapi/boom';
@@ -464,6 +467,20 @@ function checkCommandAccess(senderProfile, groupProfile, role, isGroup, command,
     };
   }
 
+  /* 💜 7.0 COMMAND-SCHUTZ (Opt-in pro Gruppe): nur Admins dürfen Bot-Befehle,
+     außer einer kleinen Hilfe-Allowlist. */
+  if (isGroup && groupProfile && groupProfile.gset && groupProfile.gset.commandProtection === true) {
+    if (role !== 'host' && role !== 'superadmin' && role !== 'admin') {
+      const safe = ['help', 'hilfe', 'menu', 'start', 'me', 'ginfo', 'groupinfo'];
+      if (!safe.includes(String(command || '').toLowerCase())) {
+        return {
+          allowed: false,
+          message: '> ⛔ *Command-Schutz:* In dieser Gruppe dürfen nur Admins Bot-Befehle nutzen.'
+        };
+      }
+    }
+  }
+
   /* Host, Zusatz-Owner, SuperAdmins und Gruppen-Admins sind vom
      DSGVO-Zwang ausgenommen (der Betreiber selbst braucht keine
      Zustimmung zu seinem eigenen Bot). */
@@ -675,15 +692,10 @@ async function announceGroupProcess(sock, from, data = {}) {
   }
 }
 
-const PROGRESSION_CURVE = Object.freeze({
-  maxLevel: 743,
-  maxPrestige: 743,
-  baseNeededXp: 743,
-  growthNumerator: 100743,
-  growthDenominator: 100000
-});
-
-const CURVE_CACHE = [BigInt(PROGRESSION_CURVE.baseNeededXp)];
+/* ── 💜 Level-Kurve: EINE zentrale Quelle (levelsystem.js).
+   PROGRESSION_CURVE / getNeededXp / curveIndex bleiben als kompatible
+   Weiterleitungen bestehen — die Mathematik lebt nur noch in levelsystem.js. */
+const PROGRESSION_CURVE = PROGRESSION_SOURCE;
 
 function curveIndex(level, prestige) {
   const rawLevel = Math.max(0, Math.floor(Number(level) || 0));
@@ -693,21 +705,8 @@ function curveIndex(level, prestige) {
   return clampedPrestige * (PROGRESSION_CURVE.maxLevel + 1) + clampedLevel;
 }
 
-function toSafeNumber(bigValue) {
-  const maxSafe = BigInt(Number.MAX_SAFE_INTEGER);
-  return bigValue > maxSafe ? Number.MAX_SAFE_INTEGER : Number(bigValue);
-}
-
 function getNeededXp(level, prestige) {
-  const idx = curveIndex(level, prestige);
-  while (CURVE_CACHE.length <= idx) {
-    const prev = CURVE_CACHE[CURVE_CACHE.length - 1];
-    const next = (prev * BigInt(PROGRESSION_CURVE.growthNumerator)
-      + (BigInt(PROGRESSION_CURVE.growthDenominator) - 1n))
-      / BigInt(PROGRESSION_CURVE.growthDenominator);
-    CURVE_CACHE.push(next);
-  }
-  return toSafeNumber(CURVE_CACHE[idx]);
+  return progressionNeededXp(level, prestige);
 }
 
 function cleanId(id) {
@@ -927,6 +926,24 @@ function saveUserProfile(profile) {
   }
 }
 
+/* 🔒 Progression 3.0: Mini-Mutex pro Profil, damit gleichzeitige
+   XP-Vergaben (z. B. zwei Nachrichten desselben Users in derselben
+   Sekunde) sich nicht gegenseitig überschreiben. */
+const profileLocks = new Map();
+async function withProfileLock(bid, fn) {
+  const key = String(bid || '');
+  const prev = profileLocks.get(key) || Promise.resolve();
+  let release = () => {};
+  const cur = new Promise((res) => { release = res; });
+  profileLocks.set(key, prev.then(() => cur));
+  await prev;
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+}
+
 async function loadUserProfileForSender(sender, username = '') {
   try {
     const jidNumber = cleanId(sender?.jid || '') || '';
@@ -984,24 +1001,15 @@ async function loadUserProfileForSender(sender, username = '') {
   }
 }
 
+/* Zentrale XP-Vergabe: läuft durch die Level-Engine (Events, Kupfer,
+   Streaks, Logs) statt direkt zu addieren. Signatur bleibt kompatibel. */
 function addXp(profile, xpAmount) {
-  if (!profile || !profile.progression) {
+  if (!profile) {
     return profile;
   }
-  const prog = profile.progression;
-  prog.xp = Math.max(0, Math.floor(Number(prog.xp) || 0)) + Math.max(0, Math.floor(Number(xpAmount) || 0));
-
-  let need = getNeededXp(prog.level, prog.prestige);
-  while (prog.xp >= need) {
-    prog.xp -= need;
-    prog.level += 1;
-    if (prog.level > PROGRESSION_CURVE.maxLevel) {
-      prog.prestige += 1;
-      prog.level = 0;
-    }
-    need = getNeededXp(prog.level, prog.prestige);
-  }
-  prog.neededXpForLvOrPrestigeUp = need;
+  try {
+    progressionGrantXp(profile, xpAmount, { source: 'general' });
+  } catch (e) {}
   return profile;
 }
 
@@ -2510,6 +2518,7 @@ export {
   createUserTemplate,
   loadUserProfileForSender,
   saveUserProfile,
+  withProfileLock,
   addXp,
   handleDsgvoCommand,
   handleCookieCommand,

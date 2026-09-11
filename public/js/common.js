@@ -166,6 +166,18 @@ const NAV = {
   daten: [
     ['profiles', '👤', 'Profile'],
     ['logs', '📜', 'Logs']
+  ],
+  /* 💜 7.0: persönlicher Bereich (alle Rollen) */
+  mein: [
+    ['home', '🏠', 'Dashboard'],
+    ['account', '👤', 'Mein Account'],
+    ['progression', '🏆', 'Progression'],
+    ['economy', '💰', 'Economy'],
+    ['bank', '🏦', 'Bank'],
+    ['reports', '📊', 'Reports'],
+    ['year', '📅', 'Jahr 2026'],
+    ['group', '👥', 'Gruppen'],
+    ['ai', '🤖', 'AI']
   ]
 };
 
@@ -173,6 +185,7 @@ function buildSidebar(activePage) {
   const role = getRole();
   const sections = [];
   sections.push(['SYSTEM', NAV.system]);
+  sections.push(['MEIN BEREICH', NAV.mein]);
   if (role === 'owner') {
     sections.push(['VERWALTUNG', NAV.verwaltung]);
     sections.push(['DATEN', NAV.daten]);

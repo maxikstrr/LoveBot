@@ -39,6 +39,7 @@ import makeWASocket, {
   findJidByLid,
   loadUserProfileForSender,
   saveUserProfile,
+  withProfileLock,
   loadGroupProfile,
   saveGroupProfile,
   checkCommandAccess,
@@ -71,7 +72,14 @@ import makeWASocket, {
 /* QR→PNG für das Senden von QR-Codes als Bild in WhatsApp-Gruppen */
 import { qrToPng } from './qrpng.js';
 /* ═══ 💖 LOVEPLUS-MODUL (Beziehung, Pets, Economy, Achievements, Games) ═══ */
-import { handleLovePlus, LOVEPLUS_HELP_CMDS, getLoveSnapshot, onMarriageAccepted } from './loveplus.js';
+import { handleLovePlus, LOVEPLUS_HELP_CMDS, LOVEBOT_GAME_COMMANDS, getLoveSnapshot, onMarriageAccepted, awardProgressionAchievements, unlockAchievementFor, loadStore } from './loveplus.js';
+/* 💜 Progression 4.0: Statistik-Texte + Account-Lifecycle (unregister) */
+import { buildProfileCenter, buildPersonalStats, buildActivity, buildRecords, buildMilestones, buildRewards, buildProgress, buildStreakCard, buildBadgeShowcase, buildTitleOverview, socialCounters, buildXpSources, buildWeeklyReport, buildMonthlyReport, buildPrestige, buildCompare, buildCoins, buildBalance, buildBank, buildEconomy, buildTransactions, buildDailySummary, buildYearlyReport, buildDayReport, buildReport, buildLifetimeReport, buildXpMultiplier, buildPeriodsLine, buildEconomySection, buildAccount, buildTopCoins, economyHidden, buildMeActivity } from './progressstats.js';
+import { startUnregister, confirmUnregister, cancelUnregister, getPendingInfo, restoreUnregister, listUnregisterBackups, auditAdmin } from './account.js';
+import { ensureGroupExtras, getGset, setGset, groupAudit, applyGroupMessage, groupLevelInfo, topMembers, activeEvents, startGroupEvent, treasuryAdd, gbanAdd, gbanRemove, isGbanned, checkFlood, checkSpam, escalationFor, validateGroup } from './groups.js';
+import { buildGroupCenter, buildGroupInfo, buildGroupSettings, buildGxp, buildGlevel, buildGtop, buildGroupGoal, buildGroupAudit, buildMembersCard, buildGroupEconomy, buildGroupEvents } from './groupstats.js';
+/* 💰 Progression 6.0: zentrale Economy-Engine (einzige Kupfer-Schreibwege) */
+import { ensureEconomy, addCoins, removeCoins, transferCoins, getBalance, capacityFor, deposit, withdraw, claimInterest, claimDaily, adminAdjustCoins, coinRollback, economyRules } from './economy.js';
 import {
   grantXp as grantLevelXp,
   applyMessageXp,
@@ -82,13 +90,29 @@ import {
   prestigeAnnounce,
   profileCard,
   rankLine,
+  rankFor,
   topProgression,
   MILESTONES,
   rewardsTable,
   applyComplimentXp,
   applyMediaXp,
   xpMultiplier,
-  xpRules
+  xpRules,
+  titleFor,
+  xpPeriods,
+  recentXp,
+  globalRank,
+  weeklyRank,
+  monthlyRank,
+  groupRank,
+  snapshotRank,
+  claimReward,
+  prestigeProgress,
+  adminAdjustXp,
+  adminRollbackXp,
+  ensureStats,
+  recordGamePlayed,
+  setActiveTitle
 } from './levelsystem.js';
 import { NOTIF_TYPES, updatePrefs } from './notifications.js';
 import { notify as notifyLove } from './notifications.js';
@@ -1847,6 +1871,157 @@ function getProfileDisplayName(profile, fallback) {
   return profile?.registration?.name || profile?.identity?.username || fallback || 'Unbekannt';
 }
 
+/* ── 💜 Level-Up-Ankündigung (EINE zentrale Stelle für alle XP-Quellen):
+   Mention in Gruppen (@User + mentions-Array), kein Mention im Privat-Chat,
+   Mehrfach-Level-Up als „Level 9 → Level 11“. Schickt nichts, wenn `events`
+   kein Level-/Prestige-Up enthält. Darf XP-Abläufe niemals brechen. */
+/* 💜 LovePlus-Helfer (Progression 3.0): ein Objekt für Default-Dispatch
+   UND $achievements-Delegation — Spiele geben XP + zählen Statistik. */
+function lovePlusHelpers(userProfile) {
+  return {
+    loadUserProfileForSender, saveUserProfile, resolveBanTarget,
+    identityKey, cleanId, sendReaction, reactions, withProfileLock,
+    /* 💜 Level-System: Spiele geben XP (Sieg +15, Niederlage +2) */
+    grantGameXp: (amount, source = 'games', outcome = null) => {
+      try {
+        if (!userProfile || !xpEligible(userProfile)) return null;
+        const res = grantLevelXp(userProfile, amount, { source });
+        /* 📊 Progression 4.0: Zähler + Tages-Aktivität zentral erfassen */
+        if (res && res.granted > 0) recordGamePlayed(userProfile, outcome);
+        return res;
+      } catch (gameXpErr) {
+        return null;
+      }
+    }
+  };
+}
+
+/* 💰 Plus-Store-Helfer (6.0): Achievement-Zahl + Inventar für Economy-Anzeigen. */
+function plusAchCount(bid) {
+  try {
+    if (!bid) return 0;
+    const st = loadStore();
+    return Object.keys(st.users?.[bid]?.achievements || {}).length;
+  } catch (e) { return 0; }
+}
+function plusUserFor(bid) {
+  try {
+    if (!bid) return null;
+    return loadStore().users?.[bid] || null;
+  } catch (e) { return null; }
+}
+
+/* 💜 Progression-Center für $me (alle Karten-Varianten) — nur echte Werte. */
+/* 💜 7.0: Gruppen-Aktivität + AI-Nutzung für $me (ehrlich, Fallback „–") */
+function meGroupActivity(db, bid) {
+  let msgs = 0, xp = 0, groups = 0;
+  try {
+    for (const g of Object.values(db?.groups || {})) {
+      const m = g?.xp?.members?.[bid];
+      if (m) { groups++; msgs += m.m || 0; xp += m.xp || 0; }
+    }
+  } catch (e) {}
+  return { msgs, xp, groups };
+}
+async function meAiUsage(bid) {
+  try { const aim = await import('./ai/memory.js'); return aim.getAiUsage(bid); } catch (e) { return null; }
+}
+
+function meProgressionSection(profile, pref = '$') {
+  try {
+    const bid = profile?.identity?.bid || '';
+    let rankPos = null, rankTotal = 0, rankPrev = null;
+    try {
+      const r = bid ? cachedGlobalRank(readDb().users || {}, bid) : null;
+      if (r && r.pos) { rankPos = r.pos; rankTotal = r.total; }
+      const hist = profile?.progression?.rankHistory || [];
+      const last = hist[hist.length - 1];
+      if (last && last.pos && last.pos !== rankPos) rankPrev = last.pos;
+    } catch (e) {}
+    return '\n\n' + buildProfileCenter(profile || {}, {
+      name: getProfileDisplayName(profile || {}, 'Du'),
+      rankPos, rankTotal, rankPrev, pref, skipUser: true /* USER-Block steht schon in der Karte */
+    });
+  } catch (e) { return ''; }
+}
+
+/* ── 💜 Progression 5.0: Ranglisten-Cache (30 s TTL) ──────────────────
+   $me/$rank/$top/$compare teilen sich EINE sortierte Momentaufnahme statt
+   je Aufruf neu zu scannen. Max. 30 s alt — dokumentiert, kein Fake.     */
+let rankCache = { at: 0, rows: [] };
+function cachedRankRows(users) {
+  const now = Date.now();
+  if (now - rankCache.at < 30000 && rankCache.rows.length) return rankCache.rows;
+  const rows = Object.entries(users || {})
+    .filter(([, u]) => u && u.progression && ((u.progression.level || 0) > 0 || (u.progression.xp || 0) > 0 || (u.progression.totalXp || 0) > 0))
+    .map(([bid, u]) => ({ bid, prestige: Number(u.progression.prestige) || 0, level: Number(u.progression.level) || 0, xp: Number(u.progression.xp) || 0, totalXp: Number(u.progression.totalXp) || 0 }))
+    .sort((a, b) => (b.prestige - a.prestige) || (b.level - a.level) || (b.xp - a.xp) || (b.totalXp - a.totalXp));
+  rankCache = { at: now, rows };
+  return rows;
+}
+function cachedGlobalRank(users, bid) {
+  const rows = cachedRankRows(users);
+  const pos = rows.findIndex((r) => r.bid === bid);
+  return { pos: pos >= 0 ? pos + 1 : null, total: rows.length };
+}
+
+async function sendLevelUpAnnouncement(sock, from, msg, { profile, name, events, isGroup = false, mentionJid = null, copper = 0, extraUnlocks = [] } = {}) {
+  try {
+    const evs = Array.isArray(events) ? events : [];
+    const hasPrestige = evs.some((e) => e && e.type === 'prestige');
+    const levelUps = evs.filter((e) => e && e.type === 'levelup');
+    /* 🎉 Freischaltungen sammeln (Engine-Events + loveplus-Achievements), gruppiert (5.0) */
+    const wins = [];
+    const goalName = (e) => ({ xp: 'XP-Ziel', messages: 'Nachrichten-Ziel', commands: 'Befehls-Ziel', games: 'Spiele-Ziel' }[e?.goal] || 'Ziel');
+    for (const e of evs) {
+      if (!e) continue;
+      if (e.type === 'milestone') wins.push(`🎁 *Meilenstein Lv ${e.level}:* ${e.reward}${Number(e.coins) > 0 ? ` (+${Number(e.coins).toLocaleString('de-DE')} Kupfer)` : ''}`);
+      else if (e.type === 'title') wins.push(`📛 *Neuer Titel:* ${e.emoji} *${e.name}*`);
+      else if (e.type === 'badge') wins.push(`🏅 *Neues Badge:* ${e.emoji} *${e.name}*`);
+      else if (e.type === 'chest') wins.push(`🎁 *Truhe bereit:* ${e.label || 'Belohnung'} (+${Number(e.copper || 0).toLocaleString('de-DE')} Kupfer) — abholen mit *$reward claim*`);
+      else if (e.type === 'daybonus') wins.push(`⭐ *Erste Aktion heute:* +${e.amount} XP`);
+      else if (e.type === 'streakbonus') wins.push(`🔥 *${e.days}-Tage-Streak:* +${e.amount} XP`);
+      else if (e.type === 'dailygoal') wins.push(`🎯 *Tagesziel (${goalName(e)}) erreicht:* +${Number(e.reward || 0).toLocaleString('de-DE')} Kupfer${Number(e.streak) > 1 ? ` · 🔥 Ziel-Streak ×${e.streak}` : ''}`);
+      else if (e.type === 'weeklygoal') wins.push(`🏆 *Wochenziel (${goalName(e)}) erreicht:* +${Number(e.reward || 0).toLocaleString('de-DE')} Kupfer`);
+    }
+    const extraAch = [], extraBadges = [];
+    for (const a of (Array.isArray(extraUnlocks) ? extraUnlocks : [])) {
+      if (!a || !a.name) continue;
+      (a.area ? extraBadges : extraAch).push(a);
+    }
+    if (extraAch.length) {
+      wins.push(`🏆 *ACHIEVEMENTS (${extraAch.length})*`);
+      for (const a of extraAch.slice(0, 6)) wins.push(`${a.emoji || '🏆'} *${a.name}* — _${a.desc || ''}_`);
+      if (extraAch.length > 6) wins.push(`_… +${extraAch.length - 6} weitere — $achievements_`);
+    }
+    if (extraBadges.length) {
+      wins.push(`🏅 *BADGES (${extraBadges.length})*`);
+      for (const a of extraBadges.slice(0, 6)) wins.push(`${a.emoji || '🏅'} *${a.name}* — _${a.desc || ''}_`);
+      if (extraBadges.length > 6) wins.push(`_… +${extraBadges.length - 6} weitere — $badges_`);
+    }
+    if (!hasPrestige && !levelUps.length && !wins.length) return false;
+    const mention = isGroup && mentionJid ? '@' + cleanId(mentionJid) : null;
+    const finalLevel = Math.max(0, Math.floor(Number(profile?.progression?.level) || 0));
+    const fromLevel = levelUps.length > 1 ? finalLevel - levelUps.length : null;
+    let text;
+    if (hasPrestige || levelUps.length) {
+      text = hasPrestige
+        ? prestigeAnnounce(profile, name, { mention })
+        : levelUpAnnounce(profile, name, { mention, fromLevel, copper });
+      if (wins.length) text += '\n\n🎉 *NEU FREIGESCHALTET*\n' + wins.join('\n');
+    } else {
+      const who = mention || `*${name}*`;
+      text = `> 🎉 *NEU FREIGESCHALTET*\n\n💜 ${who}\n\n` + wins.join('\n');
+    }
+    const opts = { quoted: msg };
+    if (mention) opts.mentions = [mentionJid];
+    await sock.sendMessage(from, { text }, opts);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function loveStatusText(profile) {
   const love = profile?.love;
   if (!love || love.married !== true) {
@@ -1884,7 +2059,7 @@ function xpBarText(cur, needed, width = 18) {
   return { bar: '█'.repeat(filled) + '░'.repeat(width - filled), pct, rest: Math.max(0, n - c) };
 }
 
-function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, username, regDate, pref = '$', personalInfo = null, loveMsgs = 0, memberDays = null }) {
+function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, username, regDate, pref = '$', personalInfo = null, loveMsgs = 0, memberDays = null, hideEconomy = false }) {
   const p = userProfile || {};
   const prog = p.progression || {};
   const xp = xpBarText(prog.xp, prog.neededXpForLvOrPrestigeUp);
@@ -1917,15 +2092,20 @@ function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, u
   out.push('⭐ *Level ' + (prog.level || 0) + '*' + (prog.prestige ? ' · 👑 Prestige ' + prog.prestige : ''));
   out.push('`' + xp.bar + '`  ' + xp.pct + '%');
   out.push('✨ ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP — noch ' + de(xp.rest) + ' bis Level ' + ((prog.level || 0) + 1));
+  out.push('🏅 ' + rankFor(prog.prestige || 0, prog.level || 0).full + ' · Σ ' + de(prog.totalXp) + ' XP');
   out.push('');
 
   out.push('💎 *ECONOMY*');
-  out.push('🤎 ' + de(eco.copper) + ' Kupfer · 🩶 ' + de(eco.silver) + ' Silber · 💛 ' + de(eco.gold) + ' Gold · 🩵 ' + de(eco.platin) + ' Platin');
-  const econExtras = [];
-  if (eco.bank) econExtras.push('🏦 ' + de(eco.bank) + ' Bank');
-  if (eco.items) econExtras.push('📦 ' + eco.items + ' Items');
-  if (eco.walletRank) econExtras.push('🥇 Wallet-Rang #' + eco.walletRank);
-  if (econExtras.length) out.push(econExtras.join(' · '));
+  if (hideEconomy) {
+    out.push('🔒 _privat — diese Person teilt ihr Vermögen nicht._');
+  } else {
+    out.push('🤎 ' + de(eco.copper) + ' Kupfer · 🩶 ' + de(eco.silver) + ' Silber · 💛 ' + de(eco.gold) + ' Gold · 🩵 ' + de(eco.platin) + ' Platin');
+    const econExtras = [];
+    if (eco.bank) econExtras.push('🏦 ' + de(eco.bank) + ' Bank');
+    if (eco.items) econExtras.push('📦 ' + eco.items + ' Items');
+    if (eco.walletRank) econExtras.push('🥇 Wallet-Rang #' + eco.walletRank);
+    if (econExtras.length) out.push(econExtras.join(' · '));
+  }
   out.push('');
 
   out.push('❤️ *LIEBE*');
@@ -2014,7 +2194,8 @@ function buildDetailProfileCard({ userProfile, snapshot, isHost = false, roleTex
     '• Level *' + (prog.level || 0) + '*' + (prog.prestige ? ' · Prestige ' + prog.prestige : ''),
     '• `' + xp.bar + '`  ' + xp.pct + '%',
     '• ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP',
-    '• Noch *' + de(xp.rest) + ' XP* bis Level ' + ((prog.level || 0) + 1));
+    '• Noch *' + de(xp.rest) + ' XP* bis Level ' + ((prog.level || 0) + 1),
+    '• 🏅 ' + rankFor(prog.prestige || 0, prog.level || 0).full + ' · Σ ' + de(prog.totalXp) + ' XP Lifetime');
 
   /* Economy */
   out.push('', '💎 *ECONOMY*',
@@ -2124,6 +2305,7 @@ function buildOwnerProfileCard({ userProfile, snapshot = null, roleText = '', na
   out.push('> Level ' + (prog.level || 0) + (prog.prestige ? ' · 👑 Prestige ' + prog.prestige : ''));
   out.push('> `' + xp.bar + '`  ' + xp.pct + '%');
   out.push('> ✨ ' + de(prog.xp) + ' / ' + de(prog.neededXpForLvOrPrestigeUp) + ' XP — noch ' + de(xp.rest) + ' bis Level ' + ((prog.level || 0) + 1));
+  out.push('> 🏅 ' + rankFor(prog.prestige || 0, prog.level || 0).full + ' · Σ ' + de(prog.totalXp) + ' XP');
   out.push('');
 
   out.push('💎 *ECONOMY*');
@@ -2708,6 +2890,140 @@ function getActiveBadwords(db) {
 /* 🛡️ AUTO-MODERATION: Badwords & Anti-Link.
    Löscht die Nachricht, verwarnet den Absender und kickt+bannt bei
    3 Verwarnungen automatisch. Liefert 'handled' wenn eingegriffen.   */
+/* 💜 7.0 AI-Frage: EIN Pfad für $ai/$ask/Chatmodus/Website-Fallback.
+   Antwortet immer genau EINMAL (Streaming wird intern gesammelt). */
+async function runAiQuestion(sock, from, msg, { text = '', bid = '', userProfile = null, rank = null, groupProfile = null, groupSubject = '', pref = '$' } = {}) {
+  const q = String(text || '').trim();
+  if (!q) {
+    await sock.sendMessage(from, { text: `> 🤖 *LOVEAI*\n\nFrag mich etwas: *${pref}ai Wie bekomme ich XP?*\n\n• *${pref}aistatus* — Status\n• *${pref}aimodel* — Modell\n• *${pref}ai diagnose* — Diagnose\n• *${pref}aiclear* — Chat-Kontext löschen` }, { quoted: msg });
+    return true;
+  }
+  try { await sendReaction(sock, from, '🤖', msg.key); } catch (e) {}
+  let res;
+  try {
+    const eng = await import('./ai/engine.js');
+    res = await eng.aiChat({
+      bid, gid: from && from.endsWith('@g.us') ? cleanId(from) : '',
+      text: q, profile: userProfile, rank,
+      group: groupProfile, groupMeta: groupSubject ? { subject: groupSubject } : null,
+      counts: null
+    });
+  } catch (e) {
+    res = { ok: false, reason: 'unavailable', detail: String(e?.message || e).slice(0, 120) };
+  }
+  if (res && res.ok) {
+    const foot = res.ms !== undefined ? `\n\n_⏱ ${res.ms} ms · ${res.model || ''}_` : '';
+    await sock.sendMessage(from, { text: `🤖 *LoveAI*\n\n${res.text}${foot}` }, { quoted: msg });
+  } else if (res && res.reason === 'limited') {
+    const wait = res.retryMs && res.retryMs > 1000 ? ` (noch ~${Math.ceil(res.retryMs / 1000)} s)` : '';
+    await sock.sendMessage(from, { text: `> 🤖 *Kurz pausieren:* Limit erreicht (${res.detail || 'cooldown'})${wait}. 💜` }, { quoted: msg });
+  } else if (res && res.reason === 'aborted') {
+    await sock.sendMessage(from, { text: '> 🤖 Abgebrochen.' }, { quoted: msg });
+  } else {
+    /* 7.0.2: klassifizierte Fehlermeldung (Code + Endpoint + Hinweis). */
+    let errText = `> 🤖 *AI GERADE NICHT ERREICHBAR*\n\nGrund: ${(res && res.detail) || 'unbekannt'}\n\nDer Rest des Bots läuft normal weiter. 💜`;
+    try {
+      const rep = await import('./ai/report.js');
+      const mem = await import('./ai/memory.js');
+      errText = rep.buildAiErrorText(res || {}, mem.aiConfig(), pref);
+    } catch (e) {}
+    await sock.sendMessage(from, { text: errText }, { quoted: msg });
+  }
+  return true;
+}
+
+/* 💜 7.0 GROUP-GUARDS + GROUP-XP: läuft für JEDE Gruppen-Nachricht.
+   · Opt-in-Guards (antiflood/antispam/mentionGuard) — Host/Admins ausgenommen
+   · Group-XP + Spiel-Command-Zählung + Goal/Achievement-Ankündigungen
+   Gibt 'handled' zurück, wenn die Nachricht bestraft/verworfen wurde. */
+async function runGroupGuards(sock, msg, from, trimmed, sessionPath, pref) {
+  try {
+    if (!from || !from.endsWith('@g.us')) return null;
+    if (msg.key?.fromMe) return null;
+    const gp = await loadGroupProfile(from, null, sock);
+    if (!gp) return null;
+    ensureGroupExtras(gp);
+    let sender = null;
+    try { sender = await userMapping.resolveSender(msg, sock, sessionPath); } catch (e) {}
+    const bid = sender ? String(cleanId(sender.lid || sender.jid || '')).split('@')[0] : '';
+    const gid = cleanId(from);
+    const s = getGset(gp);
+    const isCmd = trimmed.startsWith(pref);
+    const cmdName = isCmd ? trimmed.slice(pref.length).trim().split(/\s+/)[0].toLowerCase() : '';
+    /* --- Guards --- */
+    let guardHit = null;
+    if (bid && (s.antiflood || s.antispam || s.mentionGuard)) {
+      if (s.antiflood) { const f = checkFlood(gid, bid); if (f.hit) guardHit = { kind: 'flood', detail: f.count + ' Nachrichten/10s' }; }
+      if (!guardHit && s.antispam && !isCmd) { const sp = checkSpam(gid, bid, trimmed); if (sp.hit) guardHit = { kind: 'spam', detail: sp.count + '× gleiche Nachricht' }; }
+      if (!guardHit && s.mentionGuard) {
+        const men = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid;
+        if (Array.isArray(men) && men.length > 5) guardHit = { kind: 'mention', detail: men.length + ' Mentions' };
+      }
+    }
+    if (guardHit && bid) {
+      let role = 'member';
+      try {
+        const meta = await sock.groupMetadata(from);
+        role = getParticipantRole(meta, sender?.jid, sender?.lid);
+      } catch (e) {}
+      if (role === 'host' || role === 'superadmin' || role === 'admin') {
+        guardHit = null;
+      } else {
+        try { await sock.sendMessage(from, { delete: msg.key }); } catch (e) {}
+        if (!gp.warns || typeof gp.warns !== 'object') gp.warns = {};
+        const wk = cleanId(sender?.lid || sender?.jid || bid);
+        if (!gp.warns[wk]) gp.warns[wk] = [];
+        const reason = { flood: 'Anti-Flood', spam: 'Anti-Spam', mention: 'Mention-Spam' }[guardHit.kind] || 'Guard';
+        gp.warns[wk].push({ reason: reason + ' (' + guardHit.detail + ')', by: 'LoveBot Guard 🛡', at: new Date().toISOString() });
+        const wc = gp.warns[wk].length;
+        const esc = escalationFor(gp, wc);
+        groupAudit(gp, 'guard', 'warn', `${bid}: ${reason} (${wc})`);
+        if (esc === 'kick' || wc >= 3) {
+          try { if (typeof sock.groupParticipantsUpdate === 'function') await sock.groupParticipantsUpdate(from, [sender.jid || sender.lid], 'remove'); } catch (e) {}
+          await sock.sendMessage(from, { text: `> 🦵 *GEKICKT:* @${bid}\n*Grund:* ${reason} — ${wc}. Verwarnung.` });
+          groupAudit(gp, 'guard', 'kick', `${bid}: ${reason}`);
+        } else {
+          await sock.sendMessage(from, { text: `> ⚠️ *VERWARNUNG (${wc}/3):* @${bid}\n*Grund:* ${reason} — ${guardHit.detail}.` });
+        }
+        saveGroupProfile(gp);
+        return 'handled';
+      }
+    }
+    /* --- Group-XP --- */
+    if (s.progressionEnabled !== false) {
+      const games = (LOVEBOT_GAME_COMMANDS && LOVEBOT_GAME_COMMANDS.has(cmdName)) ? 1 : 0;
+      const res = applyGroupMessage(gp, bid, { games, now: Date.now(), memberCount: 0 });
+      saveGroupProfile(gp);
+      const lvl = res.events.find((e) => e.type === 'glevelup');
+      if (lvl) {
+        const ach = res.events.filter((e) => e.type === 'gachievement');
+        const bdg = res.events.filter((e) => e.type === 'gbadge');
+        const goal = res.events.filter((e) => e.type === 'ggoal');
+        let txt = `🎉 *GROUP LEVEL ${lvl.level}!*\n\nDie Gruppe steigt auf! +${100 + lvl.level * 10} Kupfer für die Kasse. 💰`;
+        if (goal.length) txt += '\n🎯 Ziel erreicht: ' + goal.map((x) => x.kind).join(', ');
+        if (ach.length) txt += '\n🏆 ' + ach.map((a) => a.emoji + ' ' + a.name).join(' · ');
+        if (bdg.length) txt += '\n🏅 ' + bdg.map((a) => a.emoji + ' ' + a.name).join(' · ');
+        await sock.sendMessage(from, { text: txt });
+      } else {
+        const solo = res.events.filter((e) => e.type === 'ggoal' || e.type === 'gachievement' || e.type === 'gbadge');
+        if (solo.length) {
+          await sock.sendMessage(from, { text: '🎯 ' + solo.map((e) => e.type === 'ggoal' ? `Gruppen-Ziel (${e.kind}) erreicht! +${e.reward} Kupfer` : (e.emoji || '🏆') + ' ' + e.name).join('\n') });
+        }
+      }
+      try {
+        const { emit } = await import('./loveengine.js');
+        for (const e of res.events) {
+          if (e.type === 'glevelup') emit('GROUP_LEVELUP', { name: gp.subject || gid, level: e.level });
+          else if (e.type === 'ggoal') emit('GROUP_GOAL', { name: gp.subject || gid, kind: e.kind });
+          else if (e.type === 'gachievement') emit('GROUP_ACHIEVEMENT', { name: gp.subject || gid, achievement: e.id });
+          else if (e.type === 'gbadge') emit('GROUP_BADGE', { name: gp.subject || gid, badge: e.id });
+        }
+      } catch (e) {}
+    }
+    return null;
+  } catch (e) { return null; }
+}
+
 async function runAutoModeration(sock, msg, from, text, sessionPath) {
   try {
     if (!String(from).endsWith('@g.us')) return null;
@@ -2968,9 +3284,12 @@ function randomInt(min, max) {
 }
 
 /* 💾 Wallet-Helfer: lädt Profil, ändert Coins, speichert.            */
-function addWalletCoins(profile, { copper = 0, silver = 0, gold = 0, platin = 0 } = {}) {
+function addWalletCoins(profile, { copper = 0, silver = 0, gold = 0, platin = 0 } = {}, { source = 'misc', reason = '' } = {}) {
   if (!profile || !profile.wallet) return null;
-  profile.wallet.copper = Math.max(0, (profile.wallet.copper || 0) + copper);
+  /* 💰 Kupfer läuft seit 6.0 über die Economy-Engine (Log + Zähler + Events);
+     Silber/Gold/Platin sind Legacy-Anzeige ohne neue Quellen. */
+  if (copper > 0) addCoins(profile, Math.floor(copper), { source, reason });
+  else if (copper < 0) removeCoins(profile, Math.floor(-copper), { source, reason });
   profile.wallet.silver = Math.max(0, (profile.wallet.silver || 0) + silver);
   profile.wallet.gold = Math.max(0, (profile.wallet.gold || 0) + gold);
   profile.wallet.platin = Math.max(0, (profile.wallet.platin || 0) + platin);
@@ -4472,6 +4791,12 @@ async function startBot(options = {}) {
           /* 🌐 Dashboard: Mailbox + Heartbeat starten */
           startDashboardTimers(sock);
           try { startNightConsole(); } catch (consoleErr) {}
+          /* 🤖 LoveAI Startup-Check (7.0.2): fire-and-forget, blockiert nie. */
+          try {
+            import('./ai/engine.js').then((eng) => eng.aiHealth(true).then((h) => {
+              console.log(h && h.ok ? '🤖 LoveAI: Backend erreichbar 🟢' : '🤖 LoveAI: Backend nicht erreichbar 🟡 — Bot läuft normal');
+            }).catch(() => {})).catch(() => {});
+          } catch (e) {}
 
           const hostRawId = sock.user?.id || sock.authState?.creds?.me?.id || '';
           const hostRawLid = sock.user?.lid || sock.authState?.creds?.me?.lid || '';
@@ -4642,6 +4967,24 @@ async function startBot(options = {}) {
             try { await announceBotJoinedGroup(sock, groupJid); } catch (selfAddErr) {}
             pIndex++;
             continue;
+          }
+
+          /* 💜 7.0: Gruppen-Banliste durchsetzen (Rejoin → erneut entfernen) */
+          if (actionType === 'add' && normalizedTargetId) {
+            try {
+              const gpJoin = await loadGroupProfile(groupJid, null, sock);
+              const bidJoin = String(cleanId(normalizedTargetId)).split('@')[0];
+              if (gpJoin && isGbanned(gpJoin, bidJoin)) {
+                if (typeof sock.groupParticipantsUpdate === 'function') {
+                  await sock.groupParticipantsUpdate(groupJid, [normalizedTargetId], 'remove');
+                }
+                ensureGroupExtras(gpJoin);
+                groupAudit(gpJoin, 'system', 'gban-enforce', `${bidJoin} (Rejoin geblockt)`);
+                saveGroupProfile(gpJoin);
+                pIndex++;
+                continue;
+              }
+            } catch (e) {}
           }
 
           /* Auto-Mod: Welcome / Goodbye / Kick / Promote / Demote */
@@ -4933,7 +5276,29 @@ async function startBot(options = {}) {
             continue;
           }
 
+          /* 💜 7.0 GROUP: Guards (Opt-in) + Group-XP für jede Nachricht */
+          const guardsResult = await runGroupGuards(sock, msg, from, trimmed, sessionPath, pref);
+          if (guardsResult === 'handled') {
+            continue;
+          }
+
           if (!trimmed.startsWith(pref)) {
+            /* 🤖 7.0 AI-CHATMODUS (Privatchat, Opt-in — Gruppen nie automatisch).
+               HINWEIS: kein `isGroup` hier — das wird erst weiter unten deklariert (TDZ). */
+            if (!from.endsWith('@g.us') && !msg.key?.fromMe && trimmed.length > 0) {
+              try {
+                const aiM = await import('./ai/memory.js');
+                const aiSender = await userMapping.resolveSender(msg, sock, sessionPath);
+                const aiBid = aiSender ? String(cleanId(aiSender.lid || aiSender.jid || '')).split('@')[0] : '';
+                if (aiBid && aiM.getAiPrefs(aiBid).chatMode === true) {
+                  const aiProf = await loadUserProfileForSender(aiSender, msg.key.participantUsername || msg.key.remoteJidUsername || '');
+                  if (xpEligible(aiProf)) {
+                    const aiRank = cachedGlobalRank(readDb().users || {}, aiProf?.identity?.bid || aiBid);
+                    await runAiQuestion(sock, from, msg, { text: trimmed, bid: aiProf?.identity?.bid || aiBid, userProfile: aiProf, rank: aiRank, pref });
+                  }
+                }
+              } catch (e) {}
+            }
             /* 💜 LEVEL SYSTEM: XP für jede Nachricht — nette/Liebesnachrichten
                bringen das 2–3-Fache. Nur registrierte Nutzer mit DSGVO-Zustimmung,
                Anti-Spam-Fenster (300 XP/Std.) ist in applyMessageXp drin. */
@@ -4942,14 +5307,26 @@ async function startBot(options = {}) {
                 const xpSender = await userMapping.resolveSender(msg, sock, sessionPath);
                 const xpProfile = await loadUserProfileForSender(xpSender, msg.key.participantUsername || msg.key.remoteJidUsername || '');
                 if (xpEligible(xpProfile)) {
-                  const xpRes = applyMessageXp(xpProfile, { text: trimmed, isGroup: from.endsWith('@g.us') });
-                  if (xpRes.granted > 0) {
-                    saveUserProfile(xpProfile);
-                    if (xpRes.events?.length) {
-                      const xpName = getProfileDisplayName(xpProfile, msg.pushName || cleanId(xpSender?.jid || xpSender?.lid || msg.key?.participant || from) || 'Jemand');
-                      const isPrestige = xpRes.events.some((e) => e.type === 'prestige');
-                      await sock.sendMessage(from, { text: isPrestige ? prestigeAnnounce(xpProfile, xpName) : levelUpAnnounce(xpProfile, xpName) }, { quoted: msg });
+                  /* 🔒 Lock: gleichzeitige Nachrichten desselben Users
+                     überschreiben sich nicht mehr gegenseitig. */
+                  let xpRes = null;
+                  let xpFreshAch = [];
+                  await withProfileLock(xpProfile?.identity?.bid || '', async () => {
+                    /* 👑 Owner-Bonus (6.0): eigene Nachrichten (fromMe) sind Owner-Nachrichten */
+                    xpRes = applyMessageXp(xpProfile, { text: trimmed, isGroup: from.endsWith('@g.us'), isOwner: !!msg.key?.fromMe });
+                    if (xpRes && xpRes.granted > 0) {
+                      xpFreshAch = awardProgressionAchievements(xpProfile);
+                      saveUserProfile(xpProfile);
                     }
+                  });
+                  if (xpRes && xpRes.granted > 0) {
+                    const xpName = getProfileDisplayName(xpProfile, msg.pushName || cleanId(xpSender?.jid || xpSender?.lid || msg.key?.participant || from) || 'Jemand');
+                    await sendLevelUpAnnouncement(sock, from, msg, {
+                      profile: xpProfile, name: xpName, events: [...(xpRes.events || []), ...((xpFreshAch && xpFreshAch.xpEvents) || [])],
+                      copper: xpRes.copper || 0, extraUnlocks: [...(xpFreshAch.achievements || xpFreshAch || []), ...(xpFreshAch.badges || [])],
+                      isGroup: from.endsWith('@g.us'),
+                      mentionJid: msg.key?.participant || xpSender?.lid || xpSender?.jid || null
+                    });
                   }
                 }
               }
@@ -4995,6 +5372,17 @@ async function startBot(options = {}) {
             try {
               groupMetadata = await sock.groupMetadata(from);
               groupProfile = await loadGroupProfile(from, groupMetadata, sock);
+              /* 💜 7.0: Live-Zähler cachen (nur bei Änderung → Website nutzt sie) */
+              if (groupProfile && Array.isArray(groupMetadata.participants)) {
+                const mc = groupMetadata.participants.length;
+                const ac = groupMetadata.participants.filter((x) => x && ['admin', 'superadmin'].includes(x.admin)).length;
+                if (groupProfile.memberCount !== mc || groupProfile.adminCount !== ac) {
+                  groupProfile.memberCount = mc;
+                  groupProfile.adminCount = ac;
+                  groupProfile.metaAt = Date.now();
+                  try { saveGroupProfile(groupProfile); } catch (e) {}
+                }
+              }
             } catch (gmErr) {}
           }
 
@@ -5090,15 +5478,22 @@ async function startBot(options = {}) {
              Anti-Spam-Fenster: max. 150 XP/Std. aus Befehlen. */
           if (userProfile && xpEligible(userProfile)) {
             try {
-              const cmdXp = applyCommandXp(userProfile, { loveAction: isLoveAction(command) });
-              if (cmdXp.granted > 0) {
-                saveUserProfile(userProfile);
-                if (cmdXp.events?.length) {
-                  const cmdXpPrestige = cmdXp.events.some((e) => e.type === 'prestige');
-                  await sock.sendMessage(from, {
-                    text: cmdXpPrestige ? prestigeAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid))) : levelUpAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)))
-                  }, { quoted: msg });
+              /* 🔒 Lock: parallele Befehle desselben Users bleiben konsistent. */
+              let cmdXp = null;
+              let cmdFreshAch = [];
+              await withProfileLock(userProfile?.identity?.bid || '', async () => {
+                cmdXp = applyCommandXp(userProfile, { loveAction: isLoveAction(command), isOwner: !!isHost });
+                if (cmdXp && cmdXp.granted > 0) {
+                  cmdFreshAch = awardProgressionAchievements(userProfile);
+                  saveUserProfile(userProfile);
                 }
+              });
+              if (cmdXp && cmdXp.granted > 0) {
+                await sendLevelUpAnnouncement(sock, from, msg, {
+                  profile: userProfile, name: getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)),
+                  events: [...(cmdXp.events || []), ...((cmdFreshAch && cmdFreshAch.xpEvents) || [])], copper: cmdXp.copper || 0, extraUnlocks: [...(cmdFreshAch.achievements || cmdFreshAch || []), ...(cmdFreshAch.badges || [])], isGroup,
+                  mentionJid: msg.key?.participant || senderLid || senderJid || null
+                });
               }
             } catch (cmdXpErr) { /* XP darf den Befehl nie blockieren */ }
           }
@@ -5407,13 +5802,39 @@ case 'loadingaivid': {
               }
 
               /* 📋 $me info → wirklich alles, in Bereichen */
-              if (meMode === 'info' || meMode === 'alle' || meMode === 'detail') {
+              if (meMode === 'info' || meMode === 'alle' || meMode === 'detail' || meMode === 'full' || meMode === 'voll') {
                 responseText = buildDetailProfileCard({
                   userProfile, snapshot: meSnapshot, isHost,
                   roleText: groupRoleText, name: regName, username: displayUsername, regDate, pref,
                   jid: safeSenderJid, lid: safeSenderLid, sid: senderSid,
                   privateView: !isGroup   /* 🔒 Stadt/Alter nur im Privatchat unmaskiert */
                 });
+              }
+
+              /* 💜 Progression 3.0: Fortschritt gehört zu jedem $me dazu */
+              responseText += meProgressionSection(userProfile, pref);
+              /* 💰 Economy gehört zum ausführlichen $me (6.0) */
+              const meFullModes = ['info', 'alle', 'detail', 'full', 'voll'];
+              if (meFullModes.includes(meMode)) {
+                try { responseText += '\n\n' + buildEconomySection(userProfile || {}, { achCount: plusAchCount(userProfile?.identity?.bid) }); } catch (e) {}
+              }
+              /* 💜 7.0: $me economy/progression/activity + Voll-Extras */
+              const meBid7 = userProfile?.identity?.bid || '';
+              if (meMode === 'economy' || meMode === 'kupfer' || meMode === 'geld') {
+                try { responseText = buildEconomySection(userProfile || {}, { achCount: plusAchCount(meBid7) }) + '\n\n' + buildPeriodsLine(userProfile || {}); } catch (e) {}
+              } else if (meMode === 'progression' || meMode === 'progress' || meMode === 'xp') {
+                try { responseText = meProgressionSection(userProfile, pref) + '\n\n' + buildXpMultiplier(userProfile || {}, { isOwner: !!isHost }); } catch (e) {}
+              } else if (meMode === 'activity' || meMode === 'aktivitaet' || meMode === 'aktivität') {
+                try { responseText = buildMeActivity(userProfile || {}, { groupActivity: meGroupActivity(readDb(), meBid7), aiUsage: await meAiUsage(meBid7) }); } catch (e) {}
+              } else if (meFullModes.includes(meMode)) {
+                try { responseText += '\n\n' + buildMeActivity(userProfile || {}, { groupActivity: meGroupActivity(readDb(), meBid7), aiUsage: await meAiUsage(meBid7) }); } catch (e) {}
+                try {
+                  const meLove7 = meSnapshot?.love || {};
+                  const meSince7 = meLove7?.couple?.since || meLove7?.since || '';
+                  const meSocial7 = meLove7?.married ? `💍 Verheiratet${meSince7 ? ' seit ' + formatDateTimeShort(meSince7) : ''}` : '💜 Single';
+                  const meLoveMsgs7 = (typeof loveMsgsMe !== 'undefined' ? loveMsgsMe : 0) || 0;
+                  responseText += `\n\n💜 *SOCIAL*\n• ${meSocial7}\n• 💌 ${meLoveMsgs7} Love-Nachrichten`;
+                } catch (e) {}
               }
 
               let profilePicMedia = null;
@@ -5458,8 +5879,18 @@ case 'loadingaivid': {
                       { rowId: 'cmd:me info', title: '📋 Alles im Detail', description: 'Vollständiges Profil mit allen Bereichen' },
                       { rowId: 'cmd:relationship', title: '❤️ Liebe & Beziehung', description: 'Partner, Love-XP, Jahrestag' },
                       { rowId: 'cmd:balance', title: '💎 Economy & Konto', description: 'Kupfer, Silber, Gold, Platin' },
+                      { rowId: 'cmd:economy', title: '🪙 Economy-Überblick', description: 'Wallet, Bank, Verdienst' },
+                      { rowId: 'cmd:report', title: '📊 Mein Report', description: 'Tag, Woche, Monat, Jahr' },
                       { rowId: 'cmd:achievements', title: '🏆 Achievements', description: 'Alle freigeschalteten Erfolge' },
-                      { rowId: 'cmd:pet', title: '🐶 Haustier', description: 'Wie es deinem Liebling geht' }
+                      { rowId: 'cmd:progress', title: '📈 Fortschritt', description: 'Level, Ziele & nächste Schritte' },
+                      { rowId: 'cmd:rewards', title: '🎁 Rewards', description: 'Erhaltene & kommende Belohnungen' },
+                      { rowId: 'cmd:records', title: '🏆 Rekorde', description: 'Deine persönlichen Bestwerte' },
+                      { rowId: 'cmd:pet', title: '🐶 Haustier', description: 'Wie es deinem Liebling geht' },
+                      { rowId: 'cmd:stats me', title: '📊 Statistiken', description: 'Nachrichten, Spiele, Social' },
+                      { rowId: 'cmd:badges', title: '🏅 Badges', description: 'Deine Badge-Vitrine mit Stufen' },
+                      { rowId: 'cmd:streak', title: '🔥 Streak', description: 'Serie, Rekord & nächstes Ziel' },
+                      { rowId: 'cmd:rank', title: '🏅 Mein Rang', description: 'Platz, Trend & Modi' },
+                      { rowId: 'cmd:weekly', title: '🗓️ Wochen-Report', description: 'Deine letzten 7 Tage' }
                     ]
                   }]
                 });
@@ -6135,6 +6566,13 @@ break;
                     if (mediaRes.granted > 0) {
                       saveUserProfile(userProfile);
                       await sock.sendMessage(from, { text: `\n⭐ *+${mediaRes.granted} XP* — ${mediaRes.reason === 'first-download' ? 'dein erster Media-Download!' : 'neuer Provider entdeckt: ' + (mediaRes.reason || '').split(':')[1]}` }, { quoted: msg });
+                      if (mediaRes.events?.length) {
+                        await sendLevelUpAnnouncement(sock, from, msg, {
+                          profile: userProfile, name: getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)),
+                          events: mediaRes.events, isGroup,
+                          mentionJid: msg.key?.participant || senderLid || senderJid || null
+                        });
+                      }
                     }
                   }
                 } catch (mediaXpErr) {}
@@ -7603,14 +8041,17 @@ break;
               const claim = claimDailyLove(userProfile?.identity?.bid || '');
               let dlXpLine = '';
               if (claim.ok && userProfile) {
-                try { addWalletCoins(userProfile, { copper: claim.reward.copper }); } catch (walletErr) {}
+                try { addWalletCoins(userProfile, { copper: claim.reward.copper }, { source: 'dailylove', reason: 'Daily-Love' }); } catch (walletErr) {}
                 const dlRes = grantLevelXp(userProfile, claim.reward.xp, { source: 'dailies' });
+                ensureStats(userProfile).dailyloveClaimed += 1; /* 📊 Progression 4.0 */
                 saveUserProfile(userProfile);
                 if (dlRes.events?.length) {
                   const dlPrestige = dlRes.events.some((e) => e.type === 'prestige');
-                  await sock.sendMessage(from, {
-                    text: dlPrestige ? prestigeAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid))) : levelUpAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)))
-                  }, { quoted: msg });
+                  await sendLevelUpAnnouncement(sock, from, msg, {
+                    profile: userProfile, name: getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)),
+                    events: dlRes.events, isGroup,
+                    mentionJid: msg.key?.participant || senderLid || senderJid || null
+                  });
                   dlXpLine = '\n\n' + (dlPrestige ? '✨ *PRESTIGE UP!* — siehe oben 👆' : '🎉 *LEVEL UP!* — siehe oben 👆');
                 }
               }
@@ -7836,29 +8277,47 @@ break;
               userProfile.registration = {
                 ...normalized.registration,
                 privacy: { hideCity: false, hideAge: false, publicProfile: false, ...previousPrivacy },
+                language: userProfile?.registration?.language || normalized.registration?.language || 'de',
                 value: parsed.value
               };
+              /* 🌱 Starter-Paket (6.0): einmalig Kupfer + XP, sichere Migration aller Defaults */
+              try {
+                ensureProgression(userProfile);
+                ensureEconomy(userProfile);
+                const ecoR = userProfile.economy || {};
+                if (!ecoR.starter) {
+                  const rR = economyRules();
+                  const sCopper = Math.max(0, Math.floor(Number(rR.starterCopper ?? 500) || 0));
+                  const sXp = Math.max(0, Math.floor(Number(rR.starterXp ?? 25) || 0));
+                  if (sCopper > 0) addCoins(userProfile, sCopper, { source: 'starter', reason: 'Willkommens-Bonus' });
+                  if (sXp > 0 && xpEligible(userProfile)) grantLevelXp(userProfile, sXp, { source: 'general' });
+                  ecoR.starter = { at: Date.now(), copper: sCopper, xp: sXp };
+                }
+              } catch (starterErr) { /* Starter darf die Registrierung nie blockieren */ }
               saveUserProfile(userProfile);
 
               const reg = userProfile.registration;
-              const regCardText = '> ✅ *REGISTRIERUNG ERFOLGREICH* ✅\n' +
-                  '> 💜 _Willkommen an Bord, ' + String(reg.name || '') + '!_ 🥳\n\n' +
-                  '🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹\n\n' +
-                  '*🪪 DEIN AUSWEIS*\n' +
-                  '• 👤 Name: *' + reg.name + '*\n' +
-                  '• 🎂 Alter: ' + ageLabel(reg, { reveal: true }) + '\n' +
-                  '• 💘 Status: ' + (reg.status || '—') + '\n' +
-                  '• 📍 Stadt: ' + cityLabel(reg, { privateChat: !isGroup }) + '\n' +
-                  '• 📅 Registriert seit: ' + (reg.registeredAt ? formatDateTimeShort(reg.registeredAt) : '—') + '\n\n' +
-                  '*🛡️ SICHTBARKEIT*\n' +
-                  '• In Gruppen: Stadt ' + cityLabel(reg, { privateChat: false }) + ' · Alter ' + ageLabel(reg, { reveal: false }) + '\n' +
-                  '• Anpassen: ' + pref + 'privacy\n\n' +
-                  '*💡 ERSTE SCHRITTE*\n' +
-                  '• ' + pref + 'me → Profil & Profil-Buttons\n' +
-                  '• ' + pref + 'daily → tägliche Kupfer abholen\n' +
-                  '• ' + pref + 'achievements → erste Erfolge\n' +
-                  '• ' + pref + 'pet create → Haustier adoptieren\n\n' +
-                  '🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹';
+              /* 💜 7.0: Welcome-Box mit echten Startwerten */
+              const wProg = userProfile.progression || {};
+              const wBal = (() => { try { return getBalance(userProfile) || {}; } catch (e) { return {}; } })();
+              const wStarter = userProfile.economy?.starter || {};
+              const regCardText = '╭──── 💜 *WELCOME TO LOVEBOT* ────╮\n\n' +
+                  'Account erfolgreich erstellt, ' + String(reg.name || '') + '! 🥳\n\n' +
+                  '👤 Profil\n✅ Erstellt\n\n' +
+                  '🏆 Level\n' + (wProg.level || 0) + '\n\n' +
+                  '✨ XP\n' + Number(wProg.totalXp || 0).toLocaleString('de-DE') + '\n\n' +
+                  '💰 Wallet\n' + Number(wBal.wallet || 0).toLocaleString('de-DE') + ' Kupfer\n\n' +
+                  '🏦 Bank\n' + Number(wBal.bank || 0).toLocaleString('de-DE') + ' Kupfer\n\n' +
+                  '🔥 Streak\n' + (wProg.streak || 0) + '\n\n' +
+                  '🎁 Starter Reward\n+' + Number(wStarter.copper || 0).toLocaleString('de-DE') + ' Kupfer' + (wStarter.xp ? ' + ' + wStarter.xp + ' XP' : '') + '\n\n' +
+                  '━━━━━━━━━━━━━━━━━━\n\n' +
+                  '*START HERE*\n\n' +
+                  pref + 'me\n' + pref + 'daily\n' + pref + 'level\n' + pref + 'balance\n' + pref + 'ai\n\n' +
+                  '━━━━━━━━━━━━━━━━━━\n\n' +
+                  '🪪 ' + String(reg.name || '') + ' · 🎂 ' + ageLabel(reg, { reveal: true }) + ' · 💘 ' + (reg.status || '—') + ' · 📍 ' + cityLabel(reg, { privateChat: !isGroup }) + '\n' +
+                  '🛡️ Sichtbarkeit: ' + pref + 'privacy\n\n' +
+                  'Enjoy LoveBot 💜\n' +
+                  '╰──────────────────────────────╯';
 
               if (typeof sock.profilePictureUrl === 'function') {
                 try {
@@ -8050,8 +8509,11 @@ break;
                */
               const mode = (args[0] || '').toLowerCase();
 
-              /* Echte Aktion ausführen, wenn ein Ziel übergeben wurde */
-              if (['kick', 'promote', 'demote'].includes(command) && mode !== 'on' && mode !== 'off' && args[0]) {
+              /* Echte Aktion ausführen, wenn ein Ziel übergeben wurde (7.0: + Mention/Reply) */
+              const kickCtx = msg.message?.extendedTextMessage?.contextInfo || {};
+              const kickMention = (Array.isArray(kickCtx.mentionedJid) && kickCtx.mentionedJid[0]) || '';
+              const kickQuoted = kickCtx.participant || '';
+              if (['kick', 'promote', 'demote'].includes(command) && mode !== 'on' && mode !== 'off' && (args[0] || kickMention || kickQuoted)) {
                 if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
                   await sock.sendMessage(from, {
                     text: `> ⛔ *Zugriff verweigert:* Nur Admins, der Superadmin oder der Host können *${pref}${command}* ausführen.`
@@ -8059,7 +8521,7 @@ break;
                   await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
                   break;
                 }
-                const targetRaw = args[0] || (quoted && (quoted.conversation || quoted.extendedTextMessage?.text));
+                const targetRaw = kickMention || kickQuoted || args[0] || (quoted && (quoted.conversation || quoted.extendedTextMessage?.text));
                 const target = await resolveBanTarget(sock, targetRaw, sessionPath);
                 if (!target || !target.jid) {
                   await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
@@ -8067,6 +8529,16 @@ break;
                 }
                 if (cleanId(target.jid) === cleanId(senderJid)) {
                   await sock.sendMessage(from, { text: '> ❌ *Fehler:* Du kannst dich nicht selbst ändern.' }, { quoted: msg });
+                  break;
+                }
+                /* 💜 7.0: Bot- & Owner-Schutz */
+                const selfIds = [hostJid, hostLid, sock.user?.id, sock.user?.lid].filter(Boolean).map((x) => cleanId(x));
+                if (selfIds.includes(cleanId(target.jid)) || (target.lid && selfIds.includes(cleanId(target.lid)))) {
+                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Diese Aktion ist gegen den Bot nicht möglich.' }, { quoted: msg });
+                  break;
+                }
+                if (cleanId(target.jid) === cleanId(groupMetadata?.owner || '___')) {
+                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Der Gruppen-Owner steht unter Schutz.' }, { quoted: msg });
                   break;
                 }
                 let action = 'remove';
@@ -8094,6 +8566,14 @@ break;
                 });
                 await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
                 console.log(c.bold + c.brightGreen + `[${command}] ${actLabel}: ${target.jid} (${from}).` + c.reset);
+                /* 💜 7.0: Gruppen-Audit */
+                try {
+                  if (groupProfile) {
+                    ensureGroupExtras(groupProfile);
+                    groupAudit(groupProfile, senderLidUser || cleanId(senderJid) || '', command, `${actLabel}: ${cleanId(target.jid)}`);
+                    saveGroupProfile(groupProfile);
+                  }
+                } catch (e) {}
                 break;
               }
 
@@ -8193,7 +8673,17 @@ break;
             }
 
             case 'system':
+            case 'mystats':
+            case 'mystat':
+              args.unshift('me');
+            /* fällt durch zu 'stats' */
             case 'stats': {
+              /* 📊 Progression 4.0: $stats me|ich → persönlich (System bleibt Default) */
+              if (['me', 'ich', 'my', 'mine'].includes(String(args[0] || '').toLowerCase())) {
+                await sock.sendMessage(from, { text: buildPersonalStats(userProfile || {}) }, { quoted: msg });
+                await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+                break;
+              }
               const stats = systemStats(readDb(), process.uptime() * 1000);
               const heapStats = v8.getHeapStatistics();
               const usedMem = formatMemory(heapStats.used_heap_size);
@@ -8459,6 +8949,19 @@ break;
 
             case 'info':
             case 'botinfo': {
+              if (String(args[0] || '').toLowerCase() === 'me' || String(args[0] || '').toLowerCase() === 'ich') {
+                /* 👤 $info me → eigene Account-Übersicht (6.0) */
+                if (!userProfile) {
+                  await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                  break;
+                }
+                const bidI = userProfile?.identity?.bid || '';
+                const rankI = bidI ? cachedGlobalRank(readDb().users || {}, bidI) : { pos: null, total: 0 };
+                await sock.sendMessage(from, {
+                  text: buildAccount(userProfile, { plusUser: plusUserFor(bidI), rankPos: rankI.pos, rankTotal: rankI.total, pref })
+                }, { quoted: msg });
+                break;
+              }
               const text =
                 '> 🤖 *LOVE BOT — INFO* 🤖\n\n' +
                 `• *Name:* LoveBot\n` +
@@ -8498,45 +9001,33 @@ break;
             }
 
             case 'groupinfo':
-            case 'gcinfo': {
+            case 'gcinfo':
+            case 'ginfo':
+            case 'group': {
               if (!isGroup) {
                 await sock.sendMessage(from, { text: '> ❌ *Fehler:* Dieser Befehl funktioniert nur in Gruppen.' }, { quoted: msg });
                 break;
               }
+              /* 💜 7.0: massiver Gruppenbericht aus echten Daten */
+              ensureGroupExtras(groupProfile);
               const participants = (groupMetadata && Array.isArray(groupMetadata.participants)) ? groupMetadata.participants : [];
               const admins = participants.filter((p) => p && ['admin', 'superadmin'].includes(p.admin)).length;
-              const descText = groupMetadata?.desc || 'Keine Beschreibung';
-              const gDb = readDb();
-              const gf = gDb.groups?.[cleanId(from)];
-              /* 🆔 Owner als JID + LID auflösen */
-              let groupOwnerIds = null;
-              try {
-                const ownerRaw = groupMetadata?.owner || '';
-                if (ownerRaw) {
-                  const ownerResolved = await resolveBanTarget(sock, ownerRaw, sessionPath);
-                  groupOwnerIds = {
-                    jid: ownerResolved?.jid || (String(ownerRaw).endsWith('@lid') ? '—' : ownerRaw),
-                    lid: ownerResolved?.lid || (String(ownerRaw).endsWith('@lid') ? ownerRaw : '—')
-                  };
-                }
-              } catch (ownerResolveErr) {}
-              const text =
-                '> 👥 *GRUPPEN INFO* 👥\n\n' +
-                `• *Name:* ${groupMetadata?.subject || 'Ohne Name'}\n` +
-                `• *ID:* ${cleanId(from)}\n` +
-                `• *Mitglieder:* ${participants.length}\n` +
-                `• *Admins:* ${admins}\n` +
-                `• *Owner:* ${groupMetadata?.owner || 'Unbekannt'}\n` +
-                (groupOwnerIds ? `• *Owner JID:* ${groupOwnerIds.jid}\n• *Owner LID:* ${groupOwnerIds.lid}\n` : '') +
-                `• *Bot aktiv:* ${gf?.active ? '🟢 Ja' : '🔴 Nein'}\n` +
-                `• *Setup:* ${gf?.setupAt ? '✅ ' + formatDateTime(gf.setupAt) : '❌ Nicht eingerichtet'}\n` +
-                '━━━━━━━━━━━━━━━━━━━━\n' +
-                `📜 *Beschreibung:* ${descText.length > 900 ? descText.slice(0, 900) + '…' : descText}`;
-              await sock.sendMessage(from, { text }, { quoted: msg });
+              const usersGi = readDb().users || {};
+              const topGi = topMembers(groupProfile, 'xp', 3);
+              const namesGi = {};
+              for (const t of topGi) namesGi[t.bid] = usersGi[t.bid]?.registration?.name || getProfileDisplayName(usersGi[t.bid], null) || t.bid;
+              await sock.sendMessage(from, {
+                text: buildGroupInfo(groupProfile, {
+                  subject: groupMetadata?.subject || groupProfile?.subject || '',
+                  count: participants.length, admins,
+                  owner: groupMetadata?.owner ? '@' + String(cleanId(groupMetadata.owner)).split('@')[0] : '',
+                  creation: groupMetadata?.creation ? new Date(groupMetadata.creation * 1000).toLocaleDateString('de-DE') : '',
+                  desc: groupMetadata?.desc || ''
+                }, { pref, topNames: namesGi })
+              }, { quoted: msg });
               await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
               break;
             }
-
             case 'rules': {
               if (!isGroup) {
                 await sock.sendMessage(from, { text: '> ❌ *Fehler:* Dieser Befehl funktioniert nur in Gruppen.' }, { quoted: msg });
@@ -10525,14 +11016,19 @@ break;
                   userProfile: tp, snapshot: tSnap, roleText: '',
                   name: tName, username: tp.identity?.username ? '@' + tp.identity.username : '',
                   regDate: tp.registration?.registeredAt ? new Date(tp.registration.registeredAt).toLocaleDateString('de-DE') : '',
-                  pref
+                  pref, hideEconomy: economyHidden(tp)
                 });
+                /* 📈 Progressions-Kern (5.0): Rangzeile + Platz + Badges — öffentlich, ohne IDs */
+                const rankTT = tp?.identity?.bid ? cachedGlobalRank(readDb().users || {}, tp.identity.bid) : { pos: null, total: 0 };
+                const progBlockT = '\n\n' + rankLine(tp, tName) +
+                  (rankTT.pos ? `\n📍 Global: *#${rankTT.pos}* von ${rankTT.total}` : '\n📍 Global: *noch unplatziert*') +
+                  `\n🏅 Badges: *${Object.keys(tp?.progression?.badges || {}).length}* · Σ *${Number(tp?.progression?.totalXp || 0).toLocaleString('de-DE')}* XP`;
                 let ppUrl = null;
                 try { ppUrl = await sock.profilePictureUrl(targetJid || '', 'image'); } catch (e) { ppUrl = null; }
                 if (ppUrl) {
-                  await sock.sendMessage(from, { image: { url: ppUrl }, caption: card, mimetype: 'image/jpeg' }, { quoted: msg });
+                  await sock.sendMessage(from, { image: { url: ppUrl }, caption: card + progBlockT, mimetype: 'image/jpeg' }, { quoted: msg });
                 } else {
-                  await sock.sendMessage(from, { text: card }, { quoted: msg });
+                  await sock.sendMessage(from, { text: card + progBlockT }, { quoted: msg });
                 }
               };
 
@@ -10548,7 +11044,11 @@ break;
                   regDate: userProfile.registration?.registeredAt ? new Date(userProfile.registration.registeredAt).toLocaleDateString('de-DE') : '',
                   pref
                 });
-                await sock.sendMessage(from, { text: card, mentions: [senderLid] }, { quoted: msg });
+                const rankTS = userProfile?.identity?.bid ? cachedGlobalRank(readDb().users || {}, userProfile.identity.bid) : { pos: null, total: 0 };
+                const progBlockS = '\n\n' + rankLine(userProfile, userProfile.registration?.name || 'Du') +
+                  (rankTS.pos ? `\n📍 Global: *#${rankTS.pos}* von ${rankTS.total}` : '\n📍 Global: *noch unplatziert*') +
+                  `\n🏅 Badges: *${Object.keys(userProfile?.progression?.badges || {}).length}* · Σ *${Number(userProfile?.progression?.totalXp || 0).toLocaleString('de-DE')}* XP`;
+                await sock.sendMessage(from, { text: card + progBlockS, mentions: [senderLid] }, { quoted: msg });
                 break;
               }
 
@@ -10563,17 +11063,56 @@ break;
               break;
             }
 
+            case 'xp':
+            case 'x': {
+              /* 💜 Kompakt-Status: Level, Balken, Zeiträume, Verlauf ($level = volles Profil) */
+              const subXM = String(args[0] || '').toLowerCase();
+              if (subXM === 'multi' || subXM === 'mult' || subXM === 'bonus') {
+                await sock.sendMessage(from, { text: buildXpMultiplier(userProfile || {}, { isOwner: !!isHost }) }, { quoted: msg });
+                break;
+              }
+              const pX = ensureProgression(userProfile || {});
+              const nameX = getProfileDisplayName(userProfile || {}, msg.pushName || cleanId(senderJid));
+              const rankX = rankFor(pX.prestige, pX.level);
+              const titleX = pX.title || titleFor(pX.level);
+              const perX = xpPeriods(userProfile || {});
+              const needX = Math.max(1, Number(pX.neededXpForLvOrPrestigeUp) || 1);
+              const pctX = Math.max(0, Math.min(100, Math.round((Number(pX.xp) / needX) * 100)));
+              const fillX = Math.round(pctX / 100 * 8);
+              const barX = '▰'.repeat(fillX) + '▱'.repeat(8 - fillX);
+              const histX = recentXp(userProfile || {}, 3).map((e) => `• ${e.label}: +${Number(e.amount).toLocaleString('de-DE')} XP`).join('\n');
+              await sock.sendMessage(from, {
+                text: `> 💜 *XP-STATUS* — *${nameX}*\n\n${rankX.full}\n⭐ P${pX.prestige} · Lv ${pX.level} · \`${barX}\` ${pctX}%\n📛 ${titleX.emoji} *${titleX.name}*\n📆 Heute +${Number(perX.today).toLocaleString('de-DE')} · Woche +${Number(perX.week).toLocaleString('de-DE')} · Monat +${Number(perX.month).toLocaleString('de-DE')}\nΣ Lifetime: *${Number(perX.lifetime).toLocaleString('de-DE')}* XP` +
+                  (histX ? `\n\n🧾 *Zuletzt*\n${histX}` : '') +
+                  `\n\n💡 *${pref}level* für das volle Profil.`
+              }, { quoted: msg });
+              break;
+            }
+
             case 'level':
-            case 'xp': {
-              /* 💜 Kompletes Level-Profil: Level, Prestige, Rang, XP-Balken, Quellen */
-              const pP = userProfile || {};
+            case 'lvl':
+            case 'lv': {
+              /* 💜 Kompletes Level-Profil: Level, Prestige, Rang, XP-Balken, Quellen (+ $level @user) */
+              let viewProfileL = userProfile;
+              let nameP = getProfileDisplayName(userProfile || {}, msg.pushName || cleanId(senderJid));
+              if (args[0]) {
+                const tL = await resolveBanTarget(sock, args, sessionPath);
+                if (!tL || (!tL.jid && !tL.lid)) {
+                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden. Nutze *' + pref + 'level @person*.' }, { quoted: msg });
+                  break;
+                }
+                viewProfileL = await loadUserProfileForSender({ jid: tL.jid || '', lid: tL.lid || '' });
+                nameP = getProfileDisplayName(viewProfileL || {}, tL.name || cleanId(tL.jid || tL.lid));
+              }
+              if (!viewProfileL) {
+                await sock.sendMessage(from, { text: '> ☾ kein profil gefunden. die nacht vergisst niemand — aber dieses hier ist leer.' }, { quoted: msg });
+                break;
+              }
+              const pP = viewProfileL || {};
               const loveP = pP.love || {};
-              const nameP = getProfileDisplayName(pP, msg.pushName || cleanId(senderJid));
               const levelCard = profileCard(pP, nameP, pref);
               /* Progression 2.0: Heute/Woche + drei getrennte Streaks */
               const p2P = pP.progression || {};
-              const p2Today = (p2P.xpDaily || []).find((e) => e.d === new Date().toISOString().slice(0, 10))?.a || 0;
-              const p2Week = (p2P.xpDaily || []).slice(-7).reduce((a, e) => a + (Number(e.a) || 0), 0);
               const p2St = p2P.streaks || {};
               const p2Mult = xpMultiplier(pP).toFixed(2);
               const p2Unlocks = Object.keys(p2P.unlocks || {}).length;
@@ -10582,7 +11121,7 @@ break;
                   (pP.identity?.title ? `\n📛 Titel: *${pP.identity.title}*` : '') +
                   (pP.identity?.bio ? `\n📝 Bio: *${pP.identity.bio}*` : '') +
                   (loveP.spouseName ? `\n💍 verheiratet mit: *${loveP.spouseName}*` : '') +
-                  `\n\n📈 *Progression 2.0*\n• *Heute:* +${Number(p2Today).toLocaleString('de-DE')} XP\n• *Diese Woche:* +${Number(p2Week).toLocaleString('de-DE')} XP\n• *Multiplikator:* ${p2Mult}×\n\n🔥 *Streaks*\n• Aktiv: ${p2St.daily?.c || 0} Tage\n• Chat: ${p2St.chat?.c || 0} Tage\n• XP (≥50/Tag): ${p2St.xp?.c || 0} Tage\n\n🎁 Freischaltungen: ${p2Unlocks}/${MILESTONES.length}` +
+                  `\n\n⚡ *Bonus & Streaks*\n• *Multiplikator:* ${p2Mult}×\n\n🔥 *Streaks*\n• Aktiv: ${p2St.daily?.c || 0} Tage\n• Chat: ${p2St.chat?.c || 0} Tage\n• XP (≥50/Tag): ${p2St.xp?.c || 0} Tage\n\n🎁 Freischaltungen: ${p2Unlocks}/${MILESTONES.length}` +
                   '\n\n☾ every soul has a story.'
               }, { quoted: msg });
               break;
@@ -10590,14 +11129,320 @@ break;
 
             case 'rewards':
             case 'belohnungen': {
-              /* 🎁 Level-Rewards: was ist bereits freigeschaltet, was kommt? */
-              const pR = userProfile?.progression || {};
-              const rowsR = rewardsTable(pR.prestige || 0, pR.level || 0).map((m) =>
-                `${m.unlocked ? '✅' : '🔒'} *Level ${m.level}* — ${m.label} (+${m.coins} Kupfer)`
-              ).join('\n');
+              /* 🎁 Rewards: erhalten + kommend + Ziel-Belohnungen (Progression 4.0) */
               await sock.sendMessage(from, {
-                text: `> 🎁 *REWARDS*\n\n${rowsR}\n\n💡 _Jedes Level bringt Kupfer, Meilensteine bringen Titel & Cosmetics. Mit Prestige bleiben alle Freischaltungen erhalten._\n♡ level up to unlock the night.`
+                text: buildRewards(userProfile || {}) + `\n\n💡 _Jedes Level bringt Kupfer, Meilensteine bringen Titel & Cosmetics. Mit Prestige bleiben alle Freischaltungen erhalten._`
               }, { quoted: msg });
+              break;
+            }
+
+            case 'xpsources':
+            case 'xpquellen':
+            case 'xq': {
+              /* 📊 XP-Quellen-Anteile (Progression 5.0) */
+              await sock.sendMessage(from, { text: buildXpSources(userProfile || {}) }, { quoted: msg });
+              break;
+            }
+
+            case 'weekly':
+            case 'woche': {
+              /* 🗓️ Wochen-Report (5.0, seit 6.0 mit Rang + Kupfer + Aktivität) */
+              const bidWm = userProfile?.identity?.bid || '';
+              const rankWm = bidWm ? cachedGlobalRank(readDb().users || {}, bidWm) : { pos: null, total: 0 };
+              await sock.sendMessage(from, { text: buildWeeklyReport(userProfile || {}, Date.now(), { rankPos: rankWm.pos, rankTotal: rankWm.total }) }, { quoted: msg });
+              break;
+            }
+
+            case 'monthly':
+            case 'monat': {
+              /* 📆 Monats-Report (5.0, seit 6.0 mit Rang + Kupfer + Aktivität) */
+              const bidMm = userProfile?.identity?.bid || '';
+              const rankMm = bidMm ? cachedGlobalRank(readDb().users || {}, bidMm) : { pos: null, total: 0 };
+              await sock.sendMessage(from, { text: buildMonthlyReport(userProfile || {}, Date.now(), { rankPos: rankMm.pos, rankTotal: rankMm.total }) }, { quoted: msg });
+              break;
+            }
+
+            case 'prestige': {
+              /* 👑 Prestige-Karte (Progression 5.0) */
+              await sock.sendMessage(from, { text: buildPrestige(userProfile || {}) }, { quoted: msg });
+              break;
+            }
+
+            case 'compare':
+            case 'vergleich': {
+              /* ⚔️ Fairer Profil-Vergleich, ein Kern mit $profile (Progression 5.0) */
+              const cmpTarget = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]
+                || quoted?.extendedTextMessage?.contextInfo?.participant
+                || args.find((a) => a.startsWith('@') || /^\d{6,}/.test(a))
+                || '';
+              if (!cmpTarget) {
+                await sock.sendMessage(from, { text: `> ⚔️ *VERGLEICH*\n\nNutze: *${pref}compare @person*` }, { quoted: msg });
+                break;
+              }
+              const tC = await resolveBanTarget(sock, String(cmpTarget), sessionPath);
+              if (!tC || (!tC.jid && !tC.lid)) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
+                break;
+              }
+              const profC = await loadUserProfileForSender({ jid: tC.jid || '', lid: tC.lid || '' });
+              if (!profC?.registration?.registered) {
+                await sock.sendMessage(from, { text: '> ❓ Diese Person ist noch nicht registriert.' }, { quoted: msg });
+                break;
+              }
+              const usersC = readDb().users || {};
+              const bidSelfC = userProfile?.identity?.bid || '';
+              const bidOtherC = profC?.identity?.bid || '';
+              const rSelfC = bidSelfC ? cachedGlobalRank(usersC, bidSelfC) : { pos: null, total: 0 };
+              const rOtherC = bidOtherC ? cachedGlobalRank(usersC, bidOtherC) : { pos: null, total: 0 };
+              const nameSelfC = getProfileDisplayName(userProfile || {}, msg.pushName || 'Du');
+              const nameOtherC = getProfileDisplayName(profC, tC.name || 'Profil');
+              await sock.sendMessage(from, {
+                text: buildCompare(userProfile || {}, nameSelfC, profC, nameOtherC, { rankA: rSelfC.pos, rankB: rOtherC.pos, total: Math.max(rSelfC.total, rOtherC.total), showEconomy: !economyHidden(userProfile) && !economyHidden(profC) })
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'reward': {
+              /* 🎁 Truhen abholen (Progression 5.0) — $rewards bleibt die Übersicht */
+              const subR = String(args[0] || '').toLowerCase();
+              if (subR === 'claim' || subR === 'abholen' || subR === 'holen') {
+                if (!userProfile) {
+                  await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                  break;
+                }
+                let claimRes = null;
+                await withProfileLock(userProfile?.identity?.bid || '', async () => {
+                  claimRes = claimReward(userProfile, args.slice(1).join(' '));
+                  if (claimRes && claimRes.ok) saveUserProfile(userProfile);
+                });
+                if (claimRes && claimRes.ok) {
+                  await sock.sendMessage(from, { text: `> 🎁 *TRUHE GEÖFFNET!*\n\n${claimRes.label}\n💰 *+${Number(claimRes.copper || 0).toLocaleString('de-DE')} Kupfer*${claimRes.remaining ? `\n\n_No\ch ${claimRes.remaining} Truhe(n) warten — ${pref}reward claim_` : ''}` }, { quoted: msg });
+                  await sendReaction(sock, from, '🎁', msg.key);
+                } else if (claimRes && claimRes.reason === 'not-found') {
+                  await sock.sendMessage(from, { text: '> ❌ *Diese Truhe gibt es nicht.*\n\nVerfügbar: ' + ((claimRes.pending || []).map((r) => r.label).join(', ') || '–') }, { quoted: msg });
+                } else {
+                  await sock.sendMessage(from, { text: `> 📭 *Keine Truhen offen.*\n\nTruhen gibt es bei Level 25/75/150/200/250 und jedem Prestige-Up. Übersicht: *${pref}rewards*` }, { quoted: msg });
+                }
+                break;
+              }
+              const pendR = userProfile?.progression?.pendingRewards || [];
+              await sock.sendMessage(from, {
+                text: pendR.length
+                  ? `> 🎁 *OFFENE TRUHEN (${pendR.length})*\n\n` + pendR.map((r) => `• ${r.label} — +${Number(r.copper || 0).toLocaleString('de-DE')} Kupfer`).join('\n') + `\n\nAbholen: *${pref}reward claim*`
+                  : `> 📭 *Keine Truhen offen.*\n\nÜbersicht aller Belohnungen: *${pref}rewards*`
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'givexp':
+            case 'takexp': {
+              /* 🛠️ Owner-XP-Tools mit Audit + Rollback (Progression 5.0) */
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ❌ *Nur der Owner kann XP anpassen.*' }, { quoted: msg });
+                break;
+              }
+              const negX = command === 'takexp';
+              const tRawX = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]
+                || quoted?.extendedTextMessage?.contextInfo?.participant
+                || args.find((a) => a.startsWith('@') || /^\d{6,}/.test(a))
+                || '';
+              const amtTokX = args.find((a) => /^-?\d+$/.test(a));
+              const reasonX = args.filter((a) => a !== tRawX && a !== amtTokX).join(' ').trim();
+              if (!tRawX || !amtTokX) {
+                await sock.sendMessage(from, { text: `> 🛠️ *XP ANPASSEN (Owner)*\n\nNutze: *${pref}${command} @person <anzahl> <grund, min. 5 Zeichen>*\nRückgängig: *${pref}xprollback @person*` }, { quoted: msg });
+                break;
+              }
+              const tX = await resolveBanTarget(sock, String(tRawX), sessionPath);
+              if (!tX || (!tX.jid && !tX.lid)) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
+                break;
+              }
+              const profX = await loadUserProfileForSender({ jid: tX.jid || '', lid: tX.lid || '' });
+              if (!profX?.identity?.bid) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht gefunden.' }, { quoted: msg });
+                break;
+              }
+              const deltaX = (negX ? -1 : 1) * Math.abs(Math.floor(Number(amtTokX)));
+              let resX = null;
+              await withProfileLock(profX.identity.bid, async () => {
+                resX = adminAdjustXp(profX, deltaX, { reason: reasonX, actor: 'owner:chat' });
+                if (resX && resX.ok) saveUserProfile(profX);
+              });
+              if (!resX || !resX.ok) {
+                const whyX = { 'no-delta': 'Betrag ungültig.', 'delta-too-big': 'Max. ±10.000.000.', 'reason-too-short': 'Grund zu kurz (min. 5 Zeichen).', 'no-profile': 'Profil fehlt.' }[resX?.reason] || 'Fehlgeschlagen.';
+                await sock.sendMessage(from, { text: '> ❌ *Nicht angepasst:* ' + whyX }, { quoted: msg });
+                break;
+              }
+              try { auditAdmin({ actor: 'owner:chat', action: 'xp.adjust', target: profX.identity.bid, delta: deltaX, reason: reasonX.slice(0, 200), levelAfter: resX.after.level, prestigeAfter: resX.after.prestige }); } catch (e) {}
+              const nameX = getProfileDisplayName(profX, tX.name || '?');
+              await sock.sendMessage(from, {
+                text: `> 🛠️ *XP ANGEPASST*\n\n👤 ${nameX}\n${deltaX > 0 ? '+' : ''}${deltaX.toLocaleString('de-DE')} XP _(Grund: ${reasonX.slice(0, 120)})_\n\nVorher: Lv ${resX.before.level} · Σ ${Number(resX.before.totalXp).toLocaleString('de-DE')} XP\nNachher: Lv ${resX.after.level} · Σ ${Number(resX.after.totalXp).toLocaleString('de-DE')} XP${resX.copper ? ` · +${Number(resX.copper).toLocaleString('de-DE')} Kupfer` : ''}\n\n_Rückgängig: ${pref}xprollback @person_`
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'xprollback': {
+              /* ↩️ Letztes Admin-Adjust rückgängig (Owner, auditiert) */
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ❌ *Nur der Owner kann XP zurückrollen.*' }, { quoted: msg });
+                break;
+              }
+              const tRawB = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]
+                || quoted?.extendedTextMessage?.contextInfo?.participant
+                || args.find((a) => a.startsWith('@') || /^\d{6,}/.test(a))
+                || '';
+              if (!tRawB) {
+                await sock.sendMessage(from, { text: `> ↩️ *XP-ROLLBACK (Owner)*\n\nNutze: *${pref}xprollback @person*` }, { quoted: msg });
+                break;
+              }
+              const tB = await resolveBanTarget(sock, String(tRawB), sessionPath);
+              if (!tB || (!tB.jid && !tB.lid)) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
+                break;
+              }
+              const profB = await loadUserProfileForSender({ jid: tB.jid || '', lid: tB.lid || '' });
+              if (!profB?.identity?.bid) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht gefunden.' }, { quoted: msg });
+                break;
+              }
+              let resB = null;
+              await withProfileLock(profB.identity.bid, async () => {
+                resB = adminRollbackXp(profB, { actor: 'owner:chat' });
+                if (resB && resB.ok) saveUserProfile(profB);
+              });
+              if (!resB || !resB.ok) {
+                await sock.sendMessage(from, { text: '> ℹ️ *Nichts zurückzurollen* — es gab kein Admin-Adjust für dieses Profil (oder es wurde schon zurückgerollt).' }, { quoted: msg });
+                break;
+              }
+              try { auditAdmin({ actor: 'owner:chat', action: 'xp.rollback', target: profB.identity.bid, rolledBack: resB.rolledBack }); } catch (e) {}
+              await sock.sendMessage(from, { text: `> ↩️ *XP ZURÜCKGEROLLT*\n\n👤 ${getProfileDisplayName(profB, tB.name || '?')}\nAdjust ${resB.rolledBack > 0 ? '+' : ''}${Number(resB.rolledBack).toLocaleString('de-DE')} XP rückgängig.\nJetzt: Lv ${resB.restored.level} · Σ ${Number(resB.restored.totalXp).toLocaleString('de-DE')} XP\n\n_Hinweis: Inzwischen verdiente Titel/Badges bleiben (nur der XP-Stand wird restauriert)._` }, { quoted: msg });
+              break;
+            }
+
+            case 'givecoins':
+            case 'takecoins': {
+              /* 🛠️ Owner-Kupfer-Tools mit Audit + Rollback (Progression 6.0) */
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ❌ *Nur der Owner kann Kupfer anpassen.*' }, { quoted: msg });
+                break;
+              }
+              const negC = command === 'takecoins';
+              const tRawC = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]
+                || quoted?.extendedTextMessage?.contextInfo?.participant
+                || args.find((a) => a.startsWith('@') || /^\d{6,}/.test(a))
+                || '';
+              const amtTokC = args.find((a) => /^-?\d+$/.test(a));
+              const vaultC = args.some((a) => String(a).toLowerCase() === 'bank') ? 'bank' : 'wallet';
+              const reasonC = args.filter((a) => a !== tRawC && a !== amtTokC && String(a).toLowerCase() !== 'bank').join(' ').trim();
+              if (!tRawC || !amtTokC) {
+                await sock.sendMessage(from, { text: `> 🛠️ *KUPFER ANPASSEN (Owner)*\n\nNutze: *${pref}${command} @person <anzahl> [bank] <grund, min. 5 Zeichen>*\nRückgängig: *${pref}coinrollback @person*` }, { quoted: msg });
+                break;
+              }
+              if (reasonC.length < 5) {
+                await sock.sendMessage(from, { text: '> ❌ *Grund zu kurz* (min. 5 Zeichen).' }, { quoted: msg });
+                break;
+              }
+              const tC2 = await resolveBanTarget(sock, String(tRawC), sessionPath);
+              if (!tC2 || (!tC2.jid && !tC2.lid)) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
+                break;
+              }
+              const profC2 = await loadUserProfileForSender({ jid: tC2.jid || '', lid: tC2.lid || '' });
+              if (!profC2?.identity?.bid) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht gefunden.' }, { quoted: msg });
+                break;
+              }
+              const deltaC = (negC ? -1 : 1) * Math.abs(Math.floor(Number(amtTokC)));
+              let resC = null;
+              await withProfileLock(profC2.identity.bid, async () => {
+                resC = adminAdjustCoins(profC2, deltaC, { reason: reasonC, actor: 'owner:chat', vault: vaultC });
+                if (resC && resC.ok) saveUserProfile(profC2);
+              });
+              if (!resC || !resC.ok) {
+                const whyC = { 'invalid': 'Betrag ungültig.', 'insufficient': 'Nicht genug Guthaben.', 'overflow': 'Über dem Sicherheits-Cap.', 'no-profile': 'Profil fehlt.' }[resC?.reason] || 'Fehlgeschlagen.';
+                await sock.sendMessage(from, { text: '> ❌ *Nicht angepasst:* ' + whyC }, { quoted: msg });
+                break;
+              }
+              try { auditAdmin({ actor: 'owner:chat', action: 'coins.adjust', target: profC2.identity.bid, delta: deltaC, vault: vaultC, reason: reasonC.slice(0, 200) }); } catch (e) {}
+              const nameC2 = getProfileDisplayName(profC2, tC2.name || '?');
+              await sock.sendMessage(from, {
+                text: `> 🛠️ *KUPFER ANGEPASST*\n\n👤 ${nameC2}\n${deltaC > 0 ? '+' : ''}${deltaC.toLocaleString('de-DE')} Kupfer → *${vaultC}* _(Grund: ${reasonC.slice(0, 120)})_\n\nVorher: ${Number(resC.before).toLocaleString('de-DE')} · Nachher: *${Number(resC.after).toLocaleString('de-DE')}*\n\n_Rückgängig: ${pref}coinrollback @person_`
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'coinrollback': {
+              /* ↩️ Letztes Kupfer-Adjust rückgängig (Owner, auditiert) */
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ❌ *Nur der Owner kann Kupfer zurückrollen.*' }, { quoted: msg });
+                break;
+              }
+              const tRawCR = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]
+                || quoted?.extendedTextMessage?.contextInfo?.participant
+                || args.find((a) => a.startsWith('@') || /^\d{6,}/.test(a))
+                || '';
+              if (!tRawCR) {
+                await sock.sendMessage(from, { text: `> ↩️ *COIN-ROLLBACK (Owner)*\n\nNutze: *${pref}coinrollback @person*` }, { quoted: msg });
+                break;
+              }
+              const tCR = await resolveBanTarget(sock, String(tRawCR), sessionPath);
+              if (!tCR || (!tCR.jid && !tCR.lid)) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
+                break;
+              }
+              const profCR = await loadUserProfileForSender({ jid: tCR.jid || '', lid: tCR.lid || '' });
+              if (!profCR?.identity?.bid) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht gefunden.' }, { quoted: msg });
+                break;
+              }
+              let resCR = null;
+              await withProfileLock(profCR.identity.bid, async () => {
+                resCR = coinRollback(profCR);
+                if (resCR && resCR.ok) saveUserProfile(profCR);
+              });
+              if (!resCR || !resCR.ok) {
+                await sock.sendMessage(from, { text: '> ℹ️ *Nichts zurückzurollen* — es gab kein Kupfer-Adjust für dieses Profil (oder es wurde schon zurückgerollt).' }, { quoted: msg });
+                break;
+              }
+              try { auditAdmin({ actor: 'owner:chat', action: 'coins.rollback', target: profCR.identity.bid, restored: resCR.restored }); } catch (e) {}
+              await sock.sendMessage(from, { text: `> ↩️ *KUPFER ZURÜCKGEROLLT*\n\n👤 ${getProfileDisplayName(profCR, tCR.name || '?')}\nStand wiederhergestellt: *${Number(resCR.restored).toLocaleString('de-DE')}* Kupfer.` }, { quoted: msg });
+              break;
+            }
+
+            case 'unlockach':
+            case 'unlockachievement': {
+              /* 🔓 Achievement manuell vergeben (Owner, auditiert) */
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ❌ *Nur der Owner kann Achievements vergeben.*' }, { quoted: msg });
+                break;
+              }
+              const tRawA = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0]
+                || quoted?.extendedTextMessage?.contextInfo?.participant
+                || args.find((a) => a.startsWith('@') || /^\d{6,}/.test(a))
+                || '';
+              const idA = args.filter((a) => a !== tRawA).join(' ').trim();
+              if (!tRawA || !idA) {
+                await sock.sendMessage(from, { text: `> 🔓 *ACHIEVEMENT VERGEBEN (Owner)*\n\nNutze: *${pref}unlockach @person <achievement-id>*` }, { quoted: msg });
+                break;
+              }
+              const tA = await resolveBanTarget(sock, String(tRawA), sessionPath);
+              if (!tA || (!tA.jid && !tA.lid)) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.' }, { quoted: msg });
+                break;
+              }
+              const profA = await loadUserProfileForSender({ jid: tA.jid || '', lid: tA.lid || '' });
+              if (!profA?.identity?.bid) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht gefunden.' }, { quoted: msg });
+                break;
+              }
+              const resA = unlockAchievementFor(profA.identity.bid, idA);
+              if (!resA.ok) {
+                const whyA = { 'unknown-id': 'Unbekannte Achievement-ID.', 'already-unlocked': 'Bereits freigeschaltet.' }[resA.reason] || 'Fehlgeschlagen.';
+                await sock.sendMessage(from, { text: '> ❌ *Nicht vergeben:* ' + whyA }, { quoted: msg });
+                break;
+              }
+              try { auditAdmin({ actor: 'owner:chat', action: 'achievement.unlock', target: profA.identity.bid, achievement: resA.achievement.id }); } catch (e) {}
+              await sock.sendMessage(from, { text: `> 🔓 *ACHIEVEMENT VERGEBEN*\n\n👤 ${getProfileDisplayName(profA, tA.name || '?')}\n${resA.achievement.emoji || '🏆'} *${resA.achievement.name}* — _${resA.achievement.desc || ''}_` }, { quoted: msg });
               break;
             }
 
@@ -10635,14 +11480,20 @@ break;
 
             case 'rank':
             case 'rang': {
-              /* 🏅 Rang zeigen: $rank (eigener) oder $rank @user (fremder) */
-              const rankMe = !args[0];
+              /* 🏅 Rang zeigen: $rank [weekly|monthly|group] [@user] — mit Wochen-Snapshot & Trend (5.0) */
+              const rankArgs = [...args];
+              let rankMode = 'global';
+              const modeWord = String(rankArgs[0] || '').toLowerCase();
+              if (['weekly', 'week', 'woche'].includes(modeWord)) { rankMode = 'weekly'; rankArgs.shift(); }
+              else if (['monthly', 'month', 'monat'].includes(modeWord)) { rankMode = 'monthly'; rankArgs.shift(); }
+              else if (['group', 'gruppe'].includes(modeWord)) { rankMode = 'group'; rankArgs.shift(); }
+              const rankMe = !rankArgs[0];
               let rankProfile = userProfile;
               let rankName = getProfileDisplayName(userProfile || {}, msg.pushName || cleanId(senderJid));
               if (!rankMe) {
-                const tR = await resolveBanTarget(sock, args, sessionPath);
+                const tR = await resolveBanTarget(sock, rankArgs, sessionPath);
                 if (!tR || (!tR.jid && !tR.lid)) {
-                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden. Nutze *' + pref + 'rank @person*.' }, { quoted: msg });
+                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden. Nutze *' + pref + 'rank [weekly|monthly|group] @person*.' }, { quoted: msg });
                   break;
                 }
                 rankProfile = await loadUserProfileForSender({ jid: tR.jid || '', lid: tR.lid || '' });
@@ -10652,103 +11503,352 @@ break;
                 await sock.sendMessage(from, { text: '> ☾ kein profil gefunden. die nacht vergisst niemand — aber dieses hier ist leer.' }, { quoted: msg });
                 break;
               }
-              await sock.sendMessage(from, { text: rankLine(rankProfile, rankName) + '\n\n♡ rank is earned, not given.' }, { quoted: msg });
+              const rankUsersR = readDb().users || {};
+              const rankBidR = rankProfile?.identity?.bid || '';
+              let rankPosR = { pos: null, total: 0 };
+              let rankLabelR = '📍 Global';
+              if (rankMode === 'weekly') { rankPosR = rankBidR ? weeklyRank(rankUsersR, rankBidR) : rankPosR; rankLabelR = '📍 Woche (7d XP)'; }
+              else if (rankMode === 'monthly') { rankPosR = rankBidR ? monthlyRank(rankUsersR, rankBidR) : rankPosR; rankLabelR = '📍 Monat (30d XP)'; }
+              else if (rankMode === 'group') {
+                if (!isGroup || !groupMetadata) {
+                  await sock.sendMessage(from, { text: '> 👥 *Gruppen-Rang* geht nur in einer Gruppe.' }, { quoted: msg });
+                  break;
+                }
+                const memberNumsR = new Set((groupMetadata.participants || []).map((pt) => cleanId(pt.id || pt.jid || '')));
+                const memberBidsR = Object.keys(rankUsersR).filter((b) => {
+                  const mm = /^(\d*)jid(\d*)lid$/.exec(String(b || ''));
+                  return !!mm && ((mm[1] && memberNumsR.has(mm[1])) || (mm[2] && memberNumsR.has(mm[2])));
+                });
+                rankPosR = rankBidR ? groupRank(rankUsersR, rankBidR, memberBidsR) : rankPosR;
+                rankLabelR = '📍 Gruppe';
+              } else {
+                rankPosR = rankBidR ? cachedGlobalRank(rankUsersR, rankBidR) : rankPosR;
+              }
+              /* 📈 Wochen-Snapshot nur für den eigenen globalen Rang (Trend braucht echte Vorwerte) */
+              let rankTrendR = '';
+              if (rankMe && rankMode === 'global' && rankPosR.pos && userProfile) {
+                try {
+                  const snap = snapshotRank(userProfile, rankPosR.pos, rankPosR.total);
+                  saveUserProfile(userProfile);
+                  if (snap && snap.delta) rankTrendR = snap.delta > 0 ? ` 📈 (+${snap.delta})` : ` 📉 (${snap.delta})`;
+                } catch (e) {}
+              }
+              const rankProgrR = rankProfile?.progression || {};
+              const rankTitleR = rankProgrR.title || titleFor(rankProgrR.level || 0);
+              await sock.sendMessage(from, { text: rankLine(rankProfile, rankName) +
+                (rankPosR.pos ? `\n${rankLabelR}: *#${rankPosR.pos}* von ${rankPosR.total}${rankTrendR}` : `\n${rankLabelR}: *noch unplatziert* — chatte los! 💜`) +
+                `\n📛 Titel: ${rankTitleR.emoji} *${rankTitleR.name}*` +
+                `\nΣ Lifetime: *${Number(rankProgrR.totalXp || 0).toLocaleString('de-DE')}* XP` + '\n\n♡ rank is earned, not given.' }, { quoted: msg });
               await sendReaction(sock, from, '🏅', msg.key);
               break;
             }
 
             case 'leaderboard':
             case 'lb':
+            case 'rangliste':
             case 'top': {
-              /* 🏆 Leaderboard: jetzt nach (Prestige, Level, XP) mit Rängen */
+              /* 🏆 Leaderboard mit Filtern: $top [level|xp|weekly|monthly|group] + eigener Platz */
               const dbL = readDb();
-              const rowsL = topProgression(dbL.users || {}, 10);
+              const usersL = dbL.users || {};
+              const modeL = String(args[0] || 'level').toLowerCase();
+              let rowsL = [];
+              let titleL = '> 🏆 *LOVE-LEADERBOARD*';
+              let valL = (u) => `${u.prestige > 0 ? `P${u.prestige} · ` : ''}Lv ${u.level} · ${u.rankFull}`;
+              if (modeL === 'xp' || modeL === 'lifetime') {
+                rowsL = topProgression(usersL, 50).sort((a, b) => b.totalXp - a.totalXp).slice(0, 10);
+                titleL = '> 🏆 *TOP XP — LIFETIME*';
+                valL = (u) => `Σ ${Number(u.totalXp).toLocaleString('de-DE')} XP · Lv ${u.level}`;
+              } else if (modeL === 'weekly' || modeL === 'week' || modeL === 'woche') {
+                rowsL = topProgression(usersL, 50)
+                  .map((u) => ({ ...u, per: xpPeriods(usersL[u.bid] || {}).week }))
+                  .filter((u) => u.per > 0).sort((a, b) => b.per - a.per).slice(0, 10);
+                titleL = '> 🏆 *TOP WOCHE* — XP der letzten 7 Tage';
+                valL = (u) => `+${Number(u.per).toLocaleString('de-DE')} XP (7d) · Lv ${u.level}`;
+              } else if (modeL === 'monthly' || modeL === 'month' || modeL === 'monat') {
+                rowsL = topProgression(usersL, 50)
+                  .map((u) => ({ ...u, per: xpPeriods(usersL[u.bid] || {}).month }))
+                  .filter((u) => u.per > 0).sort((a, b) => b.per - a.per).slice(0, 10);
+                titleL = '> 🏆 *TOP MONAT* — XP der letzten 30 Tage';
+                valL = (u) => `+${Number(u.per).toLocaleString('de-DE')} XP (30d) · Lv ${u.level}`;
+              } else if (modeL === 'group' || modeL === 'gruppe') {
+                if (!isGroup || !groupMetadata) {
+                  await sock.sendMessage(from, { text: '> 👥 *Gruppen-Top* geht nur in einer Gruppe.' }, { quoted: msg });
+                  break;
+                }
+                const memberNumsL = new Set((groupMetadata.participants || []).map((pt) => cleanId(pt.id || pt.jid || '')));
+                const inGroupL = (bid) => {
+                  const mm = /^(\d*)jid(\d*)lid$/.exec(String(bid || ''));
+                  if (!mm) return false;
+                  return ((mm[1] && memberNumsL.has(mm[1])) || (mm[2] && memberNumsL.has(mm[2]))) || false;
+                };
+                rowsL = topProgression(usersL, 50).filter((u) => inGroupL(u.bid)).slice(0, 10);
+                titleL = '> 🏆 *GRUPPEN-TOP* — XP ist global, die Rangliste lokal 😉';
+              } else if (modeL === 'coins' || modeL === 'kupfer' || modeL === 'rich' || modeL === 'geld') {
+                await sock.sendMessage(from, {
+                  text: buildTopCoins(usersL, { n: 10, myBid: userProfile?.identity?.bid || '', pref })
+                }, { quoted: msg });
+                break;
+              } else {
+                rowsL = topProgression(usersL, 10);
+              }
               if (!rowsL.length) {
                 await sock.sendMessage(from, { text: '☾ leaderboard is empty.\nnobody is awake yet.' }, { quoted: msg });
                 break;
               }
               const medalsL = ['👑', '', '💜'];
+              let ownRankL = '';
+              if (userProfile?.identity?.bid) {
+                const grL = cachedGlobalRank(usersL, userProfile.identity.bid);
+                if (grL.pos) ownRankL = `\n\n📍 *Dein Platz:* #${grL.pos} von ${grL.total}`;
+              }
               await sock.sendMessage(from, {
-                text: '> 🏆 *LOVE-LEADERBOARD*\n\n' + rowsL.map((u, i) =>
-                  `${medalsL[i] || '•'} *${i + 1}.* ${u.name} — ${u.prestige > 0 ? `P${u.prestige} · ` : ''}Lv ${u.level} · ${u.rankFull}`
-                ).join('\n') + '\n\n💡 _Nette Nachrichten bringen bis ×3 XP — aufholen leicht gemacht._\n♡ stay a little longer.'
+                text: titleL + '\n\n' + rowsL.map((u, i) =>
+                  `${medalsL[i] || '•'} *${i + 1}.* ${u.name} — ${valL(u)}`
+                ).join('\n') + ownRankL + '\n\n💡 _Filter: $top xp · weekly · monthly · group · coins_\n♡ stay a little longer.'
               }, { quoted: msg });
               break;
             }
 
             case 'daily': {
-              /* 💎 Täglicher Bonus: +50 XP — jetzt mit Level-Up-Logik */
+              /* 📅 UNIFIED DAILY (6.0): Kupfer-Serie (Streak, Boni, Meilensteine) + XP.
+                 Vereint das alte XP-Daily mit dem Kupfer-Daily (das zweite
+                 `case 'daily'` war toter Code — erstes Match gewinnt im Switch). */
               if (!userProfile) {
                 await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
                 break;
               }
-              const progD = ensureProgression(userProfile);
               const todayD = new Date().toISOString().slice(0, 10);
-              if (progD.lastDaily === todayD) {
-                await sock.sendMessage(from, { text: '☾ you already collected today.\nthe night rewards patience.' }, { quoted: msg });
+              let claimD = null;
+              await withProfileLock(userProfile?.identity?.bid || '', async () => {
+                claimD = claimDaily(userProfile, {});
+              });
+              if (!claimD || !claimD.ok) {
+                await sock.sendMessage(from, { text: buildDailySummary(userProfile, { claim: claimD, pref }) }, { quoted: msg });
                 break;
               }
+              /* XP-Anteil (wie bisher aus categories.daily) — Legacy-Schutz:
+                 wer das alte XP-Daily heute schon holte, bekommt nur Kupfer. */
+              const progD = ensureProgression(userProfile);
+              const legacyDoneD = progD.lastDaily === todayD;
               progD.lastDaily = todayD;
-              const dailyRules = xpRules().categories?.daily || {};
-              const dailyAmt = Number(dailyRules.daily) || 50;
-              const dailyRes = grantLevelXp(userProfile, dailyRules.enabled === false ? 0 : dailyAmt, { source: 'dailies' });
+              let dailyRes = { granted: 0, events: [] };
+              if (!legacyDoneD) {
+                const dailyRules = xpRules().categories?.daily || {};
+                const dailyAmt = Number(dailyRules.daily) || 50;
+                dailyRes = grantLevelXp(userProfile, dailyRules.enabled === false ? 0 : dailyAmt, { source: 'dailies' });
+              }
+              ensureStats(userProfile).dailiesClaimed += 1; /* 📊 Progression 4.0 */
               saveUserProfile(userProfile);
-              try { notifyLove(userProfile?.identity?.bid || '', 'daily', { title: `💰 Daily gesammelt: +${dailyRes.granted} XP`, text: `Level ${progD.level} · Prestige ${progD.prestige}`, link: '/level.html' }, userProfile); } catch (e) {}
+              try { notifyLove(userProfile?.identity?.bid || '', 'daily', { title: `📅 Daily gesammelt: +${claimD.amount} Kupfer`, text: `Serie ${claimD.streak} Tage · Level ${progD.level}`, link: '/account.html' }, userProfile); } catch (e) {}
               const dailyNameD = getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid));
               if (dailyRes.events?.length) {
-                const dailyPrestige = dailyRes.events.some((e) => e.type === 'prestige');
-                await sock.sendMessage(from, {
-                  text: dailyPrestige ? prestigeAnnounce(userProfile, dailyNameD) : levelUpAnnounce(userProfile, dailyNameD)
-                }, { quoted: msg });
+                await sendLevelUpAnnouncement(sock, from, msg, {
+                  profile: userProfile, name: dailyNameD, events: dailyRes.events, isGroup,
+                  mentionJid: msg.key?.participant || senderLid || senderJid || null
+                });
               }
               await sock.sendMessage(from, {
-                text: `> 💎 *DAILY*\n\n+50 XP gesammelt.\n• *Level:* ${progD.level} · *Prestige:* ${progD.prestige}\n• *Gesamt:* ${Number(progD.xp).toLocaleString('de-DE')} / ${Number(progD.neededXpForLvOrPrestigeUp).toLocaleString('de-DE')} XP\n• *Lifetime:* ${Number(progD.totalXp).toLocaleString('de-DE')} XP\n\n♡ come back tomorrow. I'll be here.`
+                text: buildDailySummary(userProfile, { claim: claimD, xpGranted: dailyRes.granted || 0, pref })
               }, { quoted: msg });
               await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
               break;
             }
 
             case 'streak': {
-              const progS = userProfile?.progression || {};
-              const stS = progS.streaks || {};
               await sock.sendMessage(from, {
-                text: `> 🔥 *STREAKS*\n\n• *Aktiv:* ${stS.daily?.c || progS.streak || 0} Tage\n• *Chat:* ${stS.chat?.c || 0} Tage\n• *XP (≥50/Tag):* ${stS.xp?.c || 0} Tage\n• *Bestwert:* ${progS.bestStreak || progS.streak || 0} Tage\n\n☾ consistency is a love language.`
+                text: buildStreakCard(userProfile || {}) + '\n\n☾ consistency is a love language.'
               }, { quoted: msg });
               break;
             }
 
-            case 'achievements':
+            case 'achievements': {
+              /* 🏆 Echte Achievements aus loveplus (128 Stück, Kategorien + Fortschritt) */
+              await handleLovePlus({
+                sock, msg, from, args, command: 'achievements', pref, quoted, sessionPath,
+                senderJid, senderLid, userProfile, groupProfile, isGroup, isHost,
+                helpers: lovePlusHelpers(userProfile)
+              });
+              break;
+            }
+
             case 'badges': {
-              const xpA = userProfile?.progression?.xp || 0;
-              const listA = [
-                ['💌', 'First Love', xpA >= 1],
-                ['💗', '100 Messages', xpA >= 100],
-                ['❤️', '7 Day Streak', (userProfile?.progression?.streak || 0) >= 7],
-                ['💘', 'First Crush', !!userProfile?.love?.crush],
-                ['💍', 'Soulmate', !!userProfile?.love?.spouseName],
-                ['🌹', 'Romantic', xpA >= 2500],
-                ['👑', 'Love Legend', (userProfile?.progression?.level || 0) >= 100]
-              ];
+              /* 🏅 Eigene Badge-Vitrine (Progression 4.0) */
+              let achCountB = 0;
+              try { achCountB = socialCounters(userProfile || {}).achievements || 0; } catch (e) {}
               await sock.sendMessage(from, {
-                text: '> 🏆 *ACHIEVEMENTS*\n\n' + listA.map(([ic, nm, ok]) =>
-                  `${ok ? ic : '🔒'} *${nm}* — ${ok ? 'unlocked' : 'locked'}`).join('\n') + '\n\n☾ nothing lasts forever. except badges.'
+                text: buildBadgeShowcase(userProfile || {}, achCountB)
               }, { quoted: msg });
               break;
             }
 
             case 'title': {
+              const subT = String(args[0] || '').toLowerCase();
+              /* 📛 Verdienten Titel wählen (Progression 4.0) */
+              if (subT === 'use' || subT === 'wählen' || subT === 'waehlen') {
+                const wantT = args.slice(1).join(' ').trim();
+                if (!wantT) {
+                  await sock.sendMessage(from, { text: `> 📛 *Titel wählen*\n\nNutze: *${pref}title use <name>*\nDeine verdienten Titel: *${pref}title*` }, { quoted: msg });
+                  break;
+                }
+                let achCountT = 0;
+                try { achCountT = socialCounters(userProfile || {}).achievements || 0; } catch (e) {}
+                const resT = setActiveTitle(userProfile || {}, wantT, { achCount: achCountT });
+                if (!resT.ok) {
+                  await sock.sendMessage(from, { text: `> ❌ *Diesen Titel hast du noch nicht verdient.*\n\nDeine Titel: ${(resT.earned || []).join(', ') || '—'}\nLevel up für mehr! 💜` }, { quoted: msg });
+                  break;
+                }
+                saveUserProfile(userProfile);
+                await sock.sendMessage(from, { text: `> 📛 Aktiver Titel: ${resT.title.emoji} *${resT.title.name}*` }, { quoted: msg });
+                break;
+              }
+              /* 📛 Zum höchsten verdienten Titel zurück */
+              if (subT === 'clear' || subT === 'reset') {
+                const pT = ensureProgression(userProfile || {});
+                const topT = titleFor(pT.level || 0);
+                pT.title = { min: topT.min, emoji: topT.emoji, name: topT.name };
+                pT.activeTitle = { ...pT.title };
+                saveUserProfile(userProfile);
+                await sock.sendMessage(from, { text: `> 📛 Titel zurückgesetzt: ${topT.emoji} *${topT.name}*` }, { quoted: msg });
+                break;
+              }
+              /* 📛 Übersicht: verdiente Titel + Custom-Titel */
+              if (!args.length) {
+                const dbT0 = readDb();
+                const bidT0 = userProfile?.identity?.bid || cleanId(senderJid);
+                const customT = dbT0.users?.[bidT0]?.identity?.title || '—';
+                let achCountT0 = 0;
+                try { achCountT0 = socialCounters(userProfile || {}).achievements || 0; } catch (e) {}
+                await sock.sendMessage(from, { text: buildTitleOverview(userProfile || {}, achCountT0) + `\n\n🏷️ *Custom-Titel:* ${customT}\n\n💡 _${pref}title use <name> → Titel wählen_\n_${pref}title <text> → Custom-Titel setzen_` }, { quoted: msg });
+                break;
+              }
+              /* 🏷️ Custom-Titel setzen (wie bisher — bleibt erhalten) */
               const dbT = readDb();
               const bidT = userProfile?.identity?.bid || cleanId(senderJid);
               if (!dbT.users[bidT]) dbT.users[bidT] = { identity: { bid: bidT } };
               dbT.users[bidT].identity = dbT.users[bidT].identity || {};
               const newTitle = args.join(' ').slice(0, 30);
-              if (!newTitle) {
-                await sock.sendMessage(from, { text: `> 🏷️ *Titel anzeigen/setzen*\n\nAktuell: *${dbT.users[bidT].identity.title || '—'}*\n\nNutze: *${pref}title <text>*` }, { quoted: msg });
-                break;
-              }
-              dbT.users[bidT].identity.title = newTitle;
               writeDb(dbT);
               await sock.sendMessage(from, { text: `> 🏷️ Titel gesetzt: *${newTitle}*\n\n☾ wear it well.` }, { quoted: msg });
+              break;
+            }
+
+            /* ══════════════════════════════════════════ */
+            /* 💜 PROGRESSION 4.0: Fortschritt & Account      */
+            /* ══════════════════════════════════════════ */
+            case 'progress':
+            case 'fortschritt': {
+              const bidP = userProfile?.identity?.bid || '';
+              let rankPosP = null, rankTotalP = 0;
+              try {
+                const rP = bidP ? cachedGlobalRank(readDb().users || {}, bidP) : null;
+                if (rP && rP.pos) { rankPosP = rP.pos; rankTotalP = rP.total; }
+              } catch (e) {}
+              await sock.sendMessage(from, { text: buildProgress(userProfile || {}, { rankPos: rankPosP, rankTotal: rankTotalP }) }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              break;
+            }
+
+            case 'activity':
+            case 'aktivitaet':
+            case 'aktivität': {
+              await sock.sendMessage(from, { text: buildActivity(userProfile || {}) }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              break;
+            }
+
+            case 'records':
+            case 'rekorde': {
+              await sock.sendMessage(from, { text: buildRecords(userProfile || {}) }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              break;
+            }
+
+            case 'milestones':
+            case 'meilensteine': {
+              await sock.sendMessage(from, { text: buildMilestones(userProfile || {}) }, { quoted: msg });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              break;
+            }
+
+            case 'unregister':
+            case 'abmelden':
+            case 'deleteme': {
+              /* 🗑️ Self-Service-Löschung: Warnung → Code → Confirm → weg (+ Backup).
+                 Owner kann sich nicht löschen; Restore nur für den Owner. */
+              const bidU = userProfile?.identity?.bid || '';
+              const subU = String(args[0] || '').toLowerCase();
+              if (subU === 'restore') {
+                if (!isHost) {
+                  await sock.sendMessage(from, { text: '> ❌ *Nur der Owner kann Backups wiederherstellen.*' }, { quoted: msg });
+                  break;
+                }
+                const listU = listUnregisterBackups(5);
+                const wantU = args[1] || '';
+                if (!wantU) {
+                  await sock.sendMessage(from, { text: '> 💾 *UNREGISTER-BACKUPS*\n\n' + (listU.length ? listU.map((b) => `• \`${b.id}\``).join('\n') : '_Keine Backups vorhanden._') + `\n\nNutze: *${pref}unregister restore <dateiname>*` }, { quoted: msg });
+                  break;
+                }
+                const resU = restoreUnregister(wantU, { actor: 'owner' });
+                await sock.sendMessage(from, { text: resU.ok
+                  ? `> ✅ *Backup wiederhergestellt.*\n\nWiederhergestellt: ${Object.entries(resU.restored || {}).map(([k, v]) => `${k}: ${v}`).join(', ') || '—'}${(resU.skipped || []).length ? `\nÜbersprungen (existiert neu): ${(resU.skipped || []).join(', ')}` : ''}`
+                  : '> ❌ *Wiederherstellung fehlgeschlagen.* (' + (resU.reason || '?') + ')' }, { quoted: msg });
+                break;
+              }
+              if (subU === 'cancel' || subU === 'abbruch' || subU === 'abbrechen' || subU === 'stop' || subU === 'nein') {
+                const cU = cancelUnregister(bidU);
+                await sock.sendMessage(from, { text: cU.ok ? '> ✅ *Löschung abgebrochen.*\n\nDeine Daten bleiben vollständig erhalten. 💜' : '> ℹ️ *Es läuft keine Löschung.*' }, { quoted: msg });
+                break;
+              }
+              if (subU === 'confirm' || subU === 'bestätigen' || subU === 'bestaetigen' || subU === 'ja') {
+                if (!userProfile) {
+                  await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                  break;
+                }
+                const rU = confirmUnregister(userProfile, { code: String(args[1] || ''), phrase: args.slice(2).join(' '), actor: 'self:' + bidU });
+                if (rU.ok) {
+                  const dU = rU.deleted || {};
+                  await sock.sendMessage(from, { text: `> 🗑️ *ACCOUNT GELÖSCHT*\n\nDein Profil, ${dU.plusCouples || 0} Couple-Einträge, ${dU.warns || 0} Verwarnungen, ${dU.sessions || 0} Web-Sessions und alle Fortschritte wurden entfernt.\n\n💜 _Schade, dass du gehst — ${pref}register bringt dich jederzeit zurück (als frischer Start)._\n\n🔒 _Sicherungs-Backup beim Owner, Bans/Gruppen-Config bleiben aus Sicherheitsgründen._` }, { quoted: msg });
+                  await sendReaction(sock, from, '🗑️', msg.key);
+                  console.log(c.bold + c.brightYellow + '[unregister] Account gelöscht: ' + bidU + c.reset);
+                  break;
+                }
+                const reasonU = { none: 'Es läuft keine Löschung — starte mit *' + pref + 'unregister*.', expired: 'Der Code ist *abgelaufen* — fordere mit *' + pref + 'unregister* einen neuen an.', 'bad-code': 'Falscher Code. Prüfe die Ziffern aus der Warnung.', 'bad-phrase': 'Doppelbestätigung fehlt: *' + pref + 'unregister confirm <code> LÖSCHEN*' }[rU.reason] || 'Fehlgeschlagen.';
+                await sock.sendMessage(from, { text: '> ❌ *Löschung NICHT bestätigt.*\n\n' + reasonU }, { quoted: msg });
+                break;
+              }
+              const pendU = getPendingInfo(bidU);
+              if (pendU) {
+                const minU = Math.max(1, Math.ceil((pendU.expiresAt - Date.now()) / 60000));
+                await sock.sendMessage(from, { text: `> ⏳ *LÖSCHUNG LÄUFT* (noch ~${minU} Min)\n\nBestätigen: *${pref}unregister confirm <code>${pendU.requiresPhrase ? ' LÖSCHEN' : ''}*\nAbbrechen: *${pref}unregister cancel*` }, { quoted: msg });
+                break;
+              }
+              const sU = startUnregister(userProfile || {}, { isOwner: isHost, isAdmin: false });
+              if (!sU.ok) {
+                const noU = { 'no-profile': '> ❌ Profil nicht verfügbar.', 'not-registered': `> ℹ️ *Du bist nicht registriert* — es gibt nichts zu löschen.\n\n💡 _Fortschritte sammelst du trotzdem; ${pref}register legt dein Profil an._`, 'owner-blocked': '> 👑 *Der Owner-Account kann sich nicht selbst löschen.*\n\nNotfall nur direkt über die Server-Dateien.' }[sU.reason] || '> ❌ Start fehlgeschlagen.';
+                await sock.sendMessage(from, { text: noU }, { quoted: msg });
+                break;
+              }
+              const pvU = sU.preview || {};
+              const minSU = Math.max(1, Math.ceil((sU.expiresAt - Date.now()) / 60000));
+              await sock.sendMessage(from, { text:
+                `> ⚠️ *ACCOUNT WIRKLICH LÖSCHEN?* ⚠️\n\n` +
+                `Das wird *unwiderruflich* entfernt:\n` +
+                `• 👤 Profil & Registrierung\n` +
+                `• ⭐ Level, XP, Streaks, Rekorde\n` +
+                `• 🏆 ${pvU.plusUser ? 'Achievements' : '—'}, 🏅 Badges, 📛 Titel\n` +
+                `• 🪙 Kupfer: Wallet (${Number(pvU.wallet || 0).toLocaleString('de-DE')}) · Bank (${Number(pvU.bank || 0).toLocaleString('de-DE')}) · Transaktionen (${pvU.tx || 0})\n` +
+                `• 📦 Inventar-Items (${pvU.inventory || 0}) · 🔥 Daily-Rekord (${pvU.dailyBest || 0} Tage)\n` +
+                `• 💑 Couple-Einträge (${pvU.plusCouples || 0})${pvU.married ? ' — _Partner wird Single_' : ''}\n` +
+                `• ⚠️ Verwarnungen (${pvU.warns || 0}) · 💤 AFK (${pvU.afk || 0})\n` +
+                `• 🖥️ Web-Sessions (${pvU.sessions || 0})\n` +
+                `• 🧾 Progression-Events (werden anonymisiert)\n\n` +
+                `Das *bleibt*: Bans/Mod-Logs, Gruppen-Einstellungen, Owner-Backup (nur Restore).\n\n` +
+                `🔢 *Dein Code:* \`${sU.code}\` _(⏳ ${minSU} Min gültig)_\n\n` +
+                `Bestätigen: *${pref}unregister confirm ${sU.code}${sU.requiresPhrase ? ' LÖSCHEN' : ''}*\n` +
+                `Abbrechen: *${pref}unregister cancel*\n\n` +
+                `_Nur du kannst das — niemand sonst. Bei Bot-Neustart bricht die Löschung automatisch ab._`
+              }, { quoted: msg });
+              console.log(c.bold + c.brightYellow + '[unregister] Warnung + Code an ' + bidU + c.reset);
               break;
             }
 
@@ -10855,9 +11955,10 @@ break;
               break;
             }
 
+            /* 💜 7.0: Labels 'groupinfo'/'admins' sind toter Alt-Code (live: Cases 8755/9278);
+               'members' lebt jetzt im 7.0-Block (Mitgliederliste). */
             case 'groupinfo':
-            case 'admins':
-            case 'members': {
+            case 'admins': {
               if (!isGroup) { await sock.sendMessage(from, { text: '> 👥 Nur in Gruppen möglich.' }, { quoted: msg }); break; }
               const partsG = groupMetadata?.participants || [];
               const adminsG = partsG.filter((p) => p.admin === 'admin' || p.admin === 'superadmin');
@@ -11429,6 +12530,20 @@ break;
                       text: `\n💜 *SOCIAL XP*\n• ${isSelf ? 'Selbstliebe' : 'Empfängerin'}: +${compRes.recipientXp} XP${compRes.bond ? ' · ❤️ Bond +1' : ''}\n• Du: +${compRes.senderXp} XP`
                     }, { quoted: msg });
                   }
+                  /* 🎉 Level-Ups aus Social-XP ankündigen — Sender UND Empfänger (je mit Mention) */
+                  if (compRes.senderEvents?.length) {
+                    await sendLevelUpAnnouncement(sock, from, msg, {
+                      profile: userProfile, name: getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)),
+                      events: compRes.senderEvents, isGroup,
+                      mentionJid: msg.key?.participant || senderLid || senderJid || null
+                    });
+                  }
+                  if (!isSelf && compTargetProfile && compRes.recipientEvents?.length) {
+                    await sendLevelUpAnnouncement(sock, from, msg, {
+                      profile: compTargetProfile, name: getProfileDisplayName(compTargetProfile, cleanId(compMention)),
+                      events: compRes.recipientEvents, isGroup, mentionJid: compMention || null
+                    });
+                  }
                   if (compRes.farmSuspect) {
                     /* Anti-Farm: Muster im Bot-Log + XP-Event (Owner sieht es im Abuse-Center) */
                     try { const { emit } = await import('./loveengine.js'); emit('XP_GRANTED', { bid: userProfile?.identity?.bid || '', source: 'compliment-farm-suspect', granted: 0, reason: 'mutual-farm-pattern' }); } catch (e) {}
@@ -11553,40 +12668,6 @@ break;
             /* ====================================================== */
             /* 💰 ECONOMY: daily / work / gamble / balance / top      */
             /* ====================================================== */
-            case 'daily': {
-              if (!userProfile) {
-                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
-                break;
-              }
-              const lastDaily = userProfile.rewards?.lastDailyAt ? new Date(userProfile.rewards.lastDailyAt).getTime() : 0;
-              const diffHours = (Date.now() - lastDaily) / 3600000;
-              if (diffHours < 24) {
-                const waitH = Math.floor(24 - diffHours);
-                const waitM = Math.round(((24 - diffHours) - waitH) * 60);
-                await sock.sendMessage(from, {
-                  text: `> ⏳ *DAILY SCHON ABGEHOLT*\n\nKomm in *${waitH} Std. ${waitM} Min.* wieder! 💜`
-                }, { quoted: msg });
-                break;
-              }
-              const dCopper = randomInt(150, 400);
-              const dSilver = randomInt(20, 80);
-              const dGold = randomInt(5, 15);
-              addWalletCoins(userProfile, { copper: dCopper, silver: dSilver, gold: dGold });
-              if (!userProfile.rewards) userProfile.rewards = {};
-              userProfile.rewards.lastDailyAt = new Date().toISOString();
-              saveUserProfile(userProfile);
-              await sock.sendMessage(from, {
-                text: '> 🎁 *DAILY REWARD* 🎁\n\n' +
-                  `• 🤎 *+${dCopper} Kupfer*\n` +
-                  `• 🩶 *+${dSilver} Silber*\n` +
-                  `• 💛 *+${dGold} Gold*\n\n` +
-                  `💰 *Wallet:* ${walletText(userProfile)}\n\n` +
-                  '⏰ Morgen wieder!'
-              }, { quoted: msg });
-              await sendReaction(sock, from, '🎁', msg.key);
-              break;
-            }
-
             case 'work':
             case 'arbeiten': {
               if (!userProfile) {
@@ -11601,7 +12682,7 @@ break;
               }
               const task = pickRandom(WORK_JOBS);
               const earned = randomInt(task.min, task.max);
-              addWalletCoins(userProfile, { copper: earned });
+              addWalletCoins(userProfile, { copper: earned }, { source: 'work', reason: task.job });
               if (!userProfile.rewards) userProfile.rewards = {};
               userProfile.rewards.lastWorkAt = new Date().toISOString();
               let workXpLine = '';
@@ -11609,12 +12690,15 @@ break;
                 const workXpRes = grantLevelXp(userProfile, 10, { source: 'work' });
                 if (workXpRes.events?.length) {
                   const workPrestige = workXpRes.events.some((e) => e.type === 'prestige');
-                  await sock.sendMessage(from, {
-                    text: workPrestige ? prestigeAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid))) : levelUpAnnounce(userProfile, getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)))
-                  }, { quoted: msg });
+                  await sendLevelUpAnnouncement(sock, from, msg, {
+                    profile: userProfile, name: getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid)),
+                    events: workXpRes.events, isGroup,
+                    mentionJid: msg.key?.participant || senderLid || senderJid || null
+                  });
                   workXpLine = workPrestige ? '\n✨ *PRESTIGE UP!* 👆' : '\n🎉 *LEVEL UP!* 👆';
                 }
               } catch (workXpErr) {}
+              ensureStats(userProfile).workClaimed += 1; /* 📊 Progression 4.0 */
               saveUserProfile(userProfile);
               await sock.sendMessage(from, {
                 text: `> 💼 *ARBEITEN*\n\n${task.job}\n\n• 🤎 *+${earned} Kupfer*\n• 💜 *+10 XP*${workXpLine}\n💰 *Wallet:* ${walletText(userProfile)}`
@@ -11647,13 +12731,13 @@ break;
               }
               const win = Math.random() < 0.45;
               if (win) {
-                addWalletCoins(userProfile, { copper: bet });
+                addWalletCoins(userProfile, { copper: bet }, { source: 'gamble', reason: 'Gewinn' });
                 await sock.sendMessage(from, {
                   text: `> 🎰 *GAMBLE — GEWONNEN!* 🎉\n\n• 🤎 *+${bet} Kupfer* (${bet} → ${bet * 2})\n💰 *Wallet:* ${walletText(userProfile)}`
                 }, { quoted: msg });
                 await sendReaction(sock, from, '🎉', msg.key);
               } else {
-                addWalletCoins(userProfile, { copper: -bet });
+                addWalletCoins(userProfile, { copper: -bet }, { source: 'gamble', reason: 'Verlust' });
                 await sock.sendMessage(from, {
                   text: `> 🎰 *GAMBLE — VERLOREN* 💔\n\n• 🤎 *-${bet} Kupfer*\n💰 *Wallet:* ${walletText(userProfile)}\n\n_Vielleicht beim nächsten Mal …_`
                 }, { quoted: msg });
@@ -11667,48 +12751,337 @@ break;
             case 'wallet':
             case 'geld': {
               await sock.sendMessage(from, {
-                text: `> 💰 *LOVE BOT — WALLET*\n\n${walletText(userProfile)}\n\n` +
-                  `💡 Verdienen: *${pref}daily*, *${pref}work*, *${pref}gamble*`
+                text: `> 💰 *LOVE BOT — WALLET*\n\n${walletText(userProfile)}\n${buildPeriodsLine(userProfile || {})}\n\n` +
+                  `💡 Verdienen: *${pref}daily*, *${pref}work*, *${pref}gamble* · Übersicht: *${pref}economy*`
               }, { quoted: msg });
               await sendReaction(sock, from, '💰', msg.key);
               break;
             }
 
-            case 'top':
-            case 'leaderboard':
-            case 'rangliste': {
-              const lbDb = readDb();
-              const entries = Object.entries(lbDb.users || {})
-                .map(([bid, p]) => ({
-                  bid,
-                  name: p?.registration?.name || (p?.identity?.username ? '@' + p.identity.username : 'Unbekannt'),
-                  level: p?.progression?.level || 0,
-                  prestige: p?.progression?.prestige || 0,
-                  xp: p?.progression?.xp || 0
-                }))
-                .sort((a, b) => (b.level - a.level) || (b.xp - a.xp))
-                .slice(0, 10);
-              if (!entries.length) {
-                await sock.sendMessage(from, { text: '> 📊 Noch niemand hat ein Profil. Nutze *$register*!' }, { quoted: msg });
+            case 'bank': {
+              /* 🏦 Bank: Karte oder Zinsen abholen */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
                 break;
               }
-              const medals = ['🥇', '🥈', '🥉'];
-              const lines = entries.map((e, i) =>
-                `${medals[i] || (i + 1) + '.'} *${e.name}* — Level ${e.level}${e.prestige ? ' ⭐' + e.prestige : ''} (${e.xp} XP)`
-              );
-              let ownRank = '';
-              if (userProfile?.identity?.bid) {
-                const allSorted = Object.entries(lbDb.users || {})
-                  .sort((a, b) => ((b[1]?.progression?.level || 0) - (a[1]?.progression?.level || 0)) || ((b[1]?.progression?.xp || 0) - (a[1]?.progression?.xp || 0)));
-                const pos = allSorted.findIndex(([bid]) => bid === userProfile.identity.bid);
-                if (pos !== -1) ownRank = `\n\n📍 *Dein Platz:* #${pos + 1} von ${allSorted.length}`;
+              const subB = String(args[0] || '').toLowerCase();
+              if (subB === 'claim' || subB === 'zinsen' || subB === 'abholen') {
+                let resB = null;
+                await withProfileLock(userProfile?.identity?.bid || '', async () => {
+                  resB = claimInterest(userProfile, {});
+                  if (resB && resB.ok) saveUserProfile(userProfile);
+                });
+                if (!resB || !resB.ok) {
+                  if (resB && resB.reason === 'cooldown') {
+                    const waitH = Math.floor(resB.waitMs / 3600000);
+                    const waitM = Math.round((resB.waitMs % 3600000) / 60000);
+                    await sock.sendMessage(from, { text: `> ⏳ *Zinsen laufen noch.*\n\nNächste Gutschrift in *${waitH} Std. ${waitM} Min.* 📈` }, { quoted: msg });
+                  } else if (resB && resB.reason === 'empty-bank') {
+                    await sock.sendMessage(from, { text: `> 🏦 *Leeres Konto.*\n\nZahle erst ein: *${pref}deposit <betrag>*` }, { quoted: msg });
+                  } else {
+                    await sock.sendMessage(from, { text: '> ❌ *Keine Zinsen möglich* (Guthaben zu klein).' }, { quoted: msg });
+                  }
+                  break;
+                }
+                await sock.sendMessage(from, {
+                  text: `> 📈 *ZINSEN GUTGESCHRIEBEN*\n\n• *+${resB.amount.toLocaleString('de-DE')} Kupfer* (${resB.pct} % auf ${resB.bank.toLocaleString('de-DE')} Bank)\n• 🤎 Wallet: *${resB.wallet.toLocaleString('de-DE')}*\n\n_Morgen wieder: ${pref}bank claim_`
+                }, { quoted: msg });
+                await sendReaction(sock, from, '📈', msg.key);
+                break;
               }
               await sock.sendMessage(from, {
-                text: `> 🏆 *LOVE BOT — TOP 10* 🏆\n\n${lines.join('\n')}${ownRank}\n\n_Level aufsteigen durch Aktivität!_`
+                text: buildBank(userProfile, { achCount: plusAchCount(userProfile?.identity?.bid), now: Date.now() }) +
+                  `\n\n💡 _${pref}deposit <betrag|all> · ${pref}withdraw <betrag|all> · ${pref}bank claim_`
               }, { quoted: msg });
-              await sendReaction(sock, from, '🏆', msg.key);
+              await sendReaction(sock, from, '🏦', msg.key);
               break;
             }
+
+            case 'deposit':
+            case 'einzahlen': {
+              /* 🏦 Einzahlung Wallet → Bank */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const rawA = String(args[0] || '').toLowerCase();
+              if (!rawA) {
+                await sock.sendMessage(from, { text: `> 🏦 *EINZAHLEN*\n\nNutze: *${pref}deposit <betrag|all>*` }, { quoted: msg });
+                break;
+              }
+              let resA = null;
+              const achA = plusAchCount(userProfile?.identity?.bid);
+              await withProfileLock(userProfile?.identity?.bid || '', async () => {
+                resA = deposit(userProfile, rawA, { achCount: achA });
+                if (resA && resA.ok) saveUserProfile(userProfile);
+              });
+              if (!resA || !resA.ok) {
+                const rA = resA || {};
+                if (rA.reason === 'bank-full') await sock.sendMessage(from, { text: `> 🏦 *Bank voll!*\n\nKapazität: *${Number(rA.capacity).toLocaleString('de-DE')}* — mehr Platz durch Level, Prestige & Achievements.` }, { quoted: msg });
+                else if (rA.reason === 'exceeds-capacity') await sock.sendMessage(from, { text: `> 🏦 *Passt nicht.*\n\nMaximal einzahlen: *${Number(rA.maxDepositable).toLocaleString('de-DE')}* Kupfer.` }, { quoted: msg });
+                else if (rA.reason === 'empty-wallet') await sock.sendMessage(from, { text: `> 💸 *Leeres Wallet.*\n\nVerdiene erst Kupfer: *${pref}daily* · *${pref}work*` }, { quoted: msg });
+                else await sock.sendMessage(from, { text: `> ❌ Ungültiger Betrag. Nutze: *${pref}deposit <betrag|all>*` }, { quoted: msg });
+                break;
+              }
+              await sock.sendMessage(from, {
+                text: `> 🏦 *EINGEZAHLT*\n\n• *+${resA.amount.toLocaleString('de-DE')} Kupfer* → Bank\n• 🏦 Bank: *${resA.bank.toLocaleString('de-DE')}* / ${resA.capacity.toLocaleString('de-DE')}\n• 🤎 Wallet: *${resA.wallet.toLocaleString('de-DE')}*`
+              }, { quoted: msg });
+              await sendReaction(sock, from, '🏦', msg.key);
+              break;
+            }
+
+            case 'withdraw':
+            case 'abheben':
+            case 'auszahlen': {
+              /* 🏦 Auszahlung Bank → Wallet */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const rawW = String(args[0] || '').toLowerCase();
+              if (!rawW) {
+                await sock.sendMessage(from, { text: `> 🏦 *ABHEBEN*\n\nNutze: *${pref}withdraw <betrag|all>*` }, { quoted: msg });
+                break;
+              }
+              let resW = null;
+              await withProfileLock(userProfile?.identity?.bid || '', async () => {
+                resW = withdraw(userProfile, rawW, {});
+                if (resW && resW.ok) saveUserProfile(userProfile);
+              });
+              if (!resW || !resW.ok) {
+                const rW = resW || {};
+                if (rW.reason === 'empty-bank') await sock.sendMessage(from, { text: `> 🏦 *Nichts auf der Bank.*\n\nZahle erst ein: *${pref}deposit <betrag>*` }, { quoted: msg });
+                else await sock.sendMessage(from, { text: `> ❌ Ungültiger Betrag (max. Bankguthaben). Nutze: *${pref}withdraw <betrag|all>*` }, { quoted: msg });
+                break;
+              }
+              await sock.sendMessage(from, {
+                text: `> 🏦 *ABGEHOBEN*\n\n• *+${resW.amount.toLocaleString('de-DE')} Kupfer* → Wallet\n• 🤎 Wallet: *${resW.wallet.toLocaleString('de-DE')}*\n• 🏦 Bank: *${resW.bank.toLocaleString('de-DE')}*`
+              }, { quoted: msg });
+              await sendReaction(sock, from, '💸', msg.key);
+              break;
+            }
+
+            case 'economy':
+            case 'eco': {
+              /* 🪙 Voller Economy-Überblick */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const nameE = getProfileDisplayName(userProfile, msg.pushName || cleanId(senderJid));
+              await sock.sendMessage(from, {
+                text: buildEconomy(userProfile, { achCount: plusAchCount(userProfile?.identity?.bid), now: Date.now(), name: nameE }) +
+                  `\n\n💡 _${pref}bank · ${pref}transactions · ${pref}report_`
+              }, { quoted: msg });
+              await sendReaction(sock, from, '🪙', msg.key);
+              break;
+            }
+
+            case 'transactions':
+            case 'transaktionen':
+            case 'tx': {
+              /* 🧾 Transaktions-Verlauf */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const limT = Math.max(1, Math.min(20, parseInt(args[0], 10) || 10));
+              await sock.sendMessage(from, { text: buildTransactions(userProfile, { limit: limT }) }, { quoted: msg });
+              break;
+            }
+
+            case 'report':
+            case 'reports':
+            case 'berichte': {
+              /* 📊 Zentraler Report: day|week|month|year|all */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const perR = String(args[0] || 'week').toLowerCase();
+              const knownR = ['day', 'today', 'week', 'woche', 'month', 'monat', 'year', 'jahr', 'all', 'lifetime', 'alles', 'tagesreport', 'monatsreport', 'jahresreport'];
+              if (!knownR.includes(perR)) {
+                await sock.sendMessage(from, { text: `> 📊 *REPORT*\n\nNutze: *${pref}report <day|week|month|year|all>*` }, { quoted: msg });
+                break;
+              }
+              const bidR = userProfile?.identity?.bid || '';
+              const rankR = bidR ? cachedGlobalRank(readDb().users || {}, bidR) : { pos: null, total: 0 };
+              await sock.sendMessage(from, {
+                text: buildReport(userProfile, perR, { rankPos: rankR.pos, rankTotal: rankR.total })
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'yearly':
+            case 'jahr': {
+              /* 🎆 Jahres-Report */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const bidY = userProfile?.identity?.bid || '';
+              const rankY = bidY ? cachedGlobalRank(readDb().users || {}, bidY) : { pos: null, total: 0 };
+              await sock.sendMessage(from, {
+                text: buildYearlyReport(userProfile, Date.now(), { rankPos: rankY.pos, rankTotal: rankY.total })
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'rich':
+            case 'reichsten':
+            case 'reich': {
+              /* 💰 Reichsten-Liste */
+              await sock.sendMessage(from, {
+                text: buildTopCoins(readDb().users || {}, { n: 10, myBid: userProfile?.identity?.bid || '', pref })
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'account':
+            case 'acc': {
+              /* 👤 Vollständige Account-Übersicht */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const bidA = userProfile?.identity?.bid || '';
+              const rankA = bidA ? cachedGlobalRank(readDb().users || {}, bidA) : { pos: null, total: 0 };
+              /* 💜 7.0: Account-Extras aus echten Daten */
+              const regAtA = userProfile?.registration?.registeredAt ? new Date(userProfile.registration.registeredAt).getTime() : 0;
+              const lastMsgA = Number(userProfile?.progression?.lastMsgXpAt) || 0;
+              const lastDayA = userProfile?.progression?.lastActiveDay || '';
+              const lastA = lastMsgA > 0 ? new Date(lastMsgA).toLocaleString('de-DE') : (lastDayA || '');
+              const prefsA = userProfile.notifications || {};
+              const onA = NOTIF_TYPES.filter((t) => (prefsA[t.id] !== undefined ? prefsA[t.id] : t.default)).length;
+              const privA = userProfile.registration?.privacy || {};
+              let aiA = 'bereit — sag `$ai hallo`';
+              try {
+                const aimA = await import('./ai/memory.js');
+                const useA = aimA.getAiUsage(bidA);
+                if (useA && useA.total > 0) aiA = `${useA.total} Anfragen gesamt`;
+              } catch (e) {}
+              await sock.sendMessage(from, {
+                text: buildAccount(userProfile, {
+                  plusUser: plusUserFor(bidA), rankPos: rankA.pos, rankTotal: rankA.total, pref,
+                  extras: {
+                    ageDays: regAtA > 0 ? Math.max(0, Math.floor((Date.now() - regAtA) / 86400000)) : null,
+                    lastActive: lastA,
+                    dsgvo: !!userProfile?.status?.dsgvo?.accepted,
+                    verified: !!userProfile?.status?.verified,
+                    notif: `${onA}/${NOTIF_TYPES.length} an`,
+                    privacy: [privA.hideCity ? 'Stadt 🔒' : null, privA.hideAge ? 'Alter 🔒' : null, privA.hideEconomy ? 'Economy 🔒' : null].filter(Boolean).join(' · ') || 'offen',
+                    ai: aiA
+                  }
+                })
+              }, { quoted: msg });
+              await sendReaction(sock, from, '👤', msg.key);
+              break;
+            }
+
+            case 'settings':
+            case 'einstellungen': {
+              /* ⚙️ Einstellungs-Center (7.0): Notifications · Privacy · AI · Profil · Economy */
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const subS = String(args[0] || '').toLowerCase();
+              const valS = String(args[1] || '').toLowerCase();
+              const wantBoolS = (v) => ['an', 'on', '1', 'true', 'ja', 'zeigen', 'sichtbar'].includes(v) ? true : (['aus', 'off', '0', 'false', 'nein', 'verstecken', 'privat'].includes(v) ? false : null);
+              /* 🤖 AI-Chatmodus (Privatchat) */
+              if (subS === 'ai' || subS === 'ki') {
+                const wAi = wantBoolS(valS);
+                if (wAi === null && valS) {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}settings ai <an|aus>*` }, { quoted: msg });
+                  break;
+                }
+                try {
+                  const aimS = await import('./ai/memory.js');
+                  const bidS = userProfile?.identity?.bid || '';
+                  const prS = aimS.getAiPrefs(bidS);
+                  const nextAi = wAi === null ? !prS.chatMode : wAi;
+                  aimS.setAiPrefs(bidS, { chatMode: nextAi });
+                  await sock.sendMessage(from, { text: `> 🤖 *AI-Chatmodus* → ${nextAi ? '🟢 AN (der Bot antwortet im Privatchat direkt)' : '⚫ AUS (nur noch *${pref}ai …*)'}` }, { quoted: msg });
+                } catch (e) {
+                  await sock.sendMessage(from, { text: '> 🤖 *AI derzeit nicht verfügbar.* Versuch es später erneut.' }, { quoted: msg });
+                }
+                break;
+              }
+              /* 🌍 Sprache */
+              if (subS === 'language' || subS === 'sprache') {
+                if (!['de', 'en'].includes(valS)) {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}settings language <de|en>*` }, { quoted: msg });
+                  break;
+                }
+                userProfile.registration = userProfile.registration || {};
+                userProfile.registration.language = valS;
+                saveUserProfile(userProfile);
+                await sock.sendMessage(from, { text: `> 🌍 *Sprache* → *${valS === 'de' ? 'Deutsch' : 'English'}*` }, { quoted: msg });
+                break;
+              }
+              /* 🔔 Mitteilungs-Typen direkt schalten */
+              const notifHitS = NOTIF_TYPES.find((t) => t.id === subS);
+              if (notifHitS) {
+                const wN = wantBoolS(valS);
+                if (wN === null) {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}settings ${subS} <an|aus>*` }, { quoted: msg });
+                  break;
+                }
+                updatePrefs(userProfile, { [subS]: wN });
+                saveUserProfile(userProfile);
+                await sock.sendMessage(from, { text: `> 🔔 *${notifHitS.label}* → ${wN ? '🟢 AN' : '⚫ AUS'}` }, { quoted: msg });
+                break;
+              }
+              if (subS === 'economy' || subS === 'kupfer') {
+                const regS = userProfile.registration || (userProfile.registration = {});
+                const privS = regS.privacy || (regS.privacy = {});
+                let wantS = null;
+                if (['an', 'on', 'zeigen', 'sichtbar'].includes(valS)) wantS = false;
+                else if (['aus', 'off', 'verstecken', 'privat'].includes(valS)) wantS = true;
+                else if (!valS) wantS = !privS.hideEconomy;
+                else {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}settings economy <an|aus>*` }, { quoted: msg });
+                  break;
+                }
+                privS.hideEconomy = wantS;
+                saveUserProfile(userProfile);
+                await sock.sendMessage(from, { text: `> 🪙 *Economy-Sichtbarkeit* → ${wantS ? '⚫ VERSTECKT (andere sehen dein Kupfer nicht)' : '🟢 SICHTBAR'}` }, { quoted: msg });
+                break;
+              }
+              const prefsS = userProfile.notifications || {};
+              const onS = NOTIF_TYPES.filter((t) => (prefsS[t.id] !== undefined ? prefsS[t.id] : t.default)).length;
+              const privS2 = userProfile.registration?.privacy || {};
+              let aiStateS = 'unbekannt';
+              try {
+                const aimS2 = await import('./ai/memory.js');
+                aiStateS = aimS2.getAiPrefs(userProfile?.identity?.bid || '').chatMode ? '🟢 Chatmodus an' : '⚫ nur $ai';
+              } catch (e) {}
+              await sock.sendMessage(from, {
+                text: `> ⚙️ *EINSTELLUNGS-CENTER*\n\n🔔 *Mitteilungen:* *${onS}/${NOTIF_TYPES.length}* an\n→ *${pref}notif* oder *${pref}settings <typ> <an|aus>*\n\n🔒 *Privatsphäre:*\n• Stadt: ${privS2.hideCity ? 'versteckt' : 'sichtbar'} · Alter: ${privS2.hideAge ? 'versteckt' : 'sichtbar'}\n• Öffentliches Profil: ${privS2.publicProfile ? 'an' : 'aus'} · Economy: ${privS2.hideEconomy ? '⚫ versteckt' : '🟢 sichtbar'}\n→ *${pref}privacy* · *${pref}settings economy <an|aus>*\n\n🤖 *AI:* ${aiStateS}\n→ *${pref}settings ai <an|aus>* · *${pref}aimemory*\n\n🌍 *Sprache:* ${(userProfile.registration?.language || 'de') === 'de' ? 'Deutsch' : 'English'}\n→ *${pref}settings language <de|en>*\n\n👤 *Profil:* ${pref}me · 🏆 *Progression:* ${pref}progress`
+              }, { quoted: msg });
+              /* 📂 Interaktiv: Toggle-Menü (Fallback = obige Commands) */
+              try {
+                await sendInteractiveMenu(sock, from, {
+                  title: '⚙️ EINSTELLUNGEN',
+                  description: 'Wähle eine Einstellung:',
+                  buttonText: '⚙️ ÄNDERN',
+                  sections: [{
+                    title: 'Schalter',
+                    rows: [
+                      { rowId: `cmd:settings economy ${privS2.hideEconomy ? 'an' : 'aus'}`, title: `🪙 Economy ${privS2.hideEconomy ? 'anzeigen' : 'verstecken'}`, description: 'Kupfer für andere sichtbar?' },
+                      { rowId: 'cmd:settings ai', title: '🤖 AI-Chatmodus umschalten', description: 'Direktantwort im Privatchat' },
+                      { rowId: 'cmd:notif', title: '🔔 Mitteilungen', description: 'Alle Typen im Überblick' },
+                      { rowId: 'cmd:privacy', title: '🔒 Privatsphäre', description: 'Stadt, Alter, Profil' },
+                      { rowId: 'cmd:aimemory', title: '🧠 AI-Memory', description: 'Gespeichertes einsehen/löschen' }
+                    ]
+                  }]
+                });
+              } catch (e) {}
+              break;
+            }
+
+            /* HINWEIS: $top/$leaderboard/$rangliste leben weiter oben (Prestige-sicher
+               via topProgression + eigener Platz) — kein zweiter Block nötig. */
 
             /* ====================================================== */
             /* 🌐 API-BEFEHLE (Wikipedia, Fakten, GitHub)             */
@@ -11946,6 +13319,562 @@ break;
               break;
             }
 
+            /* ══════════════════════════════════════════════════════════ */
+            /* 💜 7.0 GROUP CENTER: $am · Members · GXP · Goals · Events  */
+            /* ══════════════════════════════════════════════════════════ */
+            case 'am':
+            case 'gadmin': {
+              if (!isGroup) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              const partsAm = groupMetadata?.participants || [];
+              const adminsAm = partsAm.filter((x) => x && ['admin', 'superadmin'].includes(x.admin)).length;
+              await sock.sendMessage(from, {
+                text: buildGroupCenter(groupProfile, {
+                  subject: groupMetadata?.subject || groupProfile?.subject || '',
+                  count: partsAm.length, admins: adminsAm,
+                  owner: groupMetadata?.owner ? '@' + String(cleanId(groupMetadata.owner)).split('@')[0] : '',
+                  creation: groupMetadata?.creation ? new Date(groupMetadata.creation * 1000).toLocaleDateString('de-DE') : ''
+                }, { pref })
+              }, { quoted: msg });
+              break;
+            }
+
+            case 'members':
+            case 'mitglieder': {
+              if (!isGroup) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              const partsM = groupMetadata?.participants || [];
+              const usersM = readDb().users || {};
+              const cards = partsM.map((x) => {
+                const id = x?.id || x?.lid || x?.jid || '';
+                const bid = id ? String(cleanId(id)).split('@')[0] : '';
+                const prof = usersM[bid] || usersM[id];
+                return { id: bid || id, name: prof?.registration?.name || getProfileDisplayName(prof, null) || (bid || '–') };
+              });
+              const adminIds = new Set(partsM.filter((x) => x && ['admin', 'superadmin'].includes(x.admin)).map((x) => String(cleanId(x?.id || x?.lid || x?.jid || '')).split('@')[0]));
+              await sock.sendMessage(from, { text: buildMembersCard(cards, adminIds, {}) }, { quoted: msg });
+              break;
+            }
+
+            case 'gxp': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              await sock.sendMessage(from, { text: buildGxp(groupProfile, (groupMetadata?.participants || []).length) }, { quoted: msg });
+              break;
+            }
+
+            case 'glevel':
+            case 'gstufe': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              await sock.sendMessage(from, { text: buildGlevel(groupProfile) }, { quoted: msg });
+              break;
+            }
+
+            case 'gtop': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              const modeG = ['messages', 'msgs', 'nachrichten'].includes(String(args[0] || '').toLowerCase()) ? 'messages'
+                : ['games', 'spiele'].includes(String(args[0] || '').toLowerCase()) ? 'games' : 'xp';
+              const rowsG = topMembers(groupProfile, modeG, 10);
+              const usersG = readDb().users || {};
+              const namesG = {};
+              for (const r of rowsG) namesG[r.bid] = usersG[r.bid]?.registration?.name || getProfileDisplayName(usersG[r.bid], null) || r.bid;
+              await sock.sendMessage(from, { text: buildGtop(rowsG, namesG, modeG) }, { quoted: msg });
+              break;
+            }
+
+            case 'gsettings': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              const keyG = String(args[0] || '').toLowerCase();
+              const valG = String(args[1] || '').toLowerCase();
+              if (!keyG) {
+                await sock.sendMessage(from, { text: buildGroupSettings(groupProfile, { pref }) }, { quoted: msg });
+                break;
+              }
+              if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
+                await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Gruppen-Admins.' }, { quoted: msg });
+                break;
+              }
+              const mapG = { antilink: 'antilink', antispam: 'antispam', antiflood: 'antiflood', mention: 'mentionGuard', mentionguard: 'mentionGuard', commandschutz: 'commandProtection', commandprotection: 'commandProtection', automod: 'automod', welcome: 'welcome', goodbye: 'goodbye', autoreply: 'autoreply', ai: 'aiEnabled', economy: 'economyEnabled', xp: 'progressionEnabled', progression: 'progressionEnabled', logs: 'logsEnabled' };
+              const realKey = mapG[keyG];
+              if (!realKey) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Unbekannte Einstellung. Nutze *' + pref + 'gsettings* für die Liste.' }, { quoted: msg });
+                break;
+              }
+              let wantG = null;
+              if (['an', 'on', '1', 'true', 'ja'].includes(valG)) wantG = true;
+              if (['aus', 'off', '0', 'false', 'nein'].includes(valG)) wantG = false;
+              if (wantG === null) {
+                await sock.sendMessage(from, { text: `> ❌ *Fehler:* Nutze *${pref}gsettings ${keyG} on/off*.` }, { quoted: msg });
+                break;
+              }
+              const actorG = senderLidUser || cleanId(senderJid) || '';
+              const resG = setGset(groupProfile, realKey, wantG, actorG);
+              if (resG.ok) {
+                saveGroupProfile(groupProfile);
+                try { auditAdmin({ actor: actorG, action: 'gsettings', group: cleanId(from), detail: `${realKey} → ${wantG ? 'an' : 'aus'}` }); } catch (e) {}
+                await sock.sendMessage(from, { text: `> ✅ *${realKey}* ist jetzt *${wantG ? 'an' : 'aus'}*.` }, { quoted: msg });
+              } else {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Konnte nicht speichern.' }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'ggoal':
+            case 'gziele': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              await sock.sendMessage(from, { text: buildGroupGoal(groupProfile, (groupMetadata?.participants || []).length) }, { quoted: msg });
+              break;
+            }
+
+            case 'gevent': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              if (!args[0]) {
+                await sock.sendMessage(from, { text: buildGroupEvents(groupProfile) }, { quoted: msg });
+                break;
+              }
+              if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
+                await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Gruppen-Admins.' }, { quoted: msg });
+                break;
+              }
+              const multE = Math.min(5, Math.max(1.5, Number(args[0]) || 2));
+              const minsE = Math.min(1440, Math.max(5, Number(args[1]) || 60));
+              const actorE = senderLidUser || cleanId(senderJid) || '';
+              const evE = startGroupEvent(groupProfile, { mult: multE, minutes: minsE, by: actorE });
+              saveGroupProfile(groupProfile);
+              try { auditAdmin({ actor: actorE, action: 'gevent', group: cleanId(from), detail: `${evE.name} ×${evE.mult} ${minsE} Min.` }); } catch (e) {}
+              await sock.sendMessage(from, { text: `🔥 *GROUP EVENT GESTARTET*\n\n*${evE.name}* — ×${evE.mult} Group-XP\nDauer: ~${minsE} Minuten\n\nViel Spaß! 💜` }, { quoted: msg });
+              break;
+            }
+
+            case 'gaudit':
+            case 'glog': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              await sock.sendMessage(from, { text: buildGroupAudit(groupProfile, 8) }, { quoted: msg });
+              break;
+            }
+
+            case 'geconomy':
+            case 'gkasse': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              await sock.sendMessage(from, { text: buildGroupEconomy(groupProfile) }, { quoted: msg });
+              break;
+            }
+
+            case 'gdonate':
+            case 'gspenden': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              if (!userProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const amtD = Math.floor(Number(args[0]));
+              if (!Number.isFinite(amtD) || amtD <= 0) {
+                await sock.sendMessage(from, { text: `> ❌ *Fehler:* Nutze *${pref}gdonate <kupfer>*.` }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              const bidD = userProfile?.identity?.bid || '';
+              let resD = null;
+              await withProfileLock(bidD, async () => {
+                resD = removeCoins(userProfile, amtD, { source: 'gdonate', reason: 'Gruppenkasse', now: Date.now() });
+                if (resD && resD.ok) {
+                  treasuryAdd(groupProfile, amtD, `Spende von ${userProfile?.registration?.name || bidD}`);
+                  saveUserProfile(userProfile);
+                  saveGroupProfile(groupProfile);
+                }
+              });
+              if (resD && resD.ok) {
+                groupAudit(groupProfile, userProfile?.registration?.name || bidD, 'gdonate', `+${amtD} Kupfer`);
+                saveGroupProfile(groupProfile);
+                await sock.sendMessage(from, { text: `> 💰 *DANKE!* ${amtD} Kupfer gehen an die Gruppenkasse. 💜` }, { quoted: msg });
+              } else {
+                await sock.sendMessage(from, { text: `> ❌ *Fehler:* ${resD?.reason === 'insufficient' ? 'Nicht genug Kupfer.' : 'Konnte nicht spenden.'}` }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'gban': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
+                await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Gruppen-Admins.' }, { quoted: msg });
+                break;
+              }
+              const ctxGb = msg.message?.extendedTextMessage?.contextInfo || {};
+              const targetRawGb = (Array.isArray(ctxGb.mentionedJid) && ctxGb.mentionedJid[0]) || ctxGb.participant || args[0] || '';
+              const reasonGb = args.slice(1).join(' ') || 'Kein Grund';
+              if (!targetRawGb) {
+                await sock.sendMessage(from, { text: `> 🚫 *GBAN — VERWENDUNG*\n\nNutze: *${pref}gban @user <grund>* oder antworte mit *${pref}gban <grund>*.` }, { quoted: msg });
+                break;
+              }
+              const targetGb = await resolveBanTarget(sock, targetRawGb, sessionPath);
+              if (!targetGb || !targetGb.jid) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Ziel nicht auflösbar.' }, { quoted: msg });
+                break;
+              }
+              const botIdsGb = [hostJid, hostLid, sock.user?.id, sock.user?.lid].filter(Boolean).map((x) => cleanId(x));
+              if (botIdsGb.includes(cleanId(targetGb.jid)) || botIdsGb.includes(cleanId(targetGb.lid || ''))) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Der Bot kann sich nicht selbst bannen.' }, { quoted: msg });
+                break;
+              }
+              if (cleanId(targetGb.jid) === cleanId(groupMetadata?.owner || '___')) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Der Gruppen-Owner steht unter Schutz.' }, { quoted: msg });
+                break;
+              }
+              ensureGroupExtras(groupProfile);
+              const bidGb = String(cleanId(targetGb.lid || targetGb.jid)).split('@')[0];
+              const actorGb = senderLidUser || cleanId(senderJid) || '';
+              gbanAdd(groupProfile, bidGb, { reason: reasonGb, by: actorGb });
+              saveGroupProfile(groupProfile);
+              try {
+                if (typeof sock.groupParticipantsUpdate === 'function') await sock.groupParticipantsUpdate(from, [targetGb.jid], 'remove');
+              } catch (e) {}
+              try { auditAdmin({ actor: actorGb, action: 'gban', group: cleanId(from), detail: `${bidGb} (${reasonGb})` }); } catch (e) {}
+              await sock.sendMessage(from, { text: `> 🚫 *GEBANNT:* @${bidGb}\n*Grund:* ${reasonGb}\n\nBei Rejoin wird erneut entfernt.` }, { quoted: msg });
+              break;
+            }
+
+            case 'gunban': {
+              if (!isGroup || !groupProfile) {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                break;
+              }
+              if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
+                await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Gruppen-Admins.' }, { quoted: msg });
+                break;
+              }
+              const targetRawGu = args[0] || '';
+              if (!targetRawGu) {
+                await sock.sendMessage(from, { text: `> ❌ Nutze: *${pref}gunban <nummer/id>*.` }, { quoted: msg });
+                break;
+              }
+              const targetGu = await resolveBanTarget(sock, targetRawGu, sessionPath);
+              const bidGu = targetGu ? String(cleanId(targetGu.lid || targetGu.jid)).split('@')[0] : String(targetRawGu).replace(/\D/g, '');
+              ensureGroupExtras(groupProfile);
+              const actorGu = senderLidUser || cleanId(senderJid) || '';
+              if (gbanRemove(groupProfile, bidGu, actorGu)) {
+                saveGroupProfile(groupProfile);
+                try { auditAdmin({ actor: actorGu, action: 'gunban', group: cleanId(from), detail: bidGu }); } catch (e) {}
+                await sock.sendMessage(from, { text: `> ✅ *ENTBANNT:* @${bidGu} darf wieder joinen.` }, { quoted: msg });
+              } else {
+                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Diese ID steht nicht auf der Gruppen-Banliste.' }, { quoted: msg });
+              }
+              break;
+            }
+
+            /* ══════════════════════════════════════════════════════════ */
+            /* 💜 7.0 LOVEAI: $ai · $ask · Memory · Status · Config        */
+            /* ══════════════════════════════════════════════════════════ */
+            case 'ai':
+            case 'ki': {
+              const bidAi = userProfile?.identity?.bid || '';
+              const subAi = String(args[0] || '').toLowerCase();
+              /* an/aus: Chatmodus (nur Privatchat) */
+              if (subAi === 'on' || subAi === 'an' || subAi === 'off' || subAi === 'aus') {
+                if (isGroup) {
+                  await sock.sendMessage(from, { text: `> 🤖 *In Gruppen antwortet die AI nur auf ${pref}ai …*\n\nAdmins schalten sie mit *${pref}ai group on* frei.` }, { quoted: msg });
+                  break;
+                }
+                try {
+                  const aim = await import('./ai/memory.js');
+                  const next = subAi === 'on' || subAi === 'an';
+                  aim.setAiPrefs(bidAi, { chatMode: next });
+                  await sock.sendMessage(from, { text: `> 🤖 *AI-Chatmodus* → ${next ? '🟢 AN' : '⚫ AUS'}` }, { quoted: msg });
+                } catch (e) {
+                  await sock.sendMessage(from, { text: '> 🤖 *AI derzeit nicht verfügbar.*' }, { quoted: msg });
+                }
+                break;
+              }
+              /* group on/off: Admin-Gate pro Gruppe */
+              if (subAi === 'group' || subAi === 'gruppe') {
+                if (!isGroup || !groupProfile) {
+                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* Nur in Gruppen.' }, { quoted: msg });
+                  break;
+                }
+                if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
+                  await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Gruppen-Admins.' }, { quoted: msg });
+                  break;
+                }
+                const wG = String(args[1] || '').toLowerCase();
+                const wantG = ['on', 'an', '1', 'true', 'ja'].includes(wG) ? true : (['off', 'aus', '0', 'false', 'nein'].includes(wG) ? false : null);
+                if (wantG === null) {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}ai group <on|off>*` }, { quoted: msg });
+                  break;
+                }
+                ensureGroupExtras(groupProfile);
+                const actorAi = senderLidUser || cleanId(senderJid) || '';
+                setGset(groupProfile, 'aiEnabled', wantG, actorAi);
+                saveGroupProfile(groupProfile);
+                try { auditAdmin({ actor: actorAi, action: 'ai-group', group: cleanId(from), detail: wantG ? 'an' : 'aus' }); } catch (e) {}
+                await sock.sendMessage(from, { text: `> 🤖 *Gruppen-AI* → ${wantG ? '🟢 AN (nur auf ' + pref + 'ai …)' : '⚫ AUS'}` }, { quoted: msg });
+                break;
+              }
+              /* 7.0.2 Diagnose (läuft überall — auch ohne Gruppen-Freischaltung) */
+              if (subAi === 'diagnose' || subAi === 'diagnose') {
+                try {
+                  const eng = await import('./ai/engine.js');
+                  const rep = await import('./ai/report.js');
+                  const dg = await eng.diagnoseAi();
+                  await sock.sendMessage(from, { text: rep.buildAiDiagnoseText(dg, pref) }, { quoted: msg });
+                } catch (e) {
+                  await sock.sendMessage(from, { text: '> 🤖 *Diagnose derzeit nicht möglich.*' }, { quoted: msg });
+                }
+                break;
+              }
+              if (subAi === 'debug') {
+                if (!isHost) {
+                  await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur der Owner.' }, { quoted: msg });
+                  break;
+                }
+                try {
+                  const eng = await import('./ai/engine.js');
+                  const mem = await import('./ai/memory.js');
+                  const rep = await import('./ai/report.js');
+                  const h = await eng.aiHealth(true);
+                  await sock.sendMessage(from, { text: rep.buildAiDebugText({ cfg: mem.aiConfig(), h, last: eng.getLastAiDiag(), an: mem.aiAnalytics(), pref }) }, { quoted: msg });
+                } catch (e) {
+                  await sock.sendMessage(from, { text: '> 🤖 *Debug derzeit nicht möglich.*' }, { quoted: msg });
+                }
+                break;
+              }
+              /* Gruppe ohne Freischaltung? */
+              if (isGroup && groupProfile) {
+                ensureGroupExtras(groupProfile);
+                if (groupProfile.gset.aiEnabled !== true) {
+                  await sock.sendMessage(from, { text: `> 🤖 *AI ist in dieser Gruppe aus.*\n\nAdmins: *${pref}ai group on*` }, { quoted: msg });
+                  break;
+                }
+              }
+              const rankAi = bidAi ? cachedGlobalRank(readDb().users || {}, bidAi) : { pos: null, total: 0 };
+              await runAiQuestion(sock, from, msg, {
+                text: args.join(' '), bid: bidAi, userProfile, rank: rankAi,
+                groupProfile: isGroup ? groupProfile : null,
+                groupSubject: isGroup ? (groupMetadata?.subject || '') : '', pref
+              });
+              break;
+            }
+
+            case 'ask':
+            case 'askai':
+            case 'frag': {
+              const bidAsk = userProfile?.identity?.bid || '';
+              if (isGroup && groupProfile) {
+                ensureGroupExtras(groupProfile);
+                if (groupProfile.gset.aiEnabled !== true) {
+                  await sock.sendMessage(from, { text: `> 🤖 *AI ist in dieser Gruppe aus.*\n\nAdmins: *${pref}ai group on*` }, { quoted: msg });
+                  break;
+                }
+              }
+              const rankAsk = bidAsk ? cachedGlobalRank(readDb().users || {}, bidAsk) : { pos: null, total: 0 };
+              await runAiQuestion(sock, from, msg, {
+                text: args.join(' '), bid: bidAsk, userProfile, rank: rankAsk,
+                groupProfile: isGroup ? groupProfile : null,
+                groupSubject: isGroup ? (groupMetadata?.subject || '') : '', pref
+              });
+              break;
+            }
+
+            case 'aimemory':
+            case 'aigedaechtnis': {
+              const bidM = userProfile?.identity?.bid || '';
+              if (!bidM) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              const subM = String(args[0] || 'list').toLowerCase();
+              try {
+                const aim = await import('./ai/memory.js');
+                const gidM = isGroup ? cleanId(from) : '';
+                const scopeM = gidM ? aim.groupScope(gidM, bidM) : aim.dmScope(bidM);
+                if (subM === 'list' || subM === 'liste' || subM === 'show') {
+                  const conv = aim.getConversation(scopeM);
+                  const facts = aim.getFacts(bidM);
+                  const pr = aim.getAiPrefs(bidM);
+                  await sock.sendMessage(from, {
+                    text: `> 🧠 *AI-MEMORY*\n\n💬 Dieser Chat: *${conv.length}* Nachrichten im Kontext\n📌 Fakten: *${facts.length}*\n${facts.map((f, i) => `  ${i + 1}. ${f.text}`).join('\n') || ''}\n⚙️ Chatmodus: ${pr.chatMode ? 'an' : 'aus'} · Sprache: ${pr.lang}\n\n• *${pref}aimemory remember <fakt>* — merken\n• *${pref}aimemory forget [n]* — letzte Austausche vergessen\n• *${pref}aimemory clear* — alles löschen`
+                  }, { quoted: msg });
+                } else if (subM === 'remember' || subM === 'merken') {
+                  const fact = args.slice(1).join(' ').trim();
+                  if (!fact) {
+                    await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aimemory remember <fakt>*` }, { quoted: msg });
+                    break;
+                  }
+                  const rr = aim.rememberFact(bidM, fact);
+                  await sock.sendMessage(from, { text: rr.ok ? `> 🧠 *Gemerkt* (${rr.count}/20).` : `> ❌ *Fehler:* ${rr.reason === 'duplicate' ? 'Das weiß ich schon.' : 'Leerer Fakt.'}` }, { quoted: msg });
+                } else if (subM === 'forget' || subM === 'vergessen') {
+                  const n = Math.max(1, Math.min(10, Number(args[1]) || 1));
+                  const left = aim.forgetLast(scopeM, n);
+                  await sock.sendMessage(from, { text: `> 🧠 *Vergessen.* Noch ${left} Nachrichten im Kontext.` }, { quoted: msg });
+                } else if (subM === 'clear' || subM === 'loeschen' || subM === 'löschen') {
+                  aim.clearAiUser(bidM, { keepPrefs: true });
+                  await sock.sendMessage(from, { text: '> 🧠 *AI-Memory gelöscht* (Chats + Fakten).' }, { quoted: msg });
+                } else {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aimemory <list|remember|forget|clear>*` }, { quoted: msg });
+                }
+              } catch (e) {
+                await sock.sendMessage(from, { text: '> 🧠 *AI-Memory derzeit nicht verfügbar.*' }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'aistatus': {
+              try {
+                const eng = await import('./ai/engine.js');
+                const mem = await import('./ai/memory.js');
+                const rep = await import('./ai/report.js');
+                const h = await eng.aiHealth(true);
+                await sock.sendMessage(from, {
+                  text: rep.buildAiStatusText({ cfg: mem.aiConfig(), h, an: mem.aiAnalytics(), pref })
+                }, { quoted: msg });
+              } catch (e) {
+                await sock.sendMessage(from, { text: '> 🤖 *AI-Status derzeit nicht verfügbar.*' }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'aimodel': {
+              /* 7.0.2: $aimodel <name> schaltet ECHT um (Owner) — kein Kosmetik. */
+              const wantModel = String(args[0] || '').trim();
+              if (wantModel) {
+                if (!isHost) {
+                  await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur der Owner wechselt das Modell.' }, { quoted: msg });
+                  break;
+                }
+                try {
+                  const eng = await import('./ai/engine.js');
+                  const mem = await import('./ai/memory.js');
+                  mem.setAiConfig({ model: wantModel }, 'owner');
+                  try { eng.refreshProvider(); } catch (e) {}
+                  try { eng.invalidateAiHealth(); } catch (e) {}
+                  const h = await eng.aiHealth(true);
+                  const mark = h.ok ? (h.modelFound === false ? ' ⚠️ *nicht installiert*' : ' ✅ *bereit*') : ' (Backend offline — wird bei Erreichbarkeit geprüft)';
+                  try { auditAdmin({ actor: 'owner', action: 'aimodel', detail: wantModel }); } catch (e) {}
+                  await sock.sendMessage(from, { text: `> 🤖 *AI MODELL*\n\nAktiv: *${wantModel}*${mark}\n\nPrüfe: *${pref}aistatus*` }, { quoted: msg });
+                } catch (e) {
+                  await sock.sendMessage(from, { text: '> 🤖 *Modellwechsel fehlgeschlagen.*' }, { quoted: msg });
+                }
+                break;
+              }
+              try {
+                const eng = await import('./ai/engine.js');
+                const mem = await import('./ai/memory.js');
+                const cfg = mem.aiConfig();
+                let models = [];
+                try { models = await eng.getProvider().models(); } catch (e) {}
+                await sock.sendMessage(from, {
+                  text: `> 🤖 *AI MODELL*\n\nAktiv: *${cfg.model}* (${cfg.provider})\n\nVerfügbar:\n${models.length ? models.map((m) => `• ${m.name}`).join('\n') : '– (Provider offline?)'}`
+                }, { quoted: msg });
+              } catch (e) {
+                await sock.sendMessage(from, { text: '> 🤖 *Modell-Info derzeit nicht verfügbar.*' }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'aiclear': {
+              const bidC = userProfile?.identity?.bid || '';
+              if (!bidC) {
+                await sock.sendMessage(from, { text: '> ❌ Profil nicht verfügbar.' }, { quoted: msg });
+                break;
+              }
+              try {
+                const aim = await import('./ai/memory.js');
+                const gidC = isGroup ? cleanId(from) : '';
+                aim.clearConversation(gidC ? aim.groupScope(gidC, bidC) : aim.dmScope(bidC));
+                await sock.sendMessage(from, { text: '> 🧹 *Chat-Kontext gelöscht.* Frisch starten! 💜' }, { quoted: msg });
+              } catch (e) {
+                await sock.sendMessage(from, { text: '> ❌ Konnte nicht löschen.' }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'aistop': {
+              const bidS = userProfile?.identity?.bid || '';
+              try {
+                const eng = await import('./ai/engine.js');
+                const stopped = bidS ? eng.stopJob(bidS) : false;
+                await sock.sendMessage(from, { text: stopped ? '> 🛑 *AI-Anfrage abgebrochen.*' : '> 🤖 Keine laufende Anfrage.' }, { quoted: msg });
+              } catch (e) {
+                await sock.sendMessage(from, { text: '> ❌ Konnte nicht abbrechen.' }, { quoted: msg });
+              }
+              break;
+            }
+
+            case 'aiconfig': {
+              const bidCf = userProfile?.identity?.bid || '';
+              try {
+                const mem = await import('./ai/memory.js');
+                const cfg = mem.aiConfig();
+                const keyCf = String(args[0] || '').toLowerCase();
+                if (!keyCf) {
+                  const pr = bidCf ? mem.getAiPrefs(bidCf) : { chatMode: false, lang: 'de' };
+                  await sock.sendMessage(from, {
+                    text: `> 🤖 *AI CONFIG*\n\n*Deine Einstellungen:*\n• Chatmodus: ${pr.chatMode ? 'an' : 'aus'} → *${pref}settings ai <an|aus>*\n• Sprache: ${pr.lang} → *${pref}settings language <de|en>*\n\n*Global (nur lesbar):*\n• Provider: ${cfg.provider} · Modell: ${cfg.model}\n• Endpoint: ${cfg.baseUrl}\n• Timeout: ${cfg.timeoutMs} ms · Tokens: ${cfg.maxTokens} · Temp: ${cfg.temperature}\n• Limits: ${cfg.perMin}/min · ${cfg.perHour}/h · ${cfg.perDay}/Tag` +
+                      (isHost ? `\n\n*Owner:* *${pref}aiconfig model <name>* · *${pref}aiconfig baseurl <url>* · *${pref}aiconfig <key> <wert>*` : '')
+                  }, { quoted: msg });
+                  break;
+                }
+                if (!isHost) {
+                  await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur der Owner ändert die globale AI-Config.' }, { quoted: msg });
+                  break;
+                }
+                const mapCf = { model: 'model', baseurl: 'baseUrl', base_url: 'baseUrl', timeout: 'timeoutMs', maxtokens: 'maxTokens', temperature: 'temperature', permin: 'perMin', perhour: 'perHour', perday: 'perDay' };
+                const realCf = mapCf[keyCf];
+                const valCf = args.slice(1).join(' ').trim();
+                if (!realCf || !valCf) {
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aiconfig <model|baseurl|timeout|maxtokens|temperature|permin|perhour|perday> <wert>*` }, { quoted: msg });
+                  break;
+                }
+                mem.setAiConfig({ [realCf]: valCf }, 'owner');
+                try { (await import('./ai/engine.js')).refreshProvider(); } catch (e) {}
+                try { auditAdmin({ actor: 'owner', action: 'aiconfig', detail: `${realCf} gesetzt` }); } catch (e) {}
+                await sock.sendMessage(from, { text: `> ✅ *AI-Config:* ${realCf} gesetzt.` }, { quoted: msg });
+              } catch (e) {
+                await sock.sendMessage(from, { text: '> ❌ AI-Config derzeit nicht verfügbar.' }, { quoted: msg });
+              }
+              break;
+            }
+
             /* ═══ 💖 LOVEPLUS: Beziehung · Pets · Shop/Geschenke · Achievements · Games ═══ */
             default: {
               /* 🧭 ALLTAGS-TOOLS: $wetter · $währung · $übersetze · $qr · $kurz · $passwort
@@ -11991,18 +13920,7 @@ break;
               const loveplusHandled = await handleLovePlus({
                 sock, msg, from, args, command, pref, quoted, sessionPath,
                 senderJid, senderLid, userProfile, groupProfile, isGroup, isHost,
-                helpers: {
-                  loadUserProfileForSender, saveUserProfile, resolveBanTarget,
-                  identityKey, cleanId, sendReaction, reactions,
-                  /* 💜 Level-System: Spiele geben XP (Sieg +15, Niederlage +2) */
-                  grantGameXp: (amount, source = 'games') => {
-                    try {
-                      return userProfile && xpEligible(userProfile) ? grantLevelXp(userProfile, amount, { source }) : null;
-                    } catch (gameXpErr) {
-                      return null;
-                    }
-                  }
-                }
+                helpers: lovePlusHelpers(userProfile)
               });
               if (loveplusHandled) {
                 await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);

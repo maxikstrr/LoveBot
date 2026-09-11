@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 7,
   "updated": "2026-09-10",
   "meta": {
     "description": "LoveBot Command Registry — die eine Quelle für Bot-Help, Website, Tester & Doku.",
@@ -140,8 +140,8 @@
         },
         {
           "name": "me",
-          "usage": "$me / $me info",
-          "desc": "Dein Profil — kompakt, mit Buttons; „info“ zeigt alles 🪪",
+          "usage": "$me / $me info|full",
+          "desc": "Dein Profil — kompakt + ausführlich mit Economy; „info“ zeigt alles",
           "aliases": [],
           "perms": "all",
           "cooldown": 3,
@@ -198,6 +198,40 @@
           "perms": "all",
           "cooldown": 3,
           "source": "Bot-Code"
+        },
+        {
+          "name": "unregister",
+          "usage": "$unregister → $unregister confirm <code>",
+          "desc": "Account selbst löschen: Warnung, Code, Bestätigung, Backup, Events-Anonymisierung 🗑️",
+          "aliases": [
+            "abmelden",
+            "deleteme"
+          ],
+          "perms": "all",
+          "cooldown": 10,
+          "source": "progression v4"
+        },
+        {
+          "name": "account",
+          "usage": "$account",
+          "desc": "Account-Übersicht — Level, Kupfer, Achievements, Inventar",
+          "aliases": [
+            "acc"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "settings",
+          "usage": "$settings [economy an|aus]",
+          "desc": "Einstellungen — Benachrichtigungen, Privacy, Economy-Sichtbarkeit",
+          "aliases": [
+            "einstellungen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
         }
       ]
     },
@@ -350,6 +384,17 @@
           "perms": "all",
           "cooldown": 3,
           "source": "Love.js (neu)"
+        },
+        {
+          "name": "info",
+          "usage": "$info / $info me",
+          "desc": "Bot-Info; „me“ zeigt die eigene Account-Übersicht",
+          "aliases": [
+            "botinfo"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
         }
       ]
     },
@@ -803,10 +848,11 @@
         {
           "name": "groupinfo",
           "usage": "$groupinfo",
-          "desc": "Infos zu dieser Gruppe",
+          "desc": "Riesiger Gruppenbericht: Info, Top, Economy, AI 👥",
           "aliases": [
-            "admins",
-            "gcinfo"
+            "gcinfo",
+            "ginfo",
+            "group"
           ],
           "perms": "all",
           "cooldown": 3,
@@ -1112,6 +1158,98 @@
           "perms": "admin",
           "cooldown": 3,
           "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "am",
+          "usage": "$am",
+          "aliases": [
+            "gadmin"
+          ],
+          "desc": "Group Center: Übersicht, Security, XP, Economy 👥"
+        },
+        {
+          "name": "members",
+          "usage": "$members",
+          "aliases": [
+            "mitglieder"
+          ],
+          "desc": "Mitgliederliste mit Admins 👥"
+        },
+        {
+          "name": "gxp",
+          "usage": "$gxp",
+          "aliases": [],
+          "desc": "Group-XP, Nachrichten, Aktivität 🏆"
+        },
+        {
+          "name": "glevel",
+          "usage": "$glevel",
+          "aliases": [
+            "gstufe"
+          ],
+          "desc": "Gruppen-Level + Fortschritt 👥"
+        },
+        {
+          "name": "gtop",
+          "usage": "$gtop [xp|messages|games]",
+          "aliases": [],
+          "desc": "Top-Mitglieder (xp/messages/games) 🏆"
+        },
+        {
+          "name": "gsettings",
+          "usage": "$gsettings <feature> <on|off>",
+          "aliases": [],
+          "desc": "Gruppen-Einstellungen (Admins) ⚙️"
+        },
+        {
+          "name": "ggoal",
+          "usage": "$ggoal",
+          "aliases": [
+            "gziele"
+          ],
+          "desc": "Tages-/Wochen-Ziele der Gruppe 🎯"
+        },
+        {
+          "name": "gevent",
+          "usage": "$gevent [multi minuten]",
+          "aliases": [],
+          "desc": "Group-Events (XP-Multiplikator) 🔥"
+        },
+        {
+          "name": "gaudit",
+          "usage": "$gaudit",
+          "aliases": [
+            "glog"
+          ],
+          "desc": "Gruppen-Audit-Log 🧾"
+        },
+        {
+          "name": "geconomy",
+          "usage": "$geconomy",
+          "aliases": [
+            "gkasse"
+          ],
+          "desc": "Gruppenkasse + Verlauf 💰"
+        },
+        {
+          "name": "gdonate",
+          "usage": "$gdonate <betrag>",
+          "aliases": [
+            "gspenden"
+          ],
+          "desc": "Kupfer an Gruppenkasse spenden 💰"
+        },
+        {
+          "name": "gban",
+          "usage": "$gban @user [grund]",
+          "aliases": [],
+          "desc": "Gruppen-Ban (Admins, lokal) 🚫"
+        },
+        {
+          "name": "gunban",
+          "usage": "$gunban @user",
+          "aliases": [],
+          "desc": "Gruppen-Entbannung ✅"
         }
       ]
     },
@@ -1745,11 +1883,11 @@
         {
           "name": "daily",
           "usage": "$daily",
-          "desc": "Tägliche Belohnung 🎁 — +50 XP (Level-Ups möglich) 💎",
+          "desc": "Tägliche Belohnung — Kupfer-Serie mit Boni + XP (Level-Ups möglich)",
           "aliases": [],
           "perms": "all",
           "cooldown": 3,
-          "source": "Bot-Code"
+          "source": "progression v6"
         },
         {
           "name": "work",
@@ -1789,8 +1927,8 @@
         },
         {
           "name": "top",
-          "usage": "$top",
-          "desc": "Top 10 nach Prestige, Level & XP — mit Rängen 🏆",
+          "usage": "$top [ level | xp | weekly | monthly | group ]",
+          "desc": "Top 10 mit Filtern: Level, Lifetime-XP, Wochen-/Monats-XP & Gruppen-Rangliste 🏆",
           "aliases": [
             "leaderboard",
             "rangliste",
@@ -1802,25 +1940,237 @@
         },
         {
           "name": "level",
-          "usage": "$level",
-          "desc": "Dein komplettes Level-Profil: Level, Prestige, Rang, XP-Balken & XP-Quellen 📈",
+          "usage": "$level [ @user ]",
+          "desc": "Dein komplettes Level-Profil: Level, Prestige, Rang, Titel, XP-Balken & Quellen (+ @user für andere) 📈",
           "aliases": [
-            "xp"
+            "lvl",
+            "lv"
           ],
           "perms": "all",
           "cooldown": 3,
           "source": "levelsystem v1"
         },
         {
+          "name": "xp",
+          "usage": "$xp",
+          "desc": "Dein XP-Kompaktstatus: Level, Balken, Tages-/Wochen-/Monats-XP & Verlauf 💜",
+          "aliases": [
+            "x"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "levelsystem v3"
+        },
+        {
           "name": "rank",
-          "usage": "$rank [ @user ]",
-          "desc": "Dein Rang (oder der von jemandem mit @user) — Level, Prestige & Titel 🏅",
+          "usage": "$rank [ weekly | monthly | group ] [ @user ]",
+          "desc": "Dein Rang (oder @user) — global/weekly/monthly/group, mit Wochen-Trend 🏅",
           "aliases": [
             "rang"
           ],
           "perms": "all",
           "cooldown": 3,
           "source": "levelsystem v1"
+        },
+        {
+          "name": "progress",
+          "usage": "$progress",
+          "desc": "Dein Fortschritt: Level-Balken, Meilenstein-Roadmap, Prestige & alle Ziele 📈",
+          "aliases": [
+            "fortschritt"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v4"
+        },
+        {
+          "name": "activity",
+          "usage": "$activity",
+          "desc": "Deine Aktivität: XP-Perioden, aktive Tage/Wochen/Monate & Trends 📅",
+          "aliases": [
+            "aktivitaet",
+            "aktivität"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v4"
+        },
+        {
+          "name": "records",
+          "usage": "$records",
+          "desc": "Deine persönlichen Rekorde: Level, Tages-XP, Streak & mehr 🏆",
+          "aliases": [
+            "rekorde"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v4"
+        },
+        {
+          "name": "milestones",
+          "usage": "$milestones",
+          "desc": "Meilensteine: Level, Lifetime-XP & Streak-Marken ✅/🔒 🎯",
+          "aliases": [
+            "meilensteine"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v4"
+        },
+        {
+          "name": "mystats",
+          "usage": "$mystats / $stats me",
+          "desc": "Deine persönlichen Stats: Nachrichten, Spiele, Social & Claims 📊",
+          "aliases": [
+            "mystat"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v4"
+        },
+        {
+          "name": "xpsources",
+          "usage": "$xpsources",
+          "desc": "Deine XP-Quellen-Anteile: woher deine Lifetime-XP kommen 📊",
+          "aliases": [
+            "xpquellen",
+            "xq"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "weekly",
+          "usage": "$weekly",
+          "desc": "Wochen-Report: 7-Tage-Historie, bester Tag, neue Achievements 🗓️",
+          "aliases": [
+            "woche"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "monthly",
+          "usage": "$monthly",
+          "desc": "Monats-Report: 30-Tage-Historie & neue Achievements 📆",
+          "aliases": [
+            "monat"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "prestige",
+          "usage": "$prestige",
+          "desc": "Prestige-Karte: Zyklus, Rest-XP, Belohnungen & Truhe 👑",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "compare",
+          "usage": "$compare @user",
+          "desc": "Fairer Profil-Vergleich: Level, XP, Streak, Badges ⚔️",
+          "aliases": [
+            "vergleich"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "bank",
+          "usage": "$bank [claim]",
+          "desc": "Bank & Zinsen — Kontostand, Kapazität, Tageszins abholen",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "deposit",
+          "usage": "$deposit <betrag|all>",
+          "desc": "Einzahlen Wallet → Bank (mit Kapazität)",
+          "aliases": [
+            "einzahlen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "withdraw",
+          "usage": "$withdraw <betrag|all>",
+          "desc": "Abheben Bank → Wallet",
+          "aliases": [
+            "abheben",
+            "auszahlen"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "economy",
+          "usage": "$economy",
+          "desc": "Economy-Überblick — Wallet, Bank, Verdienst, Serie",
+          "aliases": [
+            "eco"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "transactions",
+          "usage": "$transactions [anzahl]",
+          "desc": "Transaktions-Verlauf (neueste zuerst)",
+          "aliases": [
+            "transaktionen",
+            "tx"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "report",
+          "usage": "$report <day|week|month|year|all>",
+          "desc": "Zentraler Report — XP + Kupfer + Aktivität + Rang",
+          "aliases": [
+            "reports",
+            "berichte"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "yearly",
+          "usage": "$yearly",
+          "desc": "Jahres-Report: 12 Monate, stärkster Monat, Achievements",
+          "aliases": [
+            "jahr"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "rich",
+          "usage": "$rich",
+          "desc": "Reichsten-Liste (Wallet + Bank)",
+          "aliases": [
+            "reichsten",
+            "reich"
+          ],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v6"
         }
       ]
     },
@@ -2340,15 +2690,14 @@
         },
         {
           "name": "achievements",
-          "usage": "$achievements",
-          "desc": "Deine Erfolge 🏆 (13 Achievements!)",
+          "usage": "$achievements [ all ]",
+          "desc": "Deine Erfolge 🏆 (120 Achievements, 14 Kategorien, 5 Tiers — all zeigt Fortschritt & Gesperrtes)",
           "aliases": [
-            "badges",
             "erfolge"
           ],
           "perms": "all",
           "cooldown": 3,
-          "source": "Bot-Code"
+          "source": "progression v4"
         },
         {
           "name": "hangman",
@@ -2420,7 +2769,7 @@
         {
           "name": "rewards",
           "usage": "$rewards",
-          "desc": "Level-Rewards & Meilensteine — was ist freigeschaltet 🎁",
+          "desc": "Level-Rewards & Meilensteine + Truhen + Reward-Historie 🎁",
           "aliases": [
             "belohnungen"
           ],
@@ -2438,6 +2787,24 @@
           "perms": "all",
           "cooldown": 3,
           "source": "Bot-Code"
+        },
+        {
+          "name": "badges",
+          "usage": "$badges",
+          "desc": "Deine Badge-Vitrine: 39 Badges in 6 Bereichen, mit Stufen & Fortschritt 🏅",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v4"
+        },
+        {
+          "name": "reward",
+          "usage": "$reward claim [ id ]",
+          "desc": "Truhen ansehen & abholen — einmalig, kein Doppel-Claim 🎁",
+          "aliases": [],
+          "perms": "all",
+          "cooldown": 3,
+          "source": "progression v5"
         }
       ]
     },
@@ -2699,6 +3066,71 @@
           "perms": "owner",
           "cooldown": 3,
           "source": "code-entdeckt (registry-sync)"
+        },
+        {
+          "name": "givexp",
+          "usage": "$givexp @user <anzahl> <grund>",
+          "desc": "XP geben (Owner, auditiert, mit Rollback) 🛠️",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "takexp",
+          "usage": "$takexp @user <anzahl> <grund>",
+          "desc": "XP abziehen ohne Level-Down (Owner, auditiert) 🛠️",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "xprollback",
+          "usage": "$xprollback @user",
+          "desc": "Letztes Admin-Adjust rückgängig (Owner, auditiert) ↩️",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "unlockach",
+          "usage": "$unlockach @user <achievement-id>",
+          "desc": "Achievement manuell vergeben (Owner, auditiert) 🔓",
+          "aliases": [
+            "unlockachievement"
+          ],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v5"
+        },
+        {
+          "name": "givecoins",
+          "usage": "$givecoins @person <anzahl> [bank] <grund>",
+          "desc": "Kupfer geben (Owner, auditiert, mit Rollback)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "takecoins",
+          "usage": "$takecoins @person <anzahl> [bank] <grund>",
+          "desc": "Kupfer abziehen (Owner, auditiert, mit Rollback)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v6"
+        },
+        {
+          "name": "coinrollback",
+          "usage": "$coinrollback @person",
+          "desc": "Kupfer-Adjust rückgängig (Owner, auditiert)",
+          "aliases": [],
+          "perms": "owner",
+          "cooldown": 3,
+          "source": "progression v6"
         }
       ]
     },
@@ -3102,6 +3534,71 @@
           "source": "extracmds.js"
         }
       ]
+    },
+    {
+      "id": "ai",
+      "slug": "ai",
+      "emoji": "🤖",
+      "title": "LoveAI",
+      "web": "AI",
+      "cmds": [
+        {
+          "name": "ai",
+          "usage": "$ai <frage>",
+          "aliases": [
+            "ki"
+          ],
+          "desc": "Frag LoveAI — lokale KI 💜"
+        },
+        {
+          "name": "ask",
+          "usage": "$ask <frage>",
+          "aliases": [
+            "askai",
+            "frag"
+          ],
+          "desc": "Frag LoveAI (kurz) 🤖"
+        },
+        {
+          "name": "aimemory",
+          "usage": "$aimemory <list|remember|forget|clear>",
+          "aliases": [
+            "aigedaechtnis"
+          ],
+          "desc": "AI-Gedächtnis: list/remember/forget/clear 🧠"
+        },
+        {
+          "name": "aistatus",
+          "usage": "$aistatus",
+          "aliases": [],
+          "desc": "AI-Status: Provider, Modell, Latenz 🤖"
+        },
+        {
+          "name": "aimodel",
+          "usage": "$aimodel [name]",
+          "aliases": [],
+          "desc": "Aktives KI-Modell + Auswahl 🤖"
+        },
+        {
+          "name": "aiclear",
+          "usage": "$aiclear",
+          "aliases": [],
+          "desc": "Chat-Kontext löschen 🧹"
+        },
+        {
+          "name": "aistop",
+          "usage": "$aistop",
+          "aliases": [],
+          "desc": "Laufende AI-Anfrage abbrechen 🛑"
+        },
+        {
+          "name": "aiconfig",
+          "usage": "$aiconfig <key> <wert>",
+          "aliases": [],
+          "desc": "AI-Einstellungen (Owner: global) ⚙️"
+        }
+      ]
     }
-  ]
+  ],
+  "updatedAt": "2026-09-10"
 }

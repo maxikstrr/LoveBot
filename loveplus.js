@@ -12,14 +12,15 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { levelUpAnnounce, prestigeAnnounce } from './levelsystem.js';
+import { levelUpAnnounce, prestigeAnnounce, awardBadges, grantXp, xpEligible, xpRules, yearXpSum, yearStatsSum } from './levelsystem.js';
+import { addCoins, removeCoins, transferCoins, ensureEconomy } from './economy.js';
 import { emit as engineEmit } from './loveengine.js';
 import { notify as notifyUser } from './notifications.js';
 
 /* ---------- Speicher -------------------------------------------------- */
 const STORE_PATH = path.join('Database', 'loveplus.json');
 
-function loadStore() {
+export function loadStore() {
   try {
     return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
   } catch (e) {
@@ -27,7 +28,7 @@ function loadStore() {
   }
 }
 
-function saveStore(store) {
+export function saveStore(store) {
   try {
     fs.mkdirSync(path.dirname(STORE_PATH), { recursive: true });
     fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf8');
@@ -55,43 +56,188 @@ function user(store, uid) {
 
 /* ---------- Kataloge --------------------------------------------------- */
 const SHOP_ITEMS = [
-  { id: 'rose',      emoji: '🌹', name: 'Rose',           price: 15,  desc: 'Der Klassiker.' },
-  { id: 'letter',    emoji: '💌', name: 'Liebesbrief',    price: 20,  desc: 'Zum Verlieben.' },
-  { id: 'choco',     emoji: '🍫', name: 'Schokolade',     price: 25,  desc: 'Süß wie du.' },
-  { id: 'teddy',     emoji: '🧸', name: 'Teddybär',       price: 60,  desc: 'Zum Knuddeln.' },
-  { id: 'cake',      emoji: '🎂', name: 'Kuchen',         price: 80,  desc: 'Zum Feiern.' },
-  { id: 'star',      emoji: '⭐', name: 'Stern',          price: 150, desc: 'Vom Himmel geholt.' },
-  { id: 'moon',      emoji: '🌙', name: 'Mond',           price: 300, desc: 'Für Romantiker.' },
-  { id: 'ring',      emoji: '💍', name: 'Diamantring',    price: 999, desc: 'Das große Ganze.' }
+  { id: 'rose',      emoji: '🌹', name: 'Rose',           price: 15,  desc: 'Der Klassiker.', type: 'gift', requires: null },
+  { id: 'letter',    emoji: '💌', name: 'Liebesbrief',    price: 20,  desc: 'Zum Verlieben.', type: 'gift', requires: null },
+  { id: 'choco',     emoji: '🍫', name: 'Schokolade',     price: 25,  desc: 'Süß wie du.', type: 'gift', requires: null },
+  { id: 'teddy',     emoji: '🧸', name: 'Teddybär',       price: 60,  desc: 'Zum Knuddeln.', type: 'gift', requires: null },
+  { id: 'cake',      emoji: '🎂', name: 'Kuchen',         price: 80,  desc: 'Zum Feiern.', type: 'gift', requires: null },
+  { id: 'star',      emoji: '⭐', name: 'Stern',          price: 150, desc: 'Vom Himmel geholt.', type: 'gift', requires: null },
+  { id: 'moon',      emoji: '🌙', name: 'Mond',           price: 300, desc: 'Für Romantiker.', type: 'gift', requires: null },
+  { id: 'ring',      emoji: '💍', name: 'Diamantring',    price: 999, desc: 'Das große Ganze.', type: 'gift', requires: null }
 ];
+
+/** Shop-Katalog (Kopie — nur Lesen, kein Mutieren). */
+export function shopCatalog() {
+  return SHOP_ITEMS.map((i) => ({ ...i }));
+}
+
+/**
+ * Kauf-Validierung (6.0): unbekannt / Level-Voraussetzung / Registrierung.
+ * Alle aktuellen Items haben requires=null (keine Verhaltensänderung),
+ * der Mechanismus greift, sobald ein Item requires trägt.
+ */
+export function validateShopPurchase(item, profile) {
+  if (!item) return { ok: false, reason: 'unknown-item' };
+  const req = item.requires || {};
+  if (Number(req.level) > 0 && (Number(profile?.progression?.level) || 0) < Number(req.level)) {
+    return { ok: false, reason: 'level', need: Number(req.level) };
+  }
+  if (req.registered && !profile?.registration?.name) return { ok: false, reason: 'register' };
+  if (!Number.isFinite(Number(item.price)) || Number(item.price) <= 0) return { ok: false, reason: 'bad-price' };
+  return { ok: true };
+}
 
 const PET_TYPES = ['🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐹', '🦁', '🐨', '🐥'];
 const PET_NAMES_HINT = ['Luna', 'Milo', 'Bella', 'Simba', 'Nala', 'Kira', 'Balu', 'Coco'];
 
 const ACHIEVEMENTS = [
-  { id: 'first_pet',    emoji: '🐾', name: 'Tierfreund',          desc: 'Haustier adoptiert.' },
-  { id: 'pet_lv5',      emoji: '🐕', name: 'Beste Freunde',       desc: 'Haustier Level 5 erreicht.' },
-  { id: 'first_gift',   emoji: '🎁', name: 'First Gift',          desc: 'Erstes Geschenk verschenkt.' },
-  { id: 'gifts_10',     emoji: '🌹', name: 'Romantiker',          desc: '10 Geschenke verschenkt.' },
-  { id: 'first_letter', emoji: '💌', name: 'Poet',                desc: 'Ersten Liebesbrief geschrieben.' },
-  { id: 'married',      emoji: '💍', name: 'Just Married',        desc: 'Verheiratet (über $marry).' },
-  { id: 'couple_7',     emoji: '❤️', name: 'Eine Woche Liebe',    desc: '7 Tage Couple-Streak.' },
-  { id: 'streak_7',     emoji: '🔥', name: 'Eine Woche dabei',    desc: '7 Tage Login-Streak.' },
-  { id: 'streak_30',    emoji: '☄️', name: 'Unaufhaltsam',        desc: '30 Tage Login-Streak.' },
-  { id: 'rich_1000',    emoji: '💎', name: 'Kupferkönig',         desc: '1.000 Kupfer besessen.' },
-  { id: 'hangman_win',  emoji: '🪢', name: 'Worträtsler',          desc: 'Galgenmännchen gewonnen.' },
-  { id: 'riddle_ok',    emoji: '🧠', name: 'Denker',               desc: 'Rätsel gelöst.' },
-  { id: 'big_spender',  emoji: '💸', name: 'Big Spender',          desc: '500+ Kupfer im Shop ausgegeben.' },
-  { id: 'level_10',     emoji: '🌸', name: 'Herzling',             desc: 'Level 10 erreicht.' },
-  { id: 'level_25',     emoji: '🌷', name: 'Flirter',              desc: 'Level 25 erreicht.' },
-  { id: 'level_50',     emoji: '💕', name: 'Romantiker',           desc: 'Level 50 erreicht.' },
-  { id: 'level_100',    emoji: '🌹', name: 'Rose des Herzens',     desc: 'Level 100 erreicht.' },
-  { id: 'level_250',    emoji: '🔥', name: 'Flammenherz',          desc: 'Level 250 erreicht.' },
-  { id: 'level_500',    emoji: '👑', name: 'Herzfürst(in)',        desc: 'Level 500 erreicht.' },
-  { id: 'prestige_1',   emoji: '🕊️', name: 'Herzengel',            desc: 'Erstes Prestige-Up!' },
-  { id: 'prestige_2',   emoji: '🌹', name: 'Rosenritter(in)',      desc: 'Prestige 2 erreicht.' },
-  { id: 'prestige_3',   emoji: '💜', name: 'Liebe-As',             desc: 'Prestige 3 erreicht.' }
+  { id: 'first_pet', tier: 'bronze',    emoji: '🐾', name: 'Tierfreund',          desc: 'Haustier adoptiert.', cat: 'pets' },
+  { id: 'pet_lv5', tier: 'silver',      emoji: '🐕', name: 'Beste Freunde',       desc: 'Haustier Level 5 erreicht.', cat: 'pets', goal: { m: 'petLevel', n: 5 } },
+  { id: 'first_gift', tier: 'bronze',   emoji: '🎁', name: 'First Gift',          desc: 'Erstes Geschenk verschenkt.', cat: 'social' },
+  { id: 'gifts_10', tier: 'silver',     emoji: '🌹', name: 'Romantiker',          desc: '10 Geschenke verschenkt.', cat: 'social', goal: { m: 'giftsSent', n: 10 } },
+  { id: 'first_letter', tier: 'bronze', emoji: '💌', name: 'Poet',                desc: 'Ersten Liebesbrief geschrieben.', cat: 'social' },
+  { id: 'married', tier: 'gold',      emoji: '💍', name: 'Just Married',        desc: 'Verheiratet (über $marry).', cat: 'relationship', goal: { m: 'married', n: 1 } },
+  { id: 'couple_7', tier: 'silver',     emoji: '❤️', name: 'Eine Woche Liebe',    desc: '7 Tage Couple-Streak.', cat: 'relationship', goal: { m: 'coupleStreak', n: 7 } },
+  { id: 'streak_7', tier: 'silver',     emoji: '🔥', name: 'Eine Woche dabei',    desc: '7 Tage Login-Streak.', cat: 'streak', goal: { m: 'loginStreak', n: 7 } },
+  { id: 'streak_30', tier: 'diamond',    emoji: '☄️', name: 'Unaufhaltsam',        desc: '30 Tage Login-Streak.', cat: 'streak', goal: { m: 'loginStreak', n: 30 } },
+  { id: 'rich_1000', tier: 'silver',    emoji: '💎', name: 'Kupferkönig',         desc: '1.000 Kupfer besessen.', cat: 'economy', goal: { m: 'copper', n: 1000 } },
+  { id: 'hangman_win', tier: 'bronze',  emoji: '🪢', name: 'Worträtsler',          desc: 'Galgenmännchen gewonnen.', cat: 'games' },
+  { id: 'riddle_ok', tier: 'bronze',    emoji: '🧠', name: 'Denker',               desc: 'Rätsel gelöst.', cat: 'games' },
+  { id: 'big_spender', tier: 'silver',  emoji: '💸', name: 'Big Spender',          desc: '500+ Kupfer im Shop ausgegeben.', cat: 'economy', goal: { m: 'shopSpent', n: 500 } },
+  { id: 'level_10', tier: 'bronze',     emoji: '🌸', name: 'Herzling',             desc: 'Level 10 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 10 } },
+  { id: 'level_25', tier: 'silver',     emoji: '🌷', name: 'Flirter',              desc: 'Level 25 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 25 } },
+  { id: 'level_50', tier: 'gold',     emoji: '💕', name: 'Romantiker',           desc: 'Level 50 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 50 } },
+  { id: 'level_100', tier: 'gold',    emoji: '🌹', name: 'Rose des Herzens',     desc: 'Level 100 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 100 } },
+  { id: 'level_250', tier: 'diamond',    emoji: '🔥', name: 'Flammenherz',          desc: 'Level 250 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 250 } },
+  { id: 'level_500', tier: 'mythic',    emoji: '👑', name: 'Herzfürst(in)',        desc: 'Level 500 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 500 } },
+  { id: 'prestige_1', tier: 'gold',   emoji: '🕊️', name: 'Herzengel',            desc: 'Erstes Prestige-Up!', cat: 'prestige', goal: { m: 'prestige', n: 1 } },
+  { id: 'prestige_2', tier: 'diamond',   emoji: '🌹', name: 'Rosenritter(in)',      desc: 'Prestige 2 erreicht.', cat: 'prestige', goal: { m: 'prestige', n: 2 } },
+  { id: 'prestige_3', tier: 'mythic',   emoji: '💜', name: 'Liebe-As',             desc: 'Prestige 3 erreicht.', cat: 'prestige', goal: { m: 'prestige', n: 3 } },
+  { id: 'msg_100', tier: 'bronze', emoji: '💬', name: 'Gesprächig', desc: '100 Nachrichten geschrieben.', cat: 'chat', goal: { m: 'messages', n: 100 } },
+  { id: 'msg_1000', tier: 'silver', emoji: '💬', name: 'Stammtisch', desc: '1.000 Nachrichten geschrieben.', cat: 'chat', goal: { m: 'messages', n: 1000 } },
+  { id: 'msg_10000', tier: 'diamond', emoji: '💬', name: 'Chat-Legende', desc: '10.000 Nachrichten geschrieben.', cat: 'chat', goal: { m: 'messages', n: 10000 } },
+  { id: 'cmd_100', tier: 'bronze', emoji: '⚙️', name: 'Power-User', desc: '100 Befehle benutzt.', cat: 'chat', goal: { m: 'commands', n: 100 } },
+  { id: 'cmd_1000', tier: 'gold', emoji: '⚙️', name: 'Bot-Flüsterer', desc: '1.000 Befehle benutzt.', cat: 'chat', goal: { m: 'commands', n: 1000 } },
+  { id: 'xp_10k', tier: 'silver', emoji: '✨', name: 'XP-Sammler', desc: '10.000 XP Lifetime gesammelt.', cat: 'xp', goal: { m: 'totalXp', n: 10000 } },
+  { id: 'xp_100k', tier: 'gold', emoji: '✨', name: 'XP-Großmeister', desc: '100.000 XP Lifetime gesammelt.', cat: 'xp', goal: { m: 'totalXp', n: 100000 } },
+  { id: 'wins_10', tier: 'bronze', emoji: '🏅', name: 'Gewinner', desc: '10 Spiele gewonnen.', cat: 'games', goal: { m: 'gameWins', n: 10 } },
+  { id: 'wins_100', tier: 'gold', emoji: '🏆', name: 'Champion', desc: '100 Spiele gewonnen.', cat: 'games', goal: { m: 'gameWins', n: 100 } },
+  { id: 'compl_50', tier: 'gold', emoji: '🌹', name: 'Charmeur', desc: '50 Komplimente verteilt.', cat: 'social', goal: { m: 'complimentsGiven', n: 50 } },
+  { id: 'first_msg', tier: 'bronze', emoji: '💬', name: 'Hallo Welt', desc: 'Erste Nachricht geschrieben.', cat: 'chat', goal: { m: 'messages', n: 1 } },
+  { id: 'msg_500', tier: 'silver', emoji: '💬', name: 'Plaudertasche', desc: '500 Nachrichten geschrieben.', cat: 'chat', goal: { m: 'messages', n: 500 } },
+  { id: 'msg_5000', tier: 'gold', emoji: '💬', name: 'Dauerbrenner', desc: '5.000 Nachrichten geschrieben.', cat: 'chat', goal: { m: 'messages', n: 5000 } },
+  { id: 'first_cmd', tier: 'bronze', emoji: '⚙️', name: 'Knöpfchendrücker', desc: 'Ersten Befehl benutzt.', cat: 'chat', goal: { m: 'commands', n: 1 } },
+  { id: 'cmd_500', tier: 'silver', emoji: '⚙️', name: 'Kommandeur', desc: '500 Befehle benutzt.', cat: 'chat', goal: { m: 'commands', n: 500 } },
+  { id: 'first_game', tier: 'bronze', emoji: '🎮', name: 'Mitspieler', desc: 'Erstes Spiel gespielt.', cat: 'games', goal: { m: 'games', n: 1 } },
+  { id: 'games_10', tier: 'bronze', emoji: '🎮', name: 'Dauergast', desc: '10 Spiele gespielt.', cat: 'games', goal: { m: 'games', n: 10 } },
+  { id: 'games_100', tier: 'silver', emoji: '🎮', name: 'Arcade-Fan', desc: '100 Spiele gespielt.', cat: 'games', goal: { m: 'games', n: 100 } },
+  { id: 'games_500', tier: 'gold', emoji: '🎮', name: 'Spielhallen-König', desc: '500 Spiele gespielt.', cat: 'games', goal: { m: 'games', n: 500 } },
+  { id: 'wins_50', tier: 'silver', emoji: '🏆', name: 'Seriensieger', desc: '50 Spiele gewonnen.', cat: 'games', goal: { m: 'gameWins', n: 50 } },
+  { id: 'hangman_10', tier: 'silver', emoji: '🪢', name: 'Wortakrobat', desc: '10 Galgen-Spiele gewonnen.', cat: 'games', goal: { m: 'hangmanWins', n: 10 } },
+  { id: 'compl_10', tier: 'bronze', emoji: '🌹', name: 'Liebenswürdig', desc: '10 Komplimente verteilt.', cat: 'social', goal: { m: 'complimentsGiven', n: 10 } },
+  { id: 'love_100', tier: 'silver', emoji: '💜', name: 'Amors Pfeil', desc: '100 Love-Aktionen.', cat: 'social', goal: { m: 'loveActions', n: 100 } },
+  { id: 'gifts_50', tier: 'gold', emoji: '🌹', name: 'Großromantiker', desc: '50 Geschenke verschenkt.', cat: 'social', goal: { m: 'giftsSent', n: 50 } },
+  { id: 'gifts_recv_10', tier: 'silver', emoji: '💝', name: 'Beliebt', desc: '10 Geschenke erhalten.', cat: 'social', goal: { m: 'giftsReceived', n: 10 } },
+  { id: 'letters_10', tier: 'silver', emoji: '💌', name: 'Brieffreund', desc: '10 Liebesbriefe geschrieben.', cat: 'social', goal: { m: 'lettersSent', n: 10 } },
+  { id: 'prog_streak_7', tier: 'silver', emoji: '🔥', name: 'Warmlaufen', desc: '7 Tage Aktivitäts-Streak.', cat: 'activity', goal: { m: 'bestStreak', n: 7 } },
+  { id: 'prog_streak_30', tier: 'gold', emoji: '🔥', name: 'Dranbleiber', desc: '30 Tage Aktivitäts-Streak.', cat: 'activity', goal: { m: 'bestStreak', n: 30 } },
+  { id: 'prog_streak_100', tier: 'diamond', emoji: '🔥', name: 'Unbeirrbar', desc: '100 Tage Aktivitäts-Streak.', cat: 'activity', goal: { m: 'bestStreak', n: 100 } },
+  { id: 'prog_streak_365', tier: 'mythic', emoji: '🔥', name: 'Ein Jahr dabei', desc: '365 Tage Aktivitäts-Streak.', cat: 'activity', goal: { m: 'bestStreak', n: 365 } },
+  { id: 'active_30', tier: 'gold', emoji: '📅', name: 'Stammgast', desc: 'An 30 Tagen XP gesammelt.', cat: 'activity', goal: { m: 'activeDays', n: 30 } },
+  { id: 'xp_1k', tier: 'bronze', emoji: '✨', name: 'XP-Starter', desc: '1.000 XP Lifetime gesammelt.', cat: 'xp', goal: { m: 'totalXp', n: 1000 } },
+  { id: 'xp_1m', tier: 'mythic', emoji: '✨', name: 'XP-Millionär', desc: '1.000.000 XP Lifetime gesammelt.', cat: 'xp', goal: { m: 'totalXp', n: 1000000 } },
+  { id: 'level_200', tier: 'diamond', emoji: '🌌', name: 'Mythisch', desc: 'Level 200 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 200 } },
+  { id: 'level_400', tier: 'diamond', emoji: '✨', name: 'Unsterblich', desc: 'Level 400 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 400 } },
+  { id: 'login_100', tier: 'gold', emoji: '📅', name: 'Hundert Tage', desc: '100 Tage Login-Streak.', cat: 'streak', goal: { m: 'loginStreak', n: 100 } },
+  { id: 'login_365', tier: 'mythic', emoji: '📅', name: 'Jahrestreue', desc: '365 Tage Login-Streak.', cat: 'streak', goal: { m: 'loginStreak', n: 365 } },
+  { id: 'goal_daily_1', tier: 'bronze', emoji: '🎯', name: 'Zielstürmer', desc: 'Erstes Tagesziel geschafft.', cat: 'goals', goal: { m: 'goalsDaily', n: 1 } },
+  /* ── BEZIEHUNG (5.0) ── */
+  { id: 'couple_30', tier: 'gold', emoji: '💞', name: 'Ein Monat Liebe', desc: '30 Tage Couple-Streak.', cat: 'relationship', goal: { m: 'coupleStreak', n: 30 } },
+  { id: 'couple_100', tier: 'diamond', emoji: '💖', name: 'Hundert Tage Zweisamkeit', desc: '100 Tage Couple-Streak.', cat: 'relationship', goal: { m: 'coupleStreak', n: 100 } },
+  { id: 'lovexp_1k', tier: 'gold', emoji: '💗', name: 'Liebes-Architekt', desc: '1.000 Love-XP als Paar.', cat: 'relationship', goal: { m: 'coupleLoveXp', n: 1000 } },
+  { id: 'lovexp_10k', tier: 'mythic', emoji: '💝', name: 'Liebes-Legende', desc: '10.000 Love-XP als Paar.', cat: 'relationship', goal: { m: 'coupleLoveXp', n: 10000 } },
+  { id: 'memories_10', tier: 'silver', emoji: '📸', name: 'Erinnerungs-Sammler', desc: '10 Paar-Erinnerungen.', cat: 'relationship', goal: { m: 'memories', n: 10 } },
+  { id: 'memories_50', tier: 'gold', emoji: '🎞️', name: 'Liebes-Chronist', desc: '50 Paar-Erinnerungen.', cat: 'relationship', goal: { m: 'memories', n: 50 } },
+  { id: 'together_30', tier: 'silver', emoji: '🏩', name: 'Ein Monat verheiratet', desc: '30 Tage zusammen.', cat: 'relationship', goal: { m: 'daysTogether', n: 30 } },
+  { id: 'together_365', tier: 'diamond', emoji: '👰', name: 'Ein Jahr verheiratet', desc: '365 Tage zusammen.', cat: 'relationship', goal: { m: 'daysTogether', n: 365 } },
+  { id: 'second_chance', tier: 'silver', emoji: '💍', name: 'Neues Glück', desc: 'Erneut geheiratet (2 Ehen).', cat: 'relationship', goal: { m: 'marriages', n: 2 } },
+  /* ── PRESTIGE (5.0) ── */
+  { id: 'prestige_4', tier: 'diamond', emoji: '🌙', name: 'Stern der Liebe', desc: 'Prestige 4 erreicht.', cat: 'prestige', goal: { m: 'prestige', n: 4 } },
+  { id: 'prestige_5', tier: 'mythic', emoji: '🌌', name: 'Love-Mythos', desc: 'Prestige 5 erreicht.', cat: 'prestige', goal: { m: 'prestige', n: 5 } },
+  /* ── ZIELE (5.0) ── */
+  { id: 'goals_daily_7', tier: 'silver', emoji: '🎯', name: 'Wochen-Planer', desc: '7 Tagesziele geschafft.', cat: 'goals', goal: { m: 'goalsDaily', n: 7 } },
+  { id: 'goals_daily_30', tier: 'gold', emoji: '🎯', name: 'Monats-Stratege', desc: '30 Tagesziele geschafft.', cat: 'goals', goal: { m: 'goalsDaily', n: 30 } },
+  { id: 'goal_weekly_1', tier: 'silver', emoji: '🏆', name: 'Wochen-Champion', desc: 'Erstes Wochenziel geschafft.', cat: 'goals', goal: { m: 'goalsWeekly', n: 1 } },
+  { id: 'goals_weekly_4', tier: 'gold', emoji: '🏆', name: 'Monats-Champion', desc: '4 Wochenziele geschafft.', cat: 'goals', goal: { m: 'goalsWeekly', n: 4 } },
+  { id: 'goalstreak_3', tier: 'silver', emoji: '🔥', name: 'Ziel-Streak ×3', desc: '3 Tage in Folge ein Ziel geschafft.', cat: 'goals', goal: { m: 'goalStreak', n: 3 } },
+  { id: 'goalstreak_7', tier: 'gold', emoji: '🔥', name: 'Ziel-Streak ×7', desc: '7 Tage Ziel-Streak.', cat: 'goals', goal: { m: 'goalStreak', n: 7 } },
+  { id: 'goalstreak_30', tier: 'diamond', emoji: '🔥', name: 'Ziel-Maschine ×30', desc: '30 Tage Ziel-Streak.', cat: 'goals', goal: { m: 'goalStreak', n: 30 } },
+  /* ── SAMMLUNG (5.0) ── */
+  { id: 'badges_5', tier: 'bronze', emoji: '🏅', name: 'Badge-Starter', desc: '5 Badges gesammelt.', cat: 'collection', goal: { m: 'badges', n: 5 } },
+  { id: 'badges_15', tier: 'silver', emoji: '🏅', name: 'Vitrinen-Füller', desc: '15 Badges gesammelt.', cat: 'collection', goal: { m: 'badges', n: 15 } },
+  { id: 'badges_30', tier: 'gold', emoji: '🏅', name: 'Ausstellungs-Stück', desc: '30 Badges gesammelt.', cat: 'collection', goal: { m: 'badges', n: 30 } },
+  { id: 'titles_5', tier: 'silver', emoji: '📛', name: 'Titel-Sammler', desc: '5 Level-Titel verdient.', cat: 'collection', goal: { m: 'levelTitleCount', n: 5 } },
+  { id: 'titles_9', tier: 'mythic', emoji: '📛', name: 'Titel-Legende', desc: 'Alle 9 Level-Titel verdient.', cat: 'collection', goal: { m: 'levelTitleCount', n: 9 } },
+  /* ── CHAT (5.0) ── */
+  { id: 'msg_25000', tier: 'mythic', emoji: '💬', name: 'Chat-Titan', desc: '25.000 Nachrichten geschrieben.', cat: 'chat', goal: { m: 'messages', n: 25000 } },
+  { id: 'cmd_2500', tier: 'gold', emoji: '⚙️', name: 'Kommando-Meister', desc: '2.500 Befehle benutzt.', cat: 'chat', goal: { m: 'commands', n: 2500 } },
+  { id: 'hours_12', tier: 'gold', emoji: '🕒', name: 'Tag & Nacht', desc: 'Zu 12 verschiedenen Stunden aktiv gewesen.', cat: 'chat', goal: { m: 'activeHours', n: 12 } },
+  { id: 'hours_20', tier: 'diamond', emoji: '🌙', name: 'Rund um die Uhr', desc: 'Zu 20 verschiedenen Stunden aktiv gewesen.', cat: 'chat', goal: { m: 'activeHours', n: 20 } },
+  /* ── GAMES (5.0) ── */
+  { id: 'hangman_50', tier: 'diamond', emoji: '🪢', name: 'Wort-Meister', desc: '50 Galgen-Spiele gewonnen.', cat: 'games', goal: { m: 'hangmanWins', n: 50 } },
+  { id: 'riddle_10', tier: 'silver', emoji: '🧩', name: 'Rätsel-Fan', desc: '10 Rätsel gelöst.', cat: 'games', goal: { m: 'riddlesSolved', n: 10 } },
+  { id: 'riddle_50', tier: 'gold', emoji: '🧩', name: 'Rätsel-Meister', desc: '50 Rätsel gelöst.', cat: 'games', goal: { m: 'riddlesSolved', n: 50 } },
+  { id: 'wins_200', tier: 'mythic', emoji: '👑', name: 'Sieges-Legende', desc: '200 Spiele gewonnen.', cat: 'games', goal: { m: 'gameWins', n: 200 } },
+  { id: 'games_1000', tier: 'diamond', emoji: '👾', name: 'Arcade-Legende', desc: '1.000 Spiele gespielt.', cat: 'games', goal: { m: 'games', n: 1000 } },
+  { id: 'winstreak_5', tier: 'silver', emoji: '🔥', name: 'Siegesserie ×5', desc: '5 Siege in Folge.', cat: 'games', goal: { m: 'winStreak', n: 5 } },
+  { id: 'winstreak_10', tier: 'gold', emoji: '🔥', name: 'Siegesserie ×10', desc: '10 Siege in Folge.', cat: 'games', goal: { m: 'winStreak', n: 10 } },
+  /* ── SOCIAL (5.0) ── */
+  { id: 'compl_250', tier: 'diamond', emoji: '💘', name: 'Herzensbrecher', desc: '250 Komplimente verteilt.', cat: 'social', goal: { m: 'complimentsGiven', n: 250 } },
+  { id: 'love_500', tier: 'diamond', emoji: '💞', name: 'Liebesbote', desc: '500 Love-Aktionen.', cat: 'social', goal: { m: 'loveActions', n: 500 } },
+  { id: 'gifts_200', tier: 'mythic', emoji: '🎁', name: 'Schenk-Legende', desc: '200 Geschenke verschenkt.', cat: 'social', goal: { m: 'giftsSent', n: 200 } },
+  { id: 'gifts_recv_50', tier: 'gold', emoji: '💝', name: 'Super-Beliebt', desc: '50 Geschenke erhalten.', cat: 'social', goal: { m: 'giftsReceived', n: 50 } },
+  { id: 'letters_50', tier: 'gold', emoji: '✉️', name: 'Brief-Legende', desc: '50 Liebesbriefe geschrieben.', cat: 'social', goal: { m: 'lettersSent', n: 50 } },
+  /* ── AKTIVITAET (5.0) ── */
+  { id: 'active_100', tier: 'gold', emoji: '📅', name: 'Hundert Tage aktiv', desc: 'An 100 Tagen XP gesammelt.', cat: 'activity', goal: { m: 'activeDays', n: 100 } },
+  { id: 'active_365', tier: 'mythic', emoji: '📅', name: 'Ein Jahr aktiv', desc: 'An 365 Tagen XP gesammelt.', cat: 'activity', goal: { m: 'activeDays', n: 365 } },
+  { id: 'weeks_12', tier: 'silver', emoji: '🗓️', name: '12 Wochen dabei', desc: 'In 12 Kalenderwochen aktiv gewesen.', cat: 'activity', goal: { m: 'activeWeeks', n: 12 } },
+  { id: 'weeks_52', tier: 'diamond', emoji: '🗓️', name: 'Ein Jahr Wochen', desc: 'In 52 Kalenderwochen aktiv gewesen.', cat: 'activity', goal: { m: 'activeWeeks', n: 52 } },
+  /* ── XP (5.0) ── */
+  { id: 'xp_500k', tier: 'diamond', emoji: '✨', name: 'Halbe Million', desc: '500.000 XP Lifetime gesammelt.', cat: 'xp', goal: { m: 'totalXp', n: 500000 } },
+  { id: 'xp_10m', tier: 'mythic', emoji: '✨', name: 'XP-Titan', desc: '10.000.000 XP Lifetime gesammelt.', cat: 'xp', goal: { m: 'totalXp', n: 10000000 } },
+  { id: 'dailyxp_500', tier: 'silver', emoji: '⚡', name: 'Tages-Rekord 500', desc: '500 XP an einem Tag gesammelt.', cat: 'xp', goal: { m: 'bestDailyXp', n: 500 } },
+  { id: 'dailyxp_2000', tier: 'gold', emoji: '⚡', name: 'Tages-Bestie 2000', desc: '2.000 XP an einem Tag gesammelt.', cat: 'xp', goal: { m: 'bestDailyXp', n: 2000 } },
+  /* ── LEVEL (5.0) ── */
+  { id: 'level_5', tier: 'bronze', emoji: '🌱', name: 'Sweetheart', desc: 'Level 5 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 5 } },
+  { id: 'level_600', tier: 'mythic', emoji: '🪐', name: 'Ewig', desc: 'Level 600 erreicht.', cat: 'level', goal: { m: 'totalLevel', n: 600 } },
+  { id: 'level_743', tier: 'mythic', emoji: '⭐', name: 'Zyklus-König', desc: 'Level 743 erreicht (Zyklus-Max).', cat: 'level', goal: { m: 'totalLevel', n: 743 } },
+  /* ── LOGIN-STREAK (5.0) ── */
+  { id: 'login_60', tier: 'gold', emoji: '📅', name: 'Zwei Monate Treue', desc: '60 Tage Login-Streak.', cat: 'streak', goal: { m: 'loginStreak', n: 60 } },
+  /* ── ECONOMY (5.0) ── */
+  { id: 'rich_10k', tier: 'gold', emoji: '💰', name: 'Kupfer-Baron', desc: '10.000 Kupfer besessen.', cat: 'economy', goal: { m: 'copper', n: 10000 } },
+  { id: 'rich_100k', tier: 'diamond', emoji: '💰', name: 'Kupfer-Magnat', desc: '100.000 Kupfer besessen.', cat: 'economy', goal: { m: 'copper', n: 100000 } },
+  { id: 'spend_5k', tier: 'diamond', emoji: '💸', name: 'Großspender', desc: '5.000 Kupfer im Shop ausgegeben.', cat: 'economy', goal: { m: 'shopSpent', n: 5000 } },
+  /* ── PETS (5.0) ── */
+  { id: 'pet_lv10', tier: 'gold', emoji: '🐕', name: 'Treuer Begleiter', desc: 'Haustier Level 10 erreicht.', cat: 'pets', goal: { m: 'petLevel', n: 10 } },
+  { id: 'pet_lv20', tier: 'mythic', emoji: '🐾', name: 'Seelenverwandt', desc: 'Haustier Level 20 erreicht.', cat: 'pets', goal: { m: 'petLevel', n: 20 } },
+  /* ── SPEZIAL (5.0) ── */
+  { id: 'first_daily', tier: 'bronze', emoji: '📅', name: 'Guter Start', desc: 'Erstes Daily abgeholt.', cat: 'special', goal: { m: 'dailiesClaimed', n: 1 } },
+  { id: 'daily_30', tier: 'gold', emoji: '📅', name: 'Monats-Treue', desc: '30 Dailies abgeholt.', cat: 'special', goal: { m: 'dailiesClaimed', n: 30 } },
+  { id: 'work_10', tier: 'silver', emoji: '💼', name: 'Fleißbienchen', desc: '10× gearbeitet.', cat: 'special', goal: { m: 'workClaimed', n: 10 } },
+  { id: 'work_100', tier: 'gold', emoji: '💼', name: 'Karriere', desc: '100× gearbeitet.', cat: 'special', goal: { m: 'workClaimed', n: 100 } },
+  /* ── DAILY-STREAK (6.0) ── */
+  { id: 'dstreak_7', tier: 'silver', emoji: '🔥', name: 'Wochen-Feuer', desc: '7 Tage Daily-Serie erreicht.', cat: 'streak', goal: { m: 'dailyBest', n: 7 } },
+  { id: 'dstreak_30', tier: 'gold', emoji: '🔥', name: 'Monats-Glut', desc: '30 Tage Daily-Serie erreicht.', cat: 'streak', goal: { m: 'dailyBest', n: 30 } },
+  { id: 'dstreak_100', tier: 'diamond', emoji: '☄️', name: 'Unlöschbar', desc: '100 Tage Daily-Serie erreicht.', cat: 'streak', goal: { m: 'dailyBest', n: 100 } },
+  /* ── JAHR (6.0) ── */
+  { id: 'year_xp_100k', tier: 'diamond', emoji: '🌟', name: 'Jahrhundert-Jahr', desc: '100.000 XP in 12 Monaten.', cat: 'activity', goal: { m: 'yearXp', n: 100000 } },
+  { id: 'year_msg_10k', tier: 'gold', emoji: '💬', name: 'Stammgast des Jahres', desc: '10.000 Nachrichten in 12 Monaten.', cat: 'activity', goal: { m: 'yearMessages', n: 10000 } },
+  { id: 'year_games_500', tier: 'gold', emoji: '🎮', name: 'Spieljahr', desc: '500 Spiele in 12 Monaten.', cat: 'activity', goal: { m: 'yearGames', n: 500 } },
+  /* ── ECONOMY (6.0) ── */
+  { id: 'year_coins_50k', tier: 'gold', emoji: '🪙', name: 'Jahresverdienst', desc: '50.000 Kupfer in einem Jahr verdient.', cat: 'economy', goal: { m: 'yearEarned', n: 50000 } },
+  { id: 'vault_10k', tier: 'silver', emoji: '🏦', name: 'Sparer', desc: '10.000 Kupfer auf der Bank.', cat: 'economy', goal: { m: 'bankCopper', n: 10000 } }
 ];
+
 
 const RIDDLES = [
   { q: 'Ich habe Städte, aber keine Häuser. Wälder, aber keine Bäume. Wasser, aber keinen Fisch. Was bin ich?', a: 'karte' },
@@ -157,6 +303,7 @@ function todayKey(ts = Date.now()) {
   return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
 }
 function yesterdayKey(ts = Date.now()) { return todayKey(ts - DAY_MS); }
+function onejanDay(onejanTs) { const d = new Date(onejanTs).getUTCDay(); return d === 0 ? 7 : d; }
 
 function coupleKey(a, b) { return [String(a), String(b)].sort().join('|'); }
 
@@ -212,32 +359,220 @@ function unlock(store, uid, id, unlockedNow) {
   try { notifyUser(uid, 'achievement', { title: '🏆 ' + a.name + ' freigeschaltet!', text: a.desc || 'Neues Achievement', link: '/level.html' }); } catch (e) {}
 }
 
+/* 🏆 Achievement-Kategorien (Progression 4.0) */
+export const ACHIEVEMENT_TIERS = [
+  { id: 'bronze', emoji: '🥉', name: 'Bronze' },
+  { id: 'silver', emoji: '🥈', name: 'Silber' },
+  { id: 'gold', emoji: '🥇', name: 'Gold' },
+  { id: 'diamond', emoji: '💎', name: 'Diamant' },
+  { id: 'mythic', emoji: '👑', name: 'Mythisch' }
+];
+export const ACHIEVEMENT_CATS = [
+  { id: 'chat', emoji: '💬', name: 'Chat' },
+  { id: 'games', emoji: '🎮', name: 'Games' },
+  { id: 'social', emoji: '💜', name: 'Social' },
+  { id: 'activity', emoji: '🔥', name: 'Aktivität' },
+  { id: 'xp', emoji: '✨', name: 'XP' },
+  { id: 'level', emoji: '🏆', name: 'Level' },
+  { id: 'streak', emoji: '📅', name: 'Login-Streak' },
+  { id: 'economy', emoji: '💰', name: 'Economy' },
+  { id: 'pets', emoji: '🐾', name: 'Pets' },
+  { id: 'special', emoji: '🌟', name: 'Spezial' },
+  { id: 'relationship', emoji: '💍', name: 'Beziehung' },
+  { id: 'prestige', emoji: '👑', name: 'Prestige' },
+  { id: 'goals', emoji: '🎯', name: 'Ziele' },
+  { id: 'collection', emoji: '🏅', name: 'Sammlung' }
+];
+
+export { ACHIEVEMENTS };
+
+/** Alle Achievement-Metriken aus Profil + loveplus-Store (echte Werte). */
+export function achievementMetrics(profile, store, uid) {
+  const u = store?.users?.[uid] || {};
+  const st = profile?.stats || {};
+  const prog = profile?.progression || {};
+  const c = u.counters || {};
+  const love = profile?.love || {};
+  let goalsDaily = 0, goalsWeekly = 0;
+  for (const k of Object.keys(prog.unlocks || {})) {
+    if (/^goal-d\d/.test(k) || k.startsWith('goal-dm') || k.startsWith('goal-dc')) goalsDaily++;
+    else if (k.startsWith('goal-w')) goalsWeekly++;
+  }
+  /* 💍 Bestes eigenes Couple (Streak/Love-XP/Erinnerungen) */
+  const meKeys = [uid, profile?.identity?.cleanJid, profile?.identity?.cleanLid, profile?.identity?.myKey]
+    .map((x) => String(x || '')).filter(Boolean);
+  let coupleStreak = 0, coupleLoveXp = 0, memories = 0;
+  for (const [ck, cp] of Object.entries(store?.couples || {})) {
+    if (!cp || !meKeys.some((k) => String(ck).split('|').includes(k))) continue;
+    coupleStreak = Math.max(coupleStreak, Number(cp.streak) || 0);
+    coupleLoveXp = Math.max(coupleLoveXp, Number(cp.loveXp) || 0);
+    memories = Math.max(memories, Number(cp.memories) || 0);
+  }
+  let daysTogether = Number(love.daysTogether) || 0;
+  if (!daysTogether && love.marriedAt) {
+    daysTogether = Math.max(0, Math.floor((Date.now() - new Date(love.marriedAt).getTime()) / DAY_MS));
+  }
+  /* 🗓️ Aktive Kalenderwochen aus echter xpDaily-Historie */
+  const weeks = new Set();
+  for (const e of (prog.xpDaily || [])) {
+    if (!e || !e.d) continue;
+    const t = new Date(e.d + 'T00:00:00Z').getTime();
+    if (!Number.isFinite(t)) continue;
+    const d = new Date(t);
+    const onejan = Date.UTC(d.getUTCFullYear(), 0, 1);
+    const w = Math.ceil((((t - onejan) / DAY_MS) + onejanDay(onejan)) / 7);
+    weeks.add(d.getUTCFullYear() + '-W' + w);
+  }
+  const activeHours = Array.isArray(prog.hourActivity) ? prog.hourActivity.filter((h) => (Number(h) || 0) > 0).length : 0;
+  const lvl = Number(prog.level) || 0;
+  const levelTitleCount = [0, 5, 10, 20, 50, 100, 200, 400, 600].filter((m) => lvl >= m).length;
+  return {
+    messages: st.messages || 0, commands: st.commands || 0,
+    games: st.games || 0, gameWins: st.gameWins || 0,
+    complimentsGiven: st.complimentsGiven || 0, loveActions: st.loveActions || 0,
+    totalXp: prog.totalXp || 0,
+    totalLevel: (prog.prestige || 0) * 744 + (prog.level || 0),
+    prestige: prog.prestige || 0,
+    bestStreak: Math.max(prog.bestStreak || 0, prog.streak || 0),
+    activeDays: (prog.xpDaily || []).length, goalsDaily,
+    dailiesClaimed: st.dailiesClaimed || 0, workClaimed: st.workClaimed || 0,
+    winStreak: profile?.games?.winStreak || 0,
+    bestDailyXp: prog.records?.highestDailyXp || 0,
+    goalsWeekly, goalStreak: Math.max(prog.goalStreak?.best || 0, prog.goalStreak?.c || 0),
+    badges: Object.keys(prog.badges || {}).length,
+    activeWeeks: weeks.size, activeHours, levelTitleCount,
+    coupleStreak, coupleLoveXp, memories, daysTogether,
+    marriages: love.marriages || 0, riddlesSolved: c.riddlesSolved || 0,
+    copper: profile?.wallet?.copper || 0,
+    married: profile?.love?.married === true ? 1 : 0,
+    giftsSent: c.giftsSent || 0, giftsReceived: c.giftsReceived || 0,
+    lettersSent: c.lettersSent || 0, hangmanWins: c.hangmanWins || 0,
+    shopSpent: c.shopSpent || 0,
+    petLevel: u.pet?.level || 0, loginStreak: u.lovebonus?.streak || 0,
+    /* 📅 Jahres-/Economy-Metriken (6.0, echt aus Monats-Aggregaten) */
+    yearXp: yearXpSum(profile), yearMessages: yearStatsSum(profile).m, yearGames: yearStatsSum(profile).g,
+    yearEarned: Number(profile?.economy?.periods?.year?.e) || 0,
+    dailyBest: Number(profile?.economy?.daily?.best) || 0,
+    bankCopper: Number(profile?.bank?.copper) || 0
+  };
+}
+
+/** Voller Fortschritt: Zähler, Kategorien, nächste Ziele (für $me/$achievements/$progress). */
+export function achievementProgress(bid, profile) {
+  const store = loadStore();
+  const got = store.users?.[bid]?.achievements || {};
+  const mx = achievementMetrics(profile, store, bid);
+  const list = ACHIEVEMENTS.map((a) => {
+    const has = !!got[a.id];
+    const need = a.goal?.n || 0;
+    const raw = a.goal ? (mx[a.goal.m] || 0) : (has ? 1 : 0);
+    return {
+      id: a.id, emoji: a.emoji, name: a.name, desc: a.desc, cat: a.cat || 'special', tier: a.tier || 'bronze',
+      need, have: need ? Math.min(raw, need) : raw, unlocked: has, at: got[a.id] || 0,
+      pct: need ? Math.min(100, Math.round((raw / need) * 100)) : (has ? 100 : 0)
+    };
+  });
+  const byTier = {};
+  for (const t of ACHIEVEMENT_TIERS) byTier[t.id] = { ...t, got: 0, total: 0 };
+  for (const e of list) {
+    if (!byTier[e.tier]) byTier[e.tier] = { id: e.tier, emoji: '🏆', name: e.tier, got: 0, total: 0 };
+    byTier[e.tier].total++;
+    if (e.unlocked) byTier[e.tier].got++;
+  }
+  const byCat = {};
+  for (const c of ACHIEVEMENT_CATS) byCat[c.id] = { ...c, got: 0, total: 0 };
+  for (const e of list) {
+    if (!byCat[e.cat]) byCat[e.cat] = { id: e.cat, emoji: '🏆', name: e.cat, got: 0, total: 0 };
+    byCat[e.cat].total++;
+    if (e.unlocked) byCat[e.cat].got++;
+  }
+  const count = list.filter((e) => e.unlocked).length;
+  const next = list.filter((e) => !e.unlocked && e.need > 0)
+    .sort((a, b) => (b.have / b.need) - (a.have / a.need)).slice(0, 3);
+  return { count, total: list.length, byCat, byTier, next, list };
+}
+
 function checkAchievements(store, uid, profile, events = []) {
   const u = user(store, uid);
   const now = [];
   for (const ev of events) unlock(store, uid, ev, now);
-  if (profile?.love?.married === true) unlock(store, uid, 'married', now);
-  if ((profile?.wallet?.copper || 0) >= 1000) unlock(store, uid, 'rich_1000', now);
-  if ((u.counters.giftsSent || 0) >= 10) unlock(store, uid, 'gifts_10', now);
-  if ((u.lovebonus.streak || 0) >= 7) unlock(store, uid, 'streak_7', now);
-  if ((u.lovebonus.streak || 0) >= 30) unlock(store, uid, 'streak_30', now);
-  if (u.pet && u.pet.level >= 5) unlock(store, uid, 'pet_lv5', now);
-  if ((u.counters.shopSpent || 0) >= 500) unlock(store, uid, 'big_spender', now);
-  /* 💜 Level-System-Achievements: Gesamtfortschritt = Prestige·744 + Level */
-  const prog = profile?.progression;
-  if (prog) {
-    const totalLvl = (prog.prestige || 0) * 744 + (prog.level || 0);
-    if (totalLvl >= 10) unlock(store, uid, 'level_10', now);
-    if (totalLvl >= 25) unlock(store, uid, 'level_25', now);
-    if (totalLvl >= 50) unlock(store, uid, 'level_50', now);
-    if (totalLvl >= 100) unlock(store, uid, 'level_100', now);
-    if (totalLvl >= 250) unlock(store, uid, 'level_250', now);
-    if (totalLvl >= 500) unlock(store, uid, 'level_500', now);
-    if ((prog.prestige || 0) >= 1) unlock(store, uid, 'prestige_1', now);
-    if ((prog.prestige || 0) >= 2) unlock(store, uid, 'prestige_2', now);
-    if ((prog.prestige || 0) >= 3) unlock(store, uid, 'prestige_3', now);
+  /* 📊 Metrik-Schleife (Progression 4.0): EIN Code für alle Zähler-
+     Achievements — der Katalog (`goal`) ist die einzige Wahrheit. */
+  const mx = achievementMetrics(profile, store, uid);
+  for (const a of ACHIEVEMENTS) {
+    if (!a.goal) continue;
+    if ((mx[a.goal.m] || 0) >= a.goal.n) unlock(store, uid, a.id, now);
+  }
+  /* 🎁 Achievement-XP (6.0): klein, gedeckelt, nur für Berechtigte.
+     Gutschrift sofort (einmalig, da nur frische Unlocks) — mögliche
+     Level-Ups hängen als .xpEvents am Array (Aufrufer kündigt sie an). */
+  if (now.length && profile) {
+    try {
+      const per = Math.max(0, Math.floor(Number(xpRules().xpRewards?.achievement) || 0));
+      if (per > 0 && xpEligible(profile)) {
+        const res = grantXp(profile, per * now.length, { source: 'achievements', _skipBadges: true });
+        now.xpEvents = res.events || [];
+        now.xpGranted = res.granted || 0;
+      }
+    } catch (e) {}
   }
   return now;
+}
+
+/* 🏆 Progression-3.0-Brücke: prüft ALLE Achievements für ein Profil
+   (Love.js ruft das nach XP-Vergaben auf), speichert nur bei
+   Neu-Freischaltungen und gibt die neuen Achievements zurück. */
+export function awardProgressionAchievements(profile) {
+  try {
+    const bid = profile?.identity?.bid;
+    if (!bid) return { achievements: [], badges: [] };
+    const store = loadStore();
+    /* 🔁 Mehrpass-Vergabe (5.0): Achievements (badges_*) und Badges
+       (collector_*) hängen voneinander ab — bis zu 3 Pässen, bis Ruhe ist. */
+    const freshAll = [], freshBadgesAll = [], xpEventsAll = [];
+    for (let pass = 0; pass < 3; pass++) {
+      const fresh = checkAchievements(store, bid, profile) || [];
+      for (const xev of (fresh.xpEvents || [])) xpEventsAll.push(xev);
+      /* 🏅 Sammlungs-Badges brauchen die echte Achievement-Zahl (Store) */
+      const gotCount = Object.keys((store.users?.[bid]?.achievements) || {}).length;
+      const freshBadges = awardBadges(profile, Date.now(), gotCount);
+      freshAll.push(...fresh); freshBadgesAll.push(...freshBadges);
+      if (!fresh.length && !freshBadges.length) break;
+    }
+    if (freshAll.length || freshBadgesAll.length) saveStore(store);
+    return { achievements: freshAll, badges: freshBadgesAll, xpEvents: xpEventsAll };
+  } catch (e) { return { achievements: [], badges: [] }; }
+}
+
+/* 🔓 Owner-Admin: Achievement manuell vergeben (nur echte Katalog-IDs).
+   Speichert selbst, gibt {ok, reason} zurück — Audit macht der Aufrufer. */
+export function unlockAchievementFor(bid, id) {
+  try {
+    if (!bid) return { ok: false, reason: 'no-bid' };
+    const a = ACHIEVEMENTS.find((x) => x.id === String(id || '').trim());
+    if (!a) return { ok: false, reason: 'unknown-id' };
+    const store = loadStore();
+    const u = user(store, bid);
+    if (u.achievements[a.id]) return { ok: false, reason: 'already-unlocked', achievement: a };
+    u.achievements[a.id] = Date.now();
+    saveStore(store);
+    try { engineEmit('ACHIEVEMENT_UNLOCKED', { bid, item: a.name }); } catch (e) {}
+    return { ok: true, achievement: a };
+  } catch (e) { return { ok: false, reason: 'error' }; }
+}
+
+/** Prüft Achievement-Daten (sanft: repariert Struktur, löscht nichts Verdientes). */
+export function validateAchievements(store, uid) {
+  const fixed = [], warnings = [];
+  const u = store?.users?.[uid];
+  if (!u) return { ok: true, fixed, warnings, skipped: 'no-user' };
+  if (!u.achievements || typeof u.achievements !== 'object') { u.achievements = {}; fixed.push('achievements: neu initialisiert'); }
+  if (!u.counters || typeof u.counters !== 'object') { u.counters = {}; fixed.push('counters: neu initialisiert'); }
+  for (const [id, ts] of Object.entries(u.achievements)) {
+    if (!Number.isFinite(Number(ts))) { u.achievements[id] = 0; fixed.push(id + ': Zeitstempel→0'); }
+    if (!ACHIEVEMENTS.some((a) => a.id === id)) warnings.push(id + ': unbekannte ID (bleibt erhalten)');
+  }
+  return { ok: fixed.length === 0 && warnings.length === 0, fixed, warnings };
 }
 
 /* Kleiner XP-Helfer für Spiele: gewährt XP über das Level-System und
@@ -245,14 +580,34 @@ function checkAchievements(store, uid, profile, events = []) {
 function gameXpLine(ctx, xp, source = 'games') {
   if (!ctx.helpers?.grantGameXp) return ' · 💜 +' + xp + ' XP';
   try { engineEmit(xp >= 5 ? 'GAME_WIN' : 'GAME_LOSS', { bid: ctx.uid, name: ctx.name, xp }); } catch (e) {}
-  const res = ctx.helpers.grantGameXp(xp, source);
+  const res = ctx.helpers.grantGameXp(xp, source, xp >= 5 ? 'win' : 'loss');
   if (!res) return '';
-  let line = ' · 💜 +' + xp + ' XP';
+  let line = ' · 💜 +' + (res.granted ?? xp) + ' XP';
   if (res.events?.length) {
     const isPrestige = res.events.some((e) => e.type === 'prestige');
-    line += '\n\n' + (isPrestige ? prestigeAnnounce(ctx.userProfile, ctx.name) : levelUpAnnounce(ctx.userProfile, ctx.name));
+    const lvlCount = res.events.filter((e) => e.type === 'levelup').length;
+    const finalLv = Math.max(0, Math.floor(Number(ctx.userProfile?.progression?.level) || 0));
+    line += '\n\n' + (isPrestige ? prestigeAnnounce(ctx.userProfile, ctx.name) : levelUpAnnounce(ctx.userProfile, ctx.name, { fromLevel: lvlCount > 1 ? finalLv - lvlCount : null }));
   }
   return line;
+}
+
+/* 🎁 Achievement-XP-Nachklapp (6.0): checkAchievements vergibt ggf. XP —
+   Profil sichern + Level-Up-Zeile für die Antwort liefern. */
+function achAftermath(ctx, unlocked) {
+  try { ctx.helpers.saveUserProfile(ctx.userProfile); } catch (e) {}
+  const evs = unlocked?.xpEvents || [];
+  if (evs.some((e) => e && e.type === 'prestige')) {
+    const pr = evs.filter((e) => e && e.type === 'prestige').pop();
+    return '\n\n👑 *PRESTIGE ' + pr.prestige + '!* Ein neues Kapitel beginnt.';
+  }
+  const lv = evs.filter((e) => e && e.type === 'levelup').pop();
+  return lv ? '\n\n🎉 *LEVEL UP!* Du bist jetzt Level *' + lv.level + '*' : '';
+}
+
+/* 🔒 Lock-Helfer (6.0): seriellisiert Profil-Mutationen (nutzt withProfileLock aus Love.js, Fallback direkt). */
+function lockOf(ctx) {
+  return ctx.helpers?.withProfileLock || ((bid, fn) => fn());
 }
 
 function achievementPopup(list) {
@@ -268,6 +623,10 @@ function achievementPopup(list) {
 const COMMANDS = new Map();
 
 function cmd(names, fn) { for (const n of names.split(' ')) COMMANDS.set(n, fn); }
+
+/* 💜 7.0: XP-Spiel-Commands (die einzigen gameXpLine-Caller: rob, hangman, riddle).
+   Gruppen-Engine zählt darüber echte Spiel-Aufrufe — keine erfundene Liste. */
+export const LOVEBOT_GAME_COMMANDS = new Set(['rob', 'raub', 'hangman', 'galgen', 'riddle', 'raetsel']);
 
 /* ── 💖 Beziehung ────────────────────────────────────────────────────── */
 cmd('relationship beziehung partner couple paare ehe', async (ctx, store) => {
@@ -368,12 +727,13 @@ cmd('lovebonus hearts', async (ctx, store) => {
       '💡 Verheiratete bekommen den doppelten Bonus — *' + ctx.pref + 'marry @user* 😉';
   }
 
-  userProfile.wallet ||= { copper: 0 };
-  userProfile.wallet.copper = (userProfile.wallet.copper || 0) + copper;
+  await lockOf(ctx)(userProfile?.identity?.bid || uid, async () => {
+    addCoins(userProfile, copper, { source: 'lovebonus', reason: married ? 'Couple-Bonus' : 'Singles-Bonus' });
+  });
   ctx.helpers.saveUserProfile(userProfile);
 
   const unlocked = checkAchievements(store, uid, userProfile, married ? ['couple_7'] : []);
-  await send(lines + (unlocked.length ? '\n\n' + LINE + '\n\n' + achievementPopup(unlocked) : ''));
+  await send(lines + (unlocked.length ? '\n\n' + LINE + '\n\n' + achievementPopup(unlocked) : '') + achAftermath(ctx, unlocked));
   return true;
 });
 
@@ -425,7 +785,7 @@ cmd('pet haustier', async (ctx, store) => {
       '❥ *' + pref + 'pet play* — spielen\n' +
       '❥ *' + pref + 'pet sleep* — schlafen legen\n' +
       '❥ *' + pref + 'pet* — Status\n\n' +
-      (unlocked.length ? achievementPopup(unlocked) : '_' + pick(['Ein Freund fürs Leben!', 'Zusammen durch dick und dünn. 💜']) + '_')
+      (unlocked.length ? achievementPopup(unlocked) : '_' + pick(['Ein Freund fürs Leben!', 'Zusammen durch dick und dünn. 💜']) + '_') + achAftermath(ctx, unlocked)
     );
     return true;
   }
@@ -449,7 +809,14 @@ cmd('pet haustier', async (ctx, store) => {
       await send('> 🍖 *Nicht genug Kupfer!*\nFüttern kostet 10 🪙 — hol dir *' + pref + 'lovebonus* oder *' + pref + 'work*.');
       return true;
     }
-    userProfile.wallet.copper -= cost;
+    let paid = null;
+    await lockOf(ctx)(userProfile?.identity?.bid || uid, async () => {
+      paid = removeCoins(userProfile, cost, { source: 'pet', reason: 'Füttern' });
+    });
+    if (!paid || !paid.ok) {
+      await send('> 🍖 *Nicht genug Kupfer!*\nFüttern kostet 10 🪙 — hol dir *' + pref + 'lovebonus* oder *' + pref + 'work*.');
+      return true;
+    }
     ctx.helpers.saveUserProfile(userProfile);
     pet.hunger = Math.min(100, pet.hunger + 35);
     pet.love = Math.min(100, pet.love + 5);
@@ -517,18 +884,30 @@ cmd('buy kaufen', async (ctx, store) => {
   const item = itemById(raw) || SHOP_ITEMS.find((i) => i.name.toLowerCase().startsWith(raw) && raw.length >= 3);
   if (!item) { await send('> ❓ Welches Item? Sieh dir den Shop an: *' + ctx.pref + 'shop*'); return true; }
 
-  const wallet = userProfile.wallet ||= { copper: 0 };
-  if ((wallet.copper || 0) < item.price) {
-    await send('> 💸 *Nicht genug Kupfer!*\n_' + item.emoji + ' ' + item.name + '_ kostet *' + item.price + ' 🪙* — du hast *' + (wallet.copper || 0) + '*.\n\n💡 ' + ctx.pref + 'lovebonus · ' + ctx.pref + 'work · ' + ctx.pref + 'daily');
+  const pv = validateShopPurchase(item, userProfile);
+  if (!pv.ok) {
+    await send(pv.reason === 'level'
+      ? '> 🔒 *' + item.emoji + ' ' + item.name + '* braucht Level *' + pv.need + '*.\nSammle erst XP — dann gehört es dir. 💪'
+      : '> 📝 Dafür musst du dich erst registrieren: *' + ctx.pref + 'register Name*');
     return true;
   }
-  wallet.copper -= item.price;
-  ctx.helpers.saveUserProfile(userProfile);
-  const u = user(store, uid);
-  u.inventory[item.id] = (u.inventory[item.id] || 0) + 1;
-  u.counters.shopSpent = (u.counters.shopSpent || 0) + item.price;
+  /* 💰 Kauf über die Economy-Engine (6.0): Lock + Log + kein Negativ-Saldo */
+  let res = null;
+  await lockOf(ctx)(userProfile?.identity?.bid || uid, async () => {
+    res = removeCoins(userProfile, item.price, { source: 'shop', reason: item.name });
+    if (res && res.ok) {
+      const u = user(store, uid);
+      u.inventory[item.id] = (u.inventory[item.id] || 0) + 1;
+      u.counters.shopSpent = (u.counters.shopSpent || 0) + item.price;
+    }
+  });
+  if (!res || !res.ok) {
+    await send('> 💸 *Nicht genug Kupfer!*\n_' + item.emoji + ' ' + item.name + '_ kostet *' + item.price + ' 🪙* — du hast *' + (userProfile.wallet?.copper || 0) + '*.\n\n💡 ' + ctx.pref + 'lovebonus · ' + ctx.pref + 'work · ' + ctx.pref + 'daily');
+    return true;
+  }
   const unlocked = checkAchievements(store, uid, userProfile);
-  await send('> ✅ *Gekauft!* ' + item.emoji + ' 1× _' + item.name + '_ (-' + item.price + ' 🪙)\n\n📦 Dein Inventar: *' + ctx.pref + 'inv*\n🎁 Verschenken: *' + ctx.pref + 'gift @user ' + item.id + '*' + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+  const after = achAftermath(ctx, unlocked);
+  await send('> ✅ *Gekauft!* ' + item.emoji + ' 1× _' + item.name + '_ (-' + item.price + ' 🪙)\n\n📦 Dein Inventar: *' + ctx.pref + 'inv*\n🎁 Verschenken: *' + ctx.pref + 'gift @user ' + item.id + '*' + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : '') + after);
   return true;
 });
 
@@ -552,12 +931,16 @@ cmd('gift schenken', async (ctx, store) => {
   const item = itemById(itemArg) || SHOP_ITEMS.find((i) => i.name.toLowerCase().startsWith(itemArg) && itemArg.length >= 3);
   const u = user(store, uid);
 
-  /* Nicht im Inventar? Automatisch kaufen, wenn genug Kupfer */
+  /* Nicht im Inventar? Automatisch kaufen (Economy-Engine, 6.0) */
   if (!item || (u.inventory[item.id] || 0) < 1) {
-    if (item && (userProfile.wallet?.copper || 0) >= item.price) {
-      userProfile.wallet.copper -= item.price;
-      u.counters.shopSpent = (u.counters.shopSpent || 0) + item.price;
-    } else {
+    let bought = false;
+    if (item) {
+      await lockOf(ctx)(userProfile?.identity?.bid || uid, async () => {
+        const res = removeCoins(userProfile, item.price, { source: 'shop', reason: 'Geschenk: ' + item.name });
+        if (res && res.ok) { bought = true; u.counters.shopSpent = (u.counters.shopSpent || 0) + item.price; }
+      });
+    }
+    if (!bought) {
       await send(item
         ? '> 📦 *Du hast kein „' + item.name + '“ im Inventar.*\nKaufe es zuerst: *' + pref + 'buy ' + item.id + '* (' + item.price + ' 🪙) — oder direkt genug Kupfer auf dem Konto, dann kauft der Bot es beim Verschenken automatisch.'
         : '> ❓ Welches Geschenk? *' + pref + 'shop* zeigt alles.');
@@ -566,6 +949,25 @@ cmd('gift schenken', async (ctx, store) => {
   } else {
     u.inventory[item.id] -= 1;
   }
+  /* 🎁 Geschenk-XP (6.0, regelbar via xpRewards) */
+  let giftXpLine = '';
+  try {
+    const xr = xpRules().xpRewards || {};
+    const gGot = Math.max(0, Math.floor(Number(xr.giftGiven) || 0));
+    const gRecv = Math.max(0, Math.floor(Number(xr.giftReceived) || 0));
+    if (gGot > 0 && xpEligible(userProfile)) {
+      const gres = grantXp(userProfile, gGot, { source: 'gifts' });
+      const gpr = (gres.events || []).filter((e) => e.type === 'prestige').pop();
+      const glv = (gres.events || []).filter((e) => e.type === 'levelup').pop();
+      if (gpr) giftXpLine = '\n👑 *PRESTIGE ' + gpr.prestige + '!*';
+      else if (glv) giftXpLine = '\n🎉 *LEVEL UP!* Level *' + glv.level + '*';
+    }
+    const rp = target.profile;
+    if (rp && gRecv > 0 && xpEligible(rp)) {
+      grantXp(rp, gRecv, { source: 'gifts' });
+      ctx.helpers.saveUserProfile(rp);
+    }
+  } catch (e) {}
   ctx.helpers.saveUserProfile(userProfile);
 
   const targetName = target.profile?.registration?.name || target.profile?.identity?.username || 'jemand';
@@ -593,7 +995,7 @@ cmd('gift schenken', async (ctx, store) => {
     '> 🎁 *EIN GESCHENK!*\n\n' + item.emoji + ' _' + item.name + '_\n' +
     'von *@' + ctx.helpers.cleanId(ctx.senderJid || ctx.senderLid) + '* für *@' + ctx.helpers.cleanId(target.jid || target.lid) + '*\n\n' +
     '_' + pick(['Wie süß! 🥺', 'Das kommt aus dem Herzen. 💜', 'Jemand hat dich sehr lieb!', 'Rosen, Teddys, Glück — alles da. 🌹']) + '_' +
-    coupleLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''),
+    coupleLine + giftXpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : '') + achAftermath(ctx, unlocked),
     [ctx.senderJid || ctx.senderLid, target.jid || target.lid].filter(Boolean)
   );
   return true;
@@ -604,14 +1006,27 @@ cmd('pay transfer überweisen', async (ctx, store) => {
   const target = await ctx.resolveTarget();
   const amount = Number(String(ctx.args.find((a) => /^\d+$/.test(a)) || '0'));
   if (!target || !amount || amount < 1) { await send('> ❓ Verwendung: *' + pref + 'pay @user <betrag>*'); return true; }
-  if (amount > 10000) { await send('> 🛑 Maximal 10.000 Kupfer pro Überweisung.'); return true; }
-  const wallet = userProfile.wallet ||= { copper: 0 };
-  if ((wallet.copper || 0) < amount) { await send('> 💸 Du hast nur *' + (wallet.copper || 0) + ' Kupfer* — angefragt waren *' + amount + '*.'); return true; }
-
-  wallet.copper -= amount;
+  if (target.key === ctx.myKey) { await send('> 😅 Dir selbst überweisen? Dein Kupfer bleibt, wo es ist.'); return true; }
   const tp = target.profile;
-  if (tp) { tp.wallet ||= { copper: 0 }; tp.wallet.copper = (tp.wallet.copper || 0) + amount; ctx.helpers.saveUserProfile(tp); }
+  if (!tp) { await send('> ❓ *Empfänger hat kein Profil.* Nur registrierte Nutzer können Kupfer empfangen.'); return true; }
+  /* 💸 Transfer über die Economy-Engine (6.0): Locks in bid-sortierter Reihenfolge (Deadlock-frei) */
+  const bA = userProfile?.identity?.bid || '', bB = tp?.identity?.bid || '';
+  const [first, second] = [bA, bB].sort();
+  const lockFn = lockOf(ctx);
+  let res = null;
+  const run = async () => { res = transferCoins(userProfile, tp, amount, {}); };
+  if (first && second && first !== second) await lockFn(first, async () => { await lockFn(second, run); });
+  else await lockFn(bA || bB, run);
   ctx.helpers.saveUserProfile(userProfile);
+  ctx.helpers.saveUserProfile(tp);
+  if (!res || !res.ok) {
+    const r = res || {};
+    if (r.reason === 'too-large') await send('> 🛑 Maximal *' + Number(r.max).toLocaleString('de-DE') + ' Kupfer* pro Überweisung.');
+    else if (r.reason === 'daily-cap') await send('> 🛑 *Tages-Limit erreicht:* *' + Number(r.cap).toLocaleString('de-DE') + ' Kupfer* pro Tag (bereits *' + Number(r.used).toLocaleString('de-DE') + '* überwiesen).');
+    else if (r.reason === 'self') await send('> 😅 Dir selbst überweisen? Dein Kupfer bleibt, wo es ist.');
+    else await send('> 💸 Du hast nur *' + (userProfile.wallet?.copper || 0) + ' Kupfer* — angefragt waren *' + amount + '*.');
+    return true;
+  }
   await ctx.sendWithMentions('> 🪙 *ÜBERWEISUNG*\n\n*' + amount.toLocaleString('de-DE') + ' Kupfer*\nvon *@' + ctx.helpers.cleanId(ctx.senderJid || ctx.senderLid) + '* → *@' + ctx.helpers.cleanId(target.jid || target.lid) + '*\n\n✅ Angekommen. _Geld kann Liebe nicht ersetzen — aber es hilft._ 😉', [ctx.senderJid || ctx.senderLid, target.jid || target.lid].filter(Boolean));
   return true;
 });
@@ -631,26 +1046,39 @@ cmd('rob raub', async (ctx, store) => {
   if (target.key === ctx.myKey) { await send('> 🤨 Dich selbst berauben? Bold move.'); return true; }
 
   const tp = target.profile;
-  const tWallet = tp ? (tp.wallet ||= { copper: 0 }) : null;
-  const tCopper = tWallet ? (tWallet.copper || 0) : 0;
+  if (!tp) { await send('> ❓ *Opfer hat kein Profil.* Nur registrierte Nutzer können beraubt werden.'); return true; }
+  const tCopper = tp.wallet?.copper || 0;
   if (tCopper < 50) { await send('> 🥲 *' + (target.name || 'Das Opfer') + ' hat nur ' + tCopper + ' Kupfer.*\nArme nicht berauben — das ist unsportlich.'); return true; }
 
   const stake = Math.min(100, Math.max(25, Math.floor(tCopper * 0.1)));
-  const wallet = userProfile.wallet ||= { copper: 0 };
-  if ((wallet.copper || 0) < stake) { await send('> 💸 Für einen Raub brauchst du mindestens *' + stake + ' Kupfer* Einsatz (10% des Opfers).'); return true; }
+  if ((userProfile.wallet?.copper || 0) < stake) { await send('> 💸 Für einen Raub brauchst du mindestens *' + stake + ' Kupfer* Einsatz (10% des Opfers).'); return true; }
   u.cooldowns.rob = now;
 
   const success = Math.random() < 0.4;
+  /* 🥷 Beute/Strafe über die Economy-Engine (6.0), beide Profile gelockt */
+  const rbA = userProfile?.identity?.bid || '', rbB = tp?.identity?.bid || '';
+  const [rFirst, rSecond] = [rbA, rbB].sort();
+  const rLock = lockOf(ctx);
+  const rRun = async (fn) => {
+    if (rFirst && rSecond && rFirst !== rSecond) await rLock(rFirst, async () => { await rLock(rSecond, fn); });
+    else await rLock(rbA || rbB, fn);
+  };
   if (success) {
     const loot = Math.max(25, Math.floor(tCopper * (0.15 + Math.random() * 0.2)));
     const stolen = Math.min(loot, tCopper);
-    if (tWallet) { tWallet.copper -= stolen; ctx.helpers.saveUserProfile(tp); }
-    wallet.copper = (wallet.copper || 0) + stolen;
+    let took = null;
+    await rRun(async () => { took = removeCoins(tp, stolen, { source: 'rob', reason: 'Beraubt von ' + (userProfile?.registration?.name || '?') }); });
+    if (!took || !took.ok) {
+      await send('> 💨 *Entkommen!* ' + (target.name || 'Das Opfer') + ' hat sein Kupfer gerade noch weggeschafft.');
+      return true;
+    }
+    await rRun(async () => { addCoins(userProfile, stolen, { source: 'rob', reason: 'Beute' }); });
+    ctx.helpers.saveUserProfile(tp);
     const xpLine = gameXpLine(ctx, 15, 'games');
     ctx.helpers.saveUserProfile(userProfile);
     await send('> 🏃‍♂️💨 *RAUB ERFOLGREICH!*\n\nDu hast *@' + ctx.helpers.cleanId(target.jid || target.lid) + '* *' + stolen + ' Kupfer* abgenommen! 😈\n\n_Aber Achtung: was kommt, geht auch._ Karma beobachtet dich.');
   } else {
-    wallet.copper = Math.max(0, (wallet.copper || 0) - stake);
+    await rRun(async () => { removeCoins(userProfile, stake, { source: 'rob', reason: 'Strafe (geschnappt)' }); });
     const xpLine = gameXpLine(ctx, 2, 'games');
     ctx.helpers.saveUserProfile(userProfile);
     await send('> 🚨 *GESCHNAPPT!*\n\nDer Raub ging schief — du zahlst *' + stake + ' Kupfer* Strafe und wartest 1 Stunde. 🚔\n\n_Ehrlich währt am längsten. Meistens._');
@@ -688,24 +1116,47 @@ cmd('letter liebesbrief', async (ctx, store) => {
   await ctx.sendWithMentions(
     '> 💌 *EIN LIEBESBRIEF FÜR DICH*\n\n' +
     '„' + text + '“\n\n' +
-    '— _' + ctx.name + '_ 🌹' + coupleLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''),
+    '— _' + ctx.name + '_ 🌹' + coupleLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : '') + achAftermath(ctx, unlocked),
     [target.jid || target.lid].filter(Boolean)
   );
   return true;
 });
 
 /* ── 🏆 Achievements ─────────────────────────────────────────────────── */
+const TIER_EMOJI = { bronze: '🥉', silver: '🥈', gold: '🥇', diamond: '💎', mythic: '👑' };
 cmd('achievements badges erfolge', async (ctx, store) => {
-  const { send } = ctx;
-  const u = user(store, ctx.uid);
-  const got = u.achievements || {};
-  const total = ACHIEVEMENTS.length;
-  const count = Object.keys(got).length;
-  const rows = ACHIEVEMENTS.map((a) => {
-    const has = got[a.id];
-    return (has ? a.emoji + ' ✅' : '🔒 ❌') + ' *' + a.name + '* — _' + a.desc + '_';
-  }).join('\n');
-  await send('> 🏆 *DEINE ACHIEVEMENTS* _(' + count + '/' + total + ')_\n\n' + rows + '\n\n' + LINE + '\n💡 Freischalten durch: Geschenke 🎁 · Pets 🐾 · Streaks 🔥 · Spiele 🎮 · Heiraten 💍');
+  const { send, args } = ctx;
+  const prog = achievementProgress(ctx.uid, ctx.userProfile);
+  const bar = (got, total, len = 8) => {
+    const f = total > 0 ? Math.round((got / total) * len) : 0;
+    return '█'.repeat(Math.min(len, f)) + '░'.repeat(Math.max(0, len - f));
+  };
+  const de = (n) => Number(n || 0).toLocaleString('de-DE');
+  const cats = Object.values(prog.byCat);
+  const tierLine = Object.values(prog.byTier || {}).map((t) => t.emoji + ' ' + t.got + '/' + t.total).join(' · ');
+  let text = '> 🏆 *DEINE ACHIEVEMENTS* _(' + prog.count + '/' + prog.total + ')_\n' + tierLine + '\n\n' +
+    cats.map((c) => c.emoji + ' *' + c.name.toUpperCase() + '*\n`' + bar(c.got, c.total) + '` ' + c.got + '/' + c.total).join('\n\n');
+  const showAll = ['all', 'alle'].includes(String(args[0] || '').toLowerCase());
+  const unlocked = prog.list.filter((e) => e.unlocked);
+  const inprog = prog.list.filter((e) => !e.unlocked && e.need > 0 && e.have > 0).sort((a, b) => b.pct - a.pct);
+  const locked = prog.list.filter((e) => !e.unlocked && !(e.need > 0 && e.have > 0));
+  text += '\n\n' + LINE + '\n\n✅ *FREIGESCHALTET (' + unlocked.length + ')*\n' +
+    (unlocked.length ? unlocked.map((e) => (TIER_EMOJI[e.tier] || '🏆') + ' *' + e.name + '*').join('\n') : '_Noch keine — chatte los! 💜_');
+  if (showAll) {
+    text += '\n\n🎯 *IN ARBEIT (' + inprog.length + ')*\n' + (inprog.length
+      ? inprog.slice(0, 20).map((e) => e.emoji + ' *' + e.name + '* `' + bar(e.have, e.need) + '` ' + de(e.have) + '/' + de(e.need)).join('\n') +
+        (inprog.length > 20 ? '\n_… +' + (inprog.length - 20) + ' weitere_' : '')
+      : '_Noch nichts angefangen — jedes Ziel beginnt mit Schritt 1._');
+    text += '\n\n🔒 *GESPERRT (' + locked.length + ')*\n' + locked.slice(0, 40).map((e) =>
+      '🔒 *' + e.name + '* — _' + e.desc + '_' + (e.need ? ' `(' + de(e.have) + '/' + de(e.need) + ')`' : '')).join('\n') +
+      (locked.length > 40 ? '\n_… +' + (locked.length - 40) + ' weitere_' : '');
+  } else {
+    text += '\n\n🎯 *ALS NÄCHSTES*\n' + (prog.next.length
+      ? prog.next.map((e) => e.emoji + ' *' + e.name + '* `' + de(e.have) + '/' + de(e.need) + '`').join('\n')
+      : '_Alles geschafft! 👑_') +
+      '\n\n💡 _Volle Liste (in Arbeit + gesperrt): ' + ctx.pref + 'achievements all_';
+  }
+  await send(text);
   return true;
 });
 
@@ -724,13 +1175,13 @@ cmd('hangman galgen', async (ctx, store) => {
         sess.shown = sess.word.split('').map((ch) => (ch === ' ' || sess.guessed.includes(ch)) ? ch : '_');
         if (!sess.shown.includes('_')) {
           const reward = 50;
-          userProfile.wallet ||= { copper: 0 }; userProfile.wallet.copper += reward;
+          addCoins(userProfile, reward, { source: 'games', reason: 'Hangman-Sieg' });
           const xpLine = gameXpLine(ctx, 15, 'games');
           ctx.helpers.saveUserProfile(userProfile);
           const u = user(store, uid); u.counters.hangmanWins = (u.counters.hangmanWins || 0) + 1;
           delete games['hangman:' + from];
           const unlocked = checkAchievements(store, uid, userProfile, ['hangman_win']);
-          await send('> 🎉 *GELÖST: ' + sess.word + '!*\n\n' + sess.word.split('').join(' ') + '\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+          await send('> 🎉 *GELÖST: ' + sess.word + '!*\n\n' + sess.word.split('').join(' ') + '\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : '') + achAftermath(ctx, unlocked));
           return true;
         }
         await send('> ✅ *Treffer!*\n\n`' + sess.shown.join(' ') + '`\n\n❤️ ' + '❤️'.repeat(Math.max(0, 8 - sess.wrong)) + '🖤'.repeat(sess.wrong) + '\n_Weiter raten oder aufgeben: ' + ctx.pref + 'hangman stop_');
@@ -757,13 +1208,13 @@ cmd('hangman galgen', async (ctx, store) => {
       /* Ganzes Wort geraten */
       if (guess.replace(/\s/g, '') === sess.word.replace(/\s/g, '')) {
         const reward = 50;
-        userProfile.wallet ||= { copper: 0 }; userProfile.wallet.copper += reward;
+        addCoins(userProfile, reward, { source: 'games', reason: 'Hangman-Sieg' });
         const xpLine = gameXpLine(ctx, 15, 'games');
         ctx.helpers.saveUserProfile(userProfile);
         const u = user(store, uid); u.counters.hangmanWins = (u.counters.hangmanWins || 0) + 1;
         delete games['hangman:' + from];
         const unlocked = checkAchievements(store, uid, userProfile, ['hangman_win']);
-        await send('> 🎉 *RICHTIG! Das Wort war ' + sess.word + '!*\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+        await send('> 🎉 *RICHTIG! Das Wort war ' + sess.word + '!*\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : '') + achAftermath(ctx, unlocked));
       } else {
         sess.wrong += 2;
         await send('> ❌ *Falsches Wort!* (+2 Fehler)\n\n`' + sess.shown.join(' ') + '`\n\n' + '❤️'.repeat(Math.max(0, 8 - sess.wrong)) + '🖤'.repeat(Math.min(8, sess.wrong)));
@@ -795,13 +1246,14 @@ cmd('riddle raetsel', async (ctx, store) => {
     const sess = games[key];
     if (normWord(answerRaw) === normWord(sess.a)) {
       const reward = 30;
-      userProfile.wallet ||= { copper: 0 }; userProfile.wallet.copper += reward;
+      addCoins(userProfile, reward, { source: 'games', reason: 'Rätsel gelöst' });
       ctx.helpers.saveUserProfile(userProfile);
       const xpLine = gameXpLine(ctx, 15, 'games');
       ctx.helpers.saveUserProfile(userProfile);
       delete games[key];
+      const ru = user(store, uid); ru.counters.riddlesSolved = (ru.counters.riddlesSolved || 0) + 1;
       const unlocked = checkAchievements(store, uid, userProfile, ['riddle_ok']);
-      await send('> 🧠✨ *RICHTIG!*\n\nDie Antwort war wirklich *' + sess.a + '*.\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : ''));
+      await send('> 🧠✨ *RICHTIG!*\n\nDie Antwort war wirklich *' + sess.a + '*.\n\n🪙 +' + reward + ' Kupfer' + xpLine + (unlocked.length ? '\n\n' + achievementPopup(unlocked) : '') + achAftermath(ctx, unlocked));
     } else if (/hint|tipp/i.test(answerRaw)) {
       await send('> 💡 *Tipp:* Die Antwort hat *' + sess.a.length + ' Buchstaben* und beginnt mit *„' + sess.a[0].toUpperCase() + '“*.');
     } else {
@@ -950,7 +1402,7 @@ export const LOVEPLUS_HELP_CMDS = [
   ['$pay @user <betrag>', 'Kupfer überweisen 🪙'],
   ['$rob @user', 'Kupfer rauben (40% Chance, 1h Cooldown) 😈'],
   ['$letter @user [stil]', 'Liebesbrief schicken 💌 (romantisch/suess/lustig)'],
-  ['$achievements', 'Deine Erfolge 🏆 (13 Achievements!)'],
+  ['$achievements', 'Deine Erfolge 🏆 (120 Achievements, 14 Kategorien, 5 Tiers!)'],
   ['$hangman', 'Galgenmännchen rund um die Liebe 🪢'],
   ['$riddle', 'Rätsel-Runde mit Kupfer-Belohnung 🧠'],
   ['$wouldyou', 'Würdest du eher …? 🤔'],
