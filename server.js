@@ -1362,8 +1362,15 @@ function serveStatic(req, res, urlPath) {
       res.writeHead(404, Object.assign({ 'Content-Type': 'text/plain; charset=utf-8' }, SECURITY_HEADERS));
       return res.end('404 — Nicht gefunden');
     }
-    res.writeHead(200, Object.assign({ 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream' }, SECURITY_HEADERS));
-    res.end(buf);
+    const ext = path.extname(full).toLowerCase();
+    let body = buf;
+    if (ext === '.html') {
+      const html = buf.toString('utf8');
+      const glassLink = '<link rel="stylesheet" href="/css/liquid-glass.css">';
+      body = Buffer.from(html.includes(glassLink) ? html : html.replace(/<\/head>/i, glassLink + '</head>'), 'utf8');
+    }
+    res.writeHead(200, Object.assign({ 'Content-Type': MIME[ext] || 'application/octet-stream' }, SECURITY_HEADERS));
+    res.end(body);
   });
 }
 

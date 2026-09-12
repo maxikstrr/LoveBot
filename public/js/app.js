@@ -56,6 +56,16 @@ async function loadOverview() {
     '<div class="stat"><div class="ico">👑</div><div class="num" id="statOwners">…</div><div class="lbl">Zusatz-Owner</div></div>' +
     '<div class="stat"><div class="ico">📡</div><div class="num" id="statFleet">…</div><div class="lbl">Aktive Sessions</div></div>' +
     '</div>' +
+    '<section class="glass-system" aria-labelledby="glassSystemTitle">' +
+      '<div class="glass-system-head"><div><div class="glass-kicker">LIVE SNAPSHOT</div><h2 id="glassSystemTitle">✦ System status</h2></div><span class="pill" id="glassSystemPill">⚪ UNKNOWN</span></div>' +
+      '<div class="glass-system-grid">' +
+        '<div class="glass-metric"><span>CPU</span><strong id="glassCpu">—</strong></div>' +
+        '<div class="glass-metric"><span>RSS</span><strong id="glassRam">—</strong></div>' +
+        '<div class="glass-metric"><span>HEAP</span><strong id="glassHeap">—</strong></div>' +
+        '<div class="glass-metric"><span>UPTIME</span><strong id="glassUptime">—</strong></div>' +
+      '</div>' +
+      '<div class="glass-system-foot"><span id="glassRuntime">Node — · —</span><span id="glassSessions">Sessions —</span></div>' +
+    '</section>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">' +
     '<div class="box"><h3>🤖 Bot-Info (live vom Heartbeat)</h3><div id="botInfo" class="kv"></div></div>' +
     '<div class="box"><h3>🏆 Top-Paare (Love-XP)</h3><div id="topCouples" class="kv"></div>' +
@@ -74,7 +84,7 @@ async function loadOverview() {
   await refreshOverview();
 }
 async function refreshOverview() {
-  const stats = await api('/api/stats');
+  const [stats, system] = await Promise.all([api('/api/stats'), api('/api/system')]);
   if (!stats) return;
   const hb = stats.heartbeat || {};
   const fresh = hb.time && Date.now() - new Date(hb.time).getTime() < 40000;
@@ -105,6 +115,23 @@ async function refreshOverview() {
   document.getElementById('statPets').textContent = lp.pets ?? '—';
   document.getElementById('statAch').textContent = lp.achievementsUnlocked ?? '—';
   document.getElementById('statFleet').textContent = fleet.running != null ? fleet.running + '/' + (fleet.managed ?? '—') : '—';
+
+  const sysOk = system && system.ok;
+  const setValue = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value == null ? '—' : value; };
+  const compactUptime = (seconds) => {
+    if (!Number.isFinite(Number(seconds))) return '—';
+    const total = Math.max(0, Math.floor(Number(seconds)));
+    const d = Math.floor(total / 86400), h = Math.floor((total % 86400) / 3600), m = Math.floor((total % 3600) / 60);
+    return d ? d + 'd ' + h + 'h' : h ? h + 'h ' + m + 'm' : m + 'm';
+  };
+  setValue('glassCpu', sysOk && system.cpu != null ? system.cpu + ' %' : 'UNKNOWN');
+  setValue('glassRam', sysOk && system.ramMb != null ? system.ramMb + ' MB' : 'UNKNOWN');
+  setValue('glassHeap', sysOk && system.heapMb != null ? system.heapMb + ' MB' : 'UNKNOWN');
+  setValue('glassUptime', sysOk ? compactUptime(system.uptimeSec) : 'UNKNOWN');
+  setValue('glassRuntime', sysOk ? 'Node ' + (system.node || 'UNKNOWN') + ' · ' + (system.platform || 'UNKNOWN') + '/' + (system.arch || 'UNKNOWN') : 'Runtime UNKNOWN');
+  setValue('glassSessions', 'Sessions ' + (sysOk && system.sessions != null ? system.sessions : 'UNKNOWN'));
+  const systemPill = document.getElementById('glassSystemPill');
+  if (systemPill) { systemPill.textContent = sysOk ? '🟢 LIVE' : '⚪ UNKNOWN'; systemPill.className = 'pill ' + (sysOk ? 'on' : 'unknown'); }
 
   document.getElementById('botInfo').innerHTML =
     '<div class="k">JID</div><div class="v">' + esc(hb.jid || '—') + '</div>' +

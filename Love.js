@@ -120,6 +120,7 @@ import { handleMediaCommand } from './mediacmds.js';
 
 /* ═══ 🏓 PING (echte Messwerte) + 🧭 ALLTAGS-TOOLS ═══ */
 import { handlePingCommand } from './pingcmd.js';
+import { buildSystemReport, renderSystemReport } from './systemReport.js';
 import { handleToolCommand } from './toolcmds.js';
 import { handleExtraCommand } from './extracmds.js';
 
@@ -2059,6 +2060,16 @@ function xpBarText(cur, needed, width = 18) {
   return { bar: '█'.repeat(filled) + '░'.repeat(width - filled), pct, rest: Math.max(0, n - c) };
 }
 
+function glassProfileHeader(title, subtitle = '') {
+  return [
+    '╭────────────────────────────────╮',
+    `│ ✦ LOVE•BOT · ${title.padEnd(Math.max(0, 25 - title.length))}│`,
+    subtitle ? `│ ${subtitle.slice(0, 30).padEnd(30)} │` : '│                                │',
+    '╰────────────────────────────────╯',
+    ''
+  ];
+}
+
 function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, username, regDate, pref = '$', personalInfo = null, loveMsgs = 0, memberDays = null, hideEconomy = false }) {
   const p = userProfile || {};
   const prog = p.progression || {};
@@ -2075,6 +2086,7 @@ function buildCompactProfileCard({ userProfile, snapshot, roleText = '', name, u
   const showUser = (username && username !== 'Nicht vorhanden') ? username : '';
   const verified = p.status?.verified === true;
 
+  out.push(...glassProfileHeader('PROFILE', showName));
   out.push('> 🌹✨ *' + showName + '* ✨🌹');
   if (showUser) out.push('> 🔗 ' + showUser);
   if (verified) out.push('> ✅ Verifiziert · 🛡️ DSGVO ' + (p.status?.dsgvo?.accepted ? '✓' : '—'));
@@ -2156,7 +2168,8 @@ function buildDetailProfileCard({ userProfile, snapshot, isHost = false, roleTex
   const cpCore = core.couple || {};
   const myActs = loveActionSummary(myCore.actions);
   const cpActs = loveActionSummary(cpCore.actions);
-  const out = ['> 🪪✨ *PROFIL — ALLES IM DETAIL* ✨🪪',
+  const out = [...glassProfileHeader('PROFILE · FULL', 'Live account view'),
+    '> 🪪✨ *PROFIL — ALLES IM DETAIL* ✨🪪',
     '> 💜 _Dein komplettes LoveBot-Profil · Werte live aus deinem Konto_'];
 
   /* 👑 Account (nur der Owner sieht das) */
@@ -2291,6 +2304,7 @@ function buildOwnerProfileCard({ userProfile, snapshot = null, roleText = '', na
   const daysMember = reg.registeredAt ? Math.max(0, Math.floor((Date.now() - new Date(reg.registeredAt).getTime()) / 86400000)) : null;
   const out = [];
 
+  out.push(...glassProfileHeader('OWNER PROFILE', 'Private host view'));
   out.push('> 👑✨ *LOVE BOT — OWNER PROFIL* ✨👑');
   out.push('> 💜 _Der Boss ist im Haus._ 🕶️');
   out.push('> 🌹┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈🌹');
@@ -5911,14 +5925,12 @@ case 'loadingaivid': {
                 console.log(c.bold + c.brightYellow + '[sys] Nicht-Host hat sys aufgerufen.' + c.reset);
                 break;
               }
-              const heapStats = v8.getHeapStatistics();
-              const usedMem = formatMemory(heapStats.used_heap_size);
-              const totalMem = formatMemory(heapStats.total_heap_size);
-              const limitMem = formatMemory(heapStats.heap_size_limit);
-              const responseText = `> *LOVE BOT — V8 SYSTEM SPEICHER* ⚙️\n\n` +
-                `• *Tatsächlicher V8-Verbrauch:* ${usedMem}\n` +
-                `• *V8 Heap Gesamt:* ${totalMem}\n` +
-                `• *V8 Heap Limit:* ${limitMem}`;
+              const report = await buildSystemReport({
+                db: readDb(),
+                sock,
+                sessionName: 'LoveBot'
+              });
+              const responseText = renderSystemReport(report);
               await sock.sendMessage(from, {
                 text: responseText
               }, {

@@ -312,3 +312,18 @@ Die neuen Befehle senden **Daten an externe Dienste** — nur das, was der Befeh
   nur Messdaten; die eigene öffentliche IP ist dabei naturgemäß sichtbar
 
 `$passwort` bleibt **komplett lokal** (kryptografischer Zufall, keine Ausgabe ins Log).
+
+## 9. `$sys` und Web-Systemstatus
+
+Der Host-Befehl `$sys` verwendet den gemeinsamen Bericht aus
+`systemReport.js`. Er zeigt ausschließlich echte Prozess-/OS-Werte
+(Node-Version, Plattform, Architektur, PID, Hostname, CPU-Sampling, RSS,
+Heap, External Memory und Uptime), die vorhandenen DB-Zähler sowie den
+aktuellen WhatsApp-WebSocket-Zustand. Fehlende Werte erscheinen als
+`UNKNOWN`; Zugangsdaten, Tokens und Session-Dateien werden nicht ausgegeben.
+
+Die Web-Übersicht nutzt dieselbe Datenquelle über `GET /api/system` und zeigt
+die Werte in einer responsiven Liquid-Glass-Fläche. CSS-Glas ist dabei bewusst
+auf die Webansicht beschränkt; WhatsApp erhält eine kompakte Textdarstellung.
+`$system`/`$stats` bleiben der bestehende Statistik-Handler und werden durch
+die `$sys`-Erweiterung nicht ersetzt.
