@@ -1,0 +1,368 @@
+{
+  "queue": [
+    {
+      "id": "675dc01a44a17cf21b87cbaf0e8134f013c1a29b1e40f3a2",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T21:59:23.083Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*776841*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T21:59:24.553Z"
+    },
+    {
+      "id": "de4869d303893416ddb7c2aa6053f68e5fa5a50fd2c041a0",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:01:13.525Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*755821*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:01:14.366Z"
+    },
+    {
+      "id": "7f31aeabd8b6cefc99c9c82df34761f3b7cbbeaba0fdd57d",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:06:11.790Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*944844*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:06:13.347Z"
+    },
+    {
+      "id": "07bfc573089cd0d00da3409d569804426287b071301587f7",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:09:40.144Z",
+      "text": "> 📢 *LOVE BOT — BROADCAST* 📢\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nTest\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n_Über das LoveBot-Dashboard_ 🌹",
+      "result": {
+        "sent": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "finishedAt": "2026-09-03T22:09:45.664Z"
+    },
+    {
+      "id": "46c48abba15ba25865fcfe1ee59403ae28693cebe5ee25f3",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:21:25.931Z",
+      "mentions": [
+        "4915155894714@s.whatsapp.net"
+      ],
+      "text": "🚫 *LOVE BOT — GEBANNT* 🚫\n\n👤 *Ziel:* 123@s.whatsapp.net\n📝 *Grund:* test\n🕒 *Zeit:* 4.9.2026, 00:21:25\n👑 *Durch:* @4915155894714\n🏷️ *Rolle:* @owner\n\n_Diese Information wurde vom Dashboard in alle Gruppen gesendet._",
+      "result": {
+        "sent": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "finishedAt": "2026-09-03T22:21:31.210Z"
+    },
+    {
+      "id": "c5b94ab534fc3153c5e126f0cd9252fc8b3cef0b864c5c5b",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:23:01.887Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*906292*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:23:02.679Z"
+    },
+    {
+      "id": "46184c42d12910384ec6d05f565e748ac1c0ced6dbb297f7",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:23:28.739Z",
+      "mentions": [
+        "4915155894714@s.whatsapp.net"
+      ],
+      "text": "✅ *LOVE BOT — ENTBANNT* ✅\n\n👤 *Ziel:* 867051314767696@s.whatsapp.net\n📝 *Grund:* zerstört mcib😭\n🕒 *Zeit:* 4.9.2026, 00:23:28\n👑 *Durch:* @4915155894714\n🏷️ *Rolle:* @owner\n\n_Diese Information wurde vom Dashboard in alle Gruppen gesendet._",
+      "result": {
+        "sent": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "finishedAt": "2026-09-03T22:23:34.759Z"
+    },
+    {
+      "id": "420d3aed6fb53532fafa1c13312ef6b5fe99f78148c48957",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:24:31.416Z",
+      "text": "> 📢 *LOVE BOT — BROADCAST* 📢\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nRandom werbung \n\n\nmaxichen.gamebot.me\nmaxichen.de\n\n\n\nhehe ~Maxichen\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n_Über das LoveBot-Dashboard_ 🌹",
+      "result": {
+        "sent": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "finishedAt": "2026-09-03T22:24:36.539Z"
+    },
+    {
+      "id": "38de7ff387556e46665bc5073e95cd60eff9ed0c43b870f9",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:29:02.347Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*920388*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:29:03.150Z"
+    },
+    {
+      "id": "204514e9410d2c5442405106cc383156f366604ecb0ad437",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:30:22.766Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*841387*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:30:22.855Z"
+    },
+    {
+      "id": "69e6f7666cecbcf1d064b30bb5bb6a8511bfdcedc8c6601f",
+      "type": "sendcode",
+      "to": "4915679260192",
+      "jid": "4915679260192@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:34:39.572Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*542374*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:34:40.210Z"
+    },
+    {
+      "id": "fb9af80bec1266a1a630297f4944a10b14bf7071ed928670",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:41:49.134Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*791998*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-03T22:41:49.992Z"
+    },
+    {
+      "id": "ecd489fd1be17f60bc6fa3c135e565cd6edf6b79bcb3e421",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-03T22:49:30.335Z",
+      "mentions": [
+        "4915155894714@s.whatsapp.net"
+      ],
+      "text": "🚫 *LOVE BOT — GEBANNT* 🚫\n\n👤 *Ziel:* 4915161545499@s.whatsapp.net\n📝 *Grund:* Test hehe\n🕒 *Zeit:* 4.9.2026, 00:49:30\n👑 *Durch:* @4915155894714\n🏷️ *Rolle:* @owner\n\n_Diese Information wurde vom Dashboard in alle Gruppen gesendet._",
+      "result": {
+        "sent": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "finishedAt": "2026-09-03T22:49:35.187Z"
+    },
+    {
+      "id": "0b3cb9c4abf493084d88a8be39a5c757ee56415d5839d9a8",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-05T15:59:40.975Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*176604*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-05T15:59:42.705Z"
+    },
+    {
+      "id": "ef9ca422e49ab06e5bbf11e232e08246b3e8f7a96e43ecd4",
+      "type": "sendcode",
+      "to": "491706148587",
+      "jid": "491706148587@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-05T18:09:06.313Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*777124*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-05T18:09:07.653Z"
+    },
+    {
+      "id": "1338cdd393d734586d983cedd2c1d3caed02a5b7d2a89134",
+      "type": "sendcode",
+      "to": "49155894714",
+      "jid": "49155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-05T18:13:20.108Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*949587*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-05T18:13:21.814Z"
+    },
+    {
+      "id": "15d83c71e64e819d793476a07056f57a16295e906db4542d",
+      "type": "sendcode",
+      "to": "49155894714",
+      "jid": "49155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-05T18:13:27.244Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*400036*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-05T18:13:27.828Z"
+    },
+    {
+      "id": "a99d7133d1254584248155c0214cad80b0fb7ec26f40d7c8",
+      "type": "sendcode",
+      "to": "4915155894714",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-05T23:34:06.776Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*846302*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "finishedAt": "2026-09-05T23:34:08.742Z"
+    },
+    {
+      "id": "1583f49a58f1a0c38d80a6ee6f35356843b174143a21c4d1",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T21:20:03.616Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T21:20:03.615Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T21:20:04.507Z"
+    },
+    {
+      "id": "727517b933aeff0d36a50954e28b0764d62696f90bdae5ab",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T21:24:48.705Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T21:24:48.705Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T21:24:49.495Z"
+    },
+    {
+      "id": "7b15325daaad7b526856287cfce440a41a852afff5281796",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T21:27:48.836Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T21:27:48.835Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T21:27:51.234Z"
+    },
+    {
+      "id": "01bece00382adb1f5c199037838eec98d0357d09fd2be9d8",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-07T22:55:54.462Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-07T22:55:54.462Z\nip: 176.5.75.63\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-07T22:55:56.345Z"
+    },
+    {
+      "id": "2cb2eec29a7fdfd8fd987def761ca5d4c698770b6ec2fb2f",
+      "type": "owner-notice",
+      "status": "error",
+      "createdAt": "2026-09-10T06:39:19.912Z",
+      "to": [
+        "4915155894714@s.whatsapp.net"
+      ],
+      "text": "🗑️ *SESSION GELÖSCHT* 🗑️\n\n• Session: *test910* (test910)\n• Gelöscht von: 910maxi (Dashboard)\n• Zeit: 10.9.2026, 08:39:19\n\nDas verknüpfte WhatsApp-Konto bleibt unberührt.\n— LoveBot ☾ Dashboard",
+      "result": {
+        "sent": 0,
+        "targets": 14
+      },
+      "error": "Owner-Nachricht konnte an keine JID gesendet werden.",
+      "finishedAt": "2026-09-10T06:39:20.075Z"
+    },
+    {
+      "id": "b74bcc35705e664f092a83463eb401a55eaa35433f89baf0",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-10T06:39:19.912Z",
+      "text": "🗑️ *SESSION ENTFERNT* 🗑️\n\nBot „test910“ wurde über das Dashboard aus der Session-Verwaltung entfernt.\n— LoveBot ☾",
+      "mentions": [],
+      "result": {
+        "sent": 0,
+        "failed": 0,
+        "total": 0
+      },
+      "finishedAt": "2026-09-10T06:39:20.076Z"
+    },
+    {
+      "id": "58aa44ea4daae0b18b73ddb2be8ea183ffbde59666b93c98",
+      "type": "group-notice",
+      "status": "error",
+      "createdAt": "2026-09-10T10:02:37.825Z",
+      "gid": "120363411386930403",
+      "text": "🎛️ *FEATURE-ÄNDERUNG — DASHBOARD* 🎛️\n\n👥 *Gruppe:* 𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe\n⚙️ *Feature:* 🔗 Anti-Link (antilink)\n✅ *Status:* DEAKTIVIERT\n👤 *Von:* @Owner/910maxi (Dashboard)\n📝 *Grund:* Brauche ich ned\n\n🔐 Diese Änderung wurde über das Dashboard per *Admin-Passwort* authentifiziert.\n— LoveBot ☾",
+      "mentionAdmins": true,
+      "feature": "antilink",
+      "on": false,
+      "actor": "910maxi",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-10T10:02:39.243Z"
+    },
+    {
+      "id": "cc8d5c117280e1f1919c85f1a14c1f0fa6f6493b33f6a84e",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "sent",
+      "createdAt": "2026-09-11T08:51:08.299Z",
+      "event": "USER_BANNED",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: USER_BANNED\nZeit: 2026-09-11T08:51:08.299Z\ntarget: 4915679687936@s.whatsapp.net\ntargetNumber: 4915679687936\ntargetJid: 4915679687936@s.whatsapp.net\nreason: Toter man direkt am besten WhatsApp perma wegen illegalen Stickern….\nbannedAt: 2026-09-11T08:51:08.295Z\nbannedBy: 910maxi\nbannedByRole: owner\nsource: web-dashboard\nrequestIp: 185.47.235.132\nuserAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Safari/605.1.15\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "finishedAt": "2026-09-11T08:51:11.439Z"
+    },
+    {
+      "id": "928b3753455a1a264c6f83874940f66bd18aec7ebd345283",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-11T08:51:08.301Z",
+      "mentions": [
+        "4915155894714@s.whatsapp.net"
+      ],
+      "text": "🚫 *LOVE BOT — GEBANNT* 🚫\n\n👤 *Ziel:* 4915679687936@s.whatsapp.net\n📝 *Grund:* Toter man direkt am besten WhatsApp perma wegen illegalen Stickern….\n🕒 *Zeit:* 11.9.2026, 10:51:08\n👑 *Durch:* @4915155894714\n🏷️ *Rolle:* @owner\n\n_Diese Information wurde vom Dashboard in alle Gruppen gesendet._",
+      "result": {
+        "sent": 3,
+        "failed": 0,
+        "total": 3
+      },
+      "finishedAt": "2026-09-11T08:51:13.617Z"
+    },
+    {
+      "id": "6a6b16550529c311fbd9172b2667382f9ade7553ec1895a1",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-12T02:25:50.840Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-12T02:25:50.839Z\nip: 127.0.0.1\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-12T02:25:50.880Z"
+    },
+    {
+      "id": "0c1a4c6d87b7ad12cd053c4041f13c301e9aa7b2f1012651",
+      "type": "sendcode",
+      "to": "145787235789",
+      "jid": "145787235789@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-12T04:29:07.542Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*445101*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-12T04:29:08.834Z"
+    },
+    {
+      "id": "1f456102434841b3edc4fe5e9995bf1d42286cdcf5682671",
+      "type": "sendcode",
+      "to": "145787235789",
+      "jid": "145787235789@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-12T04:29:08.373Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*954021*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-12T04:29:08.835Z"
+    },
+    {
+      "id": "a3b7fb4862acebab8adead4c3ffaa1e28013983866100276",
+      "type": "sendcode",
+      "to": "145787235789",
+      "jid": "145787235789@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-12T04:29:10.299Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*904776*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-12T04:29:10.834Z"
+    }
+  ]
+}

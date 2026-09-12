@@ -1,0 +1,129 @@
+{
+  "groupId": "120363428769698401",
+  "groupJid": "120363428769698401@g.us",
+  "subject": "𝐀𝐆𝐀💫🤍[+1k]",
+  "creator": "30189543264277@lid",
+  "owner": "30189543264277@lid",
+  "ownerUsername": null,
+  "active": false,
+  "activatedAt": null,
+  "activatedBy": null,
+  "createdAt": "2026-09-11T11:45:56.534Z",
+  "gset": {
+    "welcome": true,
+    "goodbye": true,
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "automod": true,
+    "autoreply": false,
+    "mentionGuard": false,
+    "commandProtection": false,
+    "aiEnabled": false,
+    "economyEnabled": true,
+    "progressionEnabled": true,
+    "logsEnabled": true
+  },
+  "xp": {
+    "total": 26,
+    "level": 0,
+    "msgs": 13,
+    "games": 0,
+    "members": {
+      "245517544079530": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789127156538
+      },
+      "221015259009157": {
+        "m": 3,
+        "xp": 6,
+        "games": 0,
+        "last": 1789127173027
+      },
+      "152824331657391": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789127395143
+      },
+      "147391063802082": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789127410702
+      },
+      "269574108926096": {
+        "m": 7,
+        "xp": 14,
+        "games": 0,
+        "last": 1789128988018
+      }
+    },
+    "week": {
+      "k": "2026-W37",
+      "xp": 26
+    },
+    "month": {
+      "k": "2026-09",
+      "xp": 26
+    },
+    "daily": {
+      "k": "2026-09-11",
+      "msgs": 13
+    },
+    "streak": {
+      "c": 1,
+      "last": "2026-09-11"
+    },
+    "history": {
+      "2026-09-11": 26
+    }
+  },
+  "goals": {
+    "daily": {
+      "k": "2026-09-11",
+      "target": 50,
+      "progress": 13,
+      "claimed": false
+    },
+    "weekly": {
+      "k": "2026-W37",
+      "target": 200,
+      "progress": 26,
+      "claimed": false
+    }
+  },
+  "gach": {},
+  "gbadges": {},
+  "gevents": [],
+  "gaudit": [],
+  "gtreasury": {
+    "balance": 0,
+    "log": []
+  },
+  "gbanned": {},
+  "warnCfg": {
+    "w1": "warn",
+    "w2": "warn",
+    "w3": "kick"
+  },
+  "memberCount": 999,
+  "adminCount": 3,
+  "metaAt": 1789128655374,
+  "autodl": false,
+  "welcome": false,
+  "goodbye": false,
+  "kick": false,
+  "promote": false,
+  "demote": false,
+  "liebe": false,
+  "fun": false,
+  "media": false,
+  "tools": false,
+  "badwords": false,
+  "antilink": false,
+  "night": false,
+  "afk": false
+}

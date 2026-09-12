@@ -1,0 +1,1209 @@
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 00:04:57       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/2
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+00:04:57  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+04:00:38  200 ✓ GET  /api/heartbeat  · 6 ms
+04:37:45  200 ✓ GET  /api/maintenance  · 2 ms
+04:37:46  200 ✓ GET  /api/commands  · 2 ms
+04:37:46  200 ✓ GET  /api/siteinfo  · 4 ms
+07:55:51  200 ✓ GET  /api/maintenance  · 1 ms
+07:55:51  200 ✓ GET  /api/heartbeat  · 2 ms
+07:55:51  401 ✕ GET  /api/me  · 1 ms
+07:55:51  401 ✕ GET  /api/me  · 1 ms
+07:55:52  200 ✓ GET  /api/heartbeat  · 1 ms
+08:02:11  200 ✓ POST /api/check-number  · 3 ms
+08:02:15  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+08:02:15  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+08:02:15  200 ✓ POST /api/login  · 8 ms
+08:02:16  200 ✓ GET  /api/maintenance  · 1 ms
+08:02:16  200 ✓ GET  /api/heartbeat  · 1 ms
+08:02:16  200 ✓ GET  /api/me  · 6 ms
+08:02:17  200 ✓ GET  /api/me  · 7 ms
+08:02:17  200 ✓ GET  /api/stats  · 8 ms
+08:02:17  200 ✓ GET  /api/logs  · 3 ms
+08:02:17  200 ✓ GET  /api/sessions  · 4 ms
+08:02:22  200 ✓ GET  /api/logs  · 2 ms
+08:04:40  200 ✓ GET  /api/heartbeat  · 1 ms
+08:04:40  200 ✓ GET  /api/logs  · 2 ms
+08:05:39  200 ✓ GET  /api/logs  · 2 ms
+08:05:39  200 ✓ GET  /api/heartbeat  · 1 ms
+08:05:40  200 ✓ GET  /api/downloads/list  · 3 ms
+08:05:41  401 ✕ GET  /api/sessions/all  · 3 ms
+08:05:42  200 ✓ GET  /api/stats  · 5 ms
+08:05:42  200 ✓ GET  /api/system  · 2 ms
+08:05:43  200 ✓ GET  /api/stats  · 5 ms
+08:05:43  200 ✓ GET  /api/logs  · 2 ms
+08:05:43  200 ✓ GET  /api/sessions  · 5 ms
+08:05:45  200 ✓ GET  /api/accounts  · 3 ms
+08:05:45  200 ✓ GET  /api/history  · 5 ms
+08:05:47  200 ✓ GET  /api/heartbeat  · 1 ms
+08:05:55  200 ✓ GET  /api/heartbeat  · 1 ms
+08:05:56  200 ✓ POST /api/logout  · 2 ms
+08:05:56  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:23  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:28  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:30  200 ✓ GET  /api/maintenance  · 2 ms
+08:38:30  200 ✓ GET  /api/commands  · 1 ms
+08:38:30  200 ✓ GET  /api/siteinfo  · 4 ms
+08:38:33  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:38  200 ✓ POST /api/check-number  · 2 ms
+08:38:43  AUTH_FAILURE               185.47.235.132           risk 30
+08:38:43  DENIED     › owner › login.failed · web → denied
+08:38:43  401 ✕ POST /api/login  · 5 ms
+08:38:48  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+08:38:48  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+08:38:48  200 ✓ POST /api/login  · 6 ms
+08:38:49  200 ✓ GET  /api/maintenance  · 1 ms
+08:38:49  200 ✓ GET  /api/heartbeat  · 1 ms
+08:38:49  200 ✓ GET  /api/me  · 4 ms
+08:38:49  200 ✓ GET  /api/me  · 3 ms
+08:38:49  200 ✓ GET  /api/stats  · 6 ms
+08:38:50  200 ✓ GET  /api/logs  · 4 ms
+08:38:50  200 ✓ GET  /api/sessions  · 3 ms
+08:38:54  200 ✓ GET  /api/logs  · 2 ms
+08:38:55  401 ✕ GET  /api/sessions/all  · 4 ms
+08:38:57  200 ✓ GET  /api/heartbeat  · 1 ms
+08:39:03  STEP_UP_REAUTH_OK          910maxi                  risk 5
+08:39:03  ADMIN      › 910maxi › reauth.ok · reauth.verify
+08:39:03  200 ✓ POST /api/reauth/verify  · 7 ms
+08:39:03  200 ✓ GET  /api/sessions/all  · 3 ms
+08:39:05  200 ✓ GET  /api/heartbeat  · 1 ms
+08:39:08  200 ✓ GET  /api/stats  · 5 ms
+08:39:08  200 ✓ GET  /api/system  · 2 ms
+08:39:09  200 ✓ GET  /api/sessions  · 3 ms
+08:39:10  200 ✓ GET  /api/stats  · 5 ms
+08:39:10  200 ✓ GET  /api/system  · 2 ms
+08:39:11  200 ✓ GET  /api/sessions  · 4 ms
+08:39:13  200 ✓ GET  /api/heartbeat  · 3 ms
+08:39:19  AUDIT      › 910maxi › session.delete · test910 → success
+08:39:19  ADMIN      › 910maxi › session.delete · test910
+08:39:19  200 ✓ POST /api/session/delete  · 8 ms
+08:39:19  200 ✓ GET  /api/sessions  · 3 ms
+08:39:21  200 ✓ GET  /api/stats  · 6 ms
+08:39:21  200 ✓ GET  /api/system  · 2 ms
+08:39:21  200 ✓ GET  /api/heartbeat  · 2 ms
+08:39:22  200 ✓ GET  /api/sessions  · 3 ms
+08:39:25  200 ✓ POST /api/logout  · 2 ms
+08:39:25  200 ✓ GET  /api/heartbeat  · 1 ms
+09:32:09  200 ✓ GET  /api/maintenance  · 2 ms
+09:32:09  200 ✓ GET  /api/commands  · 2 ms
+09:32:09  200 ✓ GET  /api/siteinfo  · 3 ms
+11:14:29  200 ✓ GET  /api/maintenance  · 2 ms
+11:14:29  200 ✓ GET  /api/commands  · 1 ms
+11:14:30  200 ✓ GET  /api/siteinfo  · 3 ms
+11:14:34  200 ✓ GET  /api/maintenance  · 1 ms
+11:14:34  200 ✓ GET  /api/commands  · 1 ms
+11:14:34  200 ✓ GET  /api/siteinfo  · 3 ms
+11:14:36  200 ✓ GET  /api/heartbeat  · 1 ms
+11:14:48  200 ✓ POST /api/check-number  · 2 ms
+11:14:53  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+11:14:53  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+11:14:53  200 ✓ POST /api/login  · 5 ms
+11:14:54  200 ✓ GET  /api/maintenance  · 1 ms
+11:14:54  200 ✓ GET  /api/heartbeat  · 1 ms
+11:14:55  200 ✓ GET  /api/me  · 4 ms
+11:14:55  200 ✓ GET  /api/me  · 4 ms
+11:14:55  200 ✓ GET  /api/stats  · 6 ms
+11:14:55  200 ✓ GET  /api/logs  · 3 ms
+11:14:55  200 ✓ GET  /api/sessions  · 3 ms
+11:14:58  200 ✓ GET  /api/downloads/list  · 3 ms
+11:15:03  200 ✓ GET  /api/heartbeat  · 1 ms
+11:15:07  AUDIT      › 910maxi › download.zip · all-in-one → success
+11:15:07  ADMIN      › 910maxi › download.zip · LoveBot-All-in-One
+11:15:07  200 ✓ POST /api/downloads/zip  · 51 ms
+11:15:11  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:39  200 ✓ GET  /api/maintenance  · 1 ms
+11:18:39  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:39  200 ✓ GET  /api/me  · 3 ms
+11:18:39  200 ✓ GET  /api/me  · 3 ms
+11:18:40  200 ✓ GET  /api/downloads/list  · 4 ms
+11:18:41  200 ✓ GET  /api/downloads/list  · 3 ms
+11:18:47  401 ✕ GET  /api/sessions/all  · 3 ms
+11:18:48  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:56  200 ✓ GET  /api/heartbeat  · 1 ms
+11:20:44  200 ✓ GET  /api/heartbeat  · 1 ms
+11:20:57  200 ✓ GET  /api/heartbeat  · 2 ms
+11:21:05  200 ✓ GET  /api/heartbeat  · 1 ms
+11:28:18  200 ✓ GET  /api/maintenance  · 1 ms
+11:28:18  200 ✓ GET  /api/heartbeat  · 2 ms
+11:28:18  200 ✓ GET  /api/me  · 4 ms
+11:28:18  200 ✓ GET  /api/me  · 3 ms
+11:28:18  401 ✕ GET  /api/sessions/all  · 4 ms
+11:28:23  200 ✓ POST /api/logout  · 7 ms
+11:28:23  200 ✓ GET  /api/heartbeat  · 2 ms
+11:28:28  200 ✓ GET  /api/maintenance  · 2 ms
+11:28:28  200 ✓ GET  /api/commands  · 2 ms
+11:28:28  200 ✓ GET  /api/siteinfo  · 4 ms
+12:01:03  200 ✓ GET  /api/maintenance  · 1 ms
+12:01:03  200 ✓ GET  /api/commands  · 1 ms
+12:01:03  200 ✓ GET  /api/siteinfo  · 3 ms
+12:01:08  200 ✓ GET  /api/heartbeat  · 2 ms
+12:01:16  200 ✓ POST /api/check-number  · 1 ms
+12:01:23  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+12:01:23  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+12:01:23  200 ✓ POST /api/login  · 6 ms
+12:01:24  200 ✓ GET  /api/maintenance  · 2 ms
+12:01:24  200 ✓ GET  /api/heartbeat  · 1 ms
+12:01:24  200 ✓ GET  /api/me  · 3 ms
+12:01:24  200 ✓ GET  /api/me  · 4 ms
+12:01:24  200 ✓ GET  /api/stats  · 6 ms
+12:01:24  200 ✓ GET  /api/logs  · 3 ms
+12:01:24  200 ✓ GET  /api/sessions  · 4 ms
+12:01:26  401 ✕ GET  /api/sessions/all  · 3 ms
+12:01:32  200 ✓ GET  /api/heartbeat  · 1 ms
+12:01:34  STEP_UP_REAUTH_OK          910maxi                  risk 5
+12:01:34  ADMIN      › 910maxi › reauth.ok · reauth.verify
+12:01:34  200 ✓ POST /api/reauth/verify  · 6 ms
+12:01:34  200 ✓ GET  /api/sessions/all  · 3 ms
+12:01:34  200 ✓ GET  /api/stats  · 5 ms
+12:01:34  200 ✓ GET  /api/accounts  · 4 ms
+12:01:34  200 ✓ GET  /api/groups  · 3 ms
+12:01:34  200 ✓ GET  /api/admin-actions  · 3 ms
+12:01:34  200 ✓ GET  /api/sessions  · 3 ms
+12:01:40  200 ✓ GET  /api/heartbeat  · 1 ms
+12:01:42  STEP_UP_REAUTH_OK          910maxi                  risk 5
+12:01:42  ADMIN      › 910maxi › export.xlsx · owner-export
+12:01:42  200 ✓ POST /api/export/xlsx  · 41 ms
+12:02:04  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:11  200 ✓ GET  /api/groups  · 2 ms
+12:02:12  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:14  200 ✓ GET  /api/groups  · 3 ms
+12:02:15  200 ✓ GET  /api/groups  · 3 ms
+12:02:20  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:28  401 ✕ POST /api/groups/toggle  · 3 ms
+12:02:28  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:36  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:37  STEP_UP_REAUTH_OK          910maxi                  risk 5
+12:02:37  AUDIT      › 910maxi › feature.antilink.off · 120363411386930403 (𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe) — Brauche ich ned → success
+12:02:37  ADMIN      › 910maxi › feature.toggle · 120363411386930403 | 𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe | antilink
+12:02:37  200 ✓ POST /api/groups/toggle  · 11 ms
+12:02:37  200 ✓ GET  /api/groups  · 2 ms
+12:02:42  200 ✓ GET  /api/stats  · 4 ms
+12:02:42  200 ✓ GET  /api/logs  · 4 ms
+12:02:42  200 ✓ GET  /api/sessions  · 3 ms
+12:02:44  200 ✓ GET  /api/downloads/list  · 3 ms
+12:02:44  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:47  200 ✓ GET  /api/logs  · 2 ms
+12:02:50  200 ✓ GET  /api/logs  · 3 ms
+12:02:52  200 ✓ GET  /api/heartbeat  · 1 ms
+12:02:53  200 ✓ GET  /api/logs  · 3 ms
+12:02:56  200 ✓ GET  /api/logs  · 2 ms
+12:02:59  200 ✓ GET  /api/logs  · 2 ms
+12:03:00  200 ✓ GET  /api/logs  · 3 ms
+12:03:00  200 ✓ GET  /api/heartbeat  · 1 ms
+12:03:00  200 ✓ GET  /api/logs  · 3 ms
+12:03:01  200 ✓ GET  /api/logs  · 3 ms
+12:03:02  200 ✓ GET  /api/logs  · 3 ms
+12:03:03  200 ✓ GET  /api/logs  · 4 ms
+12:03:03  200 ✓ GET  /api/logs  · 3 ms
+12:03:03  200 ✓ GET  /api/logs  · 2 ms
+12:03:04  200 ✓ GET  /api/logs  · 3 ms
+12:03:04  200 ✓ GET  /api/logs  · 2 ms
+12:03:05  200 ✓ GET  /api/logs  · 3 ms
+12:03:06  200 ✓ GET  /api/logs  · 3 ms
+12:03:06  200 ✓ GET  /api/logs  · 3 ms
+12:03:06  200 ✓ GET  /api/logs  · 3 ms
+12:03:08  200 ✓ GET  /api/logs  · 3 ms
+12:03:08  200 ✓ POST /api/logout  · 2 ms
+12:03:09  200 ✓ GET  /api/heartbeat  · 2 ms
+12:03:09  200 ✓ GET  /api/maintenance  · 1 ms
+12:03:10  200 ✓ GET  /api/commands  · 2 ms
+12:03:10  200 ✓ GET  /api/siteinfo  · 2 ms
+12:03:15  200 ✓ GET  /api/maintenance  · 1 ms
+12:03:16  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:18  200 ✓ GET  /api/maintenance  · 1 ms
+12:03:18  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:18  200 ✓ GET  /api/commands  · 1 ms
+12:03:23  200 ✓ GET  /api/siteinfo  · 2 ms
+12:03:28  200 ✓ GET  /api/siteinfo  · 2 ms
+12:03:33  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:38  200 ✓ GET  /api/siteinfo  · 3 ms
+12:03:44  200 ✓ GET  /api/siteinfo  · 2 ms
+13:57:54  200 ✓ GET  /api/maintenance  · 2 ms
+13:57:54  200 ✓ GET  /api/commands  · 1 ms
+13:57:55  200 ✓ GET  /api/siteinfo  · 2 ms
+13:58:12  200 ✓ GET  /api/heartbeat  · 2 ms
+13:58:43  200 ✓ POST /api/check-number  · 2 ms
+13:58:52  200 ✓ GET  /api/siteinfo  · 3 ms
+13:59:05  200 ✓ GET  /api/maintenance  · 1 ms
+13:59:07  200 ✓ GET  /api/commands  · 1 ms
+13:59:08  200 ✓ GET  /api/siteinfo  · 3 ms
+13:59:20  200 ✓ GET  /api/maintenance  · 1 ms
+13:59:20  200 ✓ GET  /api/commands  · 1 ms
+13:59:21  200 ✓ GET  /api/siteinfo  · 2 ms
+14:18:16  200 ✓ GET  /api/maintenance  · 1 ms
+14:18:16  200 ✓ GET  /api/commands  · 1 ms
+14:18:16  200 ✓ GET  /api/siteinfo  · 3 ms
+14:40:06  200 ✓ GET  /api/maintenance  · 1 ms
+14:40:06  200 ✓ GET  /api/commands  · 2 ms
+14:40:06  200 ✓ GET  /api/siteinfo  · 2 ms
+15:46:55  200 ✓ GET  /api/maintenance  · 1 ms
+15:46:55  200 ✓ GET  /api/commands  · 2 ms
+15:46:55  200 ✓ GET  /api/siteinfo  · 2 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 15:48:51       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+15:48:51  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+15:48:56  200 ✓ GET  /api/leaderboard  · 7 ms
+15:48:56  200 ✓ GET  /api/legal-check  · 1 ms
+15:48:56  200 ✓ GET  /api/legal-check
+15:48:56  200 ✓ GET  /api/leaderboard  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 15:49:14       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+15:49:14  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+15:49:21  200 ✓ GET  /api/leaderboard  · 8 ms
+15:50:10  200 ✓ GET  /api/legal-check  · 1 ms
+15:50:10  200 ✓ GET  /api/leaderboard  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:06:23       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:06:23  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:06:28  500 !! GET  /api/health  · 7 ms
+16:07:10  500 !! GET  /api/health  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:07:21       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:07:21  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:07:24  200 ✓ GET  /api/health  · 9 ms
+16:07:31  200 ✓ GET  /api/xp  · 7 ms
+16:07:42  AUDIT      › 910maxi › xp.adjusted · 4915155894714jid269574108926096lid: +100 XP — Test Phase 1: LoveCore-Integration → success
+16:07:42  200 ✓ POST /api/xp/adjust  · 4 ms
+16:07:42  400 ✕ POST /api/xp/adjust  · 2 ms
+16:07:49  200 ✓ GET  /api/security/rules  · 1 ms
+16:07:49  401 ✕ POST /api/security/rules  · 1 ms
+16:07:56  ABUSE_BURST_DETECTED       127.0.0.1                risk 35
+16:08:03  200 ✓ GET  /api/admin/overview  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:08:37       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:08:37  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:08:39  200 ✓ GET  /api/xp  · 14 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:09:56       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:09:56  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:10:07  200 ✓ GET  /api/xp  · 12 ms
+16:10:07  200 ✓ GET  /api/health  · 1 ms
+16:10:07  200 ✓ GET  /api/security/rules
+16:10:07  200 ✓ GET  /api/admin/overview  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:27:46       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:27:46  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:27:53  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail/full  · 12 ms
+16:27:53  200 ✓ GET  /api/owner-alerts  · 2 ms
+16:27:53  200 ✓ GET  /api/features
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:28:07       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:28:07  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:28:13  200 ✓ GET  /api/owner-alerts  · 9 ms
+16:28:13  200 ✓ POST /api/owner-alerts/read  · 2 ms
+16:29:11  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail/full  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 16:56:30       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+16:56:30  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+16:56:44  401 ✕ GET  /api/notifications  · 8 ms
+16:56:44  401 ✕ GET  /api/xp/rules  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 19:16:13       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+19:16:13  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+19:18:18  200 ✓ GET  /api/maintenance  · 10 ms
+19:18:18  200 ✓ GET  /api/commands  · 1 ms
+19:18:18  200 ✓ GET  /api/siteinfo  · 5 ms
+19:18:18  200 ✓ GET  /api/statistics  · 11 ms
+19:18:27  200 ✓ GET  /api/maintenance  · 1 ms
+19:18:27  200 ✓ GET  /api/commands  · 33 ms
+19:18:27  200 ✓ GET  /api/siteinfo  · 6 ms
+19:18:27  200 ✓ GET  /api/statistics  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 19:19:41       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+19:19:41  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 20:34:33       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:17999
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+20:34:33  BOOT       › Dashboard-Webserver gestartet (Port 17999).
+20:34:36  200 ✓ GET  /api/leaderboard  · 9 ms
+20:34:36  200 ✓ GET  /api/leaderboard  · 1 ms
+20:34:37  401 ✕ GET  /api/profile/me  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 20:40:56       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:17998
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+20:40:56  BOOT       › Dashboard-Webserver gestartet (Port 17998).
+20:41:01  200 ✓ GET  /api/leaderboard  · 10 ms
+20:41:01  401 ✕ GET  /api/profile/me  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  10.9.2026, 21:31:21       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:17997
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+21:31:21  BOOT       › Dashboard-Webserver gestartet (Port 17997).
+21:31:27  401 ✕ GET  /api/groups  · 8 ms
+21:31:27  401 ✕ GET  /api/economy  · 1 ms
+21:31:27  401 ✕ GET  /api/progression/me
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 01:01:20       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+01:01:20  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+01:01:31  200 ✓ GET  /api/maintenance  · 9 ms
+01:01:31  200 ✓ GET  /api/commands  · 1 ms
+01:01:32  200 ✓ GET  /api/siteinfo  · 3 ms
+01:01:32  200 ✓ GET  /api/statistics  · 4 ms
+01:01:41  401 ✕ GET  /api/health  · 1 ms
+01:01:46  401 ✕ GET  /api/health  · 1 ms
+01:01:49  200 ✓ GET  /api/heartbeat  · 1 ms
+01:02:10  403 ✕ GET  /api/health  · 2 ms
+01:02:12  403 ✕ GET  /api/health  · 2 ms
+01:02:22  403 ✕ GET  /api/health  · 2 ms
+01:02:48  403 ✕ GET  /api/health  · 2 ms
+01:03:44  403 ✕ GET  /api/health  · 2 ms
+01:06:22  403 ✕ GET  /api/health  · 2 ms
+01:06:22  403 ✕ GET  /api/health  · 2 ms
+07:56:39  200 ✓ GET  /api/maintenance  · 2 ms
+07:56:41  200 ✓ GET  /api/commands  · 2 ms
+07:56:43  200 ✓ GET  /api/siteinfo  · 3 ms
+07:56:43  200 ✓ GET  /api/statistics  · 4 ms
+08:53:27  401 ✕ POST /api/graphql  · 1 ms
+08:53:28  401 ✕ POST /api/gql  · 1 ms
+10:46:40  200 ✓ GET  /api/maintenance  · 2 ms
+10:46:40  200 ✓ GET  /api/commands  · 2 ms
+10:46:41  200 ✓ GET  /api/siteinfo  · 3 ms
+10:46:41  200 ✓ GET  /api/statistics  · 6 ms
+10:46:52  200 ✓ GET  /api/maintenance  · 2 ms
+10:46:52  200 ✓ GET  /api/statistics  · 5 ms
+10:46:52  200 ✓ GET  /api/siteinfo  · 3 ms
+10:46:59  200 ✓ GET  /api/maintenance  · 2 ms
+10:46:59  200 ✓ GET  /api/leaderboard  · 18 ms
+10:46:59  200 ✓ GET  /api/commands  · 1 ms
+10:46:59  200 ✓ GET  /api/siteinfo  · 3 ms
+10:46:59  200 ✓ GET  /api/statistics  · 6 ms
+10:47:13  200 ✓ GET  /api/maintenance  · 2 ms
+10:47:14  200 ✓ GET  /api/sessions  · 5 ms
+10:47:14  200 ✓ GET  /api/siteinfo  · 5 ms
+10:47:14  200 ✓ GET  /api/maintenance  · 1 ms
+10:47:14  200 ✓ GET  /api/leaderboard  · 10 ms
+10:47:14  200 ✓ GET  /api/commands
+10:47:15  200 ✓ GET  /api/siteinfo  · 4 ms
+10:47:15  200 ✓ GET  /api/statistics  · 6 ms
+10:47:15  200 ✓ GET  /api/maintenance  · 2 ms
+10:47:16  200 ✓ GET  /api/statistics  · 6 ms
+10:47:16  200 ✓ GET  /api/siteinfo  · 4 ms
+10:47:16  200 ✓ GET  /api/maintenance  · 1 ms
+10:47:16  200 ✓ GET  /api/siteinfo  · 4 ms
+10:47:17  200 ✓ GET  /api/maintenance  · 2 ms
+10:47:17  200 ✓ GET  /api/leaderboard  · 11 ms
+10:47:17  200 ✓ GET  /api/commands  · 1 ms
+10:47:17  200 ✓ GET  /api/siteinfo  · 4 ms
+10:47:18  200 ✓ GET  /api/statistics  · 7 ms
+10:49:10  200 ✓ GET  /api/maintenance  · 1 ms
+10:49:11  200 ✓ GET  /api/siteinfo  · 4 ms
+10:49:15  200 ✓ GET  /api/maintenance  · 1 ms
+10:49:16  200 ✓ GET  /api/commands  · 2 ms
+10:49:16  200 ✓ GET  /api/siteinfo  · 3 ms
+10:49:17  200 ✓ GET  /api/maintenance  · 1 ms
+10:49:17  200 ✓ GET  /api/siteinfo  · 3 ms
+10:49:22  200 ✓ GET  /api/heartbeat  · 1 ms
+10:49:27  200 ✓ POST /api/check-number  · 2 ms
+10:49:31  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+10:49:31  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+10:49:31  200 ✓ POST /api/login  · 20 ms
+10:49:32  200 ✓ GET  /api/maintenance  · 1 ms
+10:49:32  200 ✓ GET  /api/heartbeat  · 2 ms
+10:49:32  200 ✓ GET  /api/me  · 6 ms
+10:49:32  200 ✓ GET  /api/me  · 4 ms
+10:49:32  200 ✓ GET  /api/stats  · 8 ms
+10:49:32  200 ✓ GET  /api/logs  · 5 ms
+10:49:32  200 ✓ GET  /api/sessions  · 6 ms
+10:49:34  401 ✕ GET  /api/sessions/all  · 3 ms
+10:49:40  200 ✓ GET  /api/heartbeat  · 1 ms
+10:49:41  STEP_UP_REAUTH_OK          910maxi                  risk 5
+10:49:41  ADMIN      › 910maxi › reauth.ok · reauth.verify
+10:49:41  200 ✓ POST /api/reauth/verify  · 7 ms
+10:49:41  200 ✓ GET  /api/sessions/all  · 5 ms
+10:49:41  200 ✓ GET  /api/stats  · 7 ms
+10:49:41  200 ✓ GET  /api/sessions  · 3 ms
+10:49:41  200 ✓ GET  /api/groups  · 6 ms
+10:49:41  200 ✓ GET  /api/admin-actions  · 4 ms
+10:49:41  200 ✓ GET  /api/accounts  · 3 ms
+10:49:45  200 ✓ GET  /api/logs  · 3 ms
+10:49:47  200 ✓ GET  /api/accounts  · 4 ms
+10:49:48  200 ✓ GET  /api/heartbeat  · 2 ms
+10:49:48  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail  · 4 ms
+10:49:48  200 ✓ GET  /api/permissions  · 1 ms
+10:49:55  200 ✓ GET  /api/permissions  · 3 ms
+10:49:55  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail  · 3 ms
+10:49:56  200 ✓ GET  /api/heartbeat  · 2 ms
+10:50:03  200 ✓ GET  /api/account  · 3 ms
+10:50:03  200 ✓ GET  /api/account/sessions  · 2 ms
+10:50:04  200 ✓ GET  /api/heartbeat  · 1 ms
+10:50:05  200 ✓ GET  /api/accounts  · 5 ms
+10:50:05  200 ✓ GET  /api/history  · 6 ms
+10:50:07  200 ✓ GET  /api/roles  · 2 ms
+10:50:09  200 ✓ GET  /api/system  · 136 ms
+10:50:10  200 ✓ GET  /api/roles  · 2 ms
+10:50:12  200 ✓ GET  /api/heartbeat  · 1 ms
+10:50:18  200 ✓ GET  /api/system  · 129 ms
+10:50:20  200 ✓ GET  /api/heartbeat  · 1 ms
+10:50:26  200 ✓ GET  /api/stats  · 5 ms
+10:50:26  200 ✓ GET  /api/system  · 125 ms
+10:50:26  200 ✓ GET  /api/logs  · 3 ms
+10:50:28  200 ✓ GET  /api/heartbeat  · 6 ms
+10:50:29  200 ✓ GET  /api/stats  · 6 ms
+10:50:29  200 ✓ GET  /api/system  · 125 ms
+10:50:29  200 ✓ GET  /api/logs  · 4 ms
+10:50:32  200 ✓ GET  /api/owners  · 3 ms
+10:50:33  200 ✓ GET  /api/badwords  · 3 ms
+10:50:34  200 ✓ GET  /api/bans  · 4 ms
+10:50:34  200 ✓ GET  /api/database  · 3 ms
+10:50:35  200 ✓ GET  /api/bans  · 4 ms
+10:50:36  200 ✓ GET  /api/heartbeat  · 1 ms
+10:50:44  200 ✓ GET  /api/heartbeat  · 1 ms
+10:50:52  200 ✓ GET  /api/heartbeat  · 1 ms
+10:51:00  200 ✓ GET  /api/heartbeat  · 1 ms
+10:51:08  AUDIT      › 910maxi › user.banned · 4915679687936@s.whatsapp.net → success
+10:51:08  200 ✓ POST /api/bans/ban  · 14 ms
+10:51:08  200 ✓ GET  /api/bans  · 4 ms
+10:51:08  200 ✓ GET  /api/heartbeat  · 2 ms
+10:51:10  200 ✓ GET  /api/database  · 4 ms
+10:51:14  200 ✓ GET  /api/audit  · 4 ms
+10:51:16  200 ✓ GET  /api/maintenance  · 2 ms
+10:51:16  200 ✓ GET  /api/security  · 5 ms
+10:51:16  200 ✓ GET  /api/security/overview  · 8 ms
+10:51:16  200 ✓ GET  /api/security/cases  · 6 ms
+10:51:16  200 ✓ GET  /api/sessions/all  · 4 ms
+10:51:16  200 ✓ GET  /api/heartbeat  · 2 ms
+10:51:16  200 ✓ GET  /api/security  · 7 ms
+10:51:16  200 ✓ GET  /api/security/overview  · 4 ms
+10:51:16  200 ✓ GET  /api/maintenance
+10:51:16  200 ✓ GET  /api/security/cases  · 4 ms
+10:51:21  200 ✓ GET  /api/logs  · 3 ms
+10:51:24  200 ✓ GET  /api/heartbeat  · 2 ms
+10:51:27  200 ✓ GET  /api/logs  · 2 ms
+10:51:30  200 ✓ GET  /api/groups  · 4 ms
+10:51:32  200 ✓ GET  /api/heartbeat  · 1 ms
+10:51:40  200 ✓ GET  /api/heartbeat  · 1 ms
+10:51:44  200 ✓ GET  /api/love  · 5 ms
+10:51:47  200 ✓ GET  /api/love  · 5 ms
+10:51:48  200 ✓ GET  /api/heartbeat  · 2 ms
+10:51:52  200 ✓ GET  /api/groups  · 4 ms
+10:51:53  200 ✓ GET  /api/users  · 4 ms
+10:51:54  200 ✓ GET  /api/groups  · 6 ms
+10:51:55  200 ✓ GET  /api/sessions  · 3 ms
+10:51:56  200 ✓ GET  /api/heartbeat  · 2 ms
+10:51:56  200 ✓ GET  /api/stats  · 6 ms
+10:51:56  200 ✓ GET  /api/system  · 124 ms
+10:51:57  200 ✓ GET  /api/sessions  · 3 ms
+10:51:58  200 ✓ GET  /api/stats  · 4 ms
+10:51:58  200 ✓ GET  /api/logs  · 4 ms
+10:51:58  200 ✓ GET  /api/sessions  · 4 ms
+10:51:59  200 ✓ GET  /api/downloads/list  · 4 ms
+10:52:03  200 ✓ POST /api/logout  · 3 ms
+10:52:03  200 ✓ GET  /api/heartbeat  · 1 ms
+11:09:38  200 ✓ GET  /api/maintenance  · 1 ms
+11:09:38  200 ✓ GET  /api/commands  · 3 ms
+11:09:38  200 ✓ GET  /api/siteinfo  · 7 ms
+11:09:38  200 ✓ GET  /api/statistics  · 9 ms
+11:31:25  200 ✓ GET  /api/maintenance  · 1 ms
+11:31:25  200 ✓ GET  /api/commands  · 2 ms
+11:31:26  200 ✓ GET  /api/siteinfo  · 3 ms
+11:31:26  200 ✓ GET  /api/statistics  · 8 ms
+11:55:22  200 ✓ GET  /api/maintenance  · 1 ms
+11:55:22  200 ✓ GET  /api/commands  · 2 ms
+11:55:23  200 ✓ GET  /api/siteinfo  · 4 ms
+11:55:23  200 ✓ GET  /api/statistics  · 8 ms
+12:10:14  200 ✓ GET  /api/maintenance  · 1 ms
+13:53:16  200 ✓ GET  /api/maintenance  · 1 ms
+13:53:16  200 ✓ GET  /api/commands  · 2 ms
+13:53:17  200 ✓ GET  /api/siteinfo  · 21 ms
+13:53:17  200 ✓ GET  /api/statistics  · 8 ms
+13:54:46  200 ✓ GET  /api/maintenance  · 2 ms
+13:54:49  200 ✓ GET  /api/commands  · 2 ms
+13:54:51  200 ✓ GET  /api/siteinfo  · 3 ms
+13:56:52  200 ✓ GET  /api/maintenance  · 1 ms
+13:56:53  200 ✓ GET  /api/commands  · 2 ms
+13:56:53  200 ✓ GET  /api/siteinfo  · 5 ms
+13:56:53  200 ✓ GET  /api/statistics  · 5 ms
+14:29:33  200 ✓ GET  /api/maintenance  · 2 ms
+14:29:34  200 ✓ GET  /api/commands  · 2 ms
+14:29:35  200 ✓ GET  /api/siteinfo  · 5 ms
+14:29:36  200 ✓ GET  /api/statistics  · 8 ms
+14:29:48  200 ✓ GET  /api/maintenance  · 2 ms
+14:29:50  200 ✓ GET  /api/commands  · 1 ms
+14:29:51  200 ✓ GET  /api/siteinfo  · 4 ms
+14:29:51  200 ✓ GET  /api/statistics  · 5 ms
+14:54:39  200 ✓ GET  /api/maintenance  · 2 ms
+14:54:40  200 ✓ GET  /api/commands  · 2 ms
+14:54:40  200 ✓ GET  /api/siteinfo  · 4 ms
+14:54:40  200 ✓ GET  /api/statistics  · 7 ms
+15:13:37  403 ✕ GET  /api/health  · 4 ms
+16:28:11  403 ✕ GET  /api/health  · 5 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 22:56:59       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+22:56:59  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+23:02:05  200 ✓ GET  /api/maintenance  · 13 ms
+23:02:06  200 ✓ GET  /api/commands  · 3 ms
+23:02:06  200 ✓ GET  /api/notifications  · 6 ms
+23:02:06  200 ✓ GET  /api/siteinfo  · 19 ms
+23:02:06  200 ✓ GET  /api/statistics  · 21 ms
+23:02:13  200 ✓ GET  /api/heartbeat  · 2 ms
+23:02:13  200 ✓ GET  /api/notifications  · 13 ms
+23:02:13  200 ✓ GET  /api/me  · 4 ms
+23:02:13  200 ✓ GET  /api/maintenance  · 3 ms
+23:02:14  200 ✓ GET  /api/heartbeat  · 18 ms
+23:02:14  200 ✓ GET  /api/me  · 6 ms
+23:02:14  200 ✓ GET  /api/me  · 6 ms
+23:02:14  200 ✓ GET  /api/stats  · 9 ms
+23:02:14  200 ✓ GET  /api/logs  · 4 ms
+23:02:14  200 ✓ GET  /api/sessions  · 9 ms
+23:02:16  200 ✓ GET  /api/stats  · 7 ms
+23:02:16  200 ✓ GET  /api/system  · 135 ms
+23:02:18  200 ✓ GET  /api/sessions  · 4 ms
+23:02:22  200 ✓ GET  /api/heartbeat  · 2 ms
+23:02:23  401 ✕ GET  /api/sessions/all  · 5 ms
+23:02:27  200 ✓ GET  /api/audit  · 4 ms
+23:02:28  401 ✕ GET  /api/sessions/all  · 3 ms
+23:02:30  200 ✓ GET  /api/heartbeat  · 3 ms
+23:02:32  STEP_UP_REAUTH_FAILED      910maxi                  risk 35
+23:02:32  ADMIN      › 910maxi › reauth.failed · reauth.verify
+23:02:32  401 ✕ POST /api/reauth/verify  · 9 ms
+23:02:38  200 ✓ GET  /api/heartbeat  · 2 ms
+23:02:38  STEP_UP_REAUTH_OK          910maxi                  risk 5
+23:02:38  ADMIN      › 910maxi › reauth.ok · reauth.verify
+23:02:38  200 ✓ POST /api/reauth/verify  · 8 ms
+23:02:38  200 ✓ GET  /api/sessions/all  · 4 ms
+23:02:46  200 ✓ GET  /api/heartbeat  · 2 ms
+23:02:54  200 ✓ GET  /api/heartbeat  · 2 ms
+23:03:02  200 ✓ GET  /api/heartbeat  · 3 ms
+23:03:10  200 ✓ GET  /api/heartbeat  · 2 ms
+23:03:18  200 ✓ GET  /api/heartbeat  · 2 ms
+23:03:26  200 ✓ GET  /api/heartbeat  · 2 ms
+23:03:34  200 ✓ GET  /api/heartbeat  · 1 ms
+23:03:42  200 ✓ GET  /api/heartbeat  · 2 ms
+23:03:50  200 ✓ GET  /api/heartbeat  · 2 ms
+23:03:58  200 ✓ GET  /api/heartbeat  · 2 ms
+23:04:06  200 ✓ GET  /api/heartbeat  · 2 ms
+23:04:14  200 ✓ GET  /api/heartbeat  · 3 ms
+23:04:22  200 ✓ GET  /api/heartbeat  · 2 ms
+23:04:30  200 ✓ GET  /api/heartbeat  · 1 ms
+23:04:38  200 ✓ GET  /api/heartbeat  · 2 ms
+23:04:46  200 ✓ GET  /api/heartbeat  · 2 ms
+23:04:54  200 ✓ GET  /api/heartbeat  · 2 ms
+23:05:02  200 ✓ GET  /api/heartbeat  · 2 ms
+23:05:10  200 ✓ GET  /api/heartbeat  · 1 ms
+23:05:18  200 ✓ GET  /api/heartbeat  · 11 ms
+23:05:26  200 ✓ GET  /api/heartbeat  · 2 ms
+23:05:34  200 ✓ GET  /api/heartbeat  · 2 ms
+23:05:42  200 ✓ GET  /api/heartbeat  · 2 ms
+23:05:50  200 ✓ GET  /api/heartbeat  · 3 ms
+23:05:58  200 ✓ GET  /api/heartbeat  · 2 ms
+23:06:06  200 ✓ GET  /api/heartbeat  · 2 ms
+23:06:14  200 ✓ GET  /api/heartbeat  · 10 ms
+23:06:23  200 ✓ GET  /api/heartbeat  · 1 ms
+23:06:31  200 ✓ GET  /api/heartbeat  · 2 ms
+23:06:39  200 ✓ GET  /api/heartbeat  · 2 ms
+23:06:47  200 ✓ GET  /api/heartbeat  · 2 ms
+23:06:55  200 ✓ GET  /api/heartbeat  · 1 ms
+23:07:03  200 ✓ GET  /api/heartbeat  · 1 ms
+23:07:11  200 ✓ GET  /api/heartbeat  · 2 ms
+23:07:19  200 ✓ GET  /api/heartbeat  · 2 ms
+23:08:15  200 ✓ GET  /api/heartbeat  · 1 ms
+23:09:15  200 ✓ GET  /api/heartbeat  · 1 ms
+23:10:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:11:15  200 ✓ GET  /api/heartbeat  · 4 ms
+23:12:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:13:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:14:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:15:15  200 ✓ GET  /api/heartbeat  · 1 ms
+23:16:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:17:15  200 ✓ GET  /api/heartbeat  · 3 ms
+23:18:15  200 ✓ GET  /api/heartbeat  · 1 ms
+23:19:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:20:15  200 ✓ GET  /api/heartbeat  · 2 ms
+23:21:15  200 ✓ GET  /api/heartbeat  · 3 ms
+23:26:54  200 ✓ GET  /api/heartbeat  · 3 ms
+23:27:02  200 ✓ GET  /api/heartbeat  · 2 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 23:34:39       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+23:34:39  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 23:35:31       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+23:35:31  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+23:36:41  200 ✓ GET  /api/maintenance  · 23 ms
+23:36:42  200 ✓ GET  /api/commands  · 3 ms
+23:36:42  200 ✓ GET  /api/siteinfo  · 7 ms
+23:36:42  200 ✓ GET  /api/statistics  · 155 ms
+23:36:47  200 ✓ GET  /api/maintenance  · 8 ms
+23:36:47  200 ✓ GET  /api/siteinfo  · 8 ms
+23:36:48  200 ✓ GET  /api/commands  · 4 ms
+23:36:54  200 ✓ GET  /api/siteinfo  · 5 ms
+23:36:59  200 ✓ GET  /api/siteinfo  · 13 ms
+23:37:04  200 ✓ GET  /api/siteinfo  · 5 ms
+23:37:09  200 ✓ GET  /api/siteinfo  · 6 ms
+23:37:14  200 ✓ GET  /api/siteinfo  · 4 ms
+23:37:19  200 ✓ GET  /api/siteinfo  · 4 ms
+23:37:24  200 ✓ GET  /api/siteinfo  · 6 ms
+23:37:29  200 ✓ GET  /api/siteinfo  · 4 ms
+23:37:34  200 ✓ GET  /api/siteinfo  · 8 ms
+23:37:39  200 ✓ GET  /api/siteinfo  · 7 ms
+23:37:44  200 ✓ GET  /api/siteinfo  · 6 ms
+23:37:49  200 ✓ GET  /api/siteinfo  · 6 ms
+23:37:54  200 ✓ GET  /api/siteinfo  · 5 ms
+23:37:59  200 ✓ GET  /api/siteinfo  · 15 ms
+23:38:04  200 ✓ GET  /api/siteinfo  · 8 ms
+23:38:15  200 ✓ GET  /api/siteinfo  · 6 ms
+23:39:15  200 ✓ GET  /api/siteinfo  · 4 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 23:39:17       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7778
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+23:39:17  BOOT       › Dashboard-Webserver gestartet (Port 7778).
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 23:39:44       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+23:39:44  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+23:40:15  200 ✓ GET  /api/siteinfo  · 15 ms
+23:40:22  200 ✓ GET  /api/siteinfo  · 11 ms
+23:40:23  200 ✓ GET  /api/siteinfo  · 6 ms
+23:40:24  200 ✓ GET  /api/maintenance  · 2 ms
+23:40:25  200 ✓ GET  /api/siteinfo  · 55 ms
+23:40:25  200 ✓ GET  /api/commands  · 6 ms
+23:40:27  200 ✓ GET  /api/maintenance  · 2 ms
+23:40:28  200 ✓ GET  /api/commands  · 2 ms
+23:40:28  200 ✓ GET  /api/siteinfo  · 11 ms
+23:40:28  200 ✓ GET  /api/statistics  · 16 ms
+23:40:30  200 ✓ GET  /api/maintenance  · 2 ms
+23:40:30  200 ✓ GET  /api/siteinfo  · 16 ms
+23:40:32  200 ✓ GET  /api/maintenance  · 2 ms
+23:40:32  200 ✓ GET  /api/commands  · 3 ms
+23:40:32  200 ✓ GET  /api/siteinfo  · 17 ms
+23:40:34  200 ✓ GET  /api/maintenance  · 2 ms
+23:40:34  200 ✓ GET  /api/siteinfo  · 18 ms
+23:40:34  200 ✓ GET  /api/commands  · 3 ms
+23:40:36  ABUSE_BURST_DETECTED       193.111.249.189          risk 35
+23:40:37  200 ✓ GET  /api/maintenance  · 1 ms
+23:40:37  200 ✓ GET  /api/statistics  · 7 ms
+23:40:37  200 ✓ GET  /api/siteinfo  · 17 ms
+23:40:39  200 ✓ GET  /api/maintenance  · 2 ms
+23:40:40  200 ✓ GET  /api/siteinfo  · 5 ms
+23:40:40  200 ✓ GET  /api/commands  · 3 ms
+23:40:41  200 ✓ GET  /api/maintenance  · 3 ms
+23:40:41  200 ✓ GET  /api/leaderboard  · 65 ms
+23:40:41  200 ✓ GET  /api/siteinfo  · 6 ms
+23:41:02  200 ✓ GET  /api/leaderboard  · 53 ms
+23:41:22  200 ✓ GET  /api/leaderboard  · 46 ms
+23:41:42  200 ✓ GET  /api/leaderboard  · 28 ms
+23:42:02  200 ✓ GET  /api/leaderboard  · 31 ms
+23:42:22  200 ✓ GET  /api/leaderboard  · 62 ms
+23:42:42  200 ✓ GET  /api/leaderboard  · 32 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 23:42:59       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+23:42:59  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+23:43:01  200 ✓ GET  /api/leaderboard  · 49 ms
+23:43:03  200 ✓ GET  /api/maintenance  · 2 ms
+23:43:03  200 ✓ GET  /api/leaderboard  · 52 ms
+23:43:03  200 ✓ GET  /api/siteinfo  · 11 ms
+23:43:23  200 ✓ GET  /api/leaderboard  · 36 ms
+23:43:44  200 ✓ GET  /api/leaderboard  · 33 ms
+23:44:04  200 ✓ GET  /api/leaderboard  · 31 ms
+23:44:24  200 ✓ GET  /api/leaderboard  · 30 ms
+23:44:44  200 ✓ GET  /api/leaderboard  · 31 ms
+23:45:04  200 ✓ GET  /api/leaderboard  · 33 ms
+23:45:24  200 ✓ GET  /api/leaderboard  · 32 ms
+23:46:15  200 ✓ GET  /api/leaderboard  · 34 ms
+23:47:15  200 ✓ GET  /api/leaderboard  · 24 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  11.9.2026, 23:47:37       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+23:47:37  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+23:48:15  200 ✓ GET  /api/leaderboard  · 32 ms
+23:49:15  200 ✓ GET  /api/leaderboard  · 27 ms
+23:50:15  200 ✓ GET  /api/leaderboard  · 29 ms
+23:51:15  200 ✓ GET  /api/leaderboard  · 25 ms
+23:52:15  200 ✓ GET  /api/leaderboard  · 26 ms
+23:53:15  200 ✓ GET  /api/leaderboard  · 27 ms
+23:54:15  200 ✓ GET  /api/leaderboard  · 20 ms
+23:55:15  200 ✓ GET  /api/leaderboard  · 27 ms
+23:56:15  200 ✓ GET  /api/leaderboard  · 25 ms
+23:57:15  200 ✓ GET  /api/leaderboard  · 22 ms
+23:58:15  200 ✓ GET  /api/leaderboard  · 27 ms
+02:41:11  200 ✓ GET  /api/maintenance  · 2 ms
+02:41:12  200 ✓ GET  /api/siteinfo  · 7 ms
+04:23:39  ABUSE_BURST_DETECTED       127.0.0.1                risk 35
+04:24:44  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:45  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:45  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:46  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:46  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:46  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:49  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:49  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:51  401 ✕ POST /api/auth/signin  · 1 ms
+04:24:51  401 ✕ POST /api/auth/signin  · 4 ms
+04:24:51  401 ✕ POST /api/auth/signin  · 2 ms
+04:24:52  401 ✕ POST /api/auth/signin  · 2 ms
+04:25:50  ABUSE_BURST_DETECTED       127.0.0.1                risk 45
+04:25:50  ABUSE_AUTO_ESCALATED_BLOCK 127.0.0.1                risk 60
+04:25:50  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:50  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:50  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:50  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:50  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:52  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:53  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:54  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:55  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:55  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:55  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:55  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:56  ABUSE_BURST_DETECTED       93.123.109.167           risk 35
+04:25:59  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:59  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:59  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:25:59  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:00  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:01  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:02  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  ABUSE_BURST_DETECTED       127.0.0.1                risk 55
+04:26:03  ABUSE_AUTO_ESCALATED_BLOCK 127.0.0.1                risk 65
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+04:26:03  IP_BLOCKED_STATIC_DENIED   127.0.0.1                risk 55
+06:27:02  200 ✓ GET  /api/maintenance  · 2 ms
+06:27:02  200 ✓ GET  /api/commands  · 2 ms
+06:27:03  200 ✓ GET  /api/siteinfo  · 5 ms
+06:27:03  200 ✓ GET  /api/statistics  · 6 ms
+06:27:24  401 ✕ GET  /api/mcp  · 1 ms
+06:27:28  200 ✓ GET  /api/maintenance  · 1 ms
+06:27:29  200 ✓ GET  /api/commands  · 1 ms
+06:27:29  200 ✓ GET  /api/siteinfo  · 4 ms
+06:28:21  200 ✓ GET  /api/heartbeat  · 2 ms
+06:29:07  200 ✓ POST /api/request-code  · 4 ms
+06:29:08  200 ✓ POST /api/request-code  · 4 ms
+06:29:10  404 ✕ GET  /api/mailbox/1f456102434841b3edc4fe5e9995bf1d42286cdcf5682671  · 2 ms
+06:29:10  200 ✓ POST /api/request-code  · 4 ms
+06:29:10  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:12  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:12  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:13  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:15  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:15  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:15  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:17  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:17  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:18  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:20  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:20  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:21  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:29:22  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:22  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:23  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:29:58  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:58  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:29:58  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:00  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:00  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:00  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:03  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:03  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:03  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:05  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:30:05  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:05  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:08  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:08  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:08  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:10  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:30:10  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:10  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:13  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:13  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:13  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:15  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:15  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:15  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:18  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:30:18  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:18  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:20  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:20  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:20  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:23  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:30:23  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:23  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:25  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:26  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:26  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:28  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:30:28  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:28  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:31  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:31  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:31  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:33  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 4 ms
+06:30:33  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 3 ms
+06:30:33  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:36  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:36  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:36  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:38  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:38  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:38  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 1 ms
+06:30:41  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:41  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:41  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:43  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 4 ms
+06:30:43  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:43  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+06:30:46  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
+10:47:09  200 ✓ GET  /api/leaderboard  · 59 ms

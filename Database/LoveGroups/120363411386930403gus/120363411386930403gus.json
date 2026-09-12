@@ -1,0 +1,179 @@
+{
+  "groupId": "120363411386930403",
+  "groupJid": "120363411386930403@g.us",
+  "subject": "𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe",
+  "creator": "269574108926096@lid",
+  "owner": "269574108926096@lid",
+  "ownerUsername": null,
+  "active": true,
+  "activatedAt": "2026-09-03T22:13:34.333Z",
+  "activatedBy": "4915155894714@s.whatsapp.net",
+  "createdAt": "2026-09-02T00:01:11.825Z",
+  "setupAt": "2026-09-03T22:13:34.333Z",
+  "setupBy": "4915155894714@s.whatsapp.net",
+  "setupByName": "269574108926096",
+  "setupDescription": "🖤 *LoveBot* ist in @Maxichen Dev gruppe aktiv 🤖\nNutze *$dsgvo* / *$verify* für weitere Infos.\n\n⏱️ *Setup gesetzt:* Fr., 04.09.2026, 00:13:34\n🎮 *von:* 269574108926096",
+  "warns": {},
+  "autodl": true,
+  "welcome": true,
+  "goodbye": true,
+  "kick": true,
+  "promote": true,
+  "demote": true,
+  "liebe": true,
+  "fun": true,
+  "media": true,
+  "tools": true,
+  "badwords": true,
+  "antilink": false,
+  "night": true,
+  "afk": true,
+  "memberCount": 17,
+  "adminCount": 4,
+  "metaAt": 1789210801570,
+  "gset": {
+    "welcome": true,
+    "goodbye": true,
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "automod": true,
+    "autoreply": false,
+    "mentionGuard": false,
+    "commandProtection": false,
+    "aiEnabled": false,
+    "economyEnabled": true,
+    "progressionEnabled": true,
+    "logsEnabled": true
+  },
+  "xp": {
+    "total": 298,
+    "level": 0,
+    "msgs": 149,
+    "games": 0,
+    "members": {
+      "269724751503435": {
+        "m": 22,
+        "xp": 44,
+        "games": 0,
+        "last": 1789130904886
+      },
+      "44582230311125": {
+        "m": 13,
+        "xp": 26,
+        "games": 0,
+        "last": 1789131639382
+      },
+      "257466679955665": {
+        "m": 8,
+        "xp": 16,
+        "games": 0,
+        "last": 1789126571957
+      },
+      "269574108926096": {
+        "m": 58,
+        "xp": 116,
+        "games": 0,
+        "last": 1789210801432
+      },
+      "31396361941215": {
+        "m": 16,
+        "xp": 32,
+        "games": 0,
+        "last": 1789125789950
+      },
+      "57956708180043": {
+        "m": 25,
+        "xp": 50,
+        "games": 0,
+        "last": 1789194153946
+      },
+      "87089790083286": {
+        "m": 7,
+        "xp": 14,
+        "games": 0,
+        "last": 1789200562109
+      }
+    },
+    "week": {
+      "k": "2026-W38",
+      "xp": 26
+    },
+    "month": {
+      "k": "2026-09",
+      "xp": 298
+    },
+    "daily": {
+      "k": "2026-09-12",
+      "msgs": 13
+    },
+    "streak": {
+      "c": 3,
+      "last": "2026-09-12"
+    },
+    "history": {
+      "2026-09-10": 8,
+      "2026-09-11": 264,
+      "2026-09-12": 26
+    }
+  },
+  "goals": {
+    "daily": {
+      "k": "2026-09-12",
+      "target": 50,
+      "progress": 13,
+      "claimed": false
+    },
+    "weekly": {
+      "k": "2026-W38",
+      "target": 200,
+      "progress": 26,
+      "claimed": false
+    }
+  },
+  "gach": {
+    "gmsg_100": 1789128759112
+  },
+  "gbadges": {},
+  "gevents": [],
+  "gaudit": [
+    {
+      "ts": 1789123704566,
+      "actor": "system",
+      "action": "goal",
+      "detail": "daily-Ziel (50) erreicht, +250 Treasury"
+    },
+    {
+      "ts": 1789128759112,
+      "actor": "system",
+      "action": "goal",
+      "detail": "weekly-Ziel (200) erreicht, +1000 Treasury"
+    }
+  ],
+  "gtreasury": {
+    "balance": 1400,
+    "log": [
+      {
+        "ts": 1789123704566,
+        "delta": 250,
+        "reason": "daily-Ziel erreicht"
+      },
+      {
+        "ts": 1789128759112,
+        "delta": 1000,
+        "reason": "weekly-Ziel erreicht"
+      },
+      {
+        "ts": 1789128759112,
+        "delta": 150,
+        "reason": "Achievement Gesprächig"
+      }
+    ]
+  },
+  "gbanned": {},
+  "warnCfg": {
+    "w1": "warn",
+    "w2": "warn",
+    "w3": "kick"
+  }
+}

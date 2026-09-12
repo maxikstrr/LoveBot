@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "updatedAt": null,
+  "updatedBy": "defaults",
+  "multipliers": {
+    "weekend": 1.25,
+    "event": 1,
+    "eventActive": false,
+    "prestigePerLevel": 0.05,
+    "prestigeCap": 0.5,
+    "streak": {
+      "enabled": true,
+      "d3": 0.05,
+      "d7": 0.1,
+      "d30": 0.25,
+      "cap": 0.25
+    }
+  },
+  "categories": {
+    "message": {
+      "enabled": true,
+      "oneToOne": 5,
+      "group": 3,
+      "kindMult": 2,
+      "loveMult": 3,
+      "complimentBonus": 5
+    },
+    "command": {
+      "enabled": true,
+      "base": 2,
+      "loveAction": 5
+    },
+    "compliment": {
+      "enabled": true,
+      "sender": 8,
+      "recipient": 5,
+      "cooldownSec": 300,
+      "dailyCap": 30
+    },
+    "game": {
+      "enabled": true,
+      "win": 15,
+      "loss": 2
+    },
+    "daily": {
+      "enabled": true,
+      "daily": 50,
+      "dailylove": 25,
+      "work": 10
+    },
+    "media": {
+      "enabled": true,
+      "firstDownload": 15,
+      "firstProvider": 10,
+      "dailyCap": 3
+    }
+  },
+  "antiFarm": {
+    "msgCapPerHour": 300,
+    "cmdCapPerHour": 150,
+    "msgCooldownSec": 60,
+    "duplicateWindowSec": 45,
+    "duplicateMaxPerDay": 5,
+    "mutualFarmMaxPerHour": 6,
+    "suspiciousXpPerDay": 1500
+  },
+  "bonuses": {
+    "enabled": true,
+    "firstActionDaily": 10,
+    "streak7": 50,
+    "streak30": 200,
+    "streak100": 1000
+  },
+  "goals": {
+    "enabled": true,
+    "dailyXp": 50,
+    "weeklyXp": 500,
+    "dailyCopper": 50,
+    "weeklyCopper": 250
+  }
+}

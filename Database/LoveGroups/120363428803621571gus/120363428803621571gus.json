@@ -1,0 +1,219 @@
+{
+  "groupId": "120363428803621571",
+  "groupJid": "120363428803621571@g.us",
+  "subject": "Alles hier/Pushgruppe [2]",
+  "creator": "194395018133575@lid",
+  "owner": "194395018133575@lid",
+  "ownerUsername": null,
+  "active": true,
+  "activatedAt": "2026-09-05T23:53:58.791Z",
+  "activatedBy": "4915155894714@s.whatsapp.net",
+  "createdAt": "2026-09-04T10:42:57.750Z",
+  "gset": {
+    "welcome": true,
+    "goodbye": true,
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "automod": true,
+    "autoreply": false,
+    "mentionGuard": false,
+    "commandProtection": false,
+    "aiEnabled": false,
+    "economyEnabled": true,
+    "progressionEnabled": true,
+    "logsEnabled": true
+  },
+  "xp": {
+    "total": 158,
+    "level": 0,
+    "msgs": 79,
+    "games": 0,
+    "members": {
+      "269574108926096": {
+        "m": 26,
+        "xp": 52,
+        "games": 0,
+        "last": 1789135221372
+      },
+      "232452421324877": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789115109190
+      },
+      "254872721063971": {
+        "m": 5,
+        "xp": 10,
+        "games": 0,
+        "last": 1789126350685
+      },
+      "224232105586878": {
+        "m": 5,
+        "xp": 10,
+        "games": 0,
+        "last": 1789199915518
+      },
+      "277635712208989": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789123769632
+      },
+      "148477724115191": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789201598358
+      },
+      "150676495667226": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789125119083
+      },
+      "178816752337049": {
+        "m": 5,
+        "xp": 10,
+        "games": 0,
+        "last": 1789126755927
+      },
+      "194395018133575": {
+        "m": 6,
+        "xp": 12,
+        "games": 0,
+        "last": 1789128286451
+      },
+      "59601697382512": {
+        "m": 3,
+        "xp": 6,
+        "games": 0,
+        "last": 1789131269965
+      },
+      "92604343558234": {
+        "m": 7,
+        "xp": 14,
+        "games": 0,
+        "last": 1789202674574
+      },
+      "193419859218460": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789129503648
+      },
+      "167753218551979": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789129520720
+      },
+      "269724751503435": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789129597217
+      },
+      "142391436644369": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789162140372
+      },
+      "7176907178051": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789193076133
+      },
+      "244255058596072": {
+        "m": 3,
+        "xp": 6,
+        "games": 0,
+        "last": 1789202641575
+      },
+      "137903531380791": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789201720386
+      },
+      "80406753853546": {
+        "m": 3,
+        "xp": 6,
+        "games": 0,
+        "last": 1789202634735
+      },
+      "56148644393101": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789202631157
+      }
+    },
+    "week": {
+      "k": "2026-W38",
+      "xp": 26
+    },
+    "month": {
+      "k": "2026-09",
+      "xp": 158
+    },
+    "daily": {
+      "k": "2026-09-12",
+      "msgs": 13
+    },
+    "streak": {
+      "c": 2,
+      "last": "2026-09-12"
+    },
+    "history": {
+      "2026-09-11": 132,
+      "2026-09-12": 26
+    }
+  },
+  "goals": {
+    "daily": {
+      "k": "2026-09-12",
+      "target": 50,
+      "progress": 13,
+      "claimed": false
+    },
+    "weekly": {
+      "k": "2026-W38",
+      "target": 200,
+      "progress": 26,
+      "claimed": false
+    }
+  },
+  "gach": {},
+  "gbadges": {},
+  "gevents": [],
+  "gaudit": [
+    {
+      "ts": 1789129503648,
+      "actor": "system",
+      "action": "goal",
+      "detail": "daily-Ziel (50) erreicht, +250 Treasury"
+    }
+  ],
+  "gtreasury": {
+    "balance": 250,
+    "log": [
+      {
+        "ts": 1789129503648,
+        "delta": 250,
+        "reason": "daily-Ziel erreicht"
+      }
+    ]
+  },
+  "gbanned": {},
+  "warnCfg": {
+    "w1": "warn",
+    "w2": "warn",
+    "w3": "kick"
+  },
+  "memberCount": 84,
+  "adminCount": 2,
+  "metaAt": 1789107455945
+}

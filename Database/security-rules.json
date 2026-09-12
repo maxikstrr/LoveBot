@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-10T19:13:44.943Z",
+  "updatedBy": "system-init",
+  "history": [],
+  "webReqFlood": {
+    "id": "WEB-REQ-07",
+    "enabled": true,
+    "threshold": 50,
+    "windowSec": 10,
+    "violationDecayMin": 30,
+    "tiers": [
+      {
+        "atViolations": 2,
+        "action": "TEMP_BLOCK",
+        "blockMin": 5,
+        "label": "5 Minuten"
+      },
+      {
+        "atViolations": 4,
+        "action": "LONG_BLOCK",
+        "blockMin": 60,
+        "label": "1 Stunde"
+      },
+      {
+        "atViolations": 6,
+        "action": "PERM_BLOCK",
+        "blockMin": 0,
+        "label": "dauerhaft (manuelle Prüfung nötig)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "groupId": "120363411052979878",
+  "groupJid": "120363411052979878@g.us",
+  "subject": "Gruppen",
+  "creator": "269574108926096@lid",
+  "owner": "269574108926096@lid",
+  "ownerUsername": null,
+  "active": false,
+  "activatedAt": null,
+  "activatedBy": null,
+  "createdAt": "2026-09-11T21:08:28.464Z",
+  "gset": {
+    "welcome": true,
+    "goodbye": true,
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "automod": true,
+    "autoreply": false,
+    "mentionGuard": false,
+    "commandProtection": false,
+    "aiEnabled": false,
+    "economyEnabled": true,
+    "progressionEnabled": true,
+    "logsEnabled": true
+  },
+  "xp": {
+    "total": 26,
+    "level": 0,
+    "msgs": 13,
+    "games": 0,
+    "members": {
+      "269574108926096": {
+        "m": 13,
+        "xp": 26,
+        "games": 0,
+        "last": 1789199805404
+      }
+    },
+    "week": {
+      "k": "2026-W38",
+      "xp": 2
+    },
+    "month": {
+      "k": "2026-09",
+      "xp": 26
+    },
+    "daily": {
+      "k": "2026-09-12",
+      "msgs": 1
+    },
+    "streak": {
+      "c": 2,
+      "last": "2026-09-12"
+    },
+    "history": {
+      "2026-09-11": 24,
+      "2026-09-12": 2
+    }
+  },
+  "goals": {
+    "daily": {
+      "k": "2026-09-12",
+      "target": 50,
+      "progress": 1,
+      "claimed": false
+    },
+    "weekly": {
+      "k": "2026-W38",
+      "target": 200,
+      "progress": 2,
+      "claimed": false
+    }
+  },
+  "gach": {},
+  "gbadges": {},
+  "gevents": [],
+  "gaudit": [],
+  "gtreasury": {
+    "balance": 0,
+    "log": []
+  },
+  "gbanned": {},
+  "warnCfg": {
+    "w1": "warn",
+    "w2": "warn",
+    "w3": "kick"
+  },
+  "memberCount": 6,
+  "adminCount": 6,
+  "metaAt": 1789161086146,
+  "autodl": false,
+  "welcome": false,
+  "goodbye": false,
+  "kick": false,
+  "promote": false,
+  "demote": false,
+  "liebe": false,
+  "fun": false,
+  "media": false,
+  "tools": false,
+  "badwords": false,
+  "antilink": false,
+  "night": false,
+  "afk": false
+}

@@ -1,0 +1,78 @@
+{
+  "identity": {
+    "username": "",
+    "bid": "4916322223411jid157205181517834lid",
+    "phone": "+4916322223411",
+    "jid": "4916322223411@s.whatsapp.net",
+    "lid": "157205181517834@lid",
+    "cleanJid": "4916322223411",
+    "cleanLid": "157205181517834"
+  },
+  "registration": {
+    "registered": false,
+    "name": "",
+    "age": "",
+    "status": "",
+    "city": "",
+    "value": "",
+    "registeredAt": null
+  },
+  "status": {
+    "dsgvo": {
+      "accepted": true,
+      "acceptedAt": null,
+      "rejected": false,
+      "rejectedAt": null
+    },
+    "verified": false,
+    "verifiedAt": null,
+    "unverified": true,
+    "unverifiedAt": null,
+    "mappedAt": "2026-09-05T23:39:13.211Z"
+  },
+  "progression": {
+    "level": 0,
+    "prestige": 0,
+    "xp": 0,
+    "neededXpForLvOrPrestigeUp": 743
+  },
+  "games": {
+    "gamesPlayed": 0,
+    "lastPlayedAt": null,
+    "lastWin": 0,
+    "lastWinAt": null,
+    "totalWin": 0,
+    "highestWin": 0,
+    "highestWinAt": null,
+    "winStreak": 0,
+    "highestWinStreak": 0,
+    "highestWinStreakAt": null,
+    "lastLoss": 0,
+    "lastLossAt": null,
+    "totalLoss": 0,
+    "highestLoss": 0,
+    "highestLossAt": null,
+    "lossStreak": 0,
+    "highestLossStreak": 0,
+    "highestLossStreakAt": null
+  },
+  "wallet": {
+    "copper": 0,
+    "silver": 0,
+    "gold": 0,
+    "platin": 0
+  },
+  "bank": {
+    "active": false,
+    "copper": 0,
+    "silver": 0,
+    "gold": 0,
+    "platin": 0
+  },
+  "rewards": {
+    "lastDailyAt": null,
+    "lastWeeklyAt": null,
+    "lastMonthlyAt": null,
+    "lastYearlyAt": null
+  }
+}

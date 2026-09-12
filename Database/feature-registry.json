@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "updatedAt": null,
+  "updatedBy": "defaults",
+  "features": {
+    "xp": {
+      "label": "XP Engine",
+      "icon": "⭐",
+      "status": "enabled",
+      "audience": "everyone"
+    },
+    "games": {
+      "label": "Game Center",
+      "icon": "🎮",
+      "status": "enabled",
+      "audience": "everyone"
+    },
+    "economy": {
+      "label": "Economy",
+      "icon": "💰",
+      "status": "enabled",
+      "audience": "everyone"
+    },
+    "pets": {
+      "label": "Pets",
+      "icon": "🐾",
+      "status": "enabled",
+      "audience": "everyone"
+    },
+    "media": {
+      "label": "Media Center",
+      "icon": "🎬",
+      "status": "enabled",
+      "audience": "everyone"
+    },
+    "ai": {
+      "label": "AI Center",
+      "icon": "🤖",
+      "status": "limited",
+      "audience": "admins"
+    },
+    "social": {
+      "label": "Love-System",
+      "icon": "💜",
+      "status": "enabled",
+      "audience": "everyone"
+    },
+    "trading": {
+      "label": "Trading",
+      "icon": "🔄",
+      "status": "disabled",
+      "audience": "off"
+    },
+    "quests": {
+      "label": "Quest System",
+      "icon": "🎯",
+      "status": "disabled",
+      "audience": "off"
+    },
+    "seasons": {
+      "label": "Seasons / ChatPass",
+      "icon": "🎟️",
+      "status": "disabled",
+      "audience": "off"
+    },
+    "tournaments": {
+      "label": "Tournaments",
+      "icon": "🏟️",
+      "status": "disabled",
+      "audience": "off"
+    },
+    "marketplace": {
+      "label": "Marketplace",
+      "icon": "🛍️",
+      "status": "disabled",
+      "audience": "off"
+    }
+  }
+}

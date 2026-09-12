@@ -1,0 +1,195 @@
+{"ts":1789102581445,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":13,"source":"messages"}}
+{"ts":1789102581446,"type":"STREAK_UPDATED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"messages","streak":2}}
+{"ts":1789102581450,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Hallo Welt"}}
+{"ts":1789102581453,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Ein Monat verheiratet"}}
+{"ts":1789102581455,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Neues Glück"}}
+{"ts":1789102581457,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":15,"source":"achievements"}}
+{"ts":1789102792716,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789102792717,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Knöpfchendrücker"}}
+{"ts":1789102792718,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":5,"source":"achievements"}}
+{"ts":1789102807885,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789102810775,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789102839186,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789103360763,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"messages"}}
+{"ts":1789107455949,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107475626,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107475627,"type":"GOAL_COMPLETED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","kind":"daily","target":50}}
+{"ts":1789107475628,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":50,"source":"commands","kind":"dailygoal"}}
+{"ts":1789107475630,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":50,"source":"commands","reason":"levelup"}}
+{"ts":1789107475631,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Zielstürmer"}}
+{"ts":1789107475633,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":5,"source":"achievements"}}
+{"ts":1789107478798,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107478803,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"daily","amount":200}}
+{"ts":1789107478803,"type":"DAILY_CLAIM","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","streak":1,"amount":200}}
+{"ts":1789107478804,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":50,"source":"dailies"}}
+{"ts":1789107487857,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107487858,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Guter Start"}}
+{"ts":1789107487859,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":5,"source":"achievements"}}
+{"ts":1789107491533,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107496719,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107500586,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107500587,"type":"GOAL_COMPLETED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","kind":"daily","target":10}}
+{"ts":1789107500589,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"commands","kind":"dailygoal"}}
+{"ts":1789107500591,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"commands","reason":"levelup"}}
+{"ts":1789107528416,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789107614069,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":15,"source":"love"}}
+{"ts":1789116668304,"type":"USER_BANNED","data":{"name":"4915679687936@s.whatsapp.net","reason":"banned"}}
+{"ts":1789123144990,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123291870,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123622435,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123633602,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123645960,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123683074,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123688445,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123688452,"type":"COINS_SPENT","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"pet","amount":10}}
+{"ts":1789123695673,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123701974,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123701980,"type":"COINS_SPENT","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"pet","amount":10}}
+{"ts":1789123704759,"type":"GROUP_GOAL","data":{"name":"𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe","kind":"daily"}}
+{"ts":1789123704954,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123704960,"type":"COINS_SPENT","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"pet","amount":10}}
+{"ts":1789123709147,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123709164,"type":"COINS_SPENT","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"pet","amount":10}}
+{"ts":1789123714556,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123719313,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123724022,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123735578,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123740782,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123747318,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123751637,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789123778172,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"commands"}}
+{"ts":1789123788013,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"commands"}}
+{"ts":1789123795247,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789124042224,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"commands"}}
+{"ts":1789124049937,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"commands"}}
+{"ts":1789124054580,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"commands"}}
+{"ts":1789124085172,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"commands"}}
+{"ts":1789124412375,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789125769735,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":9,"source":"love"}}
+{"ts":1789125918673,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"messages"}}
+{"ts":1789126061581,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789126139039,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789126225997,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789126296193,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789126541571,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"messages"}}
+{"ts":1789126607549,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789127004243,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"messages"}}
+{"ts":1789127112585,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789127196529,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789127446905,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789127456826,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789127790094,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789128303703,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":6,"source":"messages"}}
+{"ts":1789128411480,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789128489714,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789128557814,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789128589036,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789128621002,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789128655387,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789128988022,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789129956177,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789130346070,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789132648548,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789132651796,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789133105574,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789133548423,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789135079810,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789135079811,"type":"GOAL_COMPLETED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"messages","kind":"daily","target":25}}
+{"ts":1789135079813,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"messages","kind":"dailygoal"}}
+{"ts":1789135079816,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"messages","reason":"levelup"}}
+{"ts":1789135221379,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789136949827,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789160245396,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":5,"source":"messages"}}
+{"ts":1789160268968,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789160278277,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789160294660,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789160318380,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789160354803,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789160381904,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789160386195,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789160395263,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789160835364,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789160951156,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789161086154,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789161094840,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789161170991,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789161727245,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789161741978,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":3,"source":"messages"}}
+{"ts":1789161767098,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789161792453,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789161886035,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789162512405,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789162542807,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789162580013,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789162791725,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789162806387,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789162990071,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":2,"source":"commands"}}
+{"ts":1789163057715,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":0,"granted":9,"source":"love"}}
+{"ts":1789163264337,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":2,"source":"commands"}}
+{"ts":1789163264339,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 5 — 🌱 Sweetheart"}}
+{"ts":1789163264342,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":5,"source":"commands","item":"🌱 Sweetheart"}}
+{"ts":1789163264344,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":100,"source":"commands","kind":"milestone"}}
+{"ts":1789163264348,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 10 — 💜 Profil-Rahmen"}}
+{"ts":1789163264351,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":10,"source":"commands","item":"💜 Profil-Rahmen"}}
+{"ts":1789163264352,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":250,"source":"commands","kind":"milestone"}}
+{"ts":1789163264354,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 20 — 🌹 Romantiker"}}
+{"ts":1789163264355,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":20,"source":"commands","item":"🌹 Romantiker"}}
+{"ts":1789163264358,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":500,"source":"commands","kind":"milestone"}}
+{"ts":1789163264365,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 25 — 🔥 Durchstarter"}}
+{"ts":1789163264369,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":25,"source":"commands","item":"🔥 Durchstarter"}}
+{"ts":1789163264370,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":750,"source":"commands","kind":"milestone"}}
+{"ts":1789163264375,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 30 — 💎 Elite-Status"}}
+{"ts":1789163264376,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":30,"source":"commands","item":"💎 Elite-Status"}}
+{"ts":1789163264381,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":1000,"source":"commands","kind":"milestone"}}
+{"ts":1789163264383,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 50 — 👑 Master"}}
+{"ts":1789163264384,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":50,"source":"commands","item":"👑 Master"}}
+{"ts":1789163264385,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":2500,"source":"commands","kind":"milestone"}}
+{"ts":1789163264387,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"Meilenstein Lv 75 — ⚡ Champion"}}
+{"ts":1789163264388,"type":"MILESTONE_REACHED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":75,"source":"commands","item":"⚡ Champion"}}
+{"ts":1789163264389,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":3750,"source":"commands","kind":"milestone"}}
+{"ts":1789163264390,"type":"TITLE_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"👑 Elite"}}
+{"ts":1789163264393,"type":"BADGE_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"🌱 Erste Schritte"}}
+{"ts":1789163264395,"type":"BADGE_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"⭐ Aufsteiger"}}
+{"ts":1789163264398,"type":"BADGE_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"🔥 Veteran"}}
+{"ts":1789163264400,"type":"BADGE_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","item":"👑 Elite"}}
+{"ts":1789163264404,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":8850,"source":"commands","reason":"levelup"}}
+{"ts":1789163264410,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Kupferkönig"}}
+{"ts":1789163264412,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Herzling"}}
+{"ts":1789163264414,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Flirter"}}
+{"ts":1789163264416,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Romantiker"}}
+{"ts":1789163264418,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"XP-Sammler"}}
+{"ts":1789163264421,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"XP-Großmeister"}}
+{"ts":1789163264423,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"XP-Starter"}}
+{"ts":1789163264425,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Titel-Sammler"}}
+{"ts":1789163264438,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Sweetheart"}}
+{"ts":1789163264441,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":45,"source":"achievements"}}
+{"ts":1789163264443,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Badge-Starter"}}
+{"ts":1789163264445,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":5,"source":"achievements"}}
+{"ts":1789199323870,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":18,"source":"messages"}}
+{"ts":1789199323872,"type":"STREAK_UPDATED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"messages","streak":3}}
+{"ts":1789199732281,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199740887,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199749012,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199758168,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199765808,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199786910,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199794832,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199805674,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789199805675,"type":"GOAL_COMPLETED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","kind":"weekly","target":500}}
+{"ts":1789199805677,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":250,"source":"commands","kind":"weeklygoal"}}
+{"ts":1789199805680,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":250,"source":"commands","reason":"levelup"}}
+{"ts":1789199805682,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Wochen-Champion"}}
+{"ts":1789199805684,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":5,"source":"achievements"}}
+{"ts":1789200269164,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":4,"source":"messages"}}
+{"ts":1789200269165,"type":"GOAL_COMPLETED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"messages","kind":"daily","target":50}}
+{"ts":1789200269167,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":50,"source":"messages","kind":"dailygoal"}}
+{"ts":1789200269169,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":50,"source":"messages","reason":"levelup"}}
+{"ts":1789200269171,"type":"ACHIEVEMENT_UNLOCKED","data":{"bid":"4915155894714jid269574108926096lid","item":"Tag & Nacht"}}
+{"ts":1789200269173,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":5,"source":"achievements"}}
+{"ts":1789200276621,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789200368925,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789200382223,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":8,"source":"messages"}}
+{"ts":1789200382224,"type":"GOAL_COMPLETED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"messages","kind":"daily","target":10}}
+{"ts":1789200382227,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"messages","kind":"dailygoal"}}
+{"ts":1789200382229,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"messages","reason":"levelup"}}
+{"ts":1789210801597,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}

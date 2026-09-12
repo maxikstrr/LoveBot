@@ -1,0 +1,71 @@
+{
+  "users": {
+    "4915155894714jid269574108926096lid": {
+      "achievements": {
+        "couple_7": 1788689092241,
+        "married": 1788689092241,
+        "first_pet": 1788991943885,
+        "first_msg": 1789102581450,
+        "together_30": 1789102581453,
+        "second_chance": 1789102581455,
+        "first_cmd": 1789102792717,
+        "goal_daily_1": 1789107475631,
+        "first_daily": 1789107487858,
+        "rich_1000": 1789163264410,
+        "level_10": 1789163264412,
+        "level_25": 1789163264414,
+        "level_50": 1789163264416,
+        "xp_10k": 1789163264418,
+        "xp_100k": 1789163264421,
+        "xp_1k": 1789163264423,
+        "titles_5": 1789163264425,
+        "level_5": 1789163264438,
+        "badges_5": 1789163264443,
+        "goal_weekly_1": 1789199805682,
+        "hours_12": 1789200269171
+      },
+      "counters": {},
+      "lovebonus": {
+        "lastAt": "2026-9-6",
+        "streak": 1
+      },
+      "pet": {
+        "name": "Simba",
+        "type": "🐹",
+        "createdAt": 1788991943885,
+        "lastTick": 1789123747323,
+        "love": 60,
+        "hunger": 76,
+        "mood": 100,
+        "energy": 100,
+        "level": 2,
+        "xp": 90,
+        "totalCare": 13
+      },
+      "inventory": {},
+      "cooldowns": {}
+    },
+    "420721199654jid155019043160306lid": {
+      "achievements": {},
+      "counters": {},
+      "lovebonus": {
+        "lastAt": 0,
+        "streak": 0
+      },
+      "pet": null,
+      "inventory": {},
+      "cooldowns": {}
+    }
+  },
+  "couples": {
+    "269574108926096|57956708180043": {
+      "loveXp": 40,
+      "streak": 1,
+      "lastDay": "2026-9-6",
+      "memories": 0,
+      "n1": "maxichen",
+      "n2": "4915758256378"
+    }
+  },
+  "games": {}
+}

@@ -1,0 +1,106 @@
+{
+  "groupId": "120363412090485986",
+  "groupJid": "120363412090485986@g.us",
+  "subject": "**𝒐𝒖𝒕 𝒃𝒚 𓆩♡𓆪 𝟗𝟏𝟎𝓶𝓪𝔁𝓲 𓆩♡𓆪 & 𓆩♡𓆪 𝟗𝟏𝟎𝓵𝓲𝓵𝓵𝔂 𓆩♡𓆪**",
+  "creator": "269574108926096@lid",
+  "owner": "269574108926096@lid",
+  "ownerUsername": null,
+  "active": false,
+  "activatedAt": null,
+  "activatedBy": null,
+  "createdAt": "2026-09-11T12:09:17.620Z",
+  "gset": {
+    "welcome": true,
+    "goodbye": true,
+    "antilink": false,
+    "antispam": false,
+    "antiflood": false,
+    "automod": true,
+    "autoreply": false,
+    "mentionGuard": false,
+    "commandProtection": false,
+    "aiEnabled": false,
+    "economyEnabled": true,
+    "progressionEnabled": true,
+    "logsEnabled": true
+  },
+  "xp": {
+    "total": 6,
+    "level": 0,
+    "msgs": 3,
+    "games": 0,
+    "members": {
+      "269574108926096": {
+        "m": 3,
+        "xp": 6,
+        "games": 0,
+        "last": 1789199794650
+      }
+    },
+    "week": {
+      "k": "2026-W38",
+      "xp": 2
+    },
+    "month": {
+      "k": "2026-09",
+      "xp": 6
+    },
+    "daily": {
+      "k": "2026-09-12",
+      "msgs": 1
+    },
+    "streak": {
+      "c": 2,
+      "last": "2026-09-12"
+    },
+    "history": {
+      "2026-09-11": 4,
+      "2026-09-12": 2
+    }
+  },
+  "goals": {
+    "daily": {
+      "k": "2026-09-12",
+      "target": 50,
+      "progress": 1,
+      "claimed": false
+    },
+    "weekly": {
+      "k": "2026-W38",
+      "target": 200,
+      "progress": 2,
+      "claimed": false
+    }
+  },
+  "gach": {},
+  "gbadges": {},
+  "gevents": [],
+  "gaudit": [],
+  "gtreasury": {
+    "balance": 0,
+    "log": []
+  },
+  "gbanned": {},
+  "warnCfg": {
+    "w1": "warn",
+    "w2": "warn",
+    "w3": "kick"
+  },
+  "memberCount": 4,
+  "adminCount": 4,
+  "metaAt": 1789160951149,
+  "autodl": false,
+  "welcome": false,
+  "goodbye": false,
+  "kick": false,
+  "promote": false,
+  "demote": false,
+  "liebe": false,
+  "fun": false,
+  "media": false,
+  "tools": false,
+  "badwords": false,
+  "antilink": false,
+  "night": false,
+  "afk": false
+}

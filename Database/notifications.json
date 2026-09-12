@@ -1,0 +1,328 @@
+{
+  "4915155894714jid269574108926096lid": [
+    {
+      "id": "n_mty3pmhhnjif",
+      "type": "daily",
+      "title": "🎯 Tagesziel erreicht!",
+      "text": "+25 Kupfer Belohnung",
+      "link": "/level.html",
+      "ts": 1789200382229,
+      "read": false
+    },
+    {
+      "id": "n_mty3n791mrc3",
+      "type": "achievement",
+      "title": "🏆 Tag & Nacht freigeschaltet!",
+      "text": "Zu 12 verschiedenen Stunden aktiv gewesen.",
+      "link": "/level.html",
+      "ts": 1789200269173,
+      "read": false
+    },
+    {
+      "id": "n_mty3n78xb257",
+      "type": "daily",
+      "title": "🎯 Tagesziel erreicht!",
+      "text": "+50 Kupfer Belohnung",
+      "link": "/level.html",
+      "ts": 1789200269169,
+      "read": false
+    },
+    {
+      "id": "n_mty3d9mbkovr",
+      "type": "achievement",
+      "title": "🏆 Wochen-Champion freigeschaltet!",
+      "text": "Erstes Wochenziel geschafft.",
+      "link": "/level.html",
+      "ts": 1789199805683,
+      "read": false
+    },
+    {
+      "id": "n_mty3d9m7bewq",
+      "type": "daily",
+      "title": "🏆 Wochenziel erreicht!",
+      "text": "+250 Kupfer Belohnung",
+      "link": "/level.html",
+      "ts": 1789199805679,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm27wyfws",
+      "type": "achievement",
+      "title": "🏆 Badge-Starter freigeschaltet!",
+      "text": "5 Badges gesammelt.",
+      "link": "/level.html",
+      "ts": 1789163264444,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm27smtu0",
+      "type": "achievement",
+      "title": "🏆 Sweetheart freigeschaltet!",
+      "text": "Level 5 erreicht.",
+      "link": "/level.html",
+      "ts": 1789163264440,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm27m8x9e",
+      "type": "achievement",
+      "title": "🏆 Titel-Sammler freigeschaltet!",
+      "text": "5 Level-Titel verdient.",
+      "link": "/level.html",
+      "ts": 1789163264434,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm27chacm",
+      "type": "achievement",
+      "title": "🏆 XP-Starter freigeschaltet!",
+      "text": "1.000 XP Lifetime gesammelt.",
+      "link": "/level.html",
+      "ts": 1789163264424,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm27axwog",
+      "type": "achievement",
+      "title": "🏆 XP-Großmeister freigeschaltet!",
+      "text": "100.000 XP Lifetime gesammelt.",
+      "link": "/level.html",
+      "ts": 1789163264423,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm279xiqv",
+      "type": "achievement",
+      "title": "🏆 XP-Sammler freigeschaltet!",
+      "text": "10.000 XP Lifetime gesammelt.",
+      "link": "/level.html",
+      "ts": 1789163264421,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm276l6py",
+      "type": "achievement",
+      "title": "🏆 Romantiker freigeschaltet!",
+      "text": "Level 50 erreicht.",
+      "link": "/level.html",
+      "ts": 1789163264418,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm274wfmw",
+      "type": "achievement",
+      "title": "🏆 Flirter freigeschaltet!",
+      "text": "Level 25 erreicht.",
+      "link": "/level.html",
+      "ts": 1789163264416,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm272xd0k",
+      "type": "achievement",
+      "title": "🏆 Herzling freigeschaltet!",
+      "text": "Level 10 erreicht.",
+      "link": "/level.html",
+      "ts": 1789163264414,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm270xdt7",
+      "type": "achievement",
+      "title": "🏆 Kupferkönig freigeschaltet!",
+      "text": "1.000 Kupfer besessen.",
+      "link": "/level.html",
+      "ts": 1789163264412,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm26skrq5",
+      "type": "achievement",
+      "title": "🏅 Neues Badge: Elite",
+      "text": "Level 50 erreicht",
+      "link": "/level.html",
+      "ts": 1789163264404,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm26netjp",
+      "type": "achievement",
+      "title": "🏅 Neues Badge: Veteran",
+      "text": "Level 25 erreicht",
+      "link": "/level.html",
+      "ts": 1789163264399,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm26mz5ms",
+      "type": "achievement",
+      "title": "🏅 Neues Badge: Aufsteiger",
+      "text": "Level 10 erreicht",
+      "link": "/level.html",
+      "ts": 1789163264398,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm26jk4kq",
+      "type": "achievement",
+      "title": "🏅 Neues Badge: Erste Schritte",
+      "text": "Level 1 erreicht",
+      "link": "/level.html",
+      "ts": 1789163264395,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm26epinc",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 75",
+      "text": "Freigeschaltet: ⚡ Champion",
+      "link": "/level.html",
+      "ts": 1789163264390,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm26bet0j",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 50",
+      "text": "Freigeschaltet: 👑 Master",
+      "link": "/level.html",
+      "ts": 1789163264387,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm267eu3a",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 30",
+      "text": "Freigeschaltet: 💎 Elite-Status",
+      "link": "/level.html",
+      "ts": 1789163264383,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm25z3ote",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 25",
+      "text": "Freigeschaltet: 🔥 Durchstarter",
+      "link": "/level.html",
+      "ts": 1789163264375,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm25pa6qb",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 20",
+      "text": "Freigeschaltet: 🌹 Romantiker",
+      "link": "/level.html",
+      "ts": 1789163264365,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm25d2lr7",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 10",
+      "text": "Freigeschaltet: 💜 Profil-Rahmen",
+      "link": "/level.html",
+      "ts": 1789163264353,
+      "read": false
+    },
+    {
+      "id": "n_mtxhm2577pi8",
+      "type": "achievement",
+      "title": "🎁 Meilenstein Level 5",
+      "text": "Freigeschaltet: 🌱 Sweetheart",
+      "link": "/level.html",
+      "ts": 1789163264347,
+      "read": false
+    },
+    {
+      "id": "n_mtx0tytkaevu",
+      "type": "daily",
+      "title": "🎯 Tagesziel erreicht!",
+      "text": "+25 Kupfer Belohnung",
+      "link": "/level.html",
+      "ts": 1789135079816,
+      "read": false
+    },
+    {
+      "id": "n_mtwkeujzxh8n",
+      "type": "daily",
+      "title": "🎯 Tagesziel erreicht!",
+      "text": "+25 Kupfer Belohnung",
+      "link": "/level.html",
+      "ts": 1789107500591,
+      "read": false
+    },
+    {
+      "id": "n_mtwkekqb9ax6",
+      "type": "achievement",
+      "title": "🏆 Guter Start freigeschaltet!",
+      "text": "Erstes Daily abgeholt.",
+      "link": "/level.html",
+      "ts": 1789107487859,
+      "read": false
+    },
+    {
+      "id": "n_mtwkedqu1iyo",
+      "type": "daily",
+      "title": "📅 Daily gesammelt: +200 Kupfer",
+      "text": "Serie 1 Tage · Level 0",
+      "link": "/account.html",
+      "ts": 1789107478806,
+      "read": false
+    },
+    {
+      "id": "n_mtwkebapqbv7",
+      "type": "achievement",
+      "title": "🏆 Zielstürmer freigeschaltet!",
+      "text": "Erstes Tagesziel geschafft.",
+      "link": "/level.html",
+      "ts": 1789107475633,
+      "read": false
+    },
+    {
+      "id": "n_mtwkebamorg8",
+      "type": "daily",
+      "title": "🎯 Tagesziel erreicht!",
+      "text": "+50 Kupfer Belohnung",
+      "link": "/level.html",
+      "ts": 1789107475630,
+      "read": false
+    },
+    {
+      "id": "n_mtwhlxxq09it",
+      "type": "achievement",
+      "title": "🏆 Knöpfchendrücker freigeschaltet!",
+      "text": "Ersten Befehl benutzt.",
+      "link": "/level.html",
+      "ts": 1789102792718,
+      "read": false
+    },
+    {
+      "id": "n_mtwhhexc0ehp",
+      "type": "achievement",
+      "title": "🏆 Neues Glück freigeschaltet!",
+      "text": "Erneut geheiratet (2 Ehen).",
+      "link": "/level.html",
+      "ts": 1789102581457,
+      "read": false
+    },
+    {
+      "id": "n_mtwhhexbl2x8",
+      "type": "achievement",
+      "title": "🏆 Ein Monat verheiratet freigeschaltet!",
+      "text": "30 Tage zusammen.",
+      "link": "/level.html",
+      "ts": 1789102581455,
+      "read": false
+    },
+    {
+      "id": "n_mtwhhex8wdxo",
+      "type": "achievement",
+      "title": "🏆 Hallo Welt freigeschaltet!",
+      "text": "Erste Nachricht geschrieben.",
+      "link": "/level.html",
+      "ts": 1789102581452,
+      "read": false
+    }
+  ]
+}

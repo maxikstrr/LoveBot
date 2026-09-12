@@ -1,0 +1,779 @@
+{
+  "identity": {
+    "username": "",
+    "bid": "4915155894714jid269574108926096lid",
+    "phone": "+4915155894714",
+    "jid": "4915155894714@s.whatsapp.net",
+    "lid": "269574108926096@lid",
+    "cleanJid": "4915155894714",
+    "cleanLid": "269574108926096"
+  },
+  "status": {
+    "dsgvo": {
+      "accepted": true,
+      "acceptedAt": "2026-09-01T21:53:02.915Z",
+      "rejected": false,
+      "rejectedAt": null
+    },
+    "verified": true,
+    "verifiedAt": "2026-09-01T18:48:13.201Z",
+    "unverified": false,
+    "unverifiedAt": null,
+    "mappedAt": "2026-09-01T18:47:01.901Z"
+  },
+  "progression": {
+    "level": 97,
+    "prestige": 0,
+    "xp": 125,
+    "neededXpForLvOrPrestigeUp": 1592,
+    "lastDaily": "2026-09-11",
+    "totalXp": 109590,
+    "streak": 3,
+    "xpWindow": [
+      {
+        "t": 1789210801592,
+        "a": 3,
+        "s": "cmd"
+      }
+    ],
+    "xpSources": {
+      "messages": 156,
+      "love": 42,
+      "commands": 195,
+      "games": 0,
+      "dailies": 50,
+      "work": 0,
+      "compliments": 0,
+      "media": 0,
+      "achievements": 90,
+      "admin": 109057
+    },
+    "streaks": {
+      "daily": {
+        "c": 3,
+        "last": "2026-09-12"
+      },
+      "chat": {
+        "c": 3,
+        "last": "2026-09-12"
+      },
+      "xp": {
+        "c": 1,
+        "last": "2026-09-12"
+      }
+    },
+    "xpLog": [
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789160354803
+      },
+      {
+        "s": "messages",
+        "a": 3,
+        "t": 1789160381900
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789160386195
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789160395263
+      },
+      {
+        "s": "messages",
+        "a": 3,
+        "t": 1789160835361
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789160951155
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789161086154
+      },
+      {
+        "s": "messages",
+        "a": 3,
+        "t": 1789161094839
+      },
+      {
+        "s": "messages",
+        "a": 3,
+        "t": 1789161170990
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789161727245
+      },
+      {
+        "s": "messages",
+        "a": 3,
+        "t": 1789161741978
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789161767098
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789161792452
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789161886034
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789162512379
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789162542807
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789162580013
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789162791720
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789162806383
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789162990061
+      },
+      {
+        "s": "love",
+        "a": 9,
+        "t": 1789163057714
+      },
+      {
+        "s": "commands",
+        "a": 2,
+        "t": 1789163264330
+      },
+      {
+        "s": "achievements",
+        "a": 45,
+        "t": 1789163264441
+      },
+      {
+        "s": "achievements",
+        "a": 5,
+        "t": 1789163264445
+      },
+      {
+        "s": "messages",
+        "a": 18,
+        "t": 1789199323865
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199732281
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199740886
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199749011
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199758168
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199765808
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199786909
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199794832
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789199805672
+      },
+      {
+        "s": "achievements",
+        "a": 5,
+        "t": 1789199805684
+      },
+      {
+        "s": "messages",
+        "a": 4,
+        "t": 1789200269163
+      },
+      {
+        "s": "achievements",
+        "a": 5,
+        "t": 1789200269173
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789200276621
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789200368925
+      },
+      {
+        "s": "messages",
+        "a": 8,
+        "t": 1789200382223
+      },
+      {
+        "s": "commands",
+        "a": 3,
+        "t": 1789210801592
+      }
+    ],
+    "xpDaily": [
+      {
+        "d": "2026-09-10",
+        "a": 21
+      },
+      {
+        "d": "2026-09-11",
+        "a": 439
+      },
+      {
+        "d": "2026-09-12",
+        "a": 73
+      }
+    ],
+    "recentMsgs": [
+      {
+        "h": "707a357c",
+        "t": 1789200382223
+      }
+    ],
+    "unlocks": {
+      "goal-d2026-09-11": 1789107475625,
+      "goal-dc2026-09-11": 1789107500586,
+      "goal-dm2026-09-11": 1789135079809,
+      "lv5": 1789163264330,
+      "lv10": 1789163264330,
+      "lv20": 1789163264330,
+      "lv25": 1789163264330,
+      "lv30": 1789163264330,
+      "lv50": 1789163264330,
+      "lv75": 1789163264330,
+      "chest-lv25": 1789163264330,
+      "chest-lv75": 1789163264330,
+      "goal-w2026-W37": 1789199805672,
+      "goal-d2026-09-12": 1789200269163,
+      "goal-dc2026-09-12": 1789200382223
+    },
+    "lastXpAt": 1789210801592,
+    "lastActiveDay": "2026-09-12",
+    "recentMsgsAllDay": [
+      {
+        "h": "437a390d",
+        "d": "2026-09-12"
+      },
+      {
+        "h": "762925",
+        "d": "2026-09-12"
+      },
+      {
+        "h": "707a357c",
+        "d": "2026-09-12"
+      }
+    ],
+    "lastMsgXpAt": 1789200382223,
+    "xpMonthly": {
+      "2026-09": 512
+    },
+    "statsMonthly": {
+      "2026-09": {
+        "d": "2026-09",
+        "m": 39,
+        "c": 74,
+        "g": 0,
+        "w": 0
+      }
+    },
+    "title": {
+      "min": 50,
+      "emoji": "👑",
+      "name": "Elite"
+    },
+    "titleLevel": 50,
+    "badges": {
+      "first_steps": 1789163264330,
+      "rising_star": 1789163264330,
+      "veteran": 1789163264330,
+      "elite": 1789163264330,
+      "collector_10": 1789163264442
+    },
+    "bestStreak": 3,
+    "records": {
+      "highestLevel": 97,
+      "highestDailyXp": 439,
+      "mostXpOneAction": 50
+    },
+    "statsDaily": [
+      {
+        "d": "2026-09-11",
+        "m": 36,
+        "c": 63,
+        "g": 0,
+        "w": 0
+      },
+      {
+        "d": "2026-09-12",
+        "m": 3,
+        "c": 11,
+        "g": 0,
+        "w": 0
+      }
+    ],
+    "rewardsClaimed": {
+      "copper": 425
+    },
+    "activeTitle": {
+      "min": 50,
+      "emoji": "👑",
+      "name": "Elite"
+    },
+    "rewardsLog": [
+      {
+        "t": 1789107475625,
+        "kind": "dailygoal",
+        "label": "🎯 Tagesziel 2026-09-11",
+        "copper": 50
+      },
+      {
+        "t": 1789107500586,
+        "kind": "dailygoal",
+        "label": "⌨️ Befehlsziel 2026-09-11",
+        "copper": 25
+      },
+      {
+        "t": 1789135079809,
+        "kind": "dailygoal",
+        "label": "💬 Nachrichtenziel 2026-09-11",
+        "copper": 25
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 5",
+        "copper": 100
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 10",
+        "copper": 250
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 20",
+        "copper": 500
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 25",
+        "copper": 750
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 30",
+        "copper": 1000
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 50",
+        "copper": 2500
+      },
+      {
+        "t": 1789163264330,
+        "kind": "milestone",
+        "label": "🎁 Meilenstein Lv 75",
+        "copper": 3750
+      },
+      {
+        "t": 1789199805672,
+        "kind": "weeklygoal",
+        "label": "🏆 Wochenziel 2026-W37",
+        "copper": 250
+      },
+      {
+        "t": 1789200269163,
+        "kind": "dailygoal",
+        "label": "🎯 Tagesziel 2026-09-12",
+        "copper": 50
+      },
+      {
+        "t": 1789200382223,
+        "kind": "dailygoal",
+        "label": "⌨️ Befehlsziel 2026-09-12",
+        "copper": 25
+      }
+    ],
+    "pendingRewards": [
+      {
+        "id": "chest-lv25",
+        "label": "🎁 Truhe Level 25",
+        "copper": 500,
+        "at": 1789163264330
+      },
+      {
+        "id": "chest-lv75",
+        "label": "🎁 Truhe Level 75",
+        "copper": 1500,
+        "at": 1789163264330
+      }
+    ],
+    "goalStreak": {
+      "c": 2,
+      "best": 2,
+      "last": "2026-09-12"
+    },
+    "hourActivity": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      4,
+      4,
+      12,
+      10,
+      5,
+      0,
+      25,
+      16,
+      10,
+      5,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      9,
+      20
+    ],
+    "weekdayActivity": [
+      0,
+      0,
+      0,
+      0,
+      106,
+      16,
+      0
+    ],
+    "rankHistory": [],
+    "rewardsLogMigrated": true
+  },
+  "games": {
+    "gamesPlayed": 0,
+    "lastPlayedAt": null,
+    "lastWin": 0,
+    "lastWinAt": null,
+    "totalWin": 0,
+    "highestWin": 0,
+    "highestWinAt": null,
+    "winStreak": 0,
+    "highestWinStreak": 0,
+    "highestWinStreakAt": null,
+    "lastLoss": 0,
+    "lastLossAt": null,
+    "totalLoss": 0,
+    "highestLoss": 0,
+    "highestLossAt": null,
+    "lossStreak": 0,
+    "highestLossStreak": 0,
+    "highestLossStreakAt": null
+  },
+  "wallet": {
+    "copper": 9535,
+    "silver": 0,
+    "gold": 0,
+    "platin": 0
+  },
+  "bank": {
+    "active": false,
+    "copper": 0,
+    "silver": 0,
+    "gold": 0,
+    "platin": 0
+  },
+  "rewards": {
+    "lastDailyAt": null,
+    "lastWeeklyAt": null,
+    "lastMonthlyAt": null,
+    "lastYearlyAt": null,
+    "lastWorkAt": "2026-09-05T23:32:36.894Z"
+  },
+  "registration": {
+    "registered": true,
+    "name": "maxichen",
+    "age": "16",
+    "status": "vergeben",
+    "city": "recklinghausen",
+    "value": "maxichen.16.vergeben.recklinghausen",
+    "registeredAt": "2026-09-01T19:58:11.534Z"
+  },
+  "love": {
+    "married": true,
+    "spouseName": "4915758256378",
+    "spouseKey": "57956708180043",
+    "spouseBid": "4915758256378jid57956708180043lid",
+    "marriedAt": "2026-04-01T00:00:00.000Z",
+    "divorcedAt": null,
+    "marriages": 2
+  },
+  "flags": {
+    "media": {
+      "first": null,
+      "providers": {},
+      "day": "",
+      "count": 0
+    }
+  },
+  "stats": {
+    "messages": 39,
+    "commands": 74,
+    "games": 0,
+    "gameWins": 0,
+    "gameLosses": 0,
+    "loveActions": 6,
+    "complimentsGiven": 0,
+    "dailiesClaimed": 1,
+    "workClaimed": 0,
+    "dailyloveClaimed": 0
+  },
+  "economy": {
+    "tx": [
+      {
+        "t": 1789200382223,
+        "v": "wallet",
+        "d": 25,
+        "s": "dailygoal",
+        "r": "🎯 Tagesziel"
+      },
+      {
+        "t": 1789200269164,
+        "v": "wallet",
+        "d": 50,
+        "s": "dailygoal",
+        "r": "🎯 Tagesziel"
+      },
+      {
+        "t": 1789199805673,
+        "v": "wallet",
+        "d": 250,
+        "s": "weeklygoal",
+        "r": "🏆 Wochenziel"
+      },
+      {
+        "t": 1789163264335,
+        "v": "wallet",
+        "d": 3750,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789163264335,
+        "v": "wallet",
+        "d": 2500,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789163264335,
+        "v": "wallet",
+        "d": 1000,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789163264334,
+        "v": "wallet",
+        "d": 750,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789163264334,
+        "v": "wallet",
+        "d": 500,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789163264334,
+        "v": "wallet",
+        "d": 250,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789163264334,
+        "v": "wallet",
+        "d": 100,
+        "s": "milestone",
+        "r": "🎁 Meilenstein"
+      },
+      {
+        "t": 1789135079810,
+        "v": "wallet",
+        "d": 25,
+        "s": "dailygoal",
+        "r": "🎯 Tagesziel"
+      },
+      {
+        "t": 1789123709164,
+        "v": "wallet",
+        "d": -10,
+        "s": "pet",
+        "r": "Füttern"
+      },
+      {
+        "t": 1789123704960,
+        "v": "wallet",
+        "d": -10,
+        "s": "pet",
+        "r": "Füttern"
+      },
+      {
+        "t": 1789123701980,
+        "v": "wallet",
+        "d": -10,
+        "s": "pet",
+        "r": "Füttern"
+      },
+      {
+        "t": 1789123688452,
+        "v": "wallet",
+        "d": -10,
+        "s": "pet",
+        "r": "Füttern"
+      },
+      {
+        "t": 1789107500586,
+        "v": "wallet",
+        "d": 25,
+        "s": "dailygoal",
+        "r": "🎯 Tagesziel"
+      },
+      {
+        "t": 1789107478802,
+        "v": "wallet",
+        "d": 200,
+        "s": "daily",
+        "r": "Tag 1 (Serie)"
+      },
+      {
+        "t": 1789107475626,
+        "v": "wallet",
+        "d": 50,
+        "s": "dailygoal",
+        "r": "🎯 Tagesziel"
+      }
+    ],
+    "stats": {
+      "earned": 9475,
+      "spent": 40,
+      "highBal": 9535,
+      "highWallet": 9535,
+      "highBank": 0
+    },
+    "periods": {
+      "day": {
+        "k": "2026-09-12",
+        "e": 325,
+        "s": 0
+      },
+      "week": {
+        "k": "2026-W37",
+        "e": 9475,
+        "s": 40
+      },
+      "month": {
+        "k": "2026-09",
+        "e": 9475,
+        "s": 40
+      },
+      "year": {
+        "k": "2026",
+        "e": 9475,
+        "s": 40
+      }
+    },
+    "monthly": {
+      "2026-09": {
+        "e": 9475,
+        "s": 40
+      }
+    },
+    "daily": {
+      "last": "2026-09-11",
+      "streak": 1,
+      "best": 1,
+      "history": [
+        {
+          "d": "2026-09-11",
+          "c": 200,
+          "s": 1
+        }
+      ],
+      "lastWeekReward": "",
+      "lastMonthReward": "",
+      "lastYearReward": ""
+    },
+    "interest": {
+      "lastAt": 0
+    },
+    "transferDaily": {
+      "d": "",
+      "sum": 0
+    },
+    "lastAdminAdjust": null
+  }
+}
