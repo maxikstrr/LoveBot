@@ -26,11 +26,17 @@ export function defaultAiConfig() {
     model: process.env.AI_MODEL || 'llama3.1:8b',
     baseUrl: process.env.AI_BASE_URL || 'http://127.0.0.1:11434',
     timeoutMs: Number(process.env.AI_TIMEOUT) || 60000,
-    maxTokens: Number(process.env.AI_MAX_TOKENS) || 512,
+    maxTokens: Number(process.env.AI_MAX_TOKENS) || 900,
     temperature: Number(process.env.AI_TEMPERATURE) || 0.7,
     contextChars: Number(process.env.AI_CONTEXT_SIZE) || 6000,
     perMin: 6, perHour: 60, perDay: 200,
-    maxReplies: 1
+    maxReplies: 1,
+    /* 7.1.1: Cloud-KI (echte LLMs, kostenlos) — Chain: Ollama → Cloud → Core */
+    cloudOn: process.env.AI_CLOUD === 'off' ? false : true,
+    cloudProvider: process.env.AI_CLOUD_PROVIDER || 'auto',
+    cloudKey: process.env.AI_CLOUD_KEY || '',
+    cloudModel: process.env.AI_CLOUD_MODEL || '',
+    cloudEndpoint: process.env.AI_CLOUD_ENDPOINT || ''
   };
 }
 
@@ -78,15 +84,26 @@ export function aiConfig() {
 
 export function setAiConfig(patch = {}, actor = '') {
   const st = loadAiStore();
-  const allow = ['provider', 'model', 'baseUrl', 'timeoutMs', 'maxTokens', 'temperature', 'contextChars', 'perMin', 'perHour', 'perDay'];
+  const allow = ['provider', 'model', 'baseUrl', 'timeoutMs', 'maxTokens', 'temperature', 'contextChars', 'perMin', 'perHour', 'perDay',
+    /* 7.1.1: Cloud-KI */
+    'cloudOn', 'cloudProvider', 'cloudKey', 'cloudModel', 'cloudEndpoint'];
+  const cloudProviders = ['auto', 'groq', 'gemini', 'openrouter', 'mistral', 'cerebras', 'pollinations', 'custom'];
   for (const k of allow) {
     if (patch[k] === undefined) continue;
-    /* 7.0.2: nur 'local' als Provider — 'mock' nie in Produktion speicherbar. */
+    /* 7.1.0: 'provider' wird ignoriert — die Engine nutzt fest die Chain
+       (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜). 'mock' bleibt nie speicherbar. */
     if (k === 'provider') {
       if (String(patch[k]).toLowerCase() === 'local') st.config[k] = 'local';
       continue;
     }
-    if (['model', 'baseUrl'].includes(k)) st.config[k] = String(patch[k]).slice(0, 200);
+    if (k === 'cloudOn') { st.config.cloudOn = String(patch[k]).toLowerCase() !== 'off' && patch[k] !== false; continue; }
+    if (k === 'cloudProvider') {
+      const p = String(patch[k]).toLowerCase().trim();
+      if (cloudProviders.includes(p)) st.config.cloudProvider = p;
+      continue;
+    }
+    if (k === 'cloudKey') { st.config.cloudKey = String(patch[k]).trim().slice(0, 200); continue; }
+    if (['model', 'baseUrl', 'cloudModel', 'cloudEndpoint'].includes(k)) st.config[k] = String(patch[k]).slice(0, 300);
     else if (Number.isFinite(Number(patch[k]))) st.config[k] = Number(patch[k]);
   }
   st.config.updatedAt = new Date().toISOString();

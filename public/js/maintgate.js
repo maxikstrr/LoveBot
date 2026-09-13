@@ -55,22 +55,30 @@
       '<style>' +
       '*{box-sizing:border-box}' +
       'html,body{height:100%;margin:0}' +
-      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:radial-gradient(1200px 700px at 20% -10%,rgba(167,139,250,.20),transparent 60%),radial-gradient(1000px 600px at 100% 110%,rgba(244,114,182,.16),transparent 55%),#07050f;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px}' +
-      '.card{max-width:640px;width:100%;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.10);border-radius:26px;padding:44px 38px;backdrop-filter:blur(18px);box-shadow:0 30px 80px rgba(0,0,0,.55);text-align:center}' +
-      '.ico{font-size:64px;line-height:1;margin-bottom:6px;filter:drop-shadow(0 0 24px rgba(248,113,113,.55))}' +
-      'h1{font-size:26px;margin:10px 0 6px;letter-spacing:.02em;background:linear-gradient(90deg,#f87171,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent}' +
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-font-smoothing:antialiased;' +
+      'background:radial-gradient(1200px 700px at 82% -10%,rgba(167,139,250,.22),transparent 60%),radial-gradient(1000px 600px at -10% 30%,rgba(244,114,182,.15),transparent 60%),radial-gradient(900px 700px at 55% 115%,rgba(34,211,238,.10),transparent 60%),linear-gradient(180deg,#07050f,#0b0718 55%,#100a22)}' +
+      /* 💎 Liquid-Glass-Referenz: mehrschichtige Karte mit Rim-Light */
+      '.card{position:relative;max-width:640px;width:100%;padding:46px 38px;border-radius:26px;overflow:hidden;text-align:center;' +
+      'background:radial-gradient(140% 130% at 50% -20%,rgba(255,255,255,.13),rgba(255,255,255,.04) 40%,transparent 74%),radial-gradient(60% 80% at 12% 0%,rgba(255,255,255,.13),transparent 58%),radial-gradient(46% 64% at 88% 100%,rgba(255,255,255,.07),transparent 66%),linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.02) 48%,rgba(0,0,0,.07));' +
+      'border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(20px) saturate(165%);-webkit-backdrop-filter:blur(20px) saturate(165%);' +
+      'box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.34),inset 0 -1px 0 rgba(0,0,0,.23),0 24px 60px rgba(0,0,0,.40),0 4px 14px rgba(0,0,0,.22)}' +
+      '.card::before{content:"";position:absolute;inset:1px 14% auto;height:1px;border-radius:50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.62),transparent);opacity:.72;pointer-events:none}' +
+      '.brand{font-size:11px;font-weight:600;letter-spacing:5px;background:linear-gradient(90deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent;text-transform:uppercase}' +
+      '.ico{font-size:62px;line-height:1;margin:16px 0 6px;filter:drop-shadow(0 0 24px rgba(248,113,113,.55))}' +
+      'h1{font-size:27px;margin:10px 0 6px;letter-spacing:-.02em;background:linear-gradient(120deg,#fff 20%,#b6c2ff 55%,#67e8f9 100%);-webkit-background-clip:text;background-clip:text;color:transparent}' +
       '.sub{color:rgba(255,255,255,.62);font-size:14.5px;margin-bottom:26px}' +
-      '.reason{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.35);border-radius:16px;padding:18px 20px;margin:0 0 22px;text-align:left}' +
+      '.reason{background:radial-gradient(140% 130% at 50% -20%,rgba(248,113,113,.12),rgba(248,113,113,.04) 40%,transparent 74%),rgba(0,0,0,.18);border:1px solid rgba(248,113,113,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.22),0 12px 30px rgba(0,0,0,.24);border-radius:16px;padding:18px 20px;margin:0 0 22px;text-align:left}' +
       '.reason .k{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:rgba(255,255,255,.5);margin-bottom:6px}' +
       '.reason .v{font-size:16.5px;font-weight:600;color:#fff;line-height:1.5}' +
       '.meta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:26px}' +
-      '.chip{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:7px 14px;font-size:12.5px;color:rgba(255,255,255,.75)}' +
+      '.chip{background:radial-gradient(140% 130% at 50% -20%,rgba(255,255,255,.06),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.008) 50%,rgba(0,0,0,.035));border:1px solid rgba(255,255,255,.11);box-shadow:inset 0 1px 0 rgba(255,255,255,.17),0 4px 12px rgba(0,0,0,.16);border-radius:999px;padding:7px 14px;font-size:12.5px;color:rgba(255,255,255,.75)}' +
       '.chip b{color:#fff}' +
       '.foot{font-size:12.5px;color:rgba(255,255,255,.4);font-style:italic;margin-top:6px}' +
       '.pulse{display:inline-block;width:9px;height:9px;border-radius:50%;background:#f87171;box-shadow:0 0 10px #f87171;margin-right:8px;animation:pulse 1.6s ease-in-out infinite}' +
       '@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}' +
       '</style></head><body>' +
       '<div class="card">' +
+      '<div class="brand">LoveBot · Web</div>' +
       '<div class="ico">🛠️🚫</div>' +
       '<h1>ZUGRIFF VERWEIGERT</h1>' +
       '<div class="sub"><span class="pulse"></span>LoveBot befindet sich gerade im Wartungsmodus</div>' +

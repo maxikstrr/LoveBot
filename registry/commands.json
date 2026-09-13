@@ -1120,24 +1120,6 @@
           "source": "Bot-Code"
         },
         {
-          "name": "mute",
-          "usage": "$mute",
-          "desc": "Gruppe stummschalten",
-          "aliases": [],
-          "perms": "admin",
-          "cooldown": 3,
-          "source": "Bot-Code"
-        },
-        {
-          "name": "unmute",
-          "usage": "$unmute",
-          "desc": "Gruppe entsperren",
-          "aliases": [],
-          "perms": "admin",
-          "cooldown": 3,
-          "source": "Bot-Code"
-        },
-        {
           "name": "delete",
           "usage": "$delete",
           "desc": "Zitierte Nachricht löschen",
@@ -1415,6 +1397,30 @@
           "perms": "owner",
           "cooldown": 3,
           "source": "Bot-Code"
+        },
+        {
+          "name": "mute",
+          "usage": "$mute @user [zeit] [grund]",
+          "aliases": [
+            "stumm"
+          ],
+          "desc": "Owner: User stummschalten — Nachrichten werden gelöscht. Ohne Zeit = permanent. Zeit: 30s/10m/2h/1d/2w."
+        },
+        {
+          "name": "unmute",
+          "usage": "$unmute @user",
+          "aliases": [
+            "entstummen"
+          ],
+          "desc": "Owner: Stummschaltung aufheben."
+        },
+        {
+          "name": "mutelist",
+          "usage": "$mutelist",
+          "aliases": [
+            "stummliste"
+          ],
+          "desc": "Owner: Liste aller gemuteten User mit Restdauer."
         }
       ]
     },
@@ -3598,6 +3604,41 @@
           "desc": "AI-Einstellungen (Owner: global) ⚙️"
         }
       ]
+    },
+    {
+      "id": "support",
+      "emoji": "🎫",
+      "name": "Support & Team",
+      "cmds": [
+        {
+          "name": "ticket",
+          "aliases": [
+            "support",
+            "ticket erstellen"
+          ],
+          "desc": "Support-Ticket erstellen: $ticket <Anliegen> — Team antwortet per DM. info/answer/close für Team.",
+          "usage": "$ticket <anliegen> / $ticket info <id>"
+        },
+        {
+          "name": "tickets",
+          "aliases": [
+            "ticketliste"
+          ],
+          "desc": "Team: Ticket-Übersicht (offen/geschlossen) mit Statistik.",
+          "usage": "$tickets [offen|geschlossen]"
+        },
+        {
+          "name": "setteam",
+          "aliases": [
+            "team setzen"
+          ],
+          "desc": "Owner: Rang vergeben ($setteam @person stellvertretender inhaber|admin|supporter|user) + devgroup verwalten.",
+          "usage": "$setteam @person <rang> / $setteam devgroup"
+        }
+      ],
+      "slug": "support",
+      "title": "Support & Team",
+      "web": "Support"
     }
   ],
   "updatedAt": "2026-09-10"

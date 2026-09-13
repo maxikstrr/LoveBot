@@ -16,12 +16,52 @@
   <main class="main">
     <div class="crumb">LoveBot / Mein Bereich</div>
     <h1>🤖 LoveAI</h1>
-    <p class="subline">Deine eigene LoveBot-KI — lokal, kostenlos, mit Gedächtnis.</p>
+    <p class="subline">LoveKI — der Copilot deines Bots: kennt alle Befehle, die ganze Website &amp; jedes Feature. <span id="engineTag" class="pill on" style="margin-left:6px">💜 LoveAI Core</span></p>
+
+    <!-- Status-Hero (Live-Daten aus /api/ai/status) -->
     <div id="status"><p>Lädt …</p></div>
-    <div class="panel"><h2>💬 Chat</h2><div class="chatlog" id="chat"></div>
-      <div class="chatbox"><input id="inp" type="text" maxlength="2000" placeholder="Frag LoveAI … (Enter sendet)" autocomplete="off"><button class="btn" id="send">➤</button></div>
+
+    <!-- Echte KI aktivieren (Cloud-Setup) -->
+    <div class="panel" id="cloudPanel" style="display:none">
+      <h2>🌟 Echte KI aktivieren <span style="font-size:12px;font-weight:400;opacity:.7">— kostenlos, wie ChatGPT (optional)</span></h2>
+      <p id="cloudText" style="font-size:13px;line-height:1.6">LoveAI läuft bereits über die eingebaute Engine. Mit einem <b>kostenlosen API-Key</b> wird daraus eine <b>echte KI</b> (Llama 3.3 70B / Gemini), die auf <b>alles</b> antworten kann — Wissen, Hausaufgaben, Rechnen, Texte, Ideen.</p>
+      <div id="cloudHow" style="font-size:13px;line-height:1.7;background:rgba(255,255,255,.04);border:1px solid var(--line-2);border-radius:12px;padding:12px 14px;margin:10px 0">
+        <b>So geht's (2 Minuten, gratis):</b><br>
+        1️⃣ Kostenlos registrieren: <b>console.groq.com</b> (empfohlen, sehr schnell) oder <b>aistudio.google.com</b><br>
+        2️⃣ Dort „API Key" erstellen &amp; kopieren (beginnt mit <code>gsk_…</code> bzw. <code>AIza…</code>)<br>
+        3️⃣ Hier einfügen → <b>Speichern</b> — fertig! 💜
+      </div>
+      <div class="chatbox" style="margin-top:8px">
+        <input id="cloudKey" type="password" maxlength="200" placeholder="API-Key einfügen (gsk_… / AIza… / sk-or-…)" autocomplete="off">
+        <button class="btn" id="cloudSave">💾</button>
+      </div>
+      <p id="cloudMsg" style="font-size:12px;opacity:.8;margin-top:8px"></p>
+      <p style="font-size:11px;opacity:.55;margin-top:10px">🔒 Der Key wird nur lokal in Database/ai.json gespeichert. Hinweis: Bei aktiver Cloud-KI werden Fragen zur Beantwortung an den Anbieter (z.&nbsp;B. Groq/Google) gesendet. In WhatsApp geht auch: <code>$aiconfig key gsk_…</code></p>
     </div>
-    <div class="panel"><h2>🧠 Memory</h2><div id="mem"><p>Lädt …</p></div>
+
+    <!-- Chat -->
+    <div class="panel">
+      <h2>💬 Chat</h2>
+      <div class="chatlog" id="chat"></div>
+      <div class="ai-chips" id="chips">
+        <button class="ai-chip" data-q="Was ist LoveBot? Erklär mir den Bot">🤖 Was ist LoveBot?</button>
+        <button class="ai-chip" data-q="Was gibt es für Webseiten?">🌐 Website erklären</button>
+        <button class="ai-chip" data-q="Wie funktioniert $daily?">📜 Wie funktioniert $daily?</button>
+        <button class="ai-chip" data-q="Wie bekomme ich XP?">📈 Wie bekomme ich XP?</button>
+        <button class="ai-chip" data-q="Zeig meine stats">📊 Zeig meine Stats</button>
+        <button class="ai-chip" data-q="Erklär mir kurz, was ein schwarzes Loch ist.">🌌 Schwarzes Loch?</button>
+        <button class="ai-chip" data-q="Schreibe ein kurzes, lustiges Gedicht über einen Hund, der Programmieren lernt.">✍️ Gedicht</button>
+      </div>
+      <div class="chatbox">
+        <input id="inp" type="text" maxlength="2000" placeholder="Frag LoveAI alles … (Enter sendet)" autocomplete="off">
+        <button class="btn" id="send">➤</button>
+      </div>
+    </div>
+
+    <!-- Memory -->
+    <div class="panel">
+      <h2>🧠 Memory</h2>
+      <div id="mem"><p>Lädt …</p></div>
       <p><button class="btn ghost sm" id="clearMem">🧹 Memory löschen</button></p>
     </div>
     <div id="owner"></div>
@@ -34,6 +74,8 @@ makeHearts(10);
 buildSidebar('ai');
 const chat = document.getElementById('chat');
 const inp = document.getElementById('inp');
+const ENGINE_BADGE = { ollama: '🦙 Ollama', cloud: '☁️ Cloud-KI', core: '💜 Core' };
+
 function bubble(who, text, meta) {
   const d = document.createElement('div');
   d.className = 'bubble ' + who;
@@ -42,25 +84,78 @@ function bubble(who, text, meta) {
   chat.scrollTop = chat.scrollHeight;
   return d;
 }
+
+/* ── Status-Hero + Cloud-Panel ────────────────────────────────────── */
 async function loadStatus() {
   const s = await api('/api/ai/status');
   const el = document.getElementById('status');
   if (!s || !s.ok) { el.innerHTML = '<div class="panel"><p>Status nicht verfügbar.</p></div>'; return; }
+  const eng = s.engine || 'core';
+  const tag = document.getElementById('engineTag');
+  tag.textContent = ENGINE_BADGE[eng] || '💜 Core';
+  const engineName = s.engineLabel || ENGINE_BADGE[eng] || 'LoveAI Core 💜';
+  const engineSub = eng === 'ollama'
+    ? 'lokales LLM (' + esc(s.model || '') + ')'
+    : eng === 'cloud'
+      ? 'ECHTE KI ☁️ (' + esc((s.cloud && s.cloud.model) || '') + ')'
+      : 'eingebaut — antwortet immer (offline-fähig)';
+  const cl = s.cloud || {};
   el.innerHTML = '<div class="stat-grid">' +
-    '<div class="stat-card"><div class="t">Provider</div><div class="v" style="font-size:18px">' + esc(s.provider === 'mock' ? 'Mock' : 'Local') + '</div><div class="s">' + esc(s.model || '') + '</div></div>' +
-    '<div class="stat-card"><div class="t">Status</div><div class="v">' + (s.online ? '🟢' : '🔴') + '</div><div class="s">' + (s.online ? s.latencyMs + ' ms' : esc(s.code || s.error || 'offline')) + '</div></div>' +
-    '<div class="stat-card"><div class="t">Bereit</div><div class="v">' + (s.ready ? '✅' : '❌') + '</div><div class="s">' + (s.models || 0) + ' Modelle · ' + (s.modelFound ? 'Modell da' : 'Modell fehlt') + '</div></div>' +
-    '</div>' +
-    (s.online ? (s.ready ? '' : '<div class="panel"><h2>⚠️ Modell fehlt</h2><p>Backend erreichbar, aber <b>' + esc(s.model || '') + '</b> ist nicht installiert.</p></div>') : '<div class="panel"><h2>⚠️ AI offline</h2><p>Lokales Modell nicht erreichbar (' + esc(s.code || s.error || '') + '). ' + esc(s.hint || '') + ' Der Bot läuft normal weiter — nur LoveAI antwortet gerade nicht.</p></div>');
+    '<div class="stat-card"><div class="t">Engine</div><div class="v" style="font-size:16px">' + engineName + '</div><div class="s">' + engineSub + '</div></div>' +
+    '<div class="stat-card"><div class="t">Cloud-KI ☁️</div><div class="v">' + (cl.healthy ? '🟢' : (cl.on ? (cl.keySet ? '🔴' : '⚪') : '📴')) + '</div><div class="s">' + (cl.healthy ? 'echte KI läuft' : (cl.on ? (cl.keySet ? 'Key prüfen' : 'ohne Key') : 'deaktiviert')) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Status</div><div class="v">' + (s.online ? '🟢' : '🔴') + '</div><div class="s">' + (s.online ? 'online · bereit' : esc(s.code || 'offline')) + '</div></div>' +
+    '<div class="stat-card"><div class="t">Antwortzeit</div><div class="v">' + (s.latencyMs || 0) + '<small style="font-size:12px"> ms</small></div><div class="s">Health-Check</div></div>' +
+    '</div>';
+
+  /* Cloud-Setup-Panel zeigen */
+  const cp = document.getElementById('cloudPanel');
+  if (cl.keySet) {
+    cp.style.display = '';
+    document.getElementById('cloudText').innerHTML = '🌟 <b>Echte KI ist aktiviert!</b> Anbieter: <b>' + esc(cl.provider || '?') + '</b>' + (cl.model ? ' · Modell: <b>' + esc(cl.model) + '</b>' : '') + '. LoveAI beantwortet jetzt jede Frage wie ChatGPT.';
+    document.getElementById('cloudHow').style.display = 'none';
+    document.getElementById('cloudKey').parentElement.style.display = 'none';
+    document.getElementById('cloudMsg').innerHTML = (cl.healthy ? '✅ Cloud-KI läuft' : '⚠️ Cloud-KI meldet: ' + esc(cl.hint || 'nicht erreichbar')) + ' · <a href="#" id="cloudOff" style="color:var(--pink,#f472b6)">Key entfernen</a>';
+    const off = document.getElementById('cloudOff');
+    if (off) off.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await api('/api/ai/cloud', { method: 'DELETE' });
+      location.reload();
+    });
+  } else if (cl.on !== false) {
+    cp.style.display = '';
+  }
+
   if (s.analytics) {
     const a = s.analytics;
     document.getElementById('owner').innerHTML = '<div class="panel"><h2>👑 Owner — AI-Analytics</h2><div class="stat-grid">' +
       '<div class="stat-card"><div class="t">Heute</div><div class="v">' + a.today + '</div><div class="s">Fehler: ' + a.errorsToday + ' · Ø ' + a.avgLatencyMs + ' ms</div></div>' +
-      '<div class="stat-card"><div class="t">Gesamt</div><div class="v">' + a.total + '</div><div class="s"> aktive Nutzer: ' + a.activeUsers + '</div></div>' +
+      '<div class="stat-card"><div class="t">Gesamt</div><div class="v">' + a.total + '</div><div class="s">aktive Nutzer: ' + a.activeUsers + '</div></div>' +
       '<div class="stat-card"><div class="t">Limits</div><div class="v" style="font-size:16px">' + s.limits.perMin + '/' + s.limits.perHour + '/' + s.limits.perDay + '</div><div class="s">Min/Std/Tag — $aiconfig</div></div>' +
       '</div></div>';
   }
 }
+
+/* ── Key speichern ────────────────────────────────────────────────── */
+document.getElementById('cloudSave').addEventListener('click', async () => {
+  const key = document.getElementById('cloudKey').value.trim();
+  const msg = document.getElementById('cloudMsg');
+  if (!key) { msg.textContent = '⚠️ Bitte zuerst einen API-Key einfügen.'; return; }
+  msg.textContent = '⏳ Key wird getestet …';
+  let r = null;
+  try { r = await api('/api/ai/cloud', { method: 'POST', body: { key } }); } catch (e) {}
+  if (r && r.ok && r.cloudOn) {
+    msg.innerHTML = '✅ <b>Echte KI aktiv!</b> ' + esc(r.cloudProvider || '') + ' · ' + esc(r.cloudModel || '') + ' — frag mich irgendetwas! 🎉';
+    bubble('ai', '🌟 Echte KI ist jetzt aktiv! Ab sofort kann ich dir auf ALLES antworten — Wissen, Hausaufgaben, Rechnen, Texte schreiben, Ideen … Frag mich was! 💜', '☁️ Cloud-KI');
+    setTimeout(() => location.reload(), 1800);
+  } else if (r && r.error) {
+    msg.textContent = '❌ ' + r.error;
+  } else {
+    msg.textContent = '⚠️ Key gespeichert, aber Test fehlgeschlagen (' + ((r && r.hint) || 'Prüfe den Key') + '). LoveAI läuft weiter über Ollama/Core.';
+    setTimeout(() => location.reload(), 2500);
+  }
+});
+
+/* ── Memory ──────────────────────────────────────────────────────── */
 async function loadMem() {
   const m = await api('/api/ai/memory');
   const el = document.getElementById('mem');
@@ -69,8 +164,10 @@ async function loadMem() {
     '<div class="kv"><span class="k">Fakten</span><span>' + (m.facts.length ? m.facts.map((x) => esc(x.text)).join(' · ') : '–') + '</span></div>' +
     '<div class="kv"><span class="k">Chatmodus</span><span>' + (m.prefs.chatMode ? 'an' : 'aus') + ' · Sprache: ' + esc(m.prefs.lang || 'de') + '</span></div>';
 }
-async function send() {
-  const t = inp.value.trim();
+
+/* ── Senden ──────────────────────────────────────────────────────── */
+async function send(preset) {
+  const t = (preset || inp.value).trim();
   if (!t) return;
   inp.value = '';
   bubble('me', t);
@@ -82,18 +179,26 @@ async function send() {
   let r = null;
   try { r = await api('/api/ai/chat', { method: 'POST', body: { text: t } }); } catch (e) {}
   typing.remove();
-  if (r && r.ok) bubble('ai', r.text, '⏱ ' + r.ms + ' ms · ' + (r.model || ''));
-  else if (r && r.reason === 'limited') bubble('ai', '⏳ Kurz pausieren: Limit erreicht (' + (r.detail || '') + ').');
-  else bubble('ai', '🤖 AI gerade nicht erreichbar (' + ((r && r.detail) || 'offline') + '). Der Bot läuft normal weiter.');
+  if (r && r.ok) {
+    bubble('ai', r.text, (ENGINE_BADGE[r.engine] || '💜') + ' · ⏱ ' + r.ms + ' ms');
+  } else if (r && r.reason === 'limited') {
+    bubble('ai', '⏳ Kurz pausieren: Limit erreicht (' + (r.detail || '') + ').');
+  } else {
+    bubble('ai', '🤖 AI gerade nicht erreichbar (' + ((r && r.detail) || 'offline') + '). Der Bot läuft normal weiter.');
+  }
 }
-document.getElementById('send').addEventListener('click', send);
+
+document.getElementById('send').addEventListener('click', () => send());
 inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+document.querySelectorAll('.ai-chip').forEach((c) => c.addEventListener('click', () => send(c.dataset.q)));
 document.getElementById('clearMem').addEventListener('click', async () => {
   await api('/api/ai/memory/clear', { method: 'POST', body: {} });
   chat.innerHTML = '';
   loadMem();
   bubble('ai', '🧹 Memory gelöscht — frisch starten! 💜');
 });
+
+/* ── Start: Verlauf laden + Begrüßung ────────────────────────────── */
 loadStatus();
 loadMem();
 (async () => {
@@ -101,7 +206,9 @@ loadMem();
   if (m && m.ok && m.conversation) {
     for (const c of m.conversation.slice(-6)) bubble(c.role === 'ai' ? 'ai' : 'me', c.text);
   }
-  if (!chat.children.length) bubble('ai', 'Hey! Ich bin LoveAI 💜 Frag mich z. B.: „Wie bekomme ich XP?“ oder „Wie funktioniert die Bank?“');
+  if (!chat.children.length) {
+    bubble('ai', 'Hey! Ich bin *LoveKI* 💜 — der Copilot deines Bots.\n\nIch kenne LoveBot komplett und erkläre dir alles:\n• 🤖 „Was ist LoveBot?“ — Features & Systeme\n• 🌐 „Was gibt es für Webseiten?“ — alle 40 Seiten\n• 📜 „Wie funktioniert $daily?“ — jeder Befehl erklärt\n• 📊 „Zeig meine Stats“ — deine Live-Daten\n\n🔒 Ich schaue nur zu — ich ändere nichts!\n🌟 Mit kostenlosem API-Key beantworte ich dir zusätzlich ALLE Fragen wie ChatGPT.');
+  }
 })();
 </script>
 </body>

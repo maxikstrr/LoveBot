@@ -689,3 +689,211 @@ select option { background: var(--panel-2); }
   .menu-btn { display: inline-flex !important; }
 }
 .menu-btn { display: none; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   7.1.7 · TICKETS & RÄNGE — zentrale Styles für #/ticket und #/raenge
+   (Night-Design-System: Variablen, Panels, Pills — hier nur Erweiterungen)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ---------- Hero-Banner (beide Views) ---------- */
+.tk-hero {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  padding: 18px 20px; border-radius: var(--radius);
+  background: linear-gradient(120deg, rgba(255,45,149,.14), rgba(168,85,247,.10) 55%, rgba(0,240,255,.07));
+  border: 1px solid rgba(255,255,255,.09);
+}
+.tk-hero .ic {
+  width: 52px; height: 52px; flex: 0 0 auto; display: grid; place-items: center;
+  font-size: 27px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,45,149,.22), rgba(168,85,247,.18));
+  border: 1px solid rgba(255,255,255,.12);
+  text-shadow: var(--glow-pink);
+}
+.tk-hero h2 { margin: 0 0 3px; font-size: 21px; letter-spacing: .3px; }
+.tk-hero .sub { color: var(--text-dim); font-size: 12px; line-height: 1.5; }
+.tk-hero .count {
+  margin-left: auto; text-align: center; padding: 8px 16px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+}
+.tk-hero .count b { display: block; font-size: 26px; color: var(--pink-soft); text-shadow: var(--glow-pink); }
+.tk-hero .count span { font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+
+/* ---------- Stat-Karten ---------- */
+.tk-stat {
+  display: flex; gap: 13px; align-items: center; padding: 14px 16px;
+  border-radius: var(--radius); background: var(--panel);
+  border: 1px solid var(--border-soft);
+  transition: transform .18s ease, border-color .18s ease;
+}
+.tk-stat:hover { transform: translateY(-2px); border-color: var(--border); }
+.tk-stat .ic {
+  width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center;
+  font-size: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,.09);
+}
+.tk-stat .ic.pink  { background: rgba(255,45,149,.12);  text-shadow: var(--glow-pink); }
+.tk-stat .ic.ok    { background: rgba(52,211,153,.10); }
+.tk-stat .ic.cyan  { background: rgba(0,240,255,.09); }
+.tk-stat b { display: block; font-size: 22px; line-height: 1.1; }
+.tk-stat span { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.tk-stat .hint { margin-left: auto; font-size: 16px; opacity: .55; }
+.tk-stat.hot b { color: var(--pink-soft); text-shadow: var(--glow-pink); }
+
+/* ---------- Filter (segmented pills) ---------- */
+.tk-filter { display: inline-flex; gap: 6px; padding: 5px; border-radius: 999px;
+  background: var(--panel); border: 1px solid var(--border-soft); }
+.tk-filter button {
+  border: 0; cursor: pointer; font: inherit; font-size: 12px; padding: 6px 15px;
+  border-radius: 999px; color: var(--text-dim); background: transparent;
+  transition: color .15s ease, background .15s ease;
+}
+.tk-filter button:hover { color: var(--text); }
+.tk-filter button.on {
+  color: #fff; font-weight: 600;
+  background: linear-gradient(135deg, var(--pink-deep), var(--violet));
+  box-shadow: 0 0 14px rgba(255,45,149,.35);
+}
+
+/* ---------- Ticket-Karten ---------- */
+.tk-card {
+  position: relative; padding: 16px 18px 16px 22px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid var(--border-soft);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.tk-card:hover { transform: translateY(-2px); border-color: var(--border); box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+.tk-card::before {
+  content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px;
+  border-radius: 3px; background: var(--pink); box-shadow: var(--glow-pink);
+}
+.tk-card.closed::before { background: var(--muted); box-shadow: none; }
+.tk-card.closed { opacity: .78; }
+
+.tk-ava {
+  width: 38px; height: 38px; flex: 0 0 auto; display: grid; place-items: center;
+  border-radius: 50%; font-size: 14px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--pink-deep), var(--violet));
+  text-shadow: 0 1px 3px rgba(0,0,0,.4);
+}
+.tk-ava.dim { background: linear-gradient(135deg, #2c2c40, #3a3a55); color: var(--text-dim); }
+
+.tk-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.tk-id {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--accent-soft);
+  padding: 3px 9px; border-radius: 7px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
+}
+.tk-name { font-weight: 600; }
+.tk-name .extra { color: var(--muted); font-weight: 400; font-size: 11.5px; }
+.tk-time { margin-left: auto; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+.tk-text { margin: 12px 0 4px; font-size: 13.5px; line-height: 1.65; white-space: pre-wrap; color: var(--text); }
+
+/* Antworten als Chat-Bubbles */
+.tk-answers { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.tk-ans {
+  padding: 8px 12px; border-radius: 4px 12px 12px 12px; max-width: 92%;
+  background: var(--panel-2); border: 1px solid var(--border-soft);
+}
+.tk-ans .who { display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--text-dim); margin-bottom: 3px; }
+.tk-ans .who b { color: var(--accent-soft); }
+.tk-ans .who .role {
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 1.5px 7px;
+  border-radius: 999px; border: 1px solid rgba(255,255,255,.12); color: var(--muted);
+}
+.tk-ans .txt { font-size: 12.5px; line-height: 1.55; white-space: pre-wrap; }
+
+.tk-closedinfo {
+  margin-top: 10px; font-size: 11.5px; color: var(--text-dim);
+  padding: 7px 11px; border-radius: var(--radius-sm);
+  background: rgba(248,113,113,.05); border: 1px solid rgba(248,113,113,.15);
+}
+
+/* ---------- Rang-Pills (farbcodiert) ---------- */
+.rt-role {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;
+  letter-spacing: .6px; padding: 4px 11px; border-radius: 999px; white-space: nowrap;
+}
+.rt-role.owner      { color: #ffd76a; background: rgba(251,191,36,.10);  border: 1px solid rgba(251,191,36,.38);  text-shadow: 0 0 10px rgba(251,191,36,.45); }
+.rt-role.deputy     { color: var(--cyan-soft);  background: rgba(0,240,255,.07);   border: 1px solid rgba(0,240,255,.32); }
+.rt-role.admin      { color: var(--violet-soft);background: rgba(168,85,247,.09);  border: 1px solid rgba(168,85,247,.35); }
+.rt-role.supporter  { color: var(--pink-soft);  background: rgba(255,45,149,.08);  border: 1px solid rgba(255,45,149,.32); }
+.rt-role.user       { color: var(--text-dim);   background: rgba(255,255,255,.04); border: 1px solid var(--border); }
+
+/* ---------- Ränge & Team: Formular + Liste ---------- */
+.rt-form label { display: block; margin: 12px 0 5px; font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+.rt-form input, .rt-form select {
+  width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
+  color: var(--text); background: var(--bg-2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px; outline: none; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.rt-form input:focus, .rt-form select:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,45,149,.12); }
+.rt-form select { cursor: pointer; }
+.rt-form .big {
+  width: 100%; margin-top: 16px; font-weight: 600; letter-spacing: .3px;
+  background: linear-gradient(135deg, var(--pink-deep), var(--violet));
+  border: 0; color: #fff; padding: 12px; border-radius: var(--radius-sm);
+  cursor: pointer; transition: filter .15s ease, box-shadow .15s ease;
+}
+.rt-form .big:hover { filter: brightness(1.13); box-shadow: 0 0 18px rgba(255,45,149,.35); }
+
+.rt-member {
+  display: flex; gap: 13px; align-items: center; flex-wrap: wrap;
+  padding: 12px 15px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid var(--border-soft);
+  transition: transform .16s ease, border-color .16s ease;
+}
+.rt-member:hover { transform: translateY(-1px); border-color: var(--border); }
+.rt-member.owner { border-color: rgba(251,191,36,.35); background: linear-gradient(120deg, rgba(251,191,36,.05), var(--panel) 55%); }
+.rt-member .uname { font-weight: 700; font-size: 14px; }
+.rt-member .num { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.rt-member .spacer { flex: 1; }
+.rt-member select {
+  font: inherit; font-size: 12px; color: var(--text); cursor: pointer;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 9px; outline: none;
+}
+.rt-member select:focus { border-color: var(--pink); }
+
+/* Rang-Legende */
+.rt-leg { display: flex; flex-direction: column; gap: 9px; }
+.rt-leg .item {
+  display: flex; gap: 11px; align-items: center; font-size: 12.5px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  background: var(--panel-2); border: 1px solid var(--border-soft);
+}
+.rt-leg .item .lvl {
+  font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+  margin-left: auto; padding-left: 10px; white-space: nowrap;
+}
+.rt-leg .item .desc { color: var(--text-dim); font-size: 11.5px; }
+
+/* Empty-State */
+.tk-empty { text-align: center; padding: 44px 20px; color: var(--muted); }
+.tk-empty .e { font-size: 42px; display: block; margin-bottom: 10px; filter: grayscale(.2) opacity(.9); }
+.tk-empty .t { font-size: 13px; letter-spacing: .4px; }
+
+/* Fade-Kaskade für Karten */
+.tk-stack { display: flex; flex-direction: column; gap: 13px; }
+.tk-stack > * { animation: tkIn .32s ease both; }
+.tk-stack > *:nth-child(2) { animation-delay: .05s; }
+.tk-stack > *:nth-child(3) { animation-delay: .10s; }
+.tk-stack > *:nth-child(4) { animation-delay: .15s; }
+.tk-stack > *:nth-child(5) { animation-delay: .20s; }
+.tk-stack > *:nth-child(n+6) { animation-delay: .25s; }
+@keyframes tkIn { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+
+/* Antwort-Zeile unter jedem Ticket */
+.tk-replyrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 13px; }
+.tk-replyrow input {
+  flex: 1; min-width: 200px; font: inherit; font-size: 13px; color: var(--text);
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 12px; outline: none; transition: border-color .15s ease, box-shadow .15s ease;
+}
+.tk-replyrow input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,45,149,.12); }
+
+/* Dev-Gruppe / Hinweis-Box in der Ränge-Legende */
+.rt-info {
+  margin-top: 12px; padding: 9px 12px; border-radius: var(--radius-sm); font-size: 11.5px;
+  color: var(--text-dim); background: rgba(0,240,255,.05); border: 1px solid rgba(0,240,255,.16);
+}
+.rt-info .mono { font-family: var(--mono); color: var(--cyan-soft); }

@@ -236,6 +236,8 @@
     { grp: '👤 Account & Team' },
     { id: 'account',  icon: '🪪', label: 'Mein Account', perm: 'self.view' },
     { id: 'history',  icon: '📜', label: 'Verlauf', perm: 'self.view' },
+    { id: 'ticket',   icon: '🎫', label: 'Tickets', perm: 'tickets.manage' },
+    { id: 'raenge',   icon: '🏅', label: 'Ränge & Team', perm: 'roles.assign' },
     { id: 'accounts', icon: '👥', label: 'Accounts', perm: 'accounts.view' },
     { id: 'roles',    icon: '', label: 'Rollen & Rechte', perm: 'accounts.view' },
     { id: 'system',   icon: '🖧', label: 'System' },

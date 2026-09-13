@@ -17,6 +17,12 @@
      'mock' ohne LOVEAI_ALLOW_MOCK=1 — nie versehentlich in Produktion).
    ═══════════════════════════════════════════════════════════════════ */
 
+import { CoreProvider } from './core.js';
+import { CloudProvider } from './cloud.js';
+
+/* Öffentliche API: Cloud-KI ebenfalls über providers.js beziehbar */
+export { CloudProvider, detectCloudProvider, CLOUD_PRESETS } from './cloud.js';
+
 /* ── Fehler-Klassifizierung (statt „fetch failed“) ─────────────────── */
 export function shortEndpoint(baseUrl = '') {
   try {
@@ -106,8 +112,7 @@ export function modelMatches(configured = '', installed = '') {
   return c.split(':')[0] === i.split(':')[0] && (c.split(':')[1] || 'latest') === (i.split(':')[1] || 'latest');
 }
 
-/* ── Ollama (lokal) ───────────────────────────────────────────────── */
-export class LocalProvider {
+/* ── Ollama (lokal) ───────────────────────────────────────────────── */export class LocalProvider {
   constructor(cfg = {}) {
     this.name = 'local';
     this.baseUrl = String(cfg.baseUrl || 'http://127.0.0.1:11434').replace(/\/$/, '');
@@ -348,8 +353,116 @@ export class MockProvider {
   async models() { return [{ name: 'mock-7.0', size: 0 }]; }
 }
 
+/* ── Chain (Ollama → LoveAI Core) ────────────────────────────────────
+   Der Standard-Provider ab LoveBot 7.1:
+   1. Ollama (LocalProvider), wenn erreichbar UND Modell installiert.
+   2. Sonst automatisch LoveAI Core (eingebaut, immer verfügbar).
+   Health/Generate prüfen Ollama mit 30-s-Cache — läuft Ollama später,
+   wird es automatisch wieder aktiv (kein Neustart nötig).            */
+export class ChainProvider {
+  /* 3-Tier-Kette: Ollama 🦙 → Cloud-KI ☁️ (echtes LLM) → LoveAI Core 💜.
+     Jede Anfrage fällt bei Fehler AUTOMATISCH auf die nächste Stufe —
+     und die Kette erkennt zurückgekehrte Backends ohne Neustart.    */
+  constructor(cfg = {}) {
+    this.name = 'chain';
+    this.model = cfg.model || 'auto';
+    this.local = new LocalProvider(cfg);
+    this.cloud = new CloudProvider(cfg);
+    this.core = new CoreProvider(cfg);
+    this._localCache = { at: 0, ok: false, res: null };
+    /* Tier nach Fehler kurz sperren (per-Request-Fallback) */
+    this._badUntil = { local: 0, cloud: 0 };
+  }
+
+  async _localReady() {
+    const now = Date.now();
+    if (now < this._badUntil.local) return { ok: false, res: { code: 'recent-fail' } };
+    if (now - this._localCache.at < 30000) return this._localCache;
+    let res;
+    try { res = await this.local.health(); } catch (e) { res = { ok: false, error: String(e?.message || e) }; }
+    const ok = !!(res && res.ok && res.ready !== false && res.modelFound !== false);
+    this._localCache = { at: now, ok, res };
+    return this._localCache;
+  }
+
+  async _cloudReady() {
+    if (Date.now() < this._badUntil.cloud) return { ok: false, code: 'recent-fail' };
+    try { return await this.cloud.health(); } catch (e) { return { ok: false, code: String(e?.aiCode || e?.message || e) }; }
+  }
+
+  /* Reihenfolge der Tiers für die nächste Anfrage */
+  async _tiers() {
+    const tiers = [];
+    if ((await this._localReady()).ok) tiers.push({ p: this.local, key: 'local', engine: 'ollama' });
+    if ((await this._cloudReady()).ok) tiers.push({ p: this.cloud, key: 'cloud', engine: 'cloud' });
+    tiers.push({ p: this.core, key: 'core', engine: 'core' });
+    return tiers;
+  }
+
+  _resolveHasKey() {
+    try { return !!String(this.cloud.cfg?.cloudKey || '').trim(); } catch (e) { return false; }
+  }
+
+  async health() {
+    const tiers = await this._tiers();
+    const act = tiers[0];
+    const labels = { ollama: 'Ollama 🦙', cloud: 'Cloud-KI ☁️', core: 'LoveAI Core 💜' };
+    const cc = await this._cloudReady();
+    const cloudInfo = {
+      cloudOn: !!cc.ok, cloudProvider: cc.cloud || '', cloudModel: cc.model || '',
+      cloudKeySet: this._resolveHasKey(), cloudHint: cc.hint || ''
+    };
+    if (act.engine === 'core') {
+      const lc = await this._localReady();
+      const core = await this.core.health();
+      return {
+        ...core, ok: true, ready: true,
+        engine: 'core', engineLabel: labels.core, active: 'core',
+        fallbackFrom: (lc.ok === false && lc.res?.code !== 'recent-fail' ? 'ollama' : ''),
+        fallbackReason: (lc.res && (lc.res.code || lc.res.error)) || 'unavailable',
+        ...cloudInfo
+      };
+    }
+    let h;
+    try { h = await act.p.health(); } catch (e) { h = { ok: false, error: String(e?.message || e) }; }
+    return { ...h, ok: true, engine: act.engine, engineLabel: labels[act.engine], active: act.engine, ...cloudInfo };
+  }
+
+  /* generate/stream/chat mit AUTOMATISCHEM Fallback pro Anfrage */
+  async _run(method, args) {
+    const tiers = await this._tiers();
+    let lastErr = null;
+    for (let i = 0; i < tiers.length; i++) {
+      const t = tiers[i];
+      try {
+        const res = await t.p[method](...args);
+        return { ...res, engine: t.engine };
+      } catch (e) {
+        lastErr = e;
+        /* Tier nicht letzte Stufe? → 60 s sperren und nächste Stufe probieren */
+        if (i < tiers.length - 1) {
+          this._badUntil[t.key === 'local' ? 'local' : 'cloud'] = Date.now() + 60000;
+          if (t.key === 'local') this._localCache = { at: Date.now(), ok: false, res: { code: e?.aiCode || 'fail' } };
+          try { console.log('[AI] Tier-Fallback:', t.engine, '→', (e?.aiCode || e?.message || 'fehler')); } catch (e2) {}
+        }
+      }
+    }
+    throw lastErr || new Error('Alle AI-Stufen fehlgeschlagen');
+  }
+
+  async generate(prompt, opts = {}) { return this._run('generate', [prompt, opts]); }
+  async stream(prompt, opts = {}, onChunk = null, signal = null) { return this._run('stream', [prompt, opts, onChunk, signal]); }
+  async chat(messages, opts = {}) { return this._run('chat', [messages, opts]); }
+  async models() {
+    const tiers = await this._tiers();
+    return tiers[0].p.models();
+  }
+}
+
 export function createProvider(kind = 'local', cfg = {}, script = []) {
   /* Mock nur mit explizitem Test-Flag — nie versehentlich in Produktion. */
   if (kind === 'mock' && process.env.LOVEAI_ALLOW_MOCK === '1') return new MockProvider(script);
+  if (kind === 'chain') return new ChainProvider(cfg);
+  if (kind === 'core') return new CoreProvider(cfg);
   return new LocalProvider(cfg);
 }

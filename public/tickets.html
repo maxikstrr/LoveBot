@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script src="/js/maintgate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tickets — LoveBot Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎫</text></svg>">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/consent.css">
+</head>
+<body data-page="tickets">
+<div class="hearts" id="hearts"></div>
+<div class="app show">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+    <div class="crumb">LoveBot / Team</div>
+    <h1>🎫 Ticket-Center</h1>
+    <p class="subline">Support-Tickets der Nutzer — beantworten, schließen, im Blick behalten.</p>
+    <div id="gate"><p>Lädt …</p></div>
+
+    <div id="content" style="display:none">
+      <!-- Statistiken -->
+      <div class="stat-grid" id="stats"></div>
+
+      <!-- Filter -->
+      <div class="panel">
+        <div class="ai-chips" id="filter">
+          <button class="ai-chip on" data-f="open">🟢 Offen</button>
+          <button class="ai-chip" data-f="closed">🔒 Geschlossen</button>
+          <button class="ai-chip" data-f="all">📋 Alle</button>
+        </div>
+      </div>
+
+      <!-- Ticket-Liste -->
+      <div id="list"></div>
+    </div>
+  </main>
+</div>
+<script src="/js/common.js"></script>
+<script>
+if (!guardApp()) throw new Error('redirect');
+makeHearts(10);
+buildSidebar('tickets');
+
+const ROLE_BADGE = {
+  owner: '👑 Inhaber',
+  deputy: '🔱 Stellv. Inhaber:in',
+  admin: '◆ Admin',
+  supporter: '◇ Supporter'
+};
+let FILTER = 'open';
+let DATA = { tickets: [], stats: {}, devGroup: '', role: '' };
+
+function fmtDate(iso) {
+  if (!iso) return '–';
+  const d = new Date(iso);
+  return d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
+
+async function load() {
+  const r = await api('/api/tickets?status=' + FILTER);
+  const gate = document.getElementById('gate');
+  if (!r || !r.ok) {
+    gate.innerHTML = '<div class="panel"><p>⛔ ' + (r && r.error ? esc(r.error) : 'Nicht verfügbar — bitte einloggen.') + '</p>' +
+      (r && String(r.error).includes('Team') ? '<p class="hint">🎫 Das Ticket-Center ist für das Team (Supporter · Stellv. Inhaber:in · Inhaber). Nutzer erstellen Tickets per <b>$ticket &lt;Anliegen&gt;</b> im WhatsApp-Chat.</p>' : '') + '</div>';
+    document.getElementById('content').style.display = 'none';
+    gate.style.display = '';
+    return;
+  }
+  gate.style.display = 'none';
+  document.getElementById('content').style.display = '';
+  DATA = r;
+  render();
+}
+
+function render() {
+  const s = DATA.stats || {};
+  document.getElementById('stats').innerHTML =
+    '<div class="stat-card"><div class="t">Offen</div><div class="v">' + (s.open ?? 0) + '</div><div class="s">zu bearbeiten</div></div>' +
+    '<div class="stat-card"><div class="t">Geschlossen</div><div class="v">' + (s.closed ?? 0) + '</div><div class="s">erledigt</div></div>' +
+    '<div class="stat-card"><div class="t">Heute</div><div class="v">' + (s.today ?? 0) + '</div><div class="s">neu heute</div></div>' +
+    '<div class="stat-card"><div class="t">Deine Rolle</div><div class="v" style="font-size:14px">' + (ROLE_BADGE[DATA.role] || DATA.role) + '</div><div class="s">Dev-Gruppe: ' + (DATA.devGroup ? '✅' : '—') + '</div></div>';
+
+  const list = document.getElementById('list');
+  if (!DATA.tickets.length) {
+    list.innerHTML = '<div class="panel"><p>Keine Tickets in dieser Ansicht — alles ruhig hier 💜</p></div>';
+    return;
+  }
+  list.innerHTML = DATA.tickets.map((t) => {
+    const open = t.status === 'open';
+    const answers = (t.answers || []).map((a) =>
+      '<div style="margin:8px 0;padding:10px 12px;border-left:3px solid var(--pink,#f472b6);background:rgba(255,255,255,.04);border-radius:0 10px 10px 0">' +
+      '<b>' + esc(a.byName) + '</b> <span class="pill ' + (a.role === 'owner' ? 'on' : '') + '" style="font-size:10px">' + (ROLE_BADGE[a.role] || a.role) + '</span>' +
+      '<span style="opacity:.5;font-size:11px;margin-left:6px">' + fmtDate(a.at) + '</span>' +
+      '<div style="margin-top:4px;white-space:pre-wrap">' + esc(a.text) + '</div></div>').join('');
+    return '<div class="panel" id="tk-' + t.id + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">' +
+      '<div><b style="font-size:15px">' + t.id + '</b> <span class="pill ' + (open ? 'on' : '') + '">' + (open ? '🟢 offen' : '🔒 geschlossen') + '</span>' +
+      '<span style="opacity:.6;font-size:12px;margin-left:8px">von ' + esc(t.creatorName) + ' · ' + fmtDate(t.createdAt) + '</span></div>' +
+      '<div>' + (open
+        ? '<button class="btn ghost sm" onclick="tkClose(\'' + t.id + '\')">🔒 Schließen</button>'
+        : '<button class="btn ghost sm" onclick="tkReopen(\'' + t.id + '\')">🟢 Wieder öffnen</button>') + '</div></div>' +
+      '<div style="margin:10px 0;padding:12px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line-2);border-radius:12px;white-space:pre-wrap">' + esc(t.text) + '</div>' +
+      (t.closedReason ? '<p style="font-size:12px;opacity:.7">🔒 Grund: ' + esc(t.closedReason) + ' — ' + esc(t.closedBy?.name || '?') + '</p>' : '') +
+      '<b style="font-size:13px">💬 Antworten (' + (t.answers || []).length + ')</b>' + (answers || '<p style="opacity:.5;font-size:13px">Noch keine Antworten.</p>') +
+      (open ? '<div class="chatbox" style="margin-top:10px">' +
+        '<input id="ans-' + t.id + '" maxlength="1500" placeholder="Antwort an ' + esc(t.creatorName) + ' … (wird per WhatsApp-DM zugestellt)" autocomplete="off">' +
+        '<button class="btn" onclick="tkAnswer(\'' + t.id + '\')">➤</button></div>' : '') +
+      '</div>';
+  }).join('');
+}
+
+async function tkAnswer(id) {
+  const inp = document.getElementById('ans-' + id);
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  const r = await api('/api/tickets/answer', { method: 'POST', body: { id, text } });
+  if (r && r.ok) { load(); }
+  else alert('Antwort fehlgeschlagen: ' + ((r && r.error) || 'unbekannt'));
+}
+
+async function tkClose(id) {
+  const reason = prompt('Grund (optional):') || '';
+  const r = await api('/api/tickets/close', { method: 'POST', body: { id, reason } });
+  if (r && r.ok) load();
+  else alert('Schließen fehlgeschlagen: ' + ((r && r.error) || 'unbekannt'));
+}
+
+async function tkReopen(id) {
+  const r = await api('/api/tickets/reopen', { method: 'POST', body: { id } });
+  if (r && r.ok) load();
+  else alert('Wieder-öffnen fehlgeschlagen: ' + ((r && r.error) || 'unbekannt'));
+}
+
+document.querySelectorAll('#filter .ai-chip').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#filter .ai-chip').forEach((x) => x.classList.remove('on'));
+  b.classList.add('on');
+  FILTER = b.dataset.f;
+  load();
+}));
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const el = document.activeElement;
+  if (el && el.id && el.id.startsWith('ans-')) tkAnswer(el.id.slice(4));
+});
+
+load();
+setInterval(load, 15000); /* live aktualisieren */
+</script>
+</body>
+</html>

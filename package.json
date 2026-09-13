@@ -8,7 +8,11 @@
     "start": "node Love.js",
     "watch": "node --watch Love.js",
     "web": "node server.js",
-    "web:watch": "node --watch server.js"
+    "web:watch": "node --watch server.js",
+    "test:glass": "node scripts/glasscard-selftest.mjs",
+    "test:ai": "node scripts/ai-selftest.mjs",
+    "test:cmd": "node scripts/cmdpage-selftest.mjs",
+    "test:team": "node scripts/team-selftest.mjs"
   },
   "keywords": [
     "whatsapp",
@@ -30,7 +34,8 @@
     "nayan-media-downloaders": "^0.1.8",
     "node-webpmux": "^3.2.1",
     "pino": "^10.3.1",
-    "qrcode-terminal": "^0.12.0"
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.35.4"
   },
   "optionalDependencies": {
     "youtube-dl-exec": "^3.1.15"

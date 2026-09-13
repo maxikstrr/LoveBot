@@ -7,25 +7,40 @@
    · Output-Sanitize: TOOL-Zeilen raus, Secrets-Muster rotiert, Länge cap
    ═══════════════════════════════════════════════════════════════════ */
 import { toolSpec, runTool } from './tools.js';
+import { buildBotKnowledge } from './knowledge.js';
 
 export const MAX_REACT_ROUNDS = 3;
 
 export function buildSystemPrompt({ lang = 'de', groupName = '' } = {}) {
   const tools = toolSpec().map((t) => `- ${t.name}: ${t.desc}`).join('\n');
+  const date = new Date().toLocaleDateString('de-DE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const knowledge = buildBotKnowledge();
   if (lang === 'en') {
-    return 'You are LoveAI, the friendly assistant of LoveBot 7.0 (WhatsApp bot). ' +
-      'Answer briefly (max ~600 chars), friendly, with few emojis. ' +
-      'NEVER invent commands — use tools for real data. To use a tool, output lines like:\n' +
-      'TOOL:name({"arg":"value"})\nAvailable tools:\n' + tools +
-      '\nAfter TOOL lines you get results and answer finally. No passwords/tokens ever.' +
-      (groupName ? `\nCurrent group: ${groupName}.` : '');
+    return 'You are LoveKI 💜, the real AI of LoveBot 7.1 — a fully integrated bot copilot (like GitHub Copilot knows a repo): ' +
+      'You know the ENTIRE bot — commands, website (40 pages), features, systems — and explain anything about it. ' +
+      'You also answer ANY general question (knowledge, school, math, coding, creative writing, ideas) helpfully and accurately. ' +
+      'Keep answers compact for WhatsApp (max ~900 chars), friendly, few emojis, *asterisks* for bold. ' +
+      `Today is ${date}. ` +
+      'STRICT RULES: You are READ-ONLY — you can NEVER change anything (no settings, no data, no commands that modify). ' +
+      'For user- and bot-data ALWAYS use tools — NEVER invent data or commands. ' +
+      'To use a tool, output lines like:\n' +
+      'TOOL:name({"arg":"value"})\nAvailable tools (all read-only):\n' + tools +
+      '\nAfter TOOL lines you receive results and answer finally. Never output passwords/tokens/keys.' +
+      (groupName ? `\nCurrent group: ${groupName}.` : '') +
+      '\n\n' + knowledge;
   }
-  return 'Du bist LoveAI 💜, die freundliche Assistentin von LoveBot 7.0 (WhatsApp-Bot). ' +
-    'Antworte kurz (max ~600 Zeichen), freundlich, mit wenigen Emojis. ' +
-    'Erfinde NIEMALS Befehle — nutze Tools für echte Daten. Für ein Tool schreibe Zeilen wie:\n' +
-    'TOOL:name({"arg":"wert"})\nVerfügbare Tools:\n' + tools +
-    '\nNach TOOL-Zeilen erhältst du Ergebnisse und antwortest final. Niemals Passwörter/Tokens ausgeben.' +
-    (groupName ? `\nAktuelle Gruppe: ${groupName}.` : '');
+  return 'Du bist LoveKI 💜, die echte KI von LoveBot 7.1 — ein komplett verknüpfter Bot-Copilot (wie GitHub Copilot ein Repository kennt): ' +
+    'Du kennst den GESAMTEN Bot — Befehle, Website (40 Seiten), Features, Systeme — und kannst alles daran erklären. ' +
+    'Zusätzlich beantwortest du JEDE allgemeine Frage (Wissen, Schule, Mathe, Programmieren, kreatives Schreiben, Ideen) hilfreich und korrekt. ' +
+    'Antworte kompakt für WhatsApp (max ~900 Zeichen), freundlich, mit wenigen Emojis, *Sternchen* für fett. ' +
+    `Heute ist ${date}. ` +
+    'STRENGE REGEL: Du bist NUR LESEND — du darfst NIEMALS etwas ändern (keine Einstellungen, keine Daten, keine verändernden Befehle). ' +
+    'Für ALLE User- und Bot-Daten nutze IMMER Tools — erfinde NIEMALS Daten oder Befehle. ' +
+    'Für ein Tool schreibe Zeilen wie:\n' +
+    'TOOL:name({"arg":"wert"})\nVerfügbare Tools (alle nur lesend):\n' + tools +
+    '\nNach TOOL-Zeilen erhältst du Ergebnisse und antwortest final. Niemals Passwörter/Tokens/Keys ausgeben.' +
+    (groupName ? `\nAktuelle Gruppe: ${groupName}.` : '') +
+    '\n\n' + knowledge;
 }
 
 /* Verlauf + Fakten + Nachricht zu EINEM Prompt (generate) zusammenbauen */
@@ -78,10 +93,12 @@ export async function runReact(provider, { system = '', history = [], facts = []
   const toolsUsed = [];
   let prompt = buildPrompt({ system, history, facts, userText, contextChars: cfg.contextChars || 6000 });
   let lastText = '';
+  let engine = '';
   for (let round = 0; round < MAX_REACT_ROUNDS; round++) {
     if (signal?.aborted) throw new Error('aborted');
     const res = await provider.generate(prompt, { signal, maxTokens: cfg.maxTokens, temperature: cfg.temperature, model: cfg.model });
     lastText = res.text || '';
+    engine = res.engine || engine;
     const calls = parseToolCalls(lastText);
     if (!calls.length) break;
     const results = [];
@@ -92,5 +109,5 @@ export async function runReact(provider, { system = '', history = [], facts = []
     }
     prompt = prompt + '\n\n' + lastText + '\n\n' + results.join('\n') + '\n\nAntworte jetzt final auf die User-Nachricht (kurz, ohne TOOL-Zeilen):';
   }
-  return { text: sanitizeOutput(lastText), ms: Date.now() - t0, toolsUsed };
+  return { text: sanitizeOutput(lastText), ms: Date.now() - t0, toolsUsed, engine };
 }

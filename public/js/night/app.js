@@ -1435,6 +1435,172 @@
       '<p class="dim small center" style="text-align:center;margin:14px 0 4px">🗞️ Liebe Grüße, LoveBot ☾</p>';
   };
 
+  /* ---------- 7.1.7: Tickets (Owner) — Night-Design v2 ---------------- */
+  let tkFilterState = 'all';
+  const TK_FILTERS = [['all', '🗂️ Alle'], ['open', '📬 Offen'], ['closed', '🔒 Geschlossen']];
+
+  const tkAgo = (iso) => {
+    if (!iso) return '—';
+    const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (s < 60) return 'gerade eben';
+    if (s < 3600) return 'vor ' + Math.floor(s / 60) + ' Min';
+    if (s < 86400) return 'vor ' + Math.floor(s / 3600) + ' Std';
+    return 'vor ' + Math.floor(s / 86400) + ' Tagen';
+  };
+  const tkInitials = (name) => {
+    const p = String(name || '?').replace(/[^\p{L}\p{N} ]/gu, '').trim().split(/\s+/);
+    return ((p[0] || '?')[0] + (p[1] ? p[1][0] : '')).toUpperCase() || '?';
+  };
+
+  V.ticket = async (el) => {
+    const r = await API.get('/api/tickets?status=all');
+    const tickets = (r.data && r.data.tickets) || [];
+    const st = (r.data && r.data.stats) || { open: 0, closed: 0, today: 0 };
+    const tkShown = tkFilterState === 'all' ? tickets.slice() : tickets.filter((t) => t.status === tkFilterState);
+    tkShown.sort((a, b) => (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || ''));
+
+    const tkStatCard = (icon, cls, val, label, hint, hot) =>
+      '<div class="tk-stat' + (hot ? ' hot' : '') + '"><div class="ic ' + cls + '">' + icon + '</div>' +
+      '<div><b>' + val + '</b><span>' + label + '</span></div>' +
+      (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>';
+
+    const tkCard = (t) => {
+      const open = t.status === 'open';
+      const ans = (t.answers || []).map((a) =>
+        '<div class="tk-ans"><div class="who"><b>' + fmt.esc(a.byName || 'Team') + '</b>' +
+        (a.role ? '<span class="rt-role ' + fmt.esc(a.role) + '">' + fmt.esc(a.role) + '</span>' : '') +
+        '<span>· ' + fmt.esc(tkAgo(a.at)) + '</span></div>' +
+        '<div class="txt">' + fmt.esc(a.text || '') + '</div></div>').join('');
+      return '<div class="tk-card' + (open ? '' : ' closed') + '">' +
+        '<div class="tk-head">' +
+        '<div class="tk-ava' + (open ? '' : ' dim') + '">' + fmt.esc(tkInitials(t.creatorName)) + '</div>' +
+        '<div><span class="tk-name">' + fmt.esc(t.creatorName || '–') + ' ' +
+        (t.bid ? '<span class="extra">· Liebesbote ' + fmt.esc(t.bid) + '</span>' : '') + '</span></div>' +
+        '<span class="tk-id">' + fmt.esc(t.id || '?') + '</span>' +
+        pill(open ? 'on' : 'off', open ? 'OFFEN' : 'GESCHLOSSEN') +
+        '<span class="tk-time">🕑 ' + fmt.esc(tkAgo(t.createdAt)) + '</span></div>' +
+        '<div class="tk-text">' + fmt.esc(t.text || '') + '</div>' +
+        ((t.answers || []).length
+          ? '<div class="tk-answers">' + ans + '</div>'
+          : '<div class="dim small" style="margin-top:9px">💬 noch keine Antworten</div>') +
+        (!open && t.closedAt
+          ? '<div class="tk-closedinfo">🔒 geschlossen von <b>' + fmt.esc((t.closedBy && t.closedBy.name) || 'Team') + '</b>' +
+            (t.closedReason ? ' — „' + fmt.esc(t.closedReason) + '“' : '') + ' · ' + fmt.esc(tkAgo(t.closedAt)) + '</div>'
+          : '') +
+        '<div class="tk-replyrow">' +
+        '<input id="tkA-' + fmt.esc(t.id) + '" placeholder="💬 Antwort schreiben … (geht als DM an ' + fmt.esc(t.creatorName || 'den Ersteller') + ')">' +
+        '<button class="btn sm" onclick="APP.tkAnswer(\'' + fmt.esc(t.id) + '\')">Senden</button>' +
+        (open
+          ? '<button class="btn ghost sm" onclick="APP.tkClose(\'' + fmt.esc(t.id) + '\')">🔒 Schließen</button>'
+          : '<button class="btn ghost sm" onclick="APP.tkReopen(\'' + fmt.esc(t.id) + '\')">↺ Öffnen</button>') +
+        '</div></div>';
+    };
+
+    el.innerHTML =
+      '<div class="tk-hero fade-in"><div class="ic">🎫</div>' +
+      '<div><h2>Ticket-Eingang</h2><div class="sub">Support-Anfragen aus WhatsApp — Antworten gehen als DM an den Ersteller.</div></div>' +
+      '<div class="count"><b>' + (st.open || 0) + '</b><span>offen</span></div></div>' +
+
+      '<div class="grid c3" style="margin-top:14px">' +
+      tkStatCard('📬', 'pink', st.open || 0, 'offene Tickets', '💜', (st.open || 0) > 0) +
+      tkStatCard('🔒', 'ok', st.closed || 0, 'geschlossen', '✓', false) +
+      tkStatCard('📅', 'cyan', st.today || 0, 'heute neu', '✨', false) +
+      '</div>' +
+
+      '<div style="margin:16px 0 4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">' +
+      '<div class="tk-filter">' + TK_FILTERS.map(([k, l]) =>
+        '<button class="' + (tkFilterState === k ? 'on' : '') + '" onclick="APP.tkFilter(\'' + k + '\')">' + l + '</button>').join('') + '</div>' +
+      '<span class="dim small">' + tkShown.length + ' von ' + tickets.length + ' Tickets</span></div>' +
+
+      '<div class="tk-stack" style="margin-top:12px">' +
+      (tkShown.length ? tkShown.map(tkCard).join('')
+        : '<div class="panel"><div class="tk-empty"><span class="e">🌙</span><span class="t">' +
+          (tkFilterState === 'open' ? 'Keine offenen Tickets — alles abgearbeitet. Gute Nacht. 💜'
+            : tkFilterState === 'closed' ? 'Noch keine geschlossenen Tickets.'
+            : 'Noch gar keine Tickets — ruhige Nacht.') + '</span></div></div>') +
+      '</div>' +
+
+      '<p class="dim small" style="text-align:center;margin:16px 0 4px">🎫 Team-Reiter: Supporter+ dürfen antworten · nur der Owner vergibt Ränge</p>';
+  };
+
+  /* ---------- 7.1.7: Ränge & Team (Owner) — Night-Design v2 ------------- */
+  V.raenge = async (el) => {
+    const [tm] = await Promise.all([API.get('/api/team')]);
+    const team = (tm.data && tm.data.team) || [];
+    const devGroup = (tm.data && tm.data.devGroup) || '';
+    const isOwnerAcc = (a) => a.role === 'owner';
+
+    const member = (a) =>
+      '<div class="rt-member' + (isOwnerAcc(a) ? ' owner' : '') + '">' +
+      '<div class="tk-ava">' + fmt.esc(tkInitials(a.username)) + '</div>' +
+      '<div><div class="uname">' + fmt.esc(a.username || '?') + (isOwnerAcc(a) ? ' 👑' : '') + '</div>' +
+      '<div class="num">' + fmt.esc(a.number || '–') + '</div></div>' +
+      '<div class="spacer"></div>' +
+      (isOwnerAcc(a)
+        ? '<span class="rt-role owner">OWNER</span><span class="dim small">geschützt</span>'
+        : '<select id="rt-' + fmt.esc(a.username) + '" title="Rang wählen">' +
+          ['deputy', 'admin', 'supporter', 'user'].map((r) =>
+            '<option value="' + r + '"' + (a.role === r ? ' selected' : '') + '>' + r + '</option>').join('') +
+          '</select>' +
+          '<button class="btn ghost sm" onclick="APP.teamRoleSave(\'' + fmt.esc(a.username) + '\')">✓ Speichern</button>') +
+      '</div>';
+
+    el.innerHTML =
+      '<div class="tk-hero fade-in"><div class="ic">🏅</div>' +
+      '<div><h2>Ränge &amp; Team</h2><div class="sub">Nur der Owner vergibt Ränge — Änderungen greifen sofort, auch für laufende Sessions.</div></div>' +
+      '<div class="count"><b>' + team.length + '</b><span>Team</span></div></div>' +
+
+      '<div class="grid c2" style="margin-top:14px;align-items:start">' +
+
+      /* ── Anlege-Formular ── */
+      '<div class="panel fade-in" style="padding:0"><div class="body">' +
+      '<h3 style="margin:2px 0 4px">➕ Neues Team-Mitglied</h3>' +
+      '<p class="dim small" style="margin:0 0 4px">Legt einen Account an — die Person bekommt Zugangsdaten + Passwort automatisch per WhatsApp-DM.</p>' +
+      '<div class="rt-form">' +
+      '<label>WhatsApp-Nummer · mit Ländercode</label>' +
+      '<input id="rtAddNum" class="mono" placeholder="4917612345678" inputmode="numeric">' +
+      '<label>Name / Username</label>' +
+      '<input id="rtAddName" placeholder="maxi">' +
+      '<label>Rang</label>' +
+      '<select id="rtAddRole">' +
+      '<option value="deputy">🌙 deputy — rechte Hand des Owners</option>' +
+      '<option value="admin" selected>🛡️ admin — Verwaltung</option>' +
+      '<option value="supporter">🎫 supporter — nur Tickets</option>' +
+      '</select>' +
+      '<button class="big" onclick="APP.teamAdd()">➕ Anlegen &amp; DM senden</button>' +
+      '</div></div></div>' +
+
+      /* ── Rang-Legende ── */
+      '<div class="panel fade-in" style="padding:0"><div class="body">' +
+      '<h3 style="margin:2px 0 10px">🎖️ Die Rang-Hierarchie</h3>' +
+      '<div class="rt-leg">' +
+      [['owner', '👑', 'Owner — darf alles, der Inhaber selbst', '100'],
+       ['deputy', '🌙', 'Deputy — fast alles, darf keine Ränge vergeben', '90'],
+       ['admin', '🛡️', 'Admin — Verwaltung (Bans, Gruppen, Badwords …)', '70'],
+       ['supporter', '🎫', 'Supporter — darf nur Tickets beantworten', '40'],
+       ['user', '👤', 'User — normaler Account', '10']]
+        .map((x) => '<div class="item"><span class="rt-role ' + x[0] + '">' + x[1] + ' ' + x[0].toUpperCase() + '</span>' +
+          '<span class="desc">' + x[2] + '</span><span class="lvl">' + x[3] + '</span></div>').join('') +
+      '</div>' +
+      (devGroup
+        ? '<div class="rt-info">💬 Dev-Gruppe aktiv: <span class="mono">' + fmt.esc(devGroup) + '</span> — neue Tickets landen dort.</div>'
+        : '<div class="rt-info">💡 Tipp: Dev-Gruppe per WhatsApp aktivieren: <span class="mono">$setteam devgroup hier</span></div>') +
+      '<div class="rt-info" style="background:rgba(255,45,149,.05);border-color:rgba(255,45,149,.18)">💬 Ränge gehen auch per WhatsApp: <span class="mono" style="color:var(--pink-soft)">$setteam @person rang</span></div>' +
+      '</div></div>' +
+      '</div>' +
+
+      /* ── Team-Liste ── */
+      '<h3 style="margin:18px 0 10px">👥 Das Team (' + team.length + ')</h3>' +
+      '<div class="tk-stack">' +
+      (team.length ? team.map(member).join('')
+        : '<div class="panel"><div class="tk-empty"><span class="e">👥</span><span class="t">Noch keine Team-Mitglieder — lege links das erste an.</span></div></div>') +
+      '</div>';
+
+  };
+  /* Hash-Aliase: #/tickets · #/ränge · #/rang · #/team */
+  V.tickets = V.ticket;
+  V['ränge'] = V.raenge; V.rang = V.raenge; V.team = V.raenge;
+
   /* ---------- Mein Account ---------- */
   V.account = async (el) => {
     const [a, ss] = await Promise.all([API.get('/api/account'), API.get('/api/account/sessions')]);
@@ -1863,6 +2029,82 @@
   }
 
   window.APP = {
+    /* ---------- 7.1.6: Tickets & Ränge ---------- */
+    tkFilter(f) {
+      tkFilterState = ['all', 'open', 'closed'].includes(f) ? f : 'all';
+      V.ticket(document.getElementById('view'));
+    },
+    raengeRefresh() { V.raenge(document.getElementById('view')); },
+    async tkAnswer(id) {
+      const inp = document.getElementById('tkA-' + id);
+      const text = (inp && inp.value || '').trim();
+      if (!text) return toast('✕ Antwort fehlt', 'Bitte erst eine Antwort schreiben.', 'error');
+      const r = await API.post('/api/tickets/answer', { id, text });
+      if (r.data && r.data.ok) { toast('✓ Antwort gesendet', id + ' · DM an den Ersteller ist unterwegs.', 'ok'); V.ticket(document.getElementById('view')); }
+      else toast('✕ Fehler', (r.data && r.data.error) || 'Antwort konnte nicht gesendet werden.', 'error');
+    },
+    tkClose(id) {
+      const m = UI.modal('<h3>🔒 Ticket schließen</h3><p class="dim small">' + fmt.esc(id) + '</p>' +
+        '<label class="fld dim small">Grund (optional)</label><input id="tkCloseReason" placeholder="Problem gelöst …">',
+        [
+          { label: 'Abbrechen', cls: 'ghost', onClick: (bg, close) => close() },
+          { label: '🔒 Schließen', onClick: async (bg, close) => {
+              const reason = ((bg.querySelector('#tkCloseReason') || {}).value || '').trim();
+              const r = await API.post('/api/tickets/close', { id, reason });
+              if (r.data && r.data.ok) { toast('✓ Ticket geschlossen', id, 'ok'); close(); V.ticket(document.getElementById('view')); }
+              else toast('✕ Fehler', (r.data && r.data.error) || 'Ticket konnte nicht geschlossen werden.', 'error');
+            } }
+        ]);
+      return m;
+    },
+    async tkReopen(id) {
+      const r = await API.post('/api/tickets/reopen', { id });
+      if (r.data && r.data.ok) { toast('✓ Wieder geöffnet', id, 'ok'); V.ticket(document.getElementById('view')); }
+      else toast('✕ Fehler', (r.data && r.data.error) || 'Ticket konnte nicht geöffnet werden.', 'error');
+    },
+    async teamRoleSave(username) {
+      const sel = document.getElementById('rt-' + username);
+      if (!sel || !username) return;
+      const role = sel.value;
+      const r = await API.post('/api/team/role', { username, role });
+      if (r.data && r.data.ok) {
+        toast('✓ Rang gespeichert', username + ' → ' + role, 'ok');
+        V.raenge(document.getElementById('view'));
+      } else toast('✕ Fehler', (r.data && r.data.error) || 'Rang konnte nicht gespeichert werden.', 'error');
+    },
+    teamAdd() {
+      const numEl = document.getElementById('rtAddNum');
+      const nameEl = document.getElementById('rtAddName');
+      const roleEl = document.getElementById('rtAddRole');
+      const number = (numEl && numEl.value || '').replace(/[^0-9]/g, '');
+      const name = (nameEl && nameEl.value || '').trim();
+      const role = roleEl ? roleEl.value : 'admin';
+      if (!number || number.length < 8) return toast('✕ Nummer fehlt', 'Bitte eine vollständige WhatsApp-Nummer mit Ländercode angeben.', 'error');
+      if (!name) return toast('✕ Name fehlt', 'Bitte einen Namen für das Team-Mitglied angeben.', 'error');
+      const m = UI.modal('<h3>➕ Team-Mitglied anlegen</h3>' +
+        '<p class="dim small">' + fmt.esc(name) + ' · ' + fmt.esc(number) + ' · <b>' + fmt.esc(role) + '</b></p>' +
+        '<p class="dim small">Der Account wird angelegt und die Zugangsdaten (inkl. einmaligem Passwort) der Person per WhatsApp-DM gesendet.</p>',
+        [
+          { label: 'Abbrechen', cls: 'ghost', onClick: (bg, close) => close() },
+          { label: '➕ Anlegen', onClick: async (bg, close) => {
+              const r = await API.post('/api/team/add', { number, name, role });
+              if (r.data && r.data.ok) {
+                const pw = r.data.tempPassword || '';
+                close();
+                UI.modal('<h3>✅ ' + fmt.esc(name) + ' ist im Team 🎉</h3>' +
+                  '<div style="display:flex;gap:10px;align-items:center;margin:8px 0 4px"><span class="rt-role ' + fmt.esc(role) + '">' + fmt.esc(role.toUpperCase()) + '</span><span class="dim small mono">' + fmt.esc(number) + '</span></div>' +
+                  '<p class="dim small">Die Zugangsdaten wurden automatisch per WhatsApp-DM gesendet.</p>' +
+                  '<label class="fld dim small" style="display:block;margin-top:10px">🔑 Einmaliges Passwort (nur jetzt sichtbar)</label>' +
+                  '<input class="mono" readonly value="' + fmt.esc(pw) + '" onclick="this.select()" style="width:100%;box-sizing:border-box;font-size:15px;letter-spacing:1px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:9px;color:var(--pink-soft)">' +
+                  '<p class="dim small" style="margin-top:10px">⚠️ Bitte zusätzlich sicher notieren — danach wird es nie wieder angezeigt.</p>',
+                  [{ label: 'Fertig ✔', onClick: (b2, c2) => { c2(); V.raenge(document.getElementById('view')); } }]);
+              } else {
+                toast('✕ Fehler', (r.data && r.data.error) || 'Account konnte nicht angelegt werden.', 'error');
+              }
+            } }
+        ]);
+      return m;
+    },
     async sessionAct(act, id) {
       if (!id) return;
       if (act === 'restart') {

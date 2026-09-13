@@ -193,3 +193,15 @@
 {"ts":1789200382227,"type":"REWARD_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"messages","kind":"dailygoal"}}
 {"ts":1789200382229,"type":"COINS_EARNED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","granted":25,"source":"messages","reason":"levelup"}}
 {"ts":1789210801597,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789288839066,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":13,"source":"commands"}}
+{"ts":1789288839067,"type":"STREAK_UPDATED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","source":"commands","streak":4}}
+{"ts":1789288889680,"type":"GROUP_LEVELUP","data":{"name":"𓆩♡𓆪 910maxi 𓆩♡𓆪 Dev gruppe","level":1}}
+{"ts":1789288889928,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289052366,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289057047,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289067461,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289081849,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289115296,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289127814,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289137065,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}
+{"ts":1789289146752,"type":"XP_GRANTED","data":{"bid":"4915155894714jid269574108926096lid","name":"maxichen","level":97,"granted":3,"source":"commands"}}

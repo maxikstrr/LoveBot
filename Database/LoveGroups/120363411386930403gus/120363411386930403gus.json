@@ -28,9 +28,9 @@
   "antilink": false,
   "night": true,
   "afk": true,
-  "memberCount": 17,
+  "memberCount": 20,
   "adminCount": 4,
-  "metaAt": 1789210801570,
+  "metaAt": 1789288889916,
   "gset": {
     "welcome": true,
     "goodbye": true,
@@ -41,15 +41,15 @@
     "autoreply": false,
     "mentionGuard": false,
     "commandProtection": false,
-    "aiEnabled": false,
+    "aiEnabled": true,
     "economyEnabled": true,
     "progressionEnabled": true,
     "logsEnabled": true
   },
   "xp": {
-    "total": 298,
-    "level": 0,
-    "msgs": 149,
+    "total": 322,
+    "level": 1,
+    "msgs": 161,
     "games": 0,
     "members": {
       "269724751503435": {
@@ -71,10 +71,10 @@
         "last": 1789126571957
       },
       "269574108926096": {
-        "m": 58,
-        "xp": 116,
+        "m": 67,
+        "xp": 134,
         "games": 0,
-        "last": 1789210801432
+        "last": 1789289146562
       },
       "31396361941215": {
         "m": 16,
@@ -93,41 +93,54 @@
         "xp": 14,
         "games": 0,
         "last": 1789200562109
+      },
+      "9462232387698": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789289116114
+      },
+      "108813734645801": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789289229372
       }
     },
     "week": {
       "k": "2026-W38",
-      "xp": 26
+      "xp": 50
     },
     "month": {
       "k": "2026-09",
-      "xp": 298
+      "xp": 322
     },
     "daily": {
-      "k": "2026-09-12",
-      "msgs": 13
+      "k": "2026-09-13",
+      "msgs": 12
     },
     "streak": {
-      "c": 3,
-      "last": "2026-09-12"
+      "c": 4,
+      "last": "2026-09-13"
     },
     "history": {
       "2026-09-10": 8,
       "2026-09-11": 264,
-      "2026-09-12": 26
+      "2026-09-12": 26,
+      "2026-09-13": 24
     }
   },
   "goals": {
     "daily": {
-      "k": "2026-09-12",
+      "k": "2026-09-13",
       "target": 50,
-      "progress": 13,
+      "progress": 12,
       "claimed": false
     },
     "weekly": {
       "k": "2026-W38",
       "target": 200,
-      "progress": 26,
+      "progress": 50,
       "claimed": false
     }
   },
@@ -148,10 +161,16 @@
       "actor": "system",
       "action": "goal",
       "detail": "weekly-Ziel (200) erreicht, +1000 Treasury"
+    },
+    {
+      "ts": 1789289052377,
+      "actor": "269574108926096",
+      "action": "setting",
+      "detail": "aiEnabled → an"
     }
   ],
   "gtreasury": {
-    "balance": 1400,
+    "balance": 1510,
     "log": [
       {
         "ts": 1789123704566,
@@ -167,6 +186,11 @@
         "ts": 1789128759112,
         "delta": 150,
         "reason": "Achievement Gesprächig"
+      },
+      {
+        "ts": 1789288888708,
+        "delta": 110,
+        "reason": "Group-Level 1"
       }
     ]
   },

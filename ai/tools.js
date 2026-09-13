@@ -7,9 +7,15 @@
      aktuelle Gruppe, Registry-Auszug) — niemals Secrets, Sessions, IPs.
    · runTool() erzwingt Allowlist + Write-Gate (AI_ALLOW_WRITE, default aus).
 
+   7.1.2: Copilot-Tools — die KI kennt den Bot komplett (erklären ja,
+   ändern NEIN): getBotOverview, getWebInfo, getCommandDetails,
+   getSystemStatus. Alle write:false — reine Lesefunktionen.
+
    ctx-Form: { bid, profile, rank, group, groupMeta, counts }
    ═══════════════════════════════════════════════════════════════════ */
 import fs from 'fs';
+import os from 'os';
+import { findPages, pagesByCategory, botOverview, WEB_PAGES } from './knowledge.js';
 
 let regCache = null;
 function registry() {
@@ -130,6 +136,60 @@ const TOOLS = {
         }
       }
       return { results: hits };
+    }
+  },
+
+  /* ── 7.1.2: COPILOT-TOOLS (alles read-only) ─────────────────────── */
+
+  getBotOverview: {
+    desc: 'Bot-Steckbrief: Version, Befehle/Kategorien, Features, Website-Infos.',
+    write: false,
+    run: () => botOverview()
+  },
+  getWebInfo: {
+    desc: 'Website/Web-Panel erklären: alle Seiten (leeres q) oder Seitensuche (q).',
+    write: false,
+    run: (a) => {
+      const q = String(a?.q || a?.page || '').toLowerCase().trim();
+      if (!q) {
+        return { website: 'maxichen.gamebot.me', login: 'WhatsApp-Code (2FA) + Passwort', total: Object.keys(WEB_PAGES).length, pagesByCategory: pagesByCategory() };
+      }
+      const pages = findPages(q).slice(0, 5);
+      return { query: q, pages: pages.length ? pages : [], hint: pages.length ? '' : 'Keine Seite gefunden — frage ohne q für alle Seiten.' };
+    }
+  },
+  getCommandDetails: {
+    desc: 'Details zu EINEM Befehl: Name, Aliase, Kategorie, Beschreibung (q = Name).',
+    write: false,
+    run: (a) => {
+      const q = String(a?.q || a?.cmd || a?.name || '').toLowerCase().replace(/^\$+/, '').trim();
+      if (!q) return { hint: 'Bitte Befehlsname angeben, z. B. getCommandDetails({"q":"daily"}).' };
+      const all = allCommands();
+      let exact = all.find((c) => c.name === q) || all.find((c) => c.aliases.includes(q));
+      if (!exact) exact = all.find((c) => c.name.includes(q) || c.aliases.some((x) => x.includes(q)));
+      if (!exact) return { query: q, found: false, hint: 'Nicht gefunden — nutze searchCommands für die Suche.' };
+      return { found: true, cmd: '$' + exact.name, aliases: exact.aliases.map((x) => '$' + x), category: exact.cat, desc: exact.desc };
+    }
+  },
+  getSystemStatus: {
+    desc: 'Live-System: Uptime, RAM, Node, Platform, DB-Dateigrößen, Registry-Zahlen.',
+    write: false,
+    run: (_a, ctx) => {
+      const dbs = {};
+      try {
+        for (const f of ['Database.json', 'ai.json', 'sessions.json']) {
+          try { dbs[f] = Math.round(fs.statSync('Database/' + f).size / 1024) + ' KB'; } catch (e) {}
+        }
+      } catch (e) {}
+      const mu = process.memoryUsage();
+      return {
+        version: '7.1', node: process.version, platform: os.platform(),
+        uptimeMin: Math.floor(((ctx?.uptimeMs ?? 0)) / 60000),
+        ramUsedMb: Math.round(mu.rss / 1048576), ramFreeMb: Math.round(os.freemem() / 1048576),
+        ramTotalMb: Math.round(os.totalmem() / 1048576),
+        users: ctx?.counts?.users ?? 0, groups: ctx?.counts?.groups ?? 0,
+        dbSizes: dbs
+      };
     }
   }
 };

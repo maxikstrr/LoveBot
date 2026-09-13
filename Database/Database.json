@@ -202,14 +202,59 @@
       "progression": {
         "level": 97,
         "prestige": 0,
-        "xp": 125,
+        "xp": 165,
         "neededXpForLvOrPrestigeUp": 1592,
         "lastDaily": "2026-09-11",
-        "totalXp": 109590,
-        "streak": 3,
+        "totalXp": 109630,
+        "streak": 4,
         "xpWindow": [
           {
-            "t": 1789210801592,
+            "t": 1789288839062,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789288889925,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289052365,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289057047,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289067461,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289081848,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289115296,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289127814,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289137065,
+            "a": 3,
+            "s": "cmd"
+          },
+          {
+            "t": 1789289146752,
             "a": 3,
             "s": "cmd"
           }
@@ -217,7 +262,7 @@
         "xpSources": {
           "messages": 156,
           "love": 42,
-          "commands": 195,
+          "commands": 235,
           "games": 0,
           "dailies": 50,
           "work": 0,
@@ -228,8 +273,8 @@
         },
         "streaks": {
           "daily": {
-            "c": 3,
-            "last": "2026-09-12"
+            "c": 4,
+            "last": "2026-09-13"
           },
           "chat": {
             "c": 3,
@@ -237,60 +282,10 @@
           },
           "xp": {
             "c": 1,
-            "last": "2026-09-12"
+            "last": "2026-09-13"
           }
         },
         "xpLog": [
-          {
-            "s": "commands",
-            "a": 2,
-            "t": 1789160354803
-          },
-          {
-            "s": "messages",
-            "a": 3,
-            "t": 1789160381900
-          },
-          {
-            "s": "commands",
-            "a": 2,
-            "t": 1789160386195
-          },
-          {
-            "s": "commands",
-            "a": 2,
-            "t": 1789160395263
-          },
-          {
-            "s": "messages",
-            "a": 3,
-            "t": 1789160835361
-          },
-          {
-            "s": "commands",
-            "a": 2,
-            "t": 1789160951155
-          },
-          {
-            "s": "commands",
-            "a": 2,
-            "t": 1789161086154
-          },
-          {
-            "s": "messages",
-            "a": 3,
-            "t": 1789161094839
-          },
-          {
-            "s": "messages",
-            "a": 3,
-            "t": 1789161170990
-          },
-          {
-            "s": "commands",
-            "a": 2,
-            "t": 1789161727245
-          },
           {
             "s": "messages",
             "a": 3,
@@ -440,6 +435,56 @@
             "s": "commands",
             "a": 3,
             "t": 1789210801592
+          },
+          {
+            "s": "commands",
+            "a": 13,
+            "t": 1789288839062
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789288889925
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289052365
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289057047
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289067461
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289081848
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289115296
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289127814
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289137065
+          },
+          {
+            "s": "commands",
+            "a": 3,
+            "t": 1789289146752
           }
         ],
         "xpDaily": [
@@ -454,6 +499,10 @@
           {
             "d": "2026-09-12",
             "a": 73
+          },
+          {
+            "d": "2026-09-13",
+            "a": 40
           }
         ],
         "recentMsgs": [
@@ -479,8 +528,8 @@
           "goal-d2026-09-12": 1789200269163,
           "goal-dc2026-09-12": 1789200382223
         },
-        "lastXpAt": 1789210801592,
-        "lastActiveDay": "2026-09-12",
+        "lastXpAt": 1789289146752,
+        "lastActiveDay": "2026-09-13",
         "recentMsgsAllDay": [
           {
             "h": "437a390d",
@@ -497,13 +546,13 @@
         ],
         "lastMsgXpAt": 1789200382223,
         "xpMonthly": {
-          "2026-09": 512
+          "2026-09": 552
         },
         "statsMonthly": {
           "2026-09": {
             "d": "2026-09",
             "m": 39,
-            "c": 74,
+            "c": 84,
             "g": 0,
             "w": 0
           }
@@ -521,7 +570,7 @@
           "elite": 1789163264330,
           "collector_10": 1789163264442
         },
-        "bestStreak": 3,
+        "bestStreak": 4,
         "records": {
           "highestLevel": 97,
           "highestDailyXp": 439,
@@ -539,6 +588,13 @@
             "d": "2026-09-12",
             "m": 3,
             "c": 11,
+            "g": 0,
+            "w": 0
+          },
+          {
+            "d": "2026-09-13",
+            "m": 0,
+            "c": 10,
             "g": 0,
             "w": 0
           }
@@ -661,7 +717,7 @@
           4,
           12,
           10,
-          5,
+          15,
           0,
           25,
           16,
@@ -683,7 +739,7 @@
           0,
           106,
           16,
-          0
+          10
         ],
         "rankHistory": [],
         "rewardsLogMigrated": true
@@ -756,7 +812,7 @@
       },
       "stats": {
         "messages": 39,
-        "commands": 74,
+        "commands": 84,
         "games": 0,
         "gameWins": 0,
         "gameLosses": 0,
@@ -6616,6 +6672,431 @@
         "lastMonthlyAt": null,
         "lastYearlyAt": null
       }
+    },
+    "491625127907jid35635444367414lid": {
+      "identity": {
+        "username": "",
+        "bid": "491625127907jid35635444367414lid",
+        "phone": "+491625127907",
+        "jid": "491625127907@s.whatsapp.net",
+        "lid": "35635444367414@lid",
+        "cleanJid": "491625127907",
+        "cleanLid": "35635444367414"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "cookie": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null,
+          "analytics": false
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-13T08:41:25.379Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "4367763404951jid180187249537201lid": {
+      "identity": {
+        "username": "",
+        "bid": "4367763404951jid180187249537201lid",
+        "phone": "+4367763404951",
+        "jid": "4367763404951@s.whatsapp.net",
+        "lid": "180187249537201@lid",
+        "cleanJid": "4367763404951",
+        "cleanLid": "180187249537201"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "cookie": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null,
+          "analytics": false
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-13T08:41:44.208Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "4915174235438jid106052020355151lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915174235438jid106052020355151lid",
+        "phone": "+4915174235438",
+        "jid": "4915174235438@s.whatsapp.net",
+        "lid": "106052020355151@lid",
+        "cleanJid": "4915174235438",
+        "cleanLid": "106052020355151"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "cookie": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null,
+          "analytics": false
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-13T08:44:50.721Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "4915679260192jid9462232387698lid": {
+      "identity": {
+        "username": "",
+        "bid": "4915679260192jid9462232387698lid",
+        "phone": "+4915679260192",
+        "jid": "4915679260192@s.whatsapp.net",
+        "lid": "9462232387698@lid",
+        "cleanJid": "4915679260192",
+        "cleanLid": "9462232387698"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "cookie": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null,
+          "analytics": false
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-13T08:45:16.118Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
+    },
+    "420606990992jid108813734645801lid": {
+      "identity": {
+        "username": "",
+        "bid": "420606990992jid108813734645801lid",
+        "phone": "+420606990992",
+        "jid": "420606990992@s.whatsapp.net",
+        "lid": "108813734645801@lid",
+        "cleanJid": "420606990992",
+        "cleanLid": "108813734645801"
+      },
+      "registration": {
+        "registered": false,
+        "name": "",
+        "age": "",
+        "status": "",
+        "city": "",
+        "value": "",
+        "registeredAt": null
+      },
+      "status": {
+        "dsgvo": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null
+        },
+        "cookie": {
+          "accepted": false,
+          "acceptedAt": null,
+          "rejected": false,
+          "rejectedAt": null,
+          "analytics": false
+        },
+        "verified": false,
+        "verifiedAt": null,
+        "unverified": true,
+        "unverifiedAt": null,
+        "mappedAt": "2026-09-13T08:46:09.162Z"
+      },
+      "progression": {
+        "level": 0,
+        "prestige": 0,
+        "xp": 0,
+        "neededXpForLvOrPrestigeUp": 743
+      },
+      "games": {
+        "gamesPlayed": 0,
+        "lastPlayedAt": null,
+        "lastWin": 0,
+        "lastWinAt": null,
+        "totalWin": 0,
+        "highestWin": 0,
+        "highestWinAt": null,
+        "winStreak": 0,
+        "highestWinStreak": 0,
+        "highestWinStreakAt": null,
+        "lastLoss": 0,
+        "lastLossAt": null,
+        "totalLoss": 0,
+        "highestLoss": 0,
+        "highestLossAt": null,
+        "lossStreak": 0,
+        "highestLossStreak": 0,
+        "highestLossStreakAt": null
+      },
+      "wallet": {
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "bank": {
+        "active": false,
+        "copper": 0,
+        "silver": 0,
+        "gold": 0,
+        "platin": 0
+      },
+      "rewards": {
+        "lastDailyAt": null,
+        "lastWeeklyAt": null,
+        "lastMonthlyAt": null,
+        "lastYearlyAt": null
+      }
     }
   },
   "groups": {
@@ -6656,9 +7137,9 @@
       "antilink": false,
       "night": true,
       "afk": true,
-      "memberCount": 17,
+      "memberCount": 20,
       "adminCount": 4,
-      "metaAt": 1789210801570,
+      "metaAt": 1789288889916,
       "gset": {
         "welcome": true,
         "goodbye": true,
@@ -6669,15 +7150,15 @@
         "autoreply": false,
         "mentionGuard": false,
         "commandProtection": false,
-        "aiEnabled": false,
+        "aiEnabled": true,
         "economyEnabled": true,
         "progressionEnabled": true,
         "logsEnabled": true
       },
       "xp": {
-        "total": 298,
-        "level": 0,
-        "msgs": 149,
+        "total": 322,
+        "level": 1,
+        "msgs": 161,
         "games": 0,
         "members": {
           "269724751503435": {
@@ -6699,10 +7180,10 @@
             "last": 1789126571957
           },
           "269574108926096": {
-            "m": 58,
-            "xp": 116,
+            "m": 67,
+            "xp": 134,
             "games": 0,
-            "last": 1789210801432
+            "last": 1789289146562
           },
           "31396361941215": {
             "m": 16,
@@ -6721,41 +7202,54 @@
             "xp": 14,
             "games": 0,
             "last": 1789200562109
+          },
+          "9462232387698": {
+            "m": 1,
+            "xp": 2,
+            "games": 0,
+            "last": 1789289116114
+          },
+          "108813734645801": {
+            "m": 2,
+            "xp": 4,
+            "games": 0,
+            "last": 1789289229372
           }
         },
         "week": {
           "k": "2026-W38",
-          "xp": 26
+          "xp": 50
         },
         "month": {
           "k": "2026-09",
-          "xp": 298
+          "xp": 322
         },
         "daily": {
-          "k": "2026-09-12",
-          "msgs": 13
+          "k": "2026-09-13",
+          "msgs": 12
         },
         "streak": {
-          "c": 3,
-          "last": "2026-09-12"
+          "c": 4,
+          "last": "2026-09-13"
         },
         "history": {
           "2026-09-10": 8,
           "2026-09-11": 264,
-          "2026-09-12": 26
+          "2026-09-12": 26,
+          "2026-09-13": 24
         }
       },
       "goals": {
         "daily": {
-          "k": "2026-09-12",
+          "k": "2026-09-13",
           "target": 50,
-          "progress": 13,
+          "progress": 12,
           "claimed": false
         },
         "weekly": {
           "k": "2026-W38",
           "target": 200,
-          "progress": 26,
+          "progress": 50,
           "claimed": false
         }
       },
@@ -6776,10 +7270,16 @@
           "actor": "system",
           "action": "goal",
           "detail": "weekly-Ziel (200) erreicht, +1000 Treasury"
+        },
+        {
+          "ts": 1789289052377,
+          "actor": "269574108926096",
+          "action": "setting",
+          "detail": "aiEnabled → an"
         }
       ],
       "gtreasury": {
-        "balance": 1400,
+        "balance": 1510,
         "log": [
           {
             "ts": 1789123704566,
@@ -6795,6 +7295,11 @@
             "ts": 1789128759112,
             "delta": 150,
             "reason": "Achievement Gesprächig"
+          },
+          {
+            "ts": 1789288888708,
+            "delta": 110,
+            "reason": "Group-Level 1"
           }
         ]
       },
@@ -6948,9 +7453,9 @@
         "logsEnabled": true
       },
       "xp": {
-        "total": 158,
+        "total": 160,
         "level": 0,
-        "msgs": 79,
+        "msgs": 80,
         "games": 0,
         "members": {
           "269574108926096": {
@@ -7072,40 +7577,47 @@
             "xp": 2,
             "games": 0,
             "last": 1789202631157
+          },
+          "180187249537201": {
+            "m": 1,
+            "xp": 2,
+            "games": 0,
+            "last": 1789288904203
           }
         },
         "week": {
           "k": "2026-W38",
-          "xp": 26
+          "xp": 28
         },
         "month": {
           "k": "2026-09",
-          "xp": 158
+          "xp": 160
         },
         "daily": {
-          "k": "2026-09-12",
-          "msgs": 13
+          "k": "2026-09-13",
+          "msgs": 1
         },
         "streak": {
-          "c": 2,
-          "last": "2026-09-12"
+          "c": 3,
+          "last": "2026-09-13"
         },
         "history": {
           "2026-09-11": 132,
-          "2026-09-12": 26
+          "2026-09-12": 26,
+          "2026-09-13": 2
         }
       },
       "goals": {
         "daily": {
-          "k": "2026-09-12",
+          "k": "2026-09-13",
           "target": 50,
-          "progress": 13,
+          "progress": 1,
           "claimed": false
         },
         "weekly": {
           "k": "2026-W38",
           "target": 200,
-          "progress": 26,
+          "progress": 28,
           "claimed": false
         }
       },
@@ -7783,6 +8295,103 @@
       "memberCount": 367,
       "adminCount": 2,
       "metaAt": 1789194393573
+    },
+    "120363427483026291": {
+      "groupId": "120363427483026291",
+      "groupJid": "120363427483026291@g.us",
+      "subject": "Reden und Spaß …",
+      "creator": "unknown",
+      "owner": "unknown",
+      "ownerUsername": null,
+      "active": false,
+      "activatedAt": null,
+      "activatedBy": null,
+      "createdAt": "2026-09-13T08:40:38.844Z",
+      "gset": {
+        "welcome": true,
+        "goodbye": true,
+        "antilink": false,
+        "antispam": false,
+        "antiflood": false,
+        "automod": true,
+        "autoreply": false,
+        "mentionGuard": false,
+        "commandProtection": false,
+        "aiEnabled": false,
+        "economyEnabled": true,
+        "progressionEnabled": true,
+        "logsEnabled": true
+      },
+      "xp": {
+        "total": 4,
+        "level": 0,
+        "msgs": 2,
+        "games": 0,
+        "members": {
+          "269574108926096": {
+            "m": 1,
+            "xp": 2,
+            "games": 0,
+            "last": 1789288838849
+          },
+          "35635444367414": {
+            "m": 1,
+            "xp": 2,
+            "games": 0,
+            "last": 1789288885371
+          }
+        },
+        "week": {
+          "k": "2026-W38",
+          "xp": 4
+        },
+        "month": {
+          "k": "2026-09",
+          "xp": 4
+        },
+        "daily": {
+          "k": "2026-09-13",
+          "msgs": 2
+        },
+        "streak": {
+          "c": 1,
+          "last": "2026-09-13"
+        },
+        "history": {
+          "2026-09-13": 4
+        }
+      },
+      "goals": {
+        "daily": {
+          "k": "2026-09-13",
+          "target": 50,
+          "progress": 2,
+          "claimed": false
+        },
+        "weekly": {
+          "k": "2026-W38",
+          "target": 200,
+          "progress": 4,
+          "claimed": false
+        }
+      },
+      "gach": {},
+      "gbadges": {},
+      "gevents": [],
+      "gaudit": [],
+      "gtreasury": {
+        "balance": 0,
+        "log": []
+      },
+      "gbanned": {},
+      "warnCfg": {
+        "w1": "warn",
+        "w2": "warn",
+        "w3": "kick"
+      },
+      "memberCount": 57,
+      "adminCount": 12,
+      "metaAt": 1789288839052
     }
   },
   "afk": {
@@ -7894,7 +8503,8 @@
         "120363411052979878@g.us",
         "120363412214448555@g.us",
         "120363413748725083@g.us",
-        "120363330536226393@g.us"
+        "120363330536226393@g.us",
+        "120363427483026291@g.us"
       ]
     }
   }

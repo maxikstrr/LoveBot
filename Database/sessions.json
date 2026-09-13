@@ -15,24 +15,24 @@
       "status": "CONNECTED",
       "source": "live",
       "createdAt": 1788651061273,
-      "connectedAt": 1789210792934,
-      "lastSeen": 1789210818963,
+      "connectedAt": 1789288803776,
+      "lastSeen": 1789289229364,
       "jid": "420721199654@s.whatsapp.net",
       "lid": "155019043160306@lid",
       "phone": "420721199654",
-      "messages": 4030,
-      "commands": 187,
-      "groups": 7,
-      "reconnects": 13,
+      "messages": 4090,
+      "commands": 197,
+      "groups": 8,
+      "reconnects": 14,
       "errors": 6,
-      "memoryMb": 134.9,
+      "memoryMb": 142.8,
       "isDefault": true,
       "pid": null,
       "desiredState": "running",
       "autoStart": true,
       "tags": [],
       "env": "production",
-      "connectedMs": 559597800,
+      "connectedMs": 637585101,
       "qr": null,
       "qrAt": null,
       "announcedQr": false,
@@ -272,6 +272,24 @@
       "type": "session",
       "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
       "sid": "main"
+    },
+    {
+      "ts": 1789288780235,
+      "type": "session",
+      "text": "🟡 Session „MainBot“ → QR_REQUIRED",
+      "sid": "main"
+    },
+    {
+      "ts": 1789288797867,
+      "type": "session",
+      "text": "🔴 Session „MainBot“ → DISCONNECTED",
+      "sid": "main"
+    },
+    {
+      "ts": 1789288803776,
+      "type": "session",
+      "text": "🟢 Session „MainBot“ verbunden (4207•••654)",
+      "sid": "main"
     }
   ],
   "locks": {},
@@ -292,7 +310,7 @@
     }
   ],
   "commandStats": {
-    "me": 23,
+    "me": 24,
     "offline": 2,
     "help": 10,
     "delowner": 1,
@@ -304,7 +322,7 @@
     "ban": 2,
     "pet": 17,
     "sessions": 1,
-    "ping": 3,
+    "ping": 4,
     "dsgvo": 1,
     "verify": 1,
     "play": 8,
@@ -336,7 +354,10 @@
     "ownerlist": 1,
     "relink": 1,
     "resetlink": 1,
-    "revoke": 3
+    "revoke": 3,
+    "mute": 1,
+    "ai": 4,
+    "setteam": 3
   },
   "commandStatsDaily": {
     "2026-09-07": {
@@ -416,6 +437,13 @@
       "revoke": 3,
       "me": 2,
       "ban": 1
+    },
+    "2026-09-13": {
+      "ping": 1,
+      "mute": 1,
+      "ai": 4,
+      "setteam": 3,
+      "me": 1
     }
   }
 }

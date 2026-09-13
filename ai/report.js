@@ -14,21 +14,30 @@ export function aiEndpoint(cfg = {}, h = null) {
 /* ── $aistatus ────────────────────────────────────────────────────── */
 export function buildAiStatusText({ cfg = {}, h = {}, an = {}, pref = '$' } = {}) {
   const online = !!h.ok;
-  const ep = aiEndpoint(cfg, h);
+  /* 7.1.1: 3-Tier-Chain — Ollama 🦙 → Cloud-KI ☁️ (echtes LLM) → LoveAI Core 💜 */
+  const core = h.engine === 'core';
+  const provName = h.engineLabel
+    ? h.engineLabel
+    : (cfg.provider === 'mock' ? 'Mock (Test)' : (core ? 'LoveAI Core 💜' : (h.engine === 'cloud' ? 'Cloud-KI ☁️' : 'Ollama 🦙')));
+  const cloud = h.cloudOn
+    ? `🟢 läuft (${h.cloudProvider || '?'}${h.cloudModel ? ' · ' + h.cloudModel : ''})`
+    : (h.cloudKeySet ? '🔴 Key gesetzt, aber nicht erreichbar' + (h.cloudHint ? ' (' + h.cloudHint + ')' : '') : (cfg.cloudOn === false ? '📴 aus' : '⚪ kein API-Key — nutze *' + pref + 'aiconfig key <KEY>*'));
+  const ep = h.engine === 'cloud' ? 'Cloud (echtes LLM)' : (core ? 'eingebaut — läuft immer mit' : aiEndpoint(cfg, h));
   const lat = online ? (h.ms ?? 0) + ' ms' : '–';
   const conn = online ? '✅ OK' : ('❌ Fehlgeschlagen (' + (h.code || h.error || 'unbekannt') + ')');
   const mc = typeof h.modelCount === 'number' ? h.modelCount : -1;
-  const modelsLn = !online ? '–' : (mc >= 0 ? '*' + mc + ' installiert*' : '*?*');
+  const modelsLn = !online ? '–' : (mc >= 0 ? '*' + mc + ' verfügbar*' : '*?*');
   const modelMark = !online ? '' : (h.modelFound === false ? ' ⚠️ *nicht installiert*' : ' ✅');
   const errLn = (!online && h.hint) ? h.hint + '\n' : '';
   return `> 🤖 *LOVEAI STATUS*
 
-Provider: *${cfg.provider === 'mock' ? 'Mock (Test)' : 'Local'}*
+Engine: *${provName}*
 Endpoint: *${ep}*
 Status: ${online ? '🟢 ONLINE' : '🔴 OFFLINE'}
 Verbindung: ${conn}
+Cloud-KI: ${cloud}
 Modelle: ${modelsLn}
-Modell: *${cfg.model || '–'}*${modelMark}
+Modell: *${h.model || cfg.model || (core ? 'loveai-core-1' : '–')}${modelMark}*
 Latenz: ${lat}
 Anfragen heute: ${an.today || 0} (${an.errorsToday || 0} Fehler)
 

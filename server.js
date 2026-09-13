@@ -21,6 +21,10 @@ import * as CommandRegistry from './commandRegistry.js';
 import { collectSystem, collectDbCounts, statStore, readPackageVersion } from './health.js';
 import { getMaintenance, setMaintenanceOn, setMaintenanceOff } from './night/maintenance.js';
 import * as SecurityCases from './night/security-cases.js';
+import {
+  listTickets, ticketStats, getTicket, answerTicket, closeTicket, reopenTicket,
+  getDevGroup, ticketAnswerDm, ticketClosedDm
+} from './tickets.js';
 import { exportXlsx } from './xlsxwriter.js';
 import { makeZip } from './zipwriter.js';
 import { migrateRegistration, isMinor, cityLabel, ageLabel, publicProfileAllowed } from './privacy.js';
@@ -31,6 +35,7 @@ import { xpRules, saveXpRules, XP_RULES_DEFAULTS, xpAnalytics, TITLES, BADGES, M
 import { economyAnalytics, getBalance, capacityFor, ensureEconomy, sourceLabel, economyRules } from './economy.js';
 import { ensureGroupExtras, groupLevelInfo, topMembers, activeEvents, groupPublic } from './groups.js';
 import { aiChat, aiHealth, getProvider } from './ai/engine.js';
+import { bootAi, aiBootStatus } from './ai/boot.js';
 import { aiConfig, aiAnalytics, getConversation, getFacts, getAiPrefs, clearAiUser, dmScope } from './ai/memory.js';
 import { achievementProgress, ACHIEVEMENTS } from './loveplus.js';
 
@@ -1297,6 +1302,42 @@ function sendSecurityBlock(res, code, title, detail, extra = {}) {
   });
 }
 
+/* 💎 LIQUID-GLASS-FEHLERSEITE — für Browser-Navigationen (404/500 …).
+   Vollständig selbstenthalten (inline CSS im Referenz-Glas-Design), damit
+   sie unabhängig von externen Dateien funktioniert. API-/Tool-Clients
+   erhalten weiterhin schlanke Text-/JSON-Antworten. */
+function sendGlassErrorPage(res, code, emoji, title, text) {
+  const safe = (s) => String(s || '').replace(/[<>&"]/g, (ch) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[ch]));
+  const html = '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    `<title>${safe(code + ' — ' + title)} | LoveBot</title>` +
+    '<style>' +
+    '*{box-sizing:border-box}html,body{height:100%;margin:0}' +
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-font-smoothing:antialiased;' +
+    'background:radial-gradient(1200px 700px at 82% -10%,rgba(167,139,250,.22),transparent 60%),radial-gradient(1000px 600px at -10% 30%,rgba(244,114,182,.15),transparent 60%),radial-gradient(900px 700px at 55% 115%,rgba(34,211,238,.10),transparent 60%),linear-gradient(180deg,#07050f,#0b0718 55%,#100a22)}' +
+    '.card{position:relative;max-width:560px;width:100%;padding:46px 40px;border-radius:26px;overflow:hidden;text-align:center;' +
+    'background:radial-gradient(140% 130% at 50% -20%,rgba(255,255,255,.13),rgba(255,255,255,.04) 40%,transparent 74%),radial-gradient(60% 80% at 12% 0%,rgba(255,255,255,.13),transparent 58%),radial-gradient(46% 64% at 88% 100%,rgba(255,255,255,.07),transparent 66%),linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.02) 48%,rgba(0,0,0,.07));' +
+    'border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(20px) saturate(165%);-webkit-backdrop-filter:blur(20px) saturate(165%);' +
+    'box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.34),inset 0 -1px 0 rgba(0,0,0,.23),0 24px 60px rgba(0,0,0,.40),0 4px 14px rgba(0,0,0,.22)}' +
+    '.card::before{content:"";position:absolute;inset:1px 14% auto;height:1px;border-radius:50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.62),transparent);opacity:.72;pointer-events:none}' +
+    '.brand{font-size:11px;font-weight:600;letter-spacing:5px;background:linear-gradient(90deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent;text-transform:uppercase}' +
+    '.ico{font-size:58px;line-height:1;margin:18px 0 6px;filter:drop-shadow(0 0 22px rgba(167,139,250,.5))}' +
+    'h1{font-size:27px;margin:10px 0 8px;letter-spacing:-.02em;background:linear-gradient(120deg,#fff 20%,#b6c2ff 55%,#67e8f9 100%);-webkit-background-clip:text;background-clip:text;color:transparent}' +
+    'p{color:rgba(255,255,255,.62);font-size:14.5px;line-height:1.65;margin:0 0 26px}' +
+    '.code{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:12px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);border-radius:999px;padding:6px 16px;margin-bottom:24px}' +
+    '.btn{display:inline-block;padding:12px 26px;border-radius:14px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;' +
+    'background:linear-gradient(135deg,#a78bfa,#f472b6 55%,#fb7185);box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 0 rgba(0,0,0,.22),0 10px 26px rgba(0,0,0,.30),0 0 34px rgba(167,139,250,.18);transition:transform .18s cubic-bezier(.33,1,.68,1),box-shadow .18s}' +
+    '.btn:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.44),0 14px 32px rgba(0,0,0,.34),0 0 44px rgba(167,139,250,.30)}' +
+    '.foot{margin-top:26px;font-size:10.5px;font-weight:600;letter-spacing:3px;color:rgba(255,255,255,.16);text-transform:uppercase}' +
+    '</style></head><body>' +
+    `<div class="card"><div class="brand">LoveBot · Web</div><div class="ico">${safe(emoji)}</div>` +
+    `<h1>${safe(title)}</h1><p>${safe(text)}</p><div class="code">HTTP ${safe(code)}</div><br>` +
+    '<a class="btn" href="/">💜 Zur Startseite</a>' +
+    '<div class="foot">LoveBot by Maxichen · maxichen.gamebot.me</div></div></body></html>';
+  res.writeHead(code, Object.assign({ 'Content-Type': 'text/html; charset=utf-8' }, SECURITY_HEADERS));
+  res.end(html);
+}
+
 function readBody(req) {
   return new Promise((resolve) => {
     let data = '';
@@ -1359,6 +1400,12 @@ function serveStatic(req, res, urlPath) {
   }
   fs.readFile(full, (err, buf) => {
     if (err) {
+      /* 💎 Liquid-Glass-404 für Browser-Navigation; API/Tools erhalten
+         weiterhin die schlanke Text-Antwort (bewusst unverändert). */
+      if (String(req.headers.accept || '').includes('text/html')) {
+        return sendGlassErrorPage(res, 404, '🧭', 'SEITE NICHT GEFUNDEN',
+          'Diese Seite existiert nicht (mehr). Vielleicht hast du dich vertippt — oder der Link ist veraltet.');
+      }
       res.writeHead(404, Object.assign({ 'Content-Type': 'text/plain; charset=utf-8' }, SECURITY_HEADERS));
       return res.end('404 — Nicht gefunden');
     }
@@ -2490,6 +2537,18 @@ async function handleApi(req, res, pathname) {
     /* 7.0.2: dieselbe Health-Quelle wie $aistatus (aiHealth) — identische Werte. */
     const out = {
       ok: true, provider: cfg.provider || 'local', model: cfg.model || '',
+      engine: h.engine || (h.ok ? 'ollama' : 'core'),
+      engineLabel: h.engineLabel || '',
+      coreAvailable: true,
+      /* 7.1.1: Cloud-KI (echte LLMs) — Status fürs Panel */
+      cloud: {
+        on: cfg.cloudOn !== false,
+        provider: h.cloudProvider || cfg.cloudProvider || 'auto',
+        model: h.cloudModel || cfg.cloudModel || '',
+        keySet: !!String(cfg.cloudKey || '').trim(),
+        healthy: !!h.cloudOn,
+        hint: h.cloudHint || ''
+      },
       online: !!h.ok, latencyMs: h.ms ?? 0, error: h.ok ? '' : (h.error || 'unreachable'),
       code: h.ok ? null : (h.code || h.error || 'unreachable'),
       ready: h.ok ? h.ready !== false : false,
@@ -2505,6 +2564,214 @@ async function handleApi(req, res, pathname) {
       }
     } catch (e) {}
     return sendJson(res, 200, out);
+  }
+  /* 7.1.1: Cloud-KI verwalten (echte LLMs) — NUR Owner.
+     GET  → Status (ohne Key-Inhalt) · POST → Key setzen/umschalten ·
+     POST {cloudOn} → an/aus · DELETE → Key entfernen.                   */
+  if (pathname === '/api/ai/cloud' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    let cfg = {};
+    try { cfg = aiConfig(); } catch (e) {}
+    return sendJson(res, 200, {
+      ok: true,
+      on: cfg.cloudOn !== false,
+      provider: cfg.cloudProvider || 'auto',
+      model: cfg.cloudModel || '',
+      keySet: !!String(cfg.cloudKey || '').trim()
+    });
+  }
+  if (pathname === '/api/ai/cloud' && (req.method === 'POST' || req.method === 'DELETE')) {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (roleOf(session) !== 'owner') return sendJson(res, 403, { error: 'Nur der Owner darf die Cloud-KI verwalten.' });
+    let body = {};
+    try { body = await readBody(req); } catch (e) {}
+    try {
+      const mem = await import('./ai/memory.js');
+      const eng = await import('./ai/engine.js');
+      if (req.method === 'DELETE') {
+        mem.setAiConfig({ cloudKey: '' }, 'owner:' + session.number);
+        eng.refreshProvider(); eng.invalidateAiHealth();
+        return sendJson(res, 200, { ok: true, removed: true });
+      }
+      const patch = {};
+      if (body.cloudOn !== undefined) patch.cloudOn = body.cloudOn === 'on' || body.cloudOn === true || body.cloudOn === 'an';
+      if (body.provider !== undefined) patch.cloudProvider = String(body.provider).toLowerCase();
+      if (body.model !== undefined) patch.cloudModel = String(body.model).slice(0, 200);
+      if (body.endpoint !== undefined) patch.cloudEndpoint = String(body.endpoint).slice(0, 300);
+      if (body.key !== undefined) {
+        const key = String(body.key || '').trim().slice(0, 200);
+        if (!key) return sendJson(res, 400, { error: 'Leerer Key.' });
+        patch.cloudKey = key;
+        if (!body.provider && !body.model) {
+          const { detectCloudProvider } = await import('./ai/cloud.js');
+          const det = detectCloudProvider(key);
+          if (det) patch.cloudProvider = det;
+        }
+        patch.cloudOn = true;
+      }
+      if (!Object.keys(patch).length) return sendJson(res, 400, { error: 'Nichts zu setzen (key/cloudOn/provider/model/endpoint).' });
+      mem.setAiConfig(patch, 'owner:' + session.number);
+      eng.refreshProvider(); eng.invalidateAiHealth();
+      /* Key sofort live testen */
+      let test = null;
+      try { test = await eng.aiHealth(true); } catch (e) {}
+      try { auditAdmin({ actor: 'owner', action: 'aicloud', detail: Object.keys(patch).join(',') + (test?.cloudOn ? ' · OK' : ' · check') }); } catch (e) {}
+      return sendJson(res, 200, {
+        ok: true,
+        engine: test?.engine || '', engineLabel: test?.engineLabel || '',
+        cloudOn: !!test?.cloudOn, cloudProvider: test?.cloudProvider || '', cloudModel: test?.cloudModel || '',
+        hint: test?.cloudHint || ''
+      });
+    } catch (e) {
+      return sendJson(res, 500, { error: 'Cloud-Config fehlgeschlagen.' });
+    }
+  }
+  /* ═══ 🎫 7.1.3 TICKET-SYSTEM (Team: supporter/deputy/owner) ═══ */
+  if (pathname === '/api/tickets' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'tickets.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung — Tickets sieht nur das Team.' });
+    const q = new URL(req.url, 'http://x').searchParams;
+    const status = ['open', 'closed', 'all'].includes(q.get('status')) ? q.get('status') : 'all';
+    return sendJson(res, 200, {
+      ok: true,
+      tickets: listTickets({ status }),
+      stats: ticketStats(),
+      devGroup: getDevGroup(),
+      role: roleOf(session)
+    });
+  }
+  if (pathname === '/api/tickets/answer' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'tickets.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung (tickets.manage).' });
+    const body = await readBody(req);
+    const id = String(body.id || '').trim().toUpperCase();
+    const text = String(body.text || '').trim().slice(0, 1500);
+    if (!id || !text) return sendJson(res, 400, { error: 'ID und Text fehlen.' });
+    const r = answerTicket({ id, by: session.number + '@s.whatsapp.net', byName: session.name || session.username || 'Team', role: roleOf(session), text });
+    if (!r.ok) return sendJson(res, 404, { error: r.error === 'not-found' ? 'Ticket nicht gefunden.' : r.error });
+    /* Antwort als DM an den Ersteller (Webmail → Bot) */
+    try {
+      queueMailbox({
+        id: newToken(), type: 'dm-notice', status: 'pending', createdAt: new Date().toISOString(),
+        jid: r.ticket.creatorJid, text: ticketAnswerDm(r.ticket, r.ticket.answers[r.ticket.answers.length - 1])
+      });
+    } catch (e) {}
+    try { logAdminAction(session.username || session.number, 'ticket.answer', id, { role: roleOf(session) }); } catch (e) {}
+    return sendJson(res, 200, { ok: true, ticket: r.ticket });
+  }
+  if (pathname === '/api/tickets/close' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'tickets.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung (tickets.manage).' });
+    const body = await readBody(req);
+    const id = String(body.id || '').trim().toUpperCase();
+    const reason = String(body.reason || '').trim().slice(0, 500);
+    if (!id) return sendJson(res, 400, { error: 'ID fehlt.' });
+    const r = closeTicket({ id, by: session.number + '@s.whatsapp.net', byName: session.name || session.username || 'Team', role: roleOf(session), reason });
+    if (!r.ok) return sendJson(res, 404, { error: r.error === 'already-closed' ? 'Ticket ist bereits geschlossen.' : (r.error === 'not-found' ? 'Ticket nicht gefunden.' : r.error) });
+    try {
+      queueMailbox({
+        id: newToken(), type: 'dm-notice', status: 'pending', createdAt: new Date().toISOString(),
+        jid: r.ticket.creatorJid, text: ticketClosedDm(r.ticket)
+      });
+    } catch (e) {}
+    try { logAdminAction(session.username || session.number, 'ticket.close', id, { role: roleOf(session) }); } catch (e) {}
+    return sendJson(res, 200, { ok: true, ticket: r.ticket });
+  }
+  if (pathname === '/api/tickets/reopen' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'tickets.manage')) return sendJson(res, 403, { error: 'Keine Berechtigung (tickets.manage).' });
+    const body = await readBody(req);
+    const id = String(body.id || '').trim().toUpperCase();
+    if (!id) return sendJson(res, 400, { error: 'ID fehlt.' });
+    const r = reopenTicket({ id, by: session.number + '@s.whatsapp.net', byName: session.name || session.username || 'Team', role: roleOf(session) });
+    if (!r.ok) return sendJson(res, 404, { error: r.error === 'not-closed' ? 'Ticket ist offen.' : (r.error === 'not-found' ? 'Ticket nicht gefunden.' : r.error) });
+    try { logAdminAction(session.username || session.number, 'ticket.reopen', id, { role: roleOf(session) }); } catch (e) {}
+    return sendJson(res, 200, { ok: true, ticket: r.ticket });
+  }
+  /* Team-Liste (fürs Dashboard: wer hat welchen Rang) */
+  if (pathname === '/api/team' && req.method === 'GET') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'accounts.view')) return sendJson(res, 403, { error: 'Keine Berechtigung (accounts.view).' });
+    const accs = rbac.listAccounts()
+      .filter((a) => ['owner', 'deputy', 'admin', 'supporter'].includes(a.role))
+      .map((a) => ({ username: a.username, number: a.number, role: a.role, status: a.status }));
+    return sendJson(res, 200, { ok: true, team: accs, roles: rbac.ROLES, devGroup: getDevGroup() });
+  }
+  /* 7.1.4: Rang ändern — NUR Owner (roles.assign). Owner-Konten selbst
+     sind geschützt (kein Demote anderer Owner, kein Setzen der Owner-Rolle). */
+  if (pathname === '/api/team/role' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'roles.assign')) return sendJson(res, 403, { error: 'Nur der Inhaber vergibt Ränge.' });
+    const body = await readBody(req);
+    const username = String(body.username || '').trim();
+    const role = String(body.role || '').toLowerCase();
+    const allowed = ['deputy', 'admin', 'supporter', 'user'];
+    if (!username || !allowed.includes(role)) {
+      return sendJson(res, 400, { error: 'username + role (deputy|admin|supporter|user) nötig.' });
+    }
+    const acc = rbac.getAccountByUsername(username);
+    if (!acc) return sendJson(res, 404, { error: 'Account nicht gefunden.' });
+    if (acc.role === 'owner') return sendJson(res, 403, { error: 'Owner-Konten werden nicht über das Dashboard geändert.' });
+    if (acc.role === role) return sendJson(res, 200, { ok: true, unchanged: true, account: { username: acc.username, role: acc.role } });
+    try {
+      rbac.setRole(acc.id, role, 'web:' + (session.username || session.number));
+    } catch (e) {
+      return sendJson(res, 500, { error: 'Rollen-Update fehlgeschlagen.' });
+    }
+    try { logAdminAction(session.username || session.number, 'team.role', acc.username + ' → ' + role); } catch (e) {}
+    return sendJson(res, 200, { ok: true, account: { username: acc.username, number: acc.number, role } });
+  }
+  /* 7.1.5: NEUES Team-Mitglied anlegen — NUR Owner (roles.assign +
+     accounts.manage). Erzeugt Account + Temp-Passwort (nur 1× sichtbar)
+     und stellt die Zugangsdaten per Bot-DM zu (webmail dm-notice). */
+  if (pathname === '/api/team/add' && req.method === 'POST') {
+    if (!session) return sendJson(res, 401, { error: 'Nicht eingeloggt.' });
+    if (!perm(session, 'roles.assign') || !perm(session, 'accounts.manage')) {
+      return sendJson(res, 403, { error: 'Nur der Inhaber legt Team-Mitglieder an.' });
+    }
+    const body = await readBody(req);
+    const number = String(body.number || '').replace(/\D/g, '');
+    const role = String(body.role || '').toLowerCase();
+    const name = String(body.name || '').slice(0, 40);
+    const allowed = ['deputy', 'admin', 'supporter'];
+    if (!number || number.length < 8) return sendJson(res, 400, { error: 'Bitte gültige WhatsApp-Nummer angeben (z. B. 491701234567).' });
+    if (!allowed.includes(role)) return sendJson(res, 400, { error: 'Rang nötig: deputy | admin | supporter.' });
+    /* Existiert bereits ein Account mit dieser Nummer? */
+    const existing = rbac.getAccountByNumber(number);
+    if (existing) {
+      if (existing.role === 'owner') return sendJson(res, 403, { error: 'Für diese Nummer existiert bereits ein Owner-Konto.' });
+      return sendJson(res, 409, { error: 'Account existiert bereits (' + existing.username + ', ' + existing.role + ') — ändere den Rang stattdessen in der Liste.' });
+    }
+    let created;
+    try {
+      created = rbac.createAccount({ username: name || 'team', number, role, mustChange: true });
+    } catch (e) {
+      return sendJson(res, 500, { error: 'Account-Erstellung fehlgeschlagen.' });
+    }
+    /* Zugangsdaten per Bot-DM an das neue Team-Mitglied */
+    let dmQueued = false;
+    try {
+      const roleLabel = role === 'deputy' ? 'STELLV. INHABER:IN 🔱' : (role === 'supporter' ? 'SUPPORTER ◇ (nur Tickets)' : role.toUpperCase());
+      queueMailbox({
+        id: newToken(), type: 'dm-notice', status: 'pending', createdAt: new Date().toISOString(),
+        jid: number + '@s.whatsapp.net',
+        text: '> ☾ *LOVE BOT DASHBOARD ACCOUNT* 🎫\n\n' +
+          '• *Rolle:* ' + roleLabel + '\n' +
+          '• *Username:* ' + created.account.username + '\n' +
+          '• *Temp-Passwort:* ' + created.tempPassword + '\n\n' +
+          '⚠️ Ändere das Passwort beim ersten Login.\n' +
+          '🎟️ Deine Seite: maxichen.gamebot.me/tickets.html\n' +
+          '☾ welcome to the night shift.'
+      });
+      dmQueued = true;
+    } catch (e) {}
+    try { logAdminAction(session.username || session.number, 'team.add', created.account.username + ' (' + role + ')'); } catch (e) {}
+    return sendJson(res, 200, {
+      ok: true,
+      account: { username: created.account.username, number, role },
+      tempPassword: created.tempPassword,
+      dmQueued
+    });
   }
   if (pathname === '/api/ai/models' && req.method === 'GET') {
     if (!session) return sendJson(res, 401, { error: 'Nicht eingelogggt.' });
@@ -5100,6 +5367,14 @@ const server = http.createServer(async (req, res) => {
     }
     return serveStatic(req, res, url.pathname);
   } catch (err) {
+    /* 💎 Browser-Navigation erhält die Liquid-Glass-Fehlerseite (500),
+       API-Clients weiterhin das JSON (bewusst unverändert). */
+    if (String(req.headers.accept || '').includes('text/html') && !String(req.url || '').startsWith('/api/')) {
+      try {
+        return sendGlassErrorPage(res, 500, '💥', 'INTERNER FEHLER',
+          'Auf dem Server ist ein unerwarteter Fehler aufgetreten. Die Aktion wurde sicher abgebrochen — versuche es bitte erneut.');
+      } catch (e2) { /* unten fällt es auf JSON zurück */ }
+    }
     return sendJson(res, 500, { error: String(err?.message || err) });
   }
 });
@@ -5140,5 +5415,17 @@ server.listen(PORT, HOST, () => {
   termWrite(`${TERM.grey}  👑  Owner: ${OWNER_NUMBER}  ·  Panel-Accounts: ${_acc}  ·  Sessions live: ${_fleet.running || 0}/${_fleet.managed || 0}${TERM.reset}`);
   termWrite(`${TERM.grey}  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.${TERM.reset}`);
   termWrite('');
+  /* 🤖 LoveAI startet MIT dem Webserver: Ollama (falls installiert)
+     wird automatisch gestartet; sonst läuft der eingebaute LoveAI Core.
+     Das Ergebnis erscheint als eigene Zeile im Boot-Banner. */
+  termWrite(`${TERM.grey}  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)${TERM.reset}`);
+  bootAi()
+    .then((st) => {
+      termWrite(`${st.engine === 'ollama' ? TERM.cyan : TERM.violet}  🤖  LoveAI bereit: ${st.engineLabel}${TERM.reset}${TERM.grey}  ·  ${st.detail}${TERM.reset}`);
+      termLog('BOOT', 'LoveAI gestartet: ' + st.engineLabel + ' (' + st.detail + ').');
+    })
+    .catch((e) => {
+      termWrite(`${TERM.grey}  🤖  LoveAI: Core 💜 (Boot-Check übersprungen: ${String(e?.message || e).slice(0, 80)})${TERM.reset}`);
+    });
   termLog('BOOT', 'Dashboard-Webserver gestartet (Port ' + PORT + ').');
 });

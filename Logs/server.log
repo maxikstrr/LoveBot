@@ -1207,3 +1207,272 @@
 06:30:43  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
 06:30:46  404 ✕ GET  /api/mailbox/a3b7fb4862acebab8adead4c3ffaa1e28013983866100276  · 2 ms
 10:47:09  200 ✓ GET  /api/leaderboard  · 59 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 20:02:12       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 falls vorhanden, sonst LoveAI Core 💜)
+20:02:12  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+undefined  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+20:02:12  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 20:02:43       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 falls vorhanden, sonst LoveAI Core 💜)
+20:02:43  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+20:02:43  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+20:02:50  401 ✕ GET  /api/ai/status  · 9 ms
+20:02:50  401 ✕ POST /api/ai/chat  · 1 ms
+20:02:50  401 ✕ GET  /api/ai/status
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 20:04:37       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 falls vorhanden, sonst LoveAI Core 💜)
+20:04:37  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+20:04:37  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+20:04:43  401 ✕ GET  /api/ai/status  · 14 ms
+20:04:43  401 ✕ POST /api/ai/chat
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 20:43:15       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+20:43:15  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+20:43:16  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+20:43:37  401 ✕ GET  /api/ai/status  · 9 ms
+20:43:37  401 ✕ GET  /api/ai/cloud
+20:43:37  401 ✕ POST /api/ai/cloud
+20:43:37  401 ✕ POST /api/ai/chat
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 20:45:54       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+20:45:54  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+20:45:54  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+20:46:03  401 ✕ GET  /api/ai/status  · 14 ms
+20:46:03  401 ✕ GET  /api/ai/cloud
+20:46:03  401 ✕ POST /api/ai/chat
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 21:15:19       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+21:15:19  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+21:15:20  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+21:15:29  401 ✕ GET  /api/ai/status  · 9 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 21:40:43       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+21:40:43  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+21:40:43  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+21:40:52  401 ✕ GET  /api/tickets  · 10 ms
+21:40:52  401 ✕ GET  /api/team  · 1 ms
+21:40:52  401 ✕ POST /api/tickets/answer  · 1 ms
+21:40:52  401 ✕ GET  /api/tickets
+21:40:52  200 ✓ GET  /api/commands  · 1 ms
+21:40:59  200 ✓ GET  /api/commands  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 21:41:41       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+21:41:41  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+21:41:41  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+21:41:48  200 ✓ GET  /api/commands  · 11 ms
+21:41:48  401 ✕ GET  /api/tickets
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  12.9.2026, 22:00:49       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+22:00:49  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+22:00:49  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+22:01:22  401 ✕ POST /api/team/role  · 10 ms
+22:01:22  200 ✓ GET  /api/commands  · 1 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  13.9.2026, 02:28:53       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+02:28:53  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+02:28:54  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+02:29:02  401 ✕ POST /api/team/add  · 7 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  13.9.2026, 02:52:59       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+02:52:59  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+02:52:59  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+02:53:08  200 ✓ GET  /api/commands  · 9 ms
+02:53:13  200 ✓ GET  /api/commands  · 1 ms
+02:53:13  200 ✓ GET  /api/commands  · 1 ms
+02:53:19  200 ✓ GET  /api/commands  · 1 ms
+02:53:19  401 ✕ GET  /api/tickets
+02:53:19  401 ✕ GET  /api/team
+02:53:19  401 ✕ POST /api/team/add
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  13.9.2026, 03:13:36       │
+  │   node v20.20.2 · linux · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+03:13:36  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar
+03:13:36  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama nicht erreichbar).
+03:13:43  401 ✕ GET  /api/tickets  · 7 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  13.9.2026, 10:40:12       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 4  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+10:40:12  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+10:40:13  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen).
+10:46:27  200 ✓ GET  /api/heartbeat  · 10 ms
+10:46:29  200 ✓ GET  /api/heartbeat  · 2 ms
+10:46:37  200 ✓ GET  /api/heartbeat  · 2 ms

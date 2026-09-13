@@ -7,3 +7,5 @@
 {"time":"2026-09-11T08:49:41.358Z","actor":"910maxi","action":"reauth.ok","target":"reauth.verify","ip":"185.47.•.•"}
 {"time":"2026-09-11T21:02:32.998Z","actor":"910maxi","action":"reauth.failed","target":"reauth.verify","ip":"193.111.•.•"}
 {"time":"2026-09-11T21:02:38.530Z","actor":"910maxi","action":"reauth.ok","target":"reauth.verify","ip":"193.111.•.•"}
+{"time":"2026-09-13T08:41:30.151Z","actor":"owner","action":"mute","detail":"269724751503435 · permanent"}
+{"time":"2026-09-13T08:44:12.382Z","actor":"269574108926096","action":"ai-group","group":"120363411386930403","detail":"an"}

@@ -1,66 +1,959 @@
-/* LoveBot Liquid Glass layer: shared by every HTML page. */
+/* ═══════════════════════════════════════════════════════════════════════
+   💎 L O V E B O T   ·   L I Q U I D   G L A S S   S Y S T E M
+   ─────────────────────────────────────────────────────────────────────
+   Das EINE zentrale Designsystem für die gesamte LoveBot-Weboberfläche.
+   Der Dashboard-Server (server.js) injiziert dieses Stylesheet automatisch
+   als LETZTES <link> in JEDE ausgelieferte HTML-Seite — dadurch gilt es
+   für alle drei Shells gleichzeitig:
+
+     1. Design-2026-Seiten  (style.css)   → Landing, Login, Dashboard,
+        Admin, Sessions, Status, Statistik, Bestenliste, Account, …
+     2. Midnight-Control-SPA (night.css)  → app.html
+     3. Soul-Echo-Control-Center (control.css) → control.html
+
+   Die Designsprache folgt EXAKT der Referenz aus public/test.html
+   („Liquid Glass — exakt aus Vorgabe“):
+
+     · mehrschichtiges Glas:  Außenkante · Innenkante · Gegenkante
+     · elliptische Glanzlichter oben-links & unten-rechts
+     · Rim-Light (Lichtlinie) am oberen Rand jeder Fläche
+     · vertikaler Glas-Verlauf + radialer Sheen
+     · backdrop-blur + Sättigungs-Boost
+     · Akzentfarben: Violett · Cyan · Bernstein · Rose
+     · Gradient-Text für Titel
+
+   Wichtig: Dieses File ist ADDITIV. Es überschreibt nur Oberflächen
+   (Hintergrund · Rahmen · Schatten · Blur) — Layout, Logik, Auth,
+   API-Aufrufe und alle Funktionen bleiben vollständig unberührt.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   1 · DESIGN-TOKENS — die gemeinsame Sprache aller Glas-Flächen
+   ═══════════════════════════════════════════════════════════════════════ */
 :root {
-  --glass-hi: rgba(255, 255, 255, .28);
-  --glass-inner: rgba(255, 255, 255, .10);
-  --glass-low: rgba(0, 0, 0, .24);
-  --glass-shadow: 0 16px 38px rgba(0, 0, 0, .28), 0 2px 8px rgba(0, 0, 0, .16);
+  /* Glanzlichter & Kanten (Werte der Referenz) */
+  --lg-hi:        rgba(255, 255, 255, .30);   /* obere Innenkante          */
+  --lg-edge:      rgba(255, 255, 255, .17);   /* Außenkante                */
+  --lg-inner:     rgba(255, 255, 255, .07);   /* Innenkante (inset 3)      */
+  --lg-counter:   rgba(0, 0, 0, .23);         /* dunkle Gegenkante         */
+  --lg-sheen:     rgba(255, 255, 255, .10);   /* radialer Sheen oben       */
+  --lg-tl:        rgba(255, 255, 255, .10);   /* Glanzlicht oben-links     */
+  --lg-br:        rgba(255, 255, 255, .05);   /* Glanzlicht unten-rechts   */
+
+  /* Schatten */
+  --lg-shadow:    0 16px 38px rgba(0, 0, 0, .28), 0 2px 8px rgba(0, 0, 0, .16);
+  --lg-shadow-lg: 0 24px 60px rgba(0, 0, 0, .40), 0 4px 14px rgba(0, 0, 0, .22);
+  --lg-glow:      0 0 28px rgba(167, 139, 250, .12);
+
+  /* Glas-Verläufe (mehrere Background-Layer — keine Pseudo-Elemente nötig) */
+  --lg-bg:
+    radial-gradient(140% 130% at 50% -20%, rgba(255, 255, 255, .10), rgba(255, 255, 255, .025) 38%, transparent 72%),
+    radial-gradient(60% 80% at 12% 0%, var(--lg-tl), transparent 58%),
+    radial-gradient(46% 64% at 88% 100%, var(--lg-br), transparent 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012) 48%, rgba(0, 0, 0, .055));
+  --lg-bg-strong:
+    radial-gradient(140% 130% at 50% -20%, rgba(255, 255, 255, .13), rgba(255, 255, 255, .04) 40%, transparent 74%),
+    radial-gradient(60% 80% at 12% 0%, rgba(255, 255, 255, .13), transparent 58%),
+    radial-gradient(46% 64% at 88% 100%, rgba(255, 255, 255, .07), transparent 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .02) 48%, rgba(0, 0, 0, .07));
+  --lg-bg-soft:
+    radial-gradient(140% 130% at 50% -20%, rgba(255, 255, 255, .06), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .008) 50%, rgba(0, 0, 0, .035));
+
+  /* Vollständiger Glas-Schatten-Stapel (Kanten + Tiefen) */
+  --lg-stack:
+    inset 0 0 0 1px var(--lg-inner),
+    inset 0 1px 0 var(--lg-hi),
+    inset 0 -1px 0 var(--lg-counter),
+    var(--lg-shadow);
+
+  /* Blur-Stufen */
+  --lg-blur:      blur(14px) saturate(150%);
+  --lg-blur-nav:  blur(20px) saturate(165%);
+
+  /* Akzent-Palette (Referenz-Kategorien) */
+  --lg-violet:    #a78bfa;  --lg-violet-2: #c4b5fd;
+  --lg-cyan:      #22d3ee;  --lg-cyan-2:   #67e8f9;
+  --lg-amber:     #fbbf24;  --lg-amber-2:  #fcd34d;
+  --lg-rose:      #fb7185;  --lg-rose-2:   #fda4af;
+  --lg-ok:        #34d399;  --lg-warn:     #fbbf24;
+  --lg-err:       #fb7185;  --lg-info:     #67e8f9;
+
+  /* Titel-Gradient (Referenz .hdr__title) */
+  --lg-title-grad: linear-gradient(120deg, #fff 20%, #b6c2ff 55%, #67e8f9 100%);
+
+  /* Motion */
+  --lg-t: .18s cubic-bezier(.33, 1, .68, 1);
 }
 
-.box, .card, .stat, .quick-btn, .step-card, .faq-item, .legal-check,
-.stat-card, .panel, .xp-card, .acc-card, .lb-row, .curve-note, .table-wrap,
-.lb-row2, .cc-section, .cc-stat, .cc-tile, .cc-modal, .glass-system {
+
+/* ═══════════════════════════════════════════════════════════════════════
+   2 · KERN-KLASSEN — wiederverwendbare Glas-Bausteine (für neue Views)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Standard-Glas-Fläche (wie .row der Referenz) */
+.lg {
   position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(140% 130% at 50% -20%, rgba(255,255,255,.10), rgba(255,255,255,.025) 38%, transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012) 48%, rgba(0,0,0,.055));
-  border-color: rgba(255,255,255,.16);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06),
-    inset 0 1px 0 var(--glass-hi), inset 0 -1px 0 var(--glass-low), var(--glass-shadow);
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-stack);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
 }
 
-.box::before, .card::before, .stat::before, .quick-btn::before,
-.step-card::before, .faq-item::before, .legal-check::before, .stat-card::before,
-.panel::before, .xp-card::before, .acc-card::before, .lb-row::before,
-.curve-note::before, .table-wrap::before, .lb-row2::before, .cc-section::before,
-.cc-stat::before, .cc-tile::before, .cc-modal::before, .glass-system::before {
+/* Deutlich abgesetztes Glas (Hero-Panels, Modals) */
+.lg-strong {
+  position: relative;
+  background: var(--lg-bg-strong);
+  border: 1px solid rgba(255, 255, 255, .22);
+  box-shadow:
+    inset 0 0 0 1px var(--lg-inner),
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    inset 0 -1px 0 var(--lg-counter),
+    var(--lg-shadow-lg);
+  backdrop-filter: var(--lg-blur-nav);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+}
+
+/* Hauchzartes Glas (Chips, Badges, Zähler-Pillen) */
+.lg-soft {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 4px 14px rgba(0, 0, 0, .18);
+}
+
+/* Rim-Light oben (Lichtlinie) — für Flächen OHNE eigene ::before-Nutzung */
+.lg-rim::before {
   content: '';
   position: absolute;
-  inset: 1px 10% auto;
+  inset: 1px 14% auto;
   height: 1px;
   border-radius: 50%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.62), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .62), transparent);
   opacity: .72;
   pointer-events: none;
 }
 
-.box:hover, .card:hover, .stat:hover, .quick-btn:hover, .step-card:hover,
-.faq-item:hover, .stat-card:hover, .panel:hover, .xp-card:hover, .acc-card:hover,
-.lb-row:hover, .lb-row2:hover, .cc-section:hover, .cc-stat:hover, .cc-tile:hover {
-  border-color: rgba(255,255,255,.26);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08),
-    inset 0 1px 0 rgba(255,255,255,.34), 0 20px 42px rgba(0,0,0,.30),
-    0 0 28px rgba(167,139,250,.10);
+/* Gradient-Titel (wie .hdr__title der Referenz) */
+.lg-text {
+  background: var(--lg-title-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-/* Reusable hooks for future profile/status views. */
-.liquid-glass {
+/* Leuchtender Status-Punkt mit Halo */
+.lg-dot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+}
+
+/* Akzent-Balken links (Kategorie-Farbe, wie .row__acc der Referenz) */
+.lg-acc { position: relative; padding-left: 18px; }
+.lg-acc::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 12%; bottom: 12%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--lg-violet), #6366f1);
+  box-shadow: 0 0 10px rgba(167, 139, 250, .55);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3 · SHELL 1 — DESIGN-2026-SEITEN (style.css: Landing · Login ·
+       Dashboard · Admin · Sessions · Status · Statistik · Bestenliste …)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 3.1 Top-Navigation: stärkerer Glas-Blur + Rim-Linie ─────────────── */
+.topnav {
   background:
-    radial-gradient(140% 130% at 50% -20%, rgba(255,255,255,.10), rgba(255,255,255,.025) 38%, transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012) 48%, rgba(0,0,0,.055));
-  border: 1px solid rgba(255,255,255,.16);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 var(--glass-hi),
-    inset 0 -1px 0 var(--glass-low), var(--glass-shadow);
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
+    radial-gradient(120% 160% at 50% -60%, rgba(255, 255, 255, .07), transparent 62%),
+    linear-gradient(180deg, rgba(10, 6, 22, .78), rgba(9, 6, 20, .70));
+  backdrop-filter: var(--lg-blur-nav);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 12px 34px rgba(0, 0, 0, .30);
+}
+.topnav::after {
+  content: '';
+  position: absolute;
+  left: 12%; right: 12%; bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .38), transparent);
+  pointer-events: none;
+}
+.nav-links a {
+  border-radius: 999px;
+  transition: background var(--lg-t), box-shadow var(--lg-t), color var(--lg-t);
+}
+.nav-links a:hover {
+  background: rgba(255, 255, 255, .06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 4px 14px rgba(0, 0, 0, .22);
+}
+.nav-links a.active {
+  background: var(--lg-bg-soft);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10), inset 0 1px 0 rgba(255, 255, 255, .24);
+}
+.nav-burger, .notif-bell {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18);
+  border-radius: 12px;
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
 }
 
+/* ── 3.2 Buttons: Glas-Tiefe für Ghost/Secondary, Glanz für Primär ──── */
+.btn.ghost, .btn.secondary {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), inset 0 -1px 0 rgba(0, 0, 0, .20), 0 8px 22px rgba(0, 0, 0, .22);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+.btn.ghost:hover, .btn.secondary:hover {
+  border-color: rgba(255, 255, 255, .30);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .34), inset 0 -1px 0 rgba(0, 0, 0, .20), 0 12px 28px rgba(0, 0, 0, .28), var(--lg-glow);
+}
+.btn:not(.ghost):not(.secondary) {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -1px 0 rgba(0, 0, 0, .22),
+    0 10px 26px rgba(0, 0, 0, .30),
+    0 0 34px rgba(167, 139, 250, .18);
+}
+.btn:focus-visible, .mini:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .55);
+  outline-offset: 2px;
+}
+
+/* ── 3.3 Karten & Boxen: das mehrschichtige Referenz-Glas ────────────── */
+/* .card & .stat nutzen in style.css bereits ::after/::before → hier nur
+   Background-Layer + Schatten (keine Pseudo-Elemente überschreiben).   */
+.card {
+  background: var(--lg-bg);
+  border-color: var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), inset 0 -1px 0 var(--lg-counter), var(--lg-shadow);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+.card:hover {
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 1px 0 rgba(255, 255, 255, .36), 0 22px 46px rgba(0, 0, 0, .34), var(--lg-glow);
+}
+
+/* .box · .quick-btn · .step-card · .faq-item · .legal-check haben keine
+   eigenen Pseudo-Elemente → volle Glas-Behandlung inkl. Rim-Light.     */
+.box, .quick-btn, .step-card, .faq-item, .legal-check,
+.stat-card, .panel, .xp-card, .acc-card, .lb-row, .curve-note,
+.table-wrap, .lb-row2, .auth-card, .sess-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-stack);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  transition: border-color var(--lg-t), box-shadow var(--lg-t), transform var(--lg-t);
+}
+.box::before, .quick-btn::before, .step-card::before, .faq-item::before,
+.legal-check::before, .stat-card::before, .panel::before, .xp-card::before,
+.acc-card::before, .lb-row::before, .curve-note::before, .table-wrap::before,
+.lb-row2::before, .auth-card::before, .sess-card::before {
+  content: '';
+  position: absolute;
+  inset: 1px 12% auto;
+  height: 1px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .62), transparent);
+  opacity: .72;
+  pointer-events: none;
+}
+.box:hover, .quick-btn:hover, .step-card:hover, .stat-card:hover,
+.panel:hover, .xp-card:hover, .acc-card:hover, .lb-row:hover, .lb-row2:hover,
+.sess-card:hover {
+  border-color: rgba(255, 255, 255, .26);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    inset 0 -1px 0 var(--lg-counter),
+    0 20px 42px rgba(0, 0, 0, .30),
+    var(--lg-glow);
+}
+
+/* ── 3.4 Stat-Kacheln (Dashboard/Status) — Schicht-Glas ohne Pseudo ─── */
+.stat {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), inset 0 -1px 0 var(--lg-counter), var(--lg-shadow);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+.stat:hover {
+  border-color: rgba(255, 255, 255, .26);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), inset 0 1px 0 rgba(255, 255, 255, .36), 0 20px 42px rgba(0, 0, 0, .30), var(--lg-glow);
+}
+
+/* ── 3.5 Sidebar (App-Seiten): gläserne Schiene + Glas-Nav-Pills ────── */
+.sidebar {
+  background:
+    radial-gradient(160% 60% at 50% 0%, rgba(255, 255, 255, .05), transparent 60%),
+    linear-gradient(180deg, rgba(12, 8, 24, .82), rgba(9, 6, 18, .86));
+  backdrop-filter: var(--lg-blur-nav);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  border-right: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .20), 12px 0 34px rgba(0, 0, 0, .22);
+}
+.sidebar .userchip {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+  border-radius: 14px;
+}
+.sidebar .nav-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  transition: background var(--lg-t), border-color var(--lg-t), box-shadow var(--lg-t);
+}
+.sidebar .nav-btn:hover {
+  background: var(--lg-bg-soft);
+  border-color: rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 6px 16px rgba(0, 0, 0, .20);
+}
+.sidebar .nav-btn.active {
+  background: var(--lg-bg);
+  border-color: var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), 0 8px 20px rgba(0, 0, 0, .24), var(--lg-glow);
+  position: relative;
+}
+.sidebar .nav-btn.active::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 18%; bottom: 18%;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--lg-violet-2), #6366f1);
+  box-shadow: 0 0 10px rgba(167, 139, 250, .65);
+}
+
+/* ── 3.6 Pills · Chips · Badges — zarte Glas-Kapseln ─────────────────── */
+.pill, .chip, .pchip, .badge, .status-pill, .sess-pill {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), 0 4px 12px rgba(0, 0, 0, .16);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+.pill.on, .status-pill.on {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .20), 0 0 16px rgba(52, 211, 153, .18);
+}
+.pill.off, .status-pill.off {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 14px rgba(251, 113, 133, .14);
+}
+
+/* ── 3.7 Formulare: Glas-Inputs mit Glow-Focus ───────────────────────── */
+input, textarea, select {
+  background:
+    radial-gradient(120% 140% at 50% -40%, rgba(255, 255, 255, .05), transparent 60%),
+    rgba(8, 5, 18, .55);
+  border: 1px solid rgba(255, 255, 255, .13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), inset 0 2px 8px rgba(0, 0, 0, .30);
+  border-radius: 12px;
+  transition: border-color var(--lg-t), box-shadow var(--lg-t), background var(--lg-t);
+}
+input::placeholder, textarea::placeholder { color: rgba(255, 255, 255, .32); }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: rgba(167, 139, 250, .60);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    inset 0 2px 8px rgba(0, 0, 0, .26),
+    0 0 0 4px rgba(167, 139, 250, .16),
+    0 0 30px -6px rgba(167, 139, 250, .45);
+}
+.code-input {
+  background:
+    radial-gradient(120% 140% at 50% -40%, rgba(255, 255, 255, .06), transparent 60%),
+    rgba(10, 6, 22, .65);
+  border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 3px 10px rgba(0, 0, 0, .34), var(--lg-shadow);
+  border-radius: 16px;
+  letter-spacing: .55em;
+}
+select option { background: #0e0a1d; color: #f2eefc; }
+
+/* ── 3.8 Terminal · Feed · KV-Listen: eingelassene Glas-Vertiefungen ── */
+.terminal {
+  background: linear-gradient(180deg, rgba(4, 3, 10, .72), rgba(6, 4, 14, .80));
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(255, 255, 255, .03), var(--lg-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.term-bar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02));
+  border-bottom: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.kv .k { text-transform: uppercase; letter-spacing: .08em; }
+.feed-row {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13);
+  border-radius: 12px;
+}
+
+/* ── 3.9 Toast (common.js) — Referenz-Glas-Pille ─────────────────────── */
+.toast {
+  background: rgba(20, 22, 28, .55);
+  -webkit-backdrop-filter: blur(14px) saturate(180%) brightness(1.05);
+  backdrop-filter: blur(14px) saturate(180%) brightness(1.05);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .22),
+    inset 0 1.5px 0 rgba(255, 255, 255, .32),
+    inset 0 -1px 0 rgba(0, 0, 0, .20),
+    0 12px 32px rgba(0, 0, 0, .45);
+}
+
+/* ── 3.10 System-Glas (Status-/Systemboxen) — bestehende Klasse ─────── */
+.glass-system {
+  background: var(--lg-bg);
+  border-color: var(--lg-edge);
+  box-shadow: var(--lg-stack);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+.glass-metric {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15);
+  border-radius: 10px;
+}
+
+/* ── 3.11 Login/Auth-Karte: Hero-Glas ────────────────────────────────── */
+.auth-card {
+  background: var(--lg-bg-strong);
+  backdrop-filter: var(--lg-blur-nav);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+}
+
+/* ── 3.12 Nachrichten-/Status-Meldungen (.msg) ───────────────────────── */
+.msg {
+  border-radius: 12px;
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   4 · SHELL 2 — MIDNIGHT-CONTROL-SPA (night.css · app.html)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar der Nacht-Shell */
+.side {
+  background:
+    radial-gradient(160% 50% at 50% 0%, rgba(255, 255, 255, .045), transparent 58%),
+    rgba(8, 7, 16, .78);
+  backdrop-filter: var(--lg-blur-nav);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  border-right: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .22), 12px 0 34px rgba(0, 0, 0, .24);
+}
+.nav a {
+  border: 1px solid transparent;
+  transition: background var(--lg-t), border-color var(--lg-t), box-shadow var(--lg-t);
+}
+.nav a:hover {
+  background: var(--lg-bg-soft);
+  border-color: rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 6px 16px rgba(0, 0, 0, .20);
+}
+.nav a.active {
+  background: var(--lg-bg);
+  border-color: var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), 0 8px 20px rgba(0, 0, 0, .24), var(--lg-glow);
+}
+
+/* Topbar-Chips der Nacht-Shell */
+.top .chip {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+  border-radius: 999px;
+}
+
+/* Panels & Stats (night .stat nutzt ::before → nur Layer + Schatten) */
+.panel {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-stack);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+.panel > .head {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .015));
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
+}
+.panel .stat {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), inset 0 -1px 0 var(--lg-counter), var(--lg-shadow);
+}
+
+/* Tabellen der Nacht-Shell */
+.tbl {
+  background: rgba(255, 255, 255, .018);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 10px 26px rgba(0, 0, 0, .18);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.tbl th {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .065), rgba(255, 255, 255, .02));
+  border-bottom: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.tbl tbody tr { border-bottom: 1px solid rgba(255, 255, 255, .05); transition: background var(--lg-t); }
+.tbl tbody tr:hover { background: rgba(255, 255, 255, .035); }
+
+/* Nacht-Pills */
+.night .pill, .top .pill {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17);
+  border-radius: 999px;
+}
+
+/* Nacht-Buttons (Ghost) */
+.night .btn.ghost, .modal .btn.ghost {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 22px rgba(0, 0, 0, .22);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+}
+
+/* Nacht-Modal */
+.modal-bg {
+  background: rgba(4, 3, 10, .55);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  backdrop-filter: blur(10px) saturate(120%);
+}
+.modal {
+  background: var(--lg-bg-strong);
+  border: 1px solid rgba(255, 255, 255, .20);
+  box-shadow:
+    inset 0 0 0 1px var(--lg-inner),
+    inset 0 1px 0 rgba(255, 255, 255, .32),
+    inset 0 -1px 0 var(--lg-counter),
+    var(--lg-shadow-lg);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  backdrop-filter: var(--lg-blur-nav);
+}
+
+/* Nacht-Toasts (#toasts .toast) */
+#toasts .toast {
+  background: rgba(20, 22, 28, .60);
+  -webkit-backdrop-filter: blur(14px) saturate(180%) brightness(1.05);
+  backdrop-filter: blur(14px) saturate(180%) brightness(1.05);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .20),
+    inset 0 1.5px 0 rgba(255, 255, 255, .30),
+    inset 0 -1px 0 rgba(0, 0, 0, .20),
+    0 14px 36px rgba(0, 0, 0, .46);
+}
+
+/* Router-Console (Night-Login-Screen) */
+.router-console {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-stack);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  border-radius: 22px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   5 · SHELL 3 — SOUL-ECHO-CONTROL-CENTER (control.css · control.html)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Top-Leiste + Kacheln */
+.cc-top {
+  background:
+    radial-gradient(120% 160% at 50% -60%, rgba(255, 255, 255, .06), transparent 62%),
+    rgba(9, 7, 18, .74);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  backdrop-filter: var(--lg-blur-nav);
+  border-bottom: 1px solid rgba(255, 255, 255, .11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .13), 0 12px 34px rgba(0, 0, 0, .28);
+}
+.cc-tile, .cc-stat, .cc-section, .cc-featurecard, .cc-modal, .mx-alert {
+  position: relative;
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-stack);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+  transition: border-color var(--lg-t), box-shadow var(--lg-t), transform var(--lg-t);
+}
+.cc-tile::before, .cc-stat::before, .cc-section::before, .cc-modal::before, .cc-featurecard::before {
+  content: '';
+  position: absolute;
+  inset: 1px 12% auto;
+  height: 1px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .62), transparent);
+  opacity: .72;
+  pointer-events: none;
+}
+.cc-tile:hover, .cc-stat:hover {
+  border-color: rgba(255, 255, 255, .26);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    0 20px 42px rgba(0, 0, 0, .30),
+    var(--lg-glow);
+  transform: translateY(-2px);
+}
+
+/* Control-Sidebar & Navigation */
+.cc-side {
+  background:
+    radial-gradient(160% 50% at 50% 0%, rgba(255, 255, 255, .04), transparent 58%),
+    rgba(8, 7, 16, .76);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  backdrop-filter: var(--lg-blur-nav);
+  border-right: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .22), 12px 0 34px rgba(0, 0, 0, .22);
+}
+.cc-navitem {
+  border: 1px solid transparent;
+  border-radius: 11px;
+  transition: background var(--lg-t), border-color var(--lg-t), box-shadow var(--lg-t);
+}
+.cc-navitem:hover {
+  background: var(--lg-bg-soft);
+  border-color: rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17);
+}
+.cc-navitem.on {
+  background: var(--lg-bg);
+  border-color: var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), 0 8px 20px rgba(0, 0, 0, .24), var(--lg-glow);
+}
+.cc-icobtn {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+  border-radius: 11px;
+  transition: border-color var(--lg-t), box-shadow var(--lg-t);
+}
+.cc-icobtn:hover {
+  border-color: rgba(255, 255, 255, .24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 8px 20px rgba(0, 0, 0, .24);
+}
+
+/* Control-Buttons: Glas für Standard, Glanz bleibt bei primary */
+.cc-btn:not(.primary):not(.danger):not(.ok) {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 8px 20px rgba(0, 0, 0, .20);
+}
+.cc-btn:not(.primary):not(.danger):not(.ok):hover {
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 12px 26px rgba(0, 0, 0, .26), var(--lg-glow);
+}
+.cc-btn.primary {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .35),
+    inset 0 -1px 0 rgba(0, 0, 0, .22),
+    0 10px 26px rgba(124, 58, 237, .38);
+}
+.cc-btn:focus-visible, .cc-navitem:focus-visible, .cc-icobtn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .55);
+  outline-offset: 2px;
+}
+
+/* Control-Tabs & Health-Bars */
+.cc-tab {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+  border-radius: 999px;
+}
+.cc-tab.on {
+  background: var(--lg-bg);
+  border-color: var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), var(--lg-glow);
+}
+.cc-hbartrack {
+  background: rgba(0, 0, 0, .32);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .40);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cc-hbarfill {
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .30), 0 0 14px rgba(124, 58, 237, .35);
+}
+.cc-select {
+  background:
+    radial-gradient(120% 140% at 50% -40%, rgba(255, 255, 255, .05), transparent 60%),
+    rgba(8, 5, 18, .60);
+  border: 1px solid rgba(255, 255, 255, .13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), inset 0 2px 8px rgba(0, 0, 0, .30);
+  border-radius: 11px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   6 · OVERLAYS — Consent-Gate · Security-Block · Wartung (alle Shells)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.consent-gate {
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+}
+.consent-card {
+  background: var(--lg-bg-strong);
+  border: 1px solid rgba(255, 255, 255, .20);
+  box-shadow:
+    inset 0 0 0 1px var(--lg-inner),
+    inset 0 1px 0 rgba(255, 255, 255, .32),
+    inset 0 -1px 0 var(--lg-counter),
+    var(--lg-shadow-lg);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  backdrop-filter: var(--lg-blur-nav);
+}
+.consent-opt {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+  border-radius: 14px;
+  transition: border-color var(--lg-t), box-shadow var(--lg-t);
+}
+.consent-opt:hover { border-color: rgba(255, 255, 255, .20); }
+.consent-actions button {
+  border-radius: 12px;
+}
+.consent-actions button:first-child {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 -1px 0 rgba(0, 0, 0, .22),
+    0 10px 26px rgba(0, 0, 0, .30),
+    0 0 34px rgba(167, 139, 250, .18);
+}
+.consent-actions button:not(:first-child) {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 8px 22px rgba(0, 0, 0, .20);
+}
+
+.security-block-gate {
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  backdrop-filter: blur(14px) saturate(130%);
+}
+.security-block-card {
+  background: var(--lg-bg-strong);
+  border: 1px solid rgba(248, 113, 113, .30);
+  box-shadow:
+    inset 0 0 0 1px var(--lg-inner),
+    inset 0 1px 0 rgba(255, 255, 255, .30),
+    inset 0 -1px 0 var(--lg-counter),
+    var(--lg-shadow-lg),
+    0 0 60px -18px rgba(248, 113, 113, .35);
+  -webkit-backdrop-filter: var(--lg-blur-nav);
+  backdrop-filter: var(--lg-blur-nav);
+}
+.security-block-meta {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+  border-radius: 12px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   7 · SEITENSPEZIFISCHE VERFEINERUNGEN
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Befehle-Suche (cmd.html) — Glas-Suchleiste */
+.cmdsearch-wrap input {
+  background:
+    radial-gradient(120% 140% at 50% -40%, rgba(255, 255, 255, .06), transparent 60%),
+    rgba(8, 5, 18, .68);
+  border: 1px solid rgba(255, 255, 255, .16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), inset 0 3px 12px rgba(0, 0, 0, .34), var(--lg-shadow);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+}
+
+/* Chat-Demo auf der Landingpage */
+.chatbox input {
+  background:
+    radial-gradient(120% 140% at 50% -40%, rgba(255, 255, 255, .05), transparent 60%),
+    rgba(8, 5, 18, .55);
+  border: 1px solid rgba(255, 255, 255, .13);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 2px 8px rgba(0, 0, 0, .30);
+  border-radius: 999px;
+}
+
+/* Livebar-Zellen (Landing) */
+.livebar .cell {
+  background: var(--lg-bg-soft);
+  border: 1px solid rgba(255, 255, 255, .09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+  border-radius: 14px;
+}
+
+/* Session-Karten (sessions.html) — Status-Akzente bleiben erhalten */
+.sess-card {
+  border-radius: 18px;
+}
+.sess-card.st-CONNECTED { box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), 0 16px 38px rgba(0, 0, 0, .28), 0 0 24px rgba(52, 211, 153, .10); }
+.sess-card.st-DISCONNECTED, .sess-card.st-ERROR { box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), 0 16px 38px rgba(0, 0, 0, .28), 0 0 24px rgba(251, 113, 133, .10); }
+
+/* Level-Karten (level.html) — .lvl-card::before existiert bereits */
+.lvl-card {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 0 0 1px var(--lg-inner), inset 0 1px 0 var(--lg-hi), inset 0 -1px 0 var(--lg-counter), var(--lg-shadow);
+  -webkit-backdrop-filter: var(--lg-blur);
+  backdrop-filter: var(--lg-blur);
+}
+
+/* FAQ/Regeln — Details-Pfeile unangetastet, Fläche wird Glas (oben)     */
+
+/* Tabellen in table-wrap (Admin/Profile) */
+.table-wrap table { border-collapse: separate; border-spacing: 0; }
+.table-wrap th {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02));
+  border-bottom: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.table-wrap tbody tr { transition: background var(--lg-t); }
+.table-wrap tbody tr:hover { background: rgba(255, 255, 255, .03); }
+.table-wrap tbody tr td { border-bottom: 1px solid rgba(255, 255, 255, .05); }
+
+/* ── 7.1 Loading-/Empty-States & Kleinbausteine (JS-Views) ───────────── */
+/* Mini-Buttons (.mini) — Glas-Pillen */
+.mini {
+  background: var(--lg-bg);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .18), 0 6px 16px rgba(0, 0, 0, .18);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  transition: border-color var(--lg-t), box-shadow var(--lg-t);
+}
+.mini:hover {
+  border-color: rgba(255, 255, 255, .28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .32), 0 10px 22px rgba(0, 0, 0, .24), var(--lg-glow);
+}
+
+/* Log-Ansicht (pre.logs) — eingelassenes Glas-Terminal */
+pre.logs, .logs {
+  background: linear-gradient(180deg, rgba(4, 3, 10, .72), rgba(6, 4, 14, .80));
+  border: 1px solid rgba(255, 255, 255, .10);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, .45), inset 0 0 0 1px rgba(255, 255, 255, .03), var(--lg-shadow);
+  border-radius: 14px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* Fortschritts-Tracks (mini-cmdbar u. a.) — eingelassene Schienen */
+.mini-cmdbar .row .track, .track {
+  background: rgba(0, 0, 0, .30);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .40);
+}
+
+/* Control-Center: Badges/Tags + Empty-States + KV-Grids */
+.cc-tag {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 4px 10px rgba(0, 0, 0, .14);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
+}
+.cc-empty {
+  background: var(--lg-bg-soft);
+  border: 1px dashed rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
+  border-radius: 16px;
+}
+.cc-kv .k, .cc-kv .v { border-radius: 8px; }
+.cc-kv .k {
+  background: rgba(255, 255, 255, .03);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8 · AURORA-BACKDROP — sattere Farbblasen, damit das Glas „lebt“
+       (rein additiv: die Basis-Aurora aus style.css bleibt aktiv)
+   ═══════════════════════════════════════════════════════════════════════ */
+.aurora::before { background: rgba(167, 139, 250, .26); }
+.aurora::after { background: rgba(244, 114, 182, .19); }
+
+/* Nacht-Shell: City-Hintergrund bleibt — sanfte Vignette ergänzen */
+#bgVignette {
+  box-shadow: inset 0 0 180px rgba(3, 2, 8, .85);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   9 · TASTATUR-FOKUS — klar sichtbarer Glas-Ring (wie Referenz .row)
+   ═══════════════════════════════════════════════════════════════════════ */
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible,
+.nav a:focus-visible, .nav-btn:focus-visible, .quick-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .55);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   10 · MOTION — sanft, respektiert prefers-reduced-motion
+   ═══════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .box:hover, .card:hover, .stat:hover, .quick-btn:hover, .step-card:hover,
-  .faq-item:hover, .stat-card:hover, .panel:hover, .xp-card:hover, .acc-card:hover,
-  .lb-row:hover, .lb-row2:hover, .cc-section:hover, .cc-stat:hover, .cc-tile:hover {
+  .stat-card:hover, .panel:hover, .xp-card:hover, .acc-card:hover,
+  .lb-row:hover, .lb-row2:hover, .cc-tile:hover, .cc-stat:hover, .sess-card:hover {
     transform: none;
+  }
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   11 · KOMPATIBILITÄT — Fallbacks für Browser ohne backdrop-filter
+       (Glas bleibt lesbar, nur ohne Weichzeichnung)
+   ═══════════════════════════════════════════════════════════════════════ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .box, .card, .stat, .quick-btn, .step-card, .faq-item, .legal-check,
+  .stat-card, .panel, .xp-card, .acc-card, .lb-row, .curve-note, .table-wrap,
+  .lb-row2, .auth-card, .sess-card, .glass-system, .sidebar, .topnav,
+  .cc-tile, .cc-stat, .cc-section, .cc-featurecard, .cc-modal, .cc-side, .cc-top,
+  .side, .modal, .consent-card, .security-block-card, .router-console {
+    background-color: rgba(14, 10, 26, .88);
   }
 }

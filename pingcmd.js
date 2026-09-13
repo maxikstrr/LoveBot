@@ -33,6 +33,7 @@ import {
   icmpPing, tcpPing, dnsPing, httpProbe, wsPing, iqPing, sendEchoPing,
   speedTest, edgeTrace, sysSnapshot, statsOf, sample
 } from './netping.js';
+import { renderPingCard, renderWebsiteCard } from './glassCard.js';
 
 /* Die Websites, die bei $ping (ohne Argument) immer mitgepingt werden. */
 const DEFAULT_SITES = ['maxichen.de', 'maxichen.gamebot.me'];
@@ -248,6 +249,17 @@ async function websitePing(sock, from, msg, rawUrl) {
 
   if (!okProbes.length) {
     const err = probes?.[0]?.error || 'unbekannter Fehler';
+    /* 💎 Liquid-Glass-Karte auch im OFFLINE-Fall (Zusatz, mit Fallback) */
+    try {
+      const card = await renderWebsiteCard({ host, url, okProbes, probes, icmp, dns });
+      if (card) {
+        await sock.sendMessage(from, {
+          image: card.png,
+          mimetype: 'image/png',
+          caption: `🔴 *WEBSITE OFFLINE* · ${host}`
+        }, { quoted: msg });
+      }
+    } catch (cardErr) { /* Karte optional — Text kommt immer */ }
     await put(sock, from, msg, key,
       `> 🔴 *WEBSITE OFFLINE*\n\n` +
       `• *URL:* ${url}\n` +
@@ -304,6 +316,24 @@ async function websitePing(sock, from, msg, rawUrl) {
   }
   L.push('');
   L.push(`💡 _Alles echt gemessen · ${new Date().toLocaleTimeString('de-DE')}_`);
+
+  /* 💎 LIQUID-GLASS-KARTE (Zusatz) — dieselben Messwerte als Glas-Karte.
+     Fällt das Rendering aus, bleibt der Text-Report vollständig allein. */
+  try {
+    const card = await renderWebsiteCard(
+      { host, url, okProbes, probes, icmp, dns },
+      { dateLabel: new Date().toLocaleTimeString('de-DE') }
+    );
+    if (card) {
+      await sock.sendMessage(from, {
+        image: card.png,
+        mimetype: 'image/png',
+        caption: `🌍 *WEBSITE-PING* · ${host} — alle Messwerte in der Nachricht 💜`
+      }, { quoted: msg });
+    }
+  } catch (cardErr) {
+    console.log(c.bold + c.brightYellow + `[ping] Glass-Card übersprungen (${cardErr?.message || cardErr}).` + c.reset);
+  }
 
   await put(sock, from, msg, key, L.join('\n'));
   console.log(c.bold + c.brightGreen + `[ping] Website-Ping ${host}: TTFB ${statsOf(okProbes.map((p) => p.ttfbMs)) ? Math.round(statsOf(okProbes.map((p) => p.ttfbMs)).avg) : '?'} ms.` + c.reset);
@@ -727,6 +757,28 @@ export async function handlePingCommand({ sock, msg, from, args = [], pref = '$'
   L.push('');
   L.push(`💡 _Tipp: ${pref}ping full = großer Speedtest · ${pref}ping <url> = eine Website prüfen · ${pref}ping nospeed = ohne Speedtest_`);
   L.push(`💡 _Alles live gemessen — ${pref}ping prüft ${DEFAULT_SITES.join(' & ')} immer mit._`);
+
+  /* ── 💎 LIQUID-GLASS-KARTE (Zusatz, rein optisch) ─────────────────────
+     Dieselben echten Messwerte noch einmal als hochwertige Glas-Karte
+     (PNG). Schlägt das Rendering fehl (z. B. sharp ohne Plattform-
+     Binaries), wird die Karte still übersprungen — der Text-Report
+     bleibt davon vollständig unberührt. */
+  try {
+    const card = await renderPingCard({
+      modeLabel, dateLabel: `${dateStr} · ${timeStr} Uhr`,
+      bot, siteResults, conn, icmpResults, speed, sys, health, issues,
+      db: dbLine.replace(/^\s*•\s*DB ›\s*/, 'DB › ')
+    });
+    if (card) {
+      await sock.sendMessage(from, {
+        image: card.png,
+        mimetype: 'image/png',
+        caption: `🏓 *PING-REPORT* · Health *${health.score}%* _(${health.rating.label})_ — alle Messwerte in der Nachricht 💜`
+      }, { quoted: msg });
+    }
+  } catch (cardErr) {
+    console.log(c.bold + c.brightYellow + `[ping] Glass-Card übersprungen (${cardErr?.message || cardErr}).` + c.reset);
+  }
 
   await put(sock, from, msg, key, L.join('\n'));
 

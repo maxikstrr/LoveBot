@@ -121,6 +121,7 @@ import { handleMediaCommand } from './mediacmds.js';
 /* ═══ 🏓 PING (echte Messwerte) + 🧭 ALLTAGS-TOOLS ═══ */
 import { handlePingCommand } from './pingcmd.js';
 import { buildSystemReport, renderSystemReport } from './systemReport.js';
+import { renderSysCard } from './glassCard.js';
 import { handleToolCommand } from './toolcmds.js';
 import { handleExtraCommand } from './extracmds.js';
 
@@ -186,6 +187,12 @@ import { DEFAULT_BADWORDS, findBadword, censorWord } from './badwords.js';
 import { logNightMood, nightBanner } from './night/terminal.js';
 import { nightReply } from './night/commands.js';
 import * as rbac from './night/rbac.js';
+import {
+  createTicket, getTicket, listTickets, ticketStats, getDevGroup, setDevGroup,
+  ticketDevMessage, ticketAnswerDm, ticketClosedDm, ticketListText, ticketInfoText,
+  answerTicket, closeTicket, reopenTicket
+} from './tickets.js';
+import { parseDuration, muteUser, unmuteUser, getMute, listMutes, formatDuration as fmtMuteDuration } from './mute.js';
 import { startNightConsole } from './night/console.js';
 /* 📡 Session-Profil: Präfix kann pro Session überschrieben sein ($sessionset) */
 function readSessionPrefix() {
@@ -5267,6 +5274,29 @@ async function startBot(options = {}) {
             continue;
           }
 
+          /* 🔇 7.1.7 MUTE-CHECK (frühste Stelle — vor ALLEM anderen):
+             Ein gemuteter User ist ein Geist 👻 — der Bot löscht JEDE
+             seiner Nachrichten (Text, Medien, Sticker, Befehle — wirklich
+             alles), bis $unmute sie erlöst oder die Mute-Zeit abläuft.
+             Owner (Haupt-Owner + eingetragene Zusatz-Owner) sind nie stumm. */
+          if (!msg.key?.fromMe) {
+            const emGroup = from.endsWith('@g.us');
+            const emJid = normalizeJid(emGroup ? (msg.key.participant || '') : (from || ''));
+            const emLid = normalizeLid(emGroup ? (msg.key.participantAlt || '') : (msg.key.remoteJidAlt || ''));
+            const emMute = getMute(emJid) || getMute(emLid) ||
+              getMute(msg.key.participant || '') || getMute(msg.key.remoteJid || '');
+            if (emMute) {
+              const emHostJid = normalizeJid(sock.user?.id || sock.authState?.creds?.me?.id || '');
+              const emHostLid = normalizeLid(sock.user?.lid || sock.authState?.creds?.me?.lid || '');
+              const emIsHost = areJidsSameUser(emJid, emHostJid) || areJidsSameUser(emLid, emHostLid) ||
+                !!getRegisteredOwner(readDb(), emJid, emLid);
+              if (!emIsHost) {
+                try { await sock.sendMessage(from, { delete: msg.key }); } catch (emDelErr) { /* Bot hat keine Admin-Rechte in der Gruppe */ }
+                continue; /* kein XP, keine KI, keine Reaktionen, keine Befehle — rein gar nichts. */
+              }
+            }
+          }
+
           /* AFK- & Ban-Lebenszyklus für JEDE Nachricht (auch ohne Befehl) */
           const lifecycleResult = await handleAfkBanLifecycle(sock, msg, {
             from,
@@ -5420,6 +5450,19 @@ async function startBot(options = {}) {
           const senderSid = isHost ? hostSid : parseSessionId(msg.key.participant || from);
           const senderLidUser = senderLid.split('@')[0];
           const quoted = getQuotedMessage(msg);
+
+          /* 🔇 MUTE-CHECK (2. Schicht, Befehls-Pfad): Der Haupt-Check läuft
+             ganz oben bei JEDER Nachricht (auch Medien/Chat ohne Prefix).
+             Diese zweite Schicht fängt Befehle ab, deren JID erst über
+             resolveSender aufgelöst werden musste — Owner sind nie stumm. */
+          if (!isHost) {
+            const muteHit = getMute(senderJid) || getMute(senderLid) ||
+              (isGroup ? getMute(msg.key.participant || '') : null);
+            if (muteHit) {
+              try { await sock.sendMessage(from, { delete: msg.key }); } catch (muteDelErr) {}
+              return; /* keine Befehle, keine XP, keine Reaktionen — nichts. */
+            }
+          }
 
           /* 🛠️ GLOBALER WARTUNGSMODUS ($offline / $online) — zentrale Sperre
              VOR jedem Command-Dispatch (nicht nur pro Befehl geprüft).
@@ -5930,6 +5973,26 @@ case 'loadingaivid': {
                 sock,
                 sessionName: 'LoveBot'
               });
+              /* 💎 LIQUID-GLASS-KARTE (Zusatz): derselbe Report zusätzlich
+                 als hochwertige Glas-Karte (PNG über glassCard.js/sharp).
+                 Schlägt das Rendering fehl, wird sie still übersprungen —
+                 der Text-Report bleibt vollständig erhalten. */
+              try {
+                const now = new Date();
+                const pad2 = (x) => String(x).padStart(2, '0');
+                const card = await renderSysCard(report, {
+                  dateLabel: `${pad2(now.getDate())}.${pad2(now.getMonth() + 1)}.${now.getFullYear()} · ${pad2(now.getHours())}:${pad2(now.getMinutes())}`
+                });
+                if (card) {
+                  await sock.sendMessage(from, {
+                    image: card.png,
+                    mimetype: 'image/png',
+                    caption: `🖥️ *SYSTEM STATUS* — Details in der Nachricht darunter 💜`
+                  }, { quoted: msg });
+                }
+              } catch (cardErr) {
+                console.log(c.bold + c.brightYellow + `[sys] Glass-Card übersprungen (${cardErr?.message || cardErr}).` + c.reset);
+              }
               const responseText = renderSystemReport(report);
               await sock.sendMessage(from, {
                 text: responseText
@@ -9296,53 +9359,9 @@ break;
               break;
             }
 
-            case 'mute': {
-              if (!isGroup) {
-                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Dieser Befehl funktioniert nur in Gruppen.' }, { quoted: msg });
-                break;
-              }
-              if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
-                await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Admins können die Gruppe stummschalten.' }, { quoted: msg });
-                break;
-              }
-              let duration = '0'; /* permanent? WhatsApp braucht endliche Werte; wir nutzen 86400=1d Standard */
-              const inp = (args[0] || '').toLowerCase();
-              if (inp && /^\d+$/.test(inp)) duration = inp;
-              const seconds = parseInt(duration, 10) || 86400;
-              try {
-                if (typeof sock.groupSettingUpdate === 'function') {
-                  await sock.groupSettingUpdate(from, 'announcement');
-                  await sock.sendMessage(from, { text: `> 🔇 *GRUPPE STUMMGESCHALTET*\n\nNur Admins können schreiben. (${seconds}s)\n\n*von:* @${senderLidUser}` }, { quoted: msg, mentions: [senderLid || senderJid].filter(Boolean) });
-                } else {
-                  await sock.sendMessage(from, { text: '> ❌ *Fehler:* groupSettingUpdate wird von dieser Clients-Version nicht unterstützt.' }, { quoted: msg });
-                }
-              } catch (e) {
-                await sock.sendMessage(from, { text: '> ❌ *Fehler:* ' + (e.message || e) }, { quoted: msg });
-              }
-              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
-              break;
-            }
-
-            case 'unmute': {
-              if (!isGroup) {
-                await sock.sendMessage(from, { text: '> ❌ *Fehler:* Dieser Befehl funktioniert nur in Gruppen.' }, { quoted: msg });
-                break;
-              }
-              if (userRole !== 'host' && userRole !== 'superadmin' && userRole !== 'admin') {
-                await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur Admins können die Gruppe entsperren.' }, { quoted: msg });
-                break;
-              }
-              try {
-                if (typeof sock.groupSettingUpdate === 'function') {
-                  await sock.groupSettingUpdate(from, 'not_announcement');
-                  await sock.sendMessage(from, { text: `> 🔊 *GRUPPE ENTSPERRT*\n\nAlle Mitglieder dürfen wieder schreiben. *von:* @${senderLidUser}` }, { quoted: msg, mentions: [senderLid || senderJid].filter(Boolean) });
-                }
-              } catch (e) {
-                await sock.sendMessage(from, { text: '> ❌ *Fehler:* ' + (e.message || e) }, { quoted: msg });
-              }
-              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
-              break;
-            }
+            /* 7.1.6: $mute/$unmute sind jetzt USER-Mute (Owner-only, siehe
+               unten bei den Team-Befehlen) — die alte Gruppen-Stummschaltung
+               wurde entfernt. Gruppen weiterhin per $am / Admin-Center. */
 
             case 'link':
             case 'grouplink': {
@@ -10844,7 +10863,370 @@ break;
               break;
             }
 
+            /* ====================================================== */
+            /* 🎫 7.1.3 TICKET-SYSTEM: $ticket · $tickets              */
+            /* Team (tickets.manage): supporter/deputy/owner           */
+            /* ====================================================== */
+            case 'ticket':
+            case 'support': {
+              const subTk = String(args[0] || '').toLowerCase();
+              const isTeamTk = isHost || (() => {
+                const accTk = rbac.getAccountByNumber(cleanId(senderJid));
+                return !!accTk && rbac.can(accTk.role, 'tickets.manage');
+              })();
+
+              /* $ticket <text> — JEDER Nutzer erstellt ein Ticket */
+              if (!['info', 'answer', 'antwort', 'antworten', 'close', 'schliessen', 'schließen', 'reopen', 'offen'].includes(subTk)) {
+                const textTk = args.join(' ').trim();
+                if (!textTk) {
+                  await sock.sendMessage(from, {
+                    text: '> 🎫 *SUPPORT-TICKET*\n\nNutze: *' + pref + 'ticket <dein Anliegen>*\n\nDas Team (Supporter/Stellv. Inhaber:in) antwortet dir per DM.\nDeine Tickets: *' + pref + 'ticket info <id>*'
+                  }, { quoted: msg });
+                  break;
+                }
+                if (!userProfile) {
+                  await sock.sendMessage(from, { text: '> ❌ Bitte registriere dich zuerst: *$register Name*' }, { quoted: msg });
+                  break;
+                }
+                const mkTk = createTicket({
+                  creatorJid: senderJid, creatorName: userProfile?.registration?.name || '–',
+                  bid: userProfile?.identity?.bid || '', text: textTk
+                });
+                if (!mkTk.ok) {
+                  await sock.sendMessage(from, { text: '> ❌ Ticket konnte nicht erstellt werden (Text leer?).' }, { quoted: msg });
+                  break;
+                }
+                /* In Dev-Gruppe posten (falls konfiguriert) */
+                const devGidTk = getDevGroup();
+                let devPostedTk = false;
+                if (devGidTk) {
+                  try { await sock.sendMessage(devGidTk, { text: ticketDevMessage(mkTk.ticket) }); devPostedTk = true; } catch (devErr) {}
+                }
+                await sock.sendMessage(from, {
+                  text: '> 🎫 *TICKET ERSTELLT*\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n' +
+                    'ID: *' + mkTk.ticket.id + '*\nAnliegen: _' + mkTk.ticket.text.slice(0, 120) + '_\n' +
+                    'Status: 🟢 offen\n' +
+                    (devPostedTk ? '📬 Ans Team (Dev-Gruppe) gemeldet.\n' : '') +
+                    '\nDas Team meldet sich per DM. Info: *' + pref + 'ticket info ' + mkTk.ticket.id + '*'
+                }, { quoted: msg });
+                logLove('ticket', 'neu ' + mkTk.ticket.id + ' von ' + (userProfile?.registration?.name || cleanId(senderJid)), c.brightMagenta);
+                break;
+              }
+
+              /* Ab hier: Team-Aktionen — Rechte prüfen */
+              if (!isTeamTk) {
+                await sock.sendMessage(from, { text: '> ⛔ *PERMISSION DENIED*\n\nTickets bearbeitet nur das Team (Supporter · Stellv. Inhaber:in · Inhaber).' }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+              const roleTk = isHost ? 'owner' : (rbac.getAccountByNumber(cleanId(senderJid))?.role || 'user');
+              const nameTk = isHost ? 'Inhaber' : (userProfile?.registration?.name || roleTk);
+              const idTk = String(args[1] || '').trim().toUpperCase();
+
+              if (subTk === 'info') {
+                if (!idTk) {
+                  await sock.sendMessage(from, { text: '> Nutzung: *' + pref + 'ticket info <id>*' }, { quoted: msg });
+                  break;
+                }
+                const gtTk = getTicket(idTk);
+                if (!gtTk.ok) { await sock.sendMessage(from, { text: '> ❌ Ticket ' + idTk + ' nicht gefunden.' }, { quoted: msg }); break; }
+                await sock.sendMessage(from, { text: ticketInfoText(gtTk.ticket) }, { quoted: msg });
+                break;
+              }
+              if (subTk === 'answer' || subTk === 'antwort' || subTk === 'antworten') {
+                const textAnsTk = args.slice(2).join(' ').trim();
+                if (!idTk || !textAnsTk) {
+                  await sock.sendMessage(from, { text: '> Nutzung: *' + pref + 'ticket answer <id> <antwort>*' }, { quoted: msg });
+                  break;
+                }
+                const anTk = answerTicket({ id: idTk, by: senderJid, byName: nameTk, role: roleTk, text: textAnsTk });
+                if (!anTk.ok) { await sock.sendMessage(from, { text: '> ❌ Ticket ' + idTk + ' nicht gefunden.' }, { quoted: msg }); break; }
+                /* DM an Ersteller */
+                let dmTk = false;
+                try { await sock.sendMessage(anTk.ticket.creatorJid, { text: ticketAnswerDm(anTk.ticket, anTk.ticket.answers[anTk.ticket.answers.length - 1]) }); dmTk = true; } catch (dmErr) {}
+                const devGidAn = getDevGroup();
+                if (devGidAn) { try { await sock.sendMessage(devGidAn, { text: '> 🎫 *ANTWORT* ' + idTk + '\nVon: *' + nameTk + '* (' + roleTk + ')\n↳ ' + textAnsTk.slice(0, 300) }); } catch (e) {} }
+                await sock.sendMessage(from, { text: '> ✅ *Antwort gesendet*\n\nTicket: *' + idTk + '*\n📬 DM: ' + (dmTk ? 'zugestellt' : '⚠️ fehlgeschlagen') }, { quoted: msg });
+                break;
+              }
+              if (subTk === 'close' || subTk === 'schliessen' || subTk === 'schließen') {
+                const reasonTk = args.slice(2).join(' ').trim();
+                if (!idTk) {
+                  await sock.sendMessage(from, { text: '> Nutzung: *' + pref + 'ticket close <id> [grund]*' }, { quoted: msg });
+                  break;
+                }
+                const clTk = closeTicket({ id: idTk, by: senderJid, byName: nameTk, role: roleTk, reason: reasonTk });
+                if (!clTk.ok) {
+                  await sock.sendMessage(from, { text: '> ❌ ' + (clTk.error === 'already-closed' ? 'Ticket ' + idTk + ' ist bereits geschlossen.' : 'Ticket ' + idTk + ' nicht gefunden.') }, { quoted: msg });
+                  break;
+                }
+                try { await sock.sendMessage(clTk.ticket.creatorJid, { text: ticketClosedDm(clTk.ticket) }); } catch (dmErr) {}
+                await sock.sendMessage(from, { text: '> 🔒 *Ticket ' + idTk + ' geschlossen.*\n\nErsteller wurde informiert. 📬' }, { quoted: msg });
+                logLove('ticket', 'closed ' + idTk + ' by ' + nameTk, c.brightMagenta);
+                break;
+              }
+              if (subTk === 'reopen' || subTk === 'offen') {
+                if (!idTk) {
+                  await sock.sendMessage(from, { text: '> Nutzung: *' + pref + 'ticket reopen <id>*' }, { quoted: msg });
+                  break;
+                }
+                const roTk = reopenTicket({ id: idTk, by: senderJid, byName: nameTk, role: roleTk });
+                if (!roTk.ok) {
+                  await sock.sendMessage(from, { text: '> ❌ ' + (roTk.error === 'not-closed' ? 'Ticket ' + idTk + ' ist offen.' : 'Ticket ' + idTk + ' nicht gefunden.') }, { quoted: msg });
+                  break;
+                }
+                await sock.sendMessage(from, { text: '> 🟢 *Ticket ' + idTk + ' wieder geöffnet.*' }, { quoted: msg });
+                break;
+              }
+              break;
+            }
+
+            case 'tickets': {
+              /* Team-Übersicht: $tickets [offen|geschlossen] */
+              const isTeamLs = isHost || (() => {
+                const accLs = rbac.getAccountByNumber(cleanId(senderJid));
+                return !!accLs && rbac.can(accLs.role, 'tickets.manage');
+              })();
+              if (!isTeamLs) {
+                await sock.sendMessage(from, { text: '> ⛔ *PERMISSION DENIED*\n\nTickets sieht nur das Team.' }, { quoted: msg });
+                break;
+              }
+              const filterLs = String(args[0] || 'offen').toLowerCase();
+              const stLs = ticketStats();
+              const listLs = listTickets({ status: filterLs === 'geschlossen' || filterLs === 'closed' ? 'closed' : 'open' });
+              await sock.sendMessage(from, {
+                text: ticketListText(listLs, { title: filterLs === 'geschlossen' || filterLs === 'closed' ? 'TICKETS · GESCHLOSSEN' : 'TICKETS · OFFEN' }) +
+                  '\n\n📊 Gesamt: ' + stLs.total + ' · offen: ' + stLs.open + ' · geschlossen: ' + stLs.closed + ' · heute: ' + stLs.today
+              }, { quoted: msg });
+              break;
+            }
+
+            /* ====================================================== */
+            /* 🏅 7.1.3 SETTEAM: deutsche Rang-Namen (nur Owner!)      */
+            /* ====================================================== */
+            case 'setteam': {
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ⛔ *PERMISSION DENIED*\n\nRänge vergibt nur der Inhaber (Owner).\n☾ you don\'t have enough access.' }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+              const subSt = String(args[0] || '').toLowerCase();
+
+              /* $setteam devgroup — Ziel-Gruppe für Tickets */
+              if (subSt === 'devgroup' || subSt === 'devgruppe' || subSt === 'dev-gruppe') {
+                const argG = String(args[1] || '').toLowerCase();
+                if (argG === 'hier' || argG === 'here' || argG === 'diese gruppe') {
+                  if (!isGroup) {
+                    await sock.sendMessage(from, { text: '> ❌ „hier“ funktioniert nur in einer Gruppe — oder nutze *' + pref + 'setteam devgroup <gruppen-id>*' }, { quoted: msg });
+                    break;
+                  }
+                  const rG = setDevGroup(from);
+                  if (!rG.ok) { await sock.sendMessage(from, { text: '> ❌ Ungültige Gruppe.' }, { quoted: msg }); break; }
+                  await sock.sendMessage(from, { text: '> 🎫 *DEV-GRUPPE GESETZT* ✅\n\nNeue Tickets landen ab jetzt hier rein. (Test: *$ticket Hallo Team*)' }, { quoted: msg });
+                  break;
+                }
+                if (!argG) {
+                  const curG = getDevGroup();
+                  await sock.sendMessage(from, {
+                    text: '> 🎫 *DEV-GRUPPE*\n\nAktuell: ' + (curG ? '`' + curG + '`' : '❌ nicht gesetzt') +
+                      '\n\nSetzen: in der Gruppe *' + pref + 'setteam devgroup hier* — oder *' + pref + 'setteam devgroup <gid>*\nLöschen: *' + pref + 'setteam devgroup weg*'
+                  }, { quoted: msg });
+                  break;
+                }
+                if (argG === 'weg' || argG === 'entfernen' || argG === 'remove' || argG === 'aus') {
+                  setDevGroup('');
+                  await sock.sendMessage(from, { text: '> 🗑️ *Dev-Gruppe entfernt.* Tickets werden nur im Web-Dashboard angezeigt.' }, { quoted: msg });
+                  break;
+                }
+                const rG2 = setDevGroup(args[1]);
+                if (!rG2.ok) { await sock.sendMessage(from, { text: '> ❌ Ungültige Gruppen-ID (Format: 123456789@g.us).' }, { quoted: msg }); break; }
+                await sock.sendMessage(from, { text: '> 🎫 *DEV-GRUPPE GESETZT* ✅\n\n`' + rG2.devGroup + '`' }, { quoted: msg });
+                break;
+              }
+
+              /* $setteam — Übersicht (Team-Liste) */
+              if (!subSt) {
+                const accsSt = rbac.listAccounts();
+                const teamSt = accsSt.filter((a) => ['deputy', 'admin', 'supporter'].includes(a.role));
+                const linesSt = teamSt.map((a) => {
+                  const iconSt = a.role === 'deputy' ? '🔱' : (a.role === 'admin' ? '◆' : '◇');
+                  return iconSt + ' +' + String(a.number || '?').slice(0, 20) + ' — *' + a.role.toUpperCase() + '*';
+                });
+                await sock.sendMessage(from, {
+                  text: '> 🏅 *SETTEAM* — Ränge vergibt nur der Inhaber\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n' +
+                    'Nutze: *' + pref + 'setteam @person <rang>*\n\n*Ränge:*\n👑 inhaber — (geschützt, alles)\n🔱 stellvertretende(r) inhaber(in) — viel, aber KEINE Ränge vergeben\n◆ admin\n◇ supporter — NUR Tickets\n○ user\n\n' +
+                    (linesSt.length ? '*Aktuelles Team:*\n' + linesSt.join('\n') : '_Noch kein Team eingeteilt._') +
+                    '\n\n🎫 Dev-Gruppe: *' + pref + 'setteam devgroup*'
+                }, { quoted: msg });
+                break;
+              }
+
+              /* $setteam @person <rang> — Rang vergeben */
+              const mentionsSt = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+              const quotedSt = quoted?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.participant;
+              const targetSt = mentionsSt[0] || quotedSt || '';
+              const rankSt = args.filter((x) => !x.startsWith('@')).join(' ').toLowerCase().trim();
+              /* Deutsche Rang-Namen → rbac-Rollen */
+              const rankMapSt = {
+                'inhaber': 'BLOCKED', 'owner': 'BLOCKED',
+                'stellvertretender inhaber': 'deputy', 'stellvertretende inhaberin': 'deputy',
+                'stellvertretender': 'deputy', 'stellvertretende': 'deputy', 'deputy': 'deputy', 'stellv': 'deputy', 'co-owner': 'deputy',
+                'admin': 'admin', 'administrator': 'admin',
+                'supporter': 'supporter', 'support': 'supporter',
+                'user': 'user', 'entfernen': 'user', 'weg': 'user', 'remove': 'user'
+              };
+              if (!targetSt || !rankSt) {
+                await sock.sendMessage(from, { text: '> ❌ Nutzung: *' + pref + 'setteam @person <rang>* — Ränge: siehe *' + pref + 'setteam*' }, { quoted: msg });
+                break;
+              }
+              if (rankMapSt[rankSt] === 'BLOCKED') {
+                await sock.sendMessage(from, { text: '> ⛔ Die Inhaber-Rolle wird nicht per Befehl vergeben — der Inhaber ist fest.\n\nFür fast alle Rechte: *' + pref + 'setteam @person stellvertretender inhaber*' }, { quoted: msg });
+                break;
+              }
+              const roleSt = rankMapSt[rankSt];
+              if (!roleSt) {
+                await sock.sendMessage(from, { text: '> ❓ Unbekannter Rang. Bekannt: stellvertretender inhaber · admin · supporter · user' }, { quoted: msg });
+                break;
+              }
+              const syncSt = rbac.syncRoleFromBot(cleanId(targetSt), roleSt, 'owner');
+              if (!syncSt) {
+                await sock.sendMessage(from, { text: '> ❌ Rang-Sync fehlgeschlagen.' }, { quoted: msg });
+                break;
+              }
+              const roleLabelSt = roleSt === 'deputy' ? 'STELLV. INHABER:IN 🔱' : (roleSt === 'supporter' ? 'SUPPORTER ◇ (nur Tickets)' : roleSt.toUpperCase());
+              if (syncSt.created) {
+                try {
+                  await sock.sendMessage(targetSt, {
+                    text: '> ☾ *LOVE BOT DASHBOARD ACCOUNT* 🎫\n\n' +
+                      '• *Rolle:* ' + roleLabelSt + '\n• *Username:* ' + syncSt.account.username + '\n• *Temp-Passwort:* ' + syncSt.tempPassword + '\n\n' +
+                      '⚠️ Ändere das Passwort beim ersten Login.\n🎟️ Deine Seite: maxichen.gamebot.me/tickets.html'
+                  });
+                } catch (pmErr) {}
+              } else {
+                try {
+                  await sock.sendMessage(targetSt, {
+                    text: '> ♡ *ROLLE AKTUALISIERT*\n\n• *Neue Rolle:* ' + roleLabelSt + '\n\nDeine Dashboard-Rechte sind sofort aktiv.'
+                  });
+                } catch (pmErr) {}
+              }
+              await sock.sendMessage(from, {
+                text: '> 🏅 *RANG VERGEBEN*\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n• *User:* @' + cleanId(targetSt) + '\n• *Rang:* ' + roleLabelSt + '\n• *Account:* ' + syncSt.account.username + '\n\n' + (syncSt.created ? '📬 Zugangsdaten privat zugestellt.' : '🔄 Rollen-Sync aktiv.'),
+                mentions: [targetSt]
+              }, { quoted: msg });
+              logLove('rbac', 'setteam ' + roleSt + ' → ' + cleanId(targetSt), c.brightMagenta);
+              break;
+            }
+
+            /* ====================================================== */
+            /* 🔇 7.1.4 MUTE: $mute @user [zeit] · $unmute @user       */
+            /* Nur Owner. Ohne Zeit = PERMANENT bis $unmute.           */
+            /* Stumme User: Nachrichten werden gelöscht.               */
+            /* Ziel: @mention ODER auf Nachricht antworten.            */
+            /* ====================================================== */
+            case 'mute':
+            case 'stumm': {
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ⛔ *PERMISSION DENIED*\n\nMuten kann nur der Inhaber.\n☾ you don\'t have enough access.' }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+              /* Ziel: @mention ODER Reply */
+              const mentionsMu = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+              const quotedMu = quoted?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.participant;
+              const targetMu = mentionsMu[0] || quotedMu || '';
+              if (!targetMu) {
+                await sock.sendMessage(from, {
+                  text: '> 🔇 *MUTE*\n\nNutze: *' + pref + 'mute @user [zeit] [grund]*\n\n⏱️ Zeit (optional): 30s · 10m · 2h · 1d · 2w — oder *permanent* (Standard)\n❓ Ziel: @mention oder auf die Nachricht antworten\n\n🔊 Aufheben: *' + pref + 'unmute @user*\n📋 Liste: *' + pref + 'mutelist*'
+                }, { quoted: msg });
+                break;
+              }
+              if (areJidsSameUser(normalizeJid(targetMu), hostJid)) {
+                await sock.sendMessage(from, { text: '> ⛔ Der Inhaber kann nicht gemutet werden. 😉' }, { quoted: msg });
+                break;
+              }
+              /* Argumente: @mentions raus, Rest = [zeit?] grund */
+              const partsMu = args.filter((x) => !x.startsWith('@'));
+              let untilMsMu = null; /* Standard: permanent */
+              let reasonMu = '';
+              if (partsMu.length) {
+                const durMu = parseDuration(partsMu[0]);
+                if (durMu !== undefined) {
+                  untilMsMu = durMu; /* null = permanent, Zahl = ms */
+                  reasonMu = partsMu.slice(1).join(' ').trim();
+                } else {
+                  reasonMu = partsMu.join(' ').trim(); /* keine Zeit erkannt → alles Grund */
+                }
+              }
+              const mkMu = muteUser({ jid: targetMu, by: senderJid, byName: userProfile?.registration?.name || 'Inhaber', untilMs: untilMsMu, reason: reasonMu });
+              if (!mkMu.ok) {
+                await sock.sendMessage(from, { text: '> ❌ Ungültiges Ziel.' }, { quoted: msg });
+                break;
+              }
+              const untilTxtMu = mkMu.entry.until
+                ? 'bis ' + new Date(mkMu.entry.until).toLocaleString('de-DE')
+                : '*PERMANENT* (bis ' + pref + 'unmute)';
+              await sock.sendMessage(from, {
+                text: '> 🔇 *USER GEMUTET*\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n' +
+                  '• *User:* @' + cleanId(targetMu) + '\n' +
+                  '• *Dauer:* ' + untilTxtMu + '\n' +
+                  (reasonMu ? '• *Grund:* ' + reasonMu + '\n' : '') +
+                  '\nSeine Nachrichten werden ab jetzt *gelöscht* — er kann nichts mehr schreiben, ohne dass es verschwindet. 🔇',
+                mentions: [targetMu]
+              }, { quoted: msg });
+              logLove('mute', cleanId(targetMu) + ' (' + (mkMu.entry.until ? 'bis ' + mkMu.entry.until : 'permanent') + ')', c.brightRed);
+              try { auditAdmin({ actor: 'owner', action: 'mute', detail: cleanId(targetMu) + ' · ' + (mkMu.entry.until || 'permanent') }); } catch (eAuditMu) {}
+              break;
+            }
+
+            case 'unmute':
+            case 'entstummen': {
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ⛔ *PERMISSION DENIED*\n\nEntmuten kann nur der Inhaber.' }, { quoted: msg });
+                await sendReaction(sock, from, reactions.access.reactions.unauthorized, msg.key);
+                break;
+              }
+              const mentionsUn = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+              const quotedUn = quoted?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.participant;
+              const targetUn = mentionsUn[0] || quotedUn || '';
+              if (!targetUn) {
+                await sock.sendMessage(from, { text: '> Nutzung: *' + pref + 'unmute @user* (oder auf Nachricht antworten)' }, { quoted: msg });
+                break;
+              }
+              const rmUn = unmuteUser(targetUn);
+              if (!rmUn.ok) {
+                await sock.sendMessage(from, { text: '> ❌ Dieser User ist nicht gemutet. (Liste: *' + pref + 'mutelist*)' }, { quoted: msg });
+                break;
+              }
+              await sock.sendMessage(from, {
+                text: '> 🔊 *USER ENTMUTET*\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n• *User:* @' + cleanId(targetUn) + '\n• *Vorher:* ' + (rmUn.entry.until ? 'bis ' + new Date(rmUn.entry.until).toLocaleString('de-DE') : 'permanent') + '\n\nEr kann wieder normal schreiben. Willkommen zurück! 💜',
+                mentions: [targetUn]
+              }, { quoted: msg });
+              logLove('mute', 'unmute ' + cleanId(targetUn), c.brightGreen);
+              try { auditAdmin({ actor: 'owner', action: 'unmute', detail: cleanId(targetUn) }); } catch (eAuditUn) {}
+              break;
+            }
+
+            case 'mutelist':
+            case 'stummliste': {
+              if (!isHost) {
+                await sock.sendMessage(from, { text: '> ⛔ *PERMISSION DENIED*' }, { quoted: msg });
+                break;
+              }
+              const listMu = listMutes();
+              await sock.sendMessage(from, listMu.length
+                ? {
+                    text: '> 🔇 *MUTELISTE* (' + listMu.length + ')\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n' + listMu.map((e) =>
+                      '• @' + cleanId(e.jid) + ' — ' + (e.until ? 'bis ' + new Date(e.until).toLocaleString('de-DE') : '*permanent*') + (e.reason ? ' · ' + e.reason : '')
+                    ).join('\n') + '\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n_Aufheben: ' + pref + 'unmute @user_',
+                    mentions: listMu.map((e) => e.jid)
+                  }
+                : { text: '> 🔇 *MUTELISTE*\n\nNiemand ist gemutet. Ruhe ist. 💜' }
+              , { quoted: msg });
+              break;
+            }
+
             case 'getrang':
+
             case 'getrank': {
               const mentionsG = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
               const quotedG = quoted?.extendedTextMessage?.contextInfo?.participant || msg.message?.extendedTextMessage?.contextInfo?.participant;
@@ -13861,8 +14243,8 @@ break;
                 if (!keyCf) {
                   const pr = bidCf ? mem.getAiPrefs(bidCf) : { chatMode: false, lang: 'de' };
                   await sock.sendMessage(from, {
-                    text: `> 🤖 *AI CONFIG*\n\n*Deine Einstellungen:*\n• Chatmodus: ${pr.chatMode ? 'an' : 'aus'} → *${pref}settings ai <an|aus>*\n• Sprache: ${pr.lang} → *${pref}settings language <de|en>*\n\n*Global (nur lesbar):*\n• Provider: ${cfg.provider} · Modell: ${cfg.model}\n• Endpoint: ${cfg.baseUrl}\n• Timeout: ${cfg.timeoutMs} ms · Tokens: ${cfg.maxTokens} · Temp: ${cfg.temperature}\n• Limits: ${cfg.perMin}/min · ${cfg.perHour}/h · ${cfg.perDay}/Tag` +
-                      (isHost ? `\n\n*Owner:* *${pref}aiconfig model <name>* · *${pref}aiconfig baseurl <url>* · *${pref}aiconfig <key> <wert>*` : '')
+                    text: `> 🤖 *AI CONFIG*\n\n*Deine Einstellungen:*\n• Chatmodus: ${pr.chatMode ? 'an' : 'aus'} → *${pref}settings ai <an|aus>*\n• Sprache: ${pr.lang} → *${pref}settings language <de|en>*\n\n*Engine (nur lesbar):*\n• Kette: Ollama 🦙 → Cloud-KI ☁️ → Core 💜\n• Cloud-KI: ${cfg.cloudOn === false ? 'aus' : 'an'}${cfg.cloudKey ? ' · Key: ✅ gesetzt' : ' · Key: ❌ nicht gesetzt'}\n• Cloud-Anbieter: ${cfg.cloudProvider || 'auto'}${cfg.cloudModel ? ' · Modell: ' + cfg.cloudModel : ''}\n• Ollama-Modell: ${cfg.model} · Timeout: ${cfg.timeoutMs} ms\n• Limits: ${cfg.perMin}/min · ${cfg.perHour}/h · ${cfg.perDay}/Tag` +
+                      (isHost ? `\n\n*Owner:*\n• *${pref}aiconfig key <API-KEY>* — Cloud-KI aktivieren 🌟\n• *${pref}aiconfig cloud <an|aus>* · *${pref}aiconfig cloudmodel <name>*\n• *${pref}aiconfig cloudprovider <groq|gemini|openrouter|mistral|cerebras|custom>*\n• *${pref}aiconfig model|baseurl|timeout|maxtokens|temperature <wert>*` : '')
                   }, { quoted: msg });
                   break;
                 }
@@ -13870,11 +14252,58 @@ break;
                   await sock.sendMessage(from, { text: '> ⛔ *Zugriff verweigert:* Nur der Owner ändert die globale AI-Config.' }, { quoted: msg });
                   break;
                 }
-                const mapCf = { model: 'model', baseurl: 'baseUrl', base_url: 'baseUrl', timeout: 'timeoutMs', maxtokens: 'maxTokens', temperature: 'temperature', permin: 'perMin', perhour: 'perHour', perday: 'perDay' };
+                /* ── Cloud-KI: Key & Schalter ── */
+                if (keyCf === 'key' || keyCf === 'apikey' || keyCf === 'cloudkey') {
+                  const valKey = args.slice(1).join(' ').trim();
+                  if (!valKey || /^(weg|entfernen|löschen|remove|off|aus)$/i.test(valKey)) {
+                    mem.setAiConfig({ cloudKey: '' }, 'owner');
+                    try { const eng = await import('./ai/engine.js'); eng.refreshProvider(); eng.invalidateAiHealth(); } catch (e) {}
+                    await sock.sendMessage(from, { text: '> 🗑️ *Cloud-Key entfernt.* LoveAI nutzt wieder Ollama/Core.' }, { quoted: msg });
+                    break;
+                  }
+                  const { detectCloudProvider } = await import('./ai/cloud.js');
+                  const provDet = detectCloudProvider(valKey);
+                  mem.setAiConfig({ cloudKey: valKey, cloudProvider: provDet || 'custom', cloudOn: true }, 'owner');
+                  try {
+                    const eng = await import('./ai/engine.js');
+                    eng.refreshProvider(); eng.invalidateAiHealth();
+                    const h = await eng.aiHealth(true);
+                    await sock.sendMessage(from, {
+                      text: `> 🌟 *ECHTE KI AKTIVIERT!*\n\nAnbieter: *${provDet || 'custom'}*${h.cloudModel ? '\nModell: *' + h.cloudModel + '*' : ''}\nStatus: ${h.cloudOn ? '✅ Cloud-KI läuft' : '⚠️ Key/Modell prüfen (' + (h.cloudHint || 'fehler') + ')'}\n\nAb jetzt antworte ich auf ALLES — frag mich was! 💜`
+                    }, { quoted: msg });
+                  } catch (e) {
+                    await sock.sendMessage(from, { text: `> ✅ *Key gespeichert* (${provDet || 'custom'}). Status prüfen: *${pref}aistatus*` }, { quoted: msg });
+                  }
+                  try { auditAdmin({ actor: 'owner', action: 'aiconfig', detail: 'cloud-key gesetzt (' + (provDet || 'custom') + ')' }); } catch (e) {}
+                  break;
+                }
+                if (keyCf === 'cloud' || keyCf === 'cloudon') {
+                  const onOff = String(args[1] || '').toLowerCase();
+                  if (!['an', 'aus', 'on', 'off'].includes(onOff)) {
+                    await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aiconfig cloud <an|aus>*` }, { quoted: msg });
+                    break;
+                  }
+                  mem.setAiConfig({ cloudOn: onOff === 'an' || onOff === 'on' }, 'owner');
+                  try { const eng = await import('./ai/engine.js'); eng.refreshProvider(); eng.invalidateAiHealth(); } catch (e) {}
+                  await sock.sendMessage(from, { text: `> ${onOff === 'an' || onOff === 'on' ? '✅ Cloud-KI aktiviert.' : '📴 Cloud-KI deaktiviert (Ollama/Core aktiv).'}` }, { quoted: msg });
+                  break;
+                }
+                if (keyCf === 'cloudprovider') {
+                  const p = String(args[1] || '').toLowerCase();
+                  if (!['auto', 'groq', 'gemini', 'openrouter', 'mistral', 'cerebras', 'pollinations', 'custom'].includes(p)) {
+                    await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aiconfig cloudprovider <auto|groq|gemini|openrouter|mistral|cerebras|pollinations|custom>*` }, { quoted: msg });
+                    break;
+                  }
+                  mem.setAiConfig({ cloudProvider: p }, 'owner');
+                  try { const eng = await import('./ai/engine.js'); eng.refreshProvider(); eng.invalidateAiHealth(); } catch (e) {}
+                  await sock.sendMessage(from, { text: `> ✅ Cloud-Anbieter: *${p}*` }, { quoted: msg });
+                  break;
+                }
+                const mapCf = { model: 'model', baseurl: 'baseUrl', base_url: 'baseUrl', timeout: 'timeoutMs', maxtokens: 'maxTokens', temperature: 'temperature', permin: 'perMin', perhour: 'perHour', perday: 'perDay', cloudmodel: 'cloudModel', cloudendpoint: 'cloudEndpoint' };
                 const realCf = mapCf[keyCf];
                 const valCf = args.slice(1).join(' ').trim();
                 if (!realCf || !valCf) {
-                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aiconfig <model|baseurl|timeout|maxtokens|temperature|permin|perhour|perday> <wert>*` }, { quoted: msg });
+                  await sock.sendMessage(from, { text: `> ❌ Nutzung: *${pref}aiconfig <key|cloud|cloudprovider|cloudmodel|cloudendpoint|model|baseurl|timeout|maxtokens|temperature|permin|perhour|perday> <wert>*` }, { quoted: msg });
                   break;
                 }
                 mem.setAiConfig({ [realCf]: valCf }, 'owner');
@@ -14091,6 +14520,15 @@ async function processWebmailQueue(sock) {
           if (item.mentionAdmins) mentions = await groupAdminMentions(sock, gid);
           await sock.sendMessage(gid, { text: item.text, mentions });
           item.status = 'sent';
+        } else if (item.type === 'dm-notice') {
+          /* 🎫 7.1.3: Direkte DM aus dem Web-Dashboard (z. B. Ticket-Antwort)
+             an eine einzelne Nutzer-JID. */
+          const targetJid = String(item.jid || '').split(':')[0];
+          if (!/^\d+@(s\.whatsapp\.net|lid)$/.test(targetJid)) {
+            throw new Error('Ungültige JID für dm-notice.');
+          }
+          await sock.sendMessage(targetJid, { text: String(item.text || '') });
+          item.status = 'sent';
         } else if (item.type === 'broadcast-qr') {
           /* QR-Code einer neuen Session als Bild in ALLE Gruppen des aktiven Bots */
           const png = qrToPng(String(item.qr || ''));
@@ -14184,6 +14622,14 @@ function startDashboardTimers(sock) {
 /* 💜 Terminal-Beauty: Banner direkt beim Start */
 printStartupBanner();
 logLove('boot', `LoveBot v2 gestartet — Node ${process.version}, ${HELP_CATEGORIES.length} Hilfe-Kategorien geladen.`, c.brightCyan);
+
+/* 🤖 LoveAI startet MIT dem Bot: Ollama (falls installiert) wird
+   automatisch gestartet; sonst läuft der eingebaute LoveAI Core —
+   $ai ist dadurch immer verfügbar. Fällt still aus (Core läuft eh). */
+import('./ai/boot.js')
+  .then(({ bootAi }) => bootAi())
+  .then((st) => logLove('ai', `LoveAI bereit: ${st.engineLabel} — ${st.detail}`, c.brightCyan))
+  .catch((e) => logLove('ai', `LoveAI: Core 💜 (Boot-Check übersprungen: ${String(e?.message || e).slice(0, 80)})`, c.brightYellow));
 
 /* 🤖 Headless-Modus (vom SessionManager gespawnte Instanzen): kein
    interaktives Menü möglich (kein TTY) — LOVEBOT_AUTH_MODE sagt dem Bot,

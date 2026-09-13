@@ -206,6 +206,72 @@
           "by": "system"
         }
       ]
+    },
+    "acc_31dac6824890c5ae": {
+      "id": "acc_31dac6824890c5ae",
+      "username": "love_5801",
+      "number": "108813734645801",
+      "role": "deputy",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "94b5261c22f55827def98a8c34f2e5ea",
+      "hash": "18265b397fc6c289616c271feb438f036a57eeddf3aad917f417595d5204f4de",
+      "status": "active",
+      "mustChange": true,
+      "createdAt": "2026-09-13T08:45:15.348Z",
+      "lastLoginAt": null,
+      "roleHistory": [
+        {
+          "role": "deputy",
+          "at": "2026-09-13T08:45:15.348Z",
+          "by": "system"
+        }
+      ]
+    },
+    "acc_966cbbc192c8920d": {
+      "id": "acc_966cbbc192c8920d",
+      "username": "love_3286",
+      "number": "87089790083286",
+      "role": "deputy",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "8cb8bf2385dd3fac0d8000c9e44a6332",
+      "hash": "e3913aa44d2f8e0f4fe04a75b1317bfff6bd8e3bdbb725dd76808741910407c9",
+      "status": "active",
+      "mustChange": true,
+      "createdAt": "2026-09-13T08:45:27.862Z",
+      "lastLoginAt": null,
+      "roleHistory": [
+        {
+          "role": "deputy",
+          "at": "2026-09-13T08:45:27.862Z",
+          "by": "system"
+        }
+      ]
+    },
+    "acc_f34f776af4bdf4b3": {
+      "id": "acc_f34f776af4bdf4b3",
+      "username": "love_0503",
+      "number": "69415898980503",
+      "role": "deputy",
+      "scope": {
+        "type": "global"
+      },
+      "salt": "e01390692738aebceaa6686c2378a1e0",
+      "hash": "ee91e7af70fc9ce1f09bdf383e7248726821b621cbb9692fc377adcd7793b05c",
+      "status": "active",
+      "mustChange": true,
+      "createdAt": "2026-09-13T08:45:37.113Z",
+      "lastLoginAt": null,
+      "roleHistory": [
+        {
+          "role": "deputy",
+          "at": "2026-09-13T08:45:37.113Z",
+          "by": "system"
+        }
+      ]
     }
   },
   "history": []

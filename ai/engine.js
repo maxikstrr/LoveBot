@@ -22,13 +22,14 @@ const jobs = new Map(); /* bid -> AbortController */
 
 export function setProvider(p) { provider = p; return provider; }
 export function getProvider() {
-  if (!provider) provider = createProvider('local', aiConfig());
+  if (!provider) provider = createProvider('chain', aiConfig());
   return provider;
 }
 export function refreshProvider() {
   const cfg = aiConfig();
-  /* Mock bleibt nur erhalten, wenn explizit injiziert (Tests) — nie aus Config. */
-  if (!provider || provider.name !== 'mock') provider = createProvider('local', cfg);
+  /* Mock bleibt nur erhalten, wenn explizit injiziert (Tests) — nie aus Config.
+     Standard ist die Chain: Ollama, wenn bereit — sonst LoveAI Core. */
+  if (!provider || provider.name !== 'mock') provider = createProvider('chain', cfg);
   return provider;
 }
 
@@ -150,7 +151,7 @@ export async function aiChat({ bid = '', gid = '', text = '', profile = null, ra
     try { statAiRequest(bid, Date.now() - t0, false); } catch (e) {}
     markLast(true, { code: 'ok', ms: Date.now() - t0, model: cfg.model, endpoint: (h && h.endpoint) || '' });
     aiLog('chat ok:', Date.now() - t0, 'ms, tools:', (res.toolsUsed || []).join(',') || '–');
-    return { ok: true, text: res.text, ms: Date.now() - t0, toolsUsed: res.toolsUsed || [], model: cfg.model };
+    return { ok: true, text: res.text, ms: Date.now() - t0, toolsUsed: res.toolsUsed || [], model: res.model || cfg.model, engine: res.engine || (h && h.engine) || 'core' };
   } catch (e) {
     const ms = Date.now() - t0;
     const msg = String(e?.message || e);

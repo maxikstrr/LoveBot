@@ -157,6 +157,7 @@ const NAV = {
     ['settings', '⚙️', 'Einstellungen']
   ],
   verwaltung: [
+    ['tickets', '🎫', 'Ticket-Center'],
     ['owners', '👑', 'Owner'],
     ['groups', '👥', 'Gruppen & Features'],
     ['badwords', '🤬', 'Badwords'],
@@ -181,6 +182,15 @@ const NAV = {
   ]
 };
 
+/* 7.1.3: Rollen-Anzeige + Team-Sektion (Tickets) */
+const ROLE_LABELS = {
+  owner: '👑 Inhaber — volle Kontrolle',
+  deputy: '🔱 Stellv. Inhaber:in',
+  admin: '◆ Admin',
+  supporter: '◇ Supporter — Tickets'
+};
+const TEAM_ROLES = ['owner', 'deputy', 'admin', 'supporter'];
+
 function buildSidebar(activePage) {
   const role = getRole();
   const sections = [];
@@ -189,13 +199,17 @@ function buildSidebar(activePage) {
   if (role === 'owner') {
     sections.push(['VERWALTUNG', NAV.verwaltung]);
     sections.push(['DATEN', NAV.daten]);
+  } else if (TEAM_ROLES.includes(role)) {
+    /* 🎫 Team (nicht-Owner): eigenes Ticket-Center */
+    sections.push(['TEAM', [['tickets', '🎫', 'Ticket-Center']]]);
+    sections.push(['DATEN', [['profiles', '👤', 'Mein Profil']]]);
   } else {
     sections.push(['DATEN', [['profiles', '👤', 'Mein Profil']]]);
   }
   let html =
     '<div class="brand"><span class="h">💜</span><b>LOVE&nbsp;BOT</b></div>' +
     '<div class="userchip"><div class="nm">' + esc(getName() || 'Nutzer') + '</div>' +
-    '<div class="rl">' + (role === 'owner' ? '👑 Owner — volle Kontrolle' : '👤 Nutzer') + '</div></div>';
+    '<div class="rl">' + (ROLE_LABELS[role] || '👤 Nutzer') + '</div></div>';
   for (const [label, items] of sections) {
     html += '<div class="side-label">' + label + '</div>';
     for (const [page, ico, title] of items) {

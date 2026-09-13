@@ -27,7 +27,7 @@ export const ROLES = {
 const MATRIX = {
   owner: ['*'],
   deputy: [
-    'accounts.view', 'accounts.manage', 'roles.assign',
+    'accounts.view',
     'xp.view', 'xp.adjust', 'economy.view', 'economy.adjust', 'games.view',
     'sessions.view', 'sessions.control', 'sessions.delete',
     'users.view', 'users.edit', 'users.ban',
@@ -37,6 +37,9 @@ const MATRIX = {
     'db.view', 'db.backup', 'db.restore',
     'system.view', 'system.control',
     'broadcast.send', 'tickets.manage', 'self.view'
+    /* 🔱 7.1.3: KEIN 'roles.assign'/'accounts.manage' — der stellvertretende
+       Inhaber darf VIELES (Bans, Broadcast, System, DB …), aber KEINE Ränge
+       vergeben und keine Accounts anlegen. Das bleibt allein beim Inhaber. */
   ],
   admin: [
     'accounts.view',
@@ -51,7 +54,8 @@ const MATRIX = {
     'broadcast.send', 'tickets.manage', 'self.view'
   ],
   supporter: [
-    'users.view', 'groups.view', 'sessions.view', 'logs.view',
+    /* ◇ 7.1.3: Supporter darf NUR das Ticket-System (lesen, beantworten,
+       schließen, wieder öffnen) — sonst nichts. */
     'tickets.manage', 'self.view'
   ],
   groupadmin: ['groups.view', 'users.view', 'logs.view', 'self.view'],
