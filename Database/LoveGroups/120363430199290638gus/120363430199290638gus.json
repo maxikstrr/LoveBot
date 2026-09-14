@@ -1,7 +1,7 @@
 {
   "groupId": "120363430199290638",
   "groupJid": "120363430199290638@g.us",
-  "subject": "✨Best Friends ✨",
+  "subject": "🙌🏻✨Friendsss✨🙌🏻",
   "creator": "51260870918164@lid",
   "owner": "51260870918164@lid",
   "ownerUsername": null,
@@ -29,9 +29,9 @@
     "logsEnabled": true
   },
   "xp": {
-    "total": 2,
+    "total": 18,
     "level": 0,
-    "msgs": 1,
+    "msgs": 9,
     "games": 0,
     "members": {
       "51260870918164": {
@@ -39,39 +39,52 @@
         "xp": 2,
         "games": 0,
         "last": 1789169067951
+      },
+      "279233540653222": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789377737844
+      },
+      "269574108926096": {
+        "m": 7,
+        "xp": 14,
+        "games": 0,
+        "last": 1789380338537
       }
     },
     "week": {
-      "k": "2026-W37",
-      "xp": 2
+      "k": "2026-W38",
+      "xp": 16
     },
     "month": {
       "k": "2026-09",
-      "xp": 2
+      "xp": 18
     },
     "daily": {
-      "k": "2026-09-11",
-      "msgs": 1
+      "k": "2026-09-14",
+      "msgs": 8
     },
     "streak": {
       "c": 1,
-      "last": "2026-09-11"
+      "last": "2026-09-14"
     },
     "history": {
-      "2026-09-11": 2
+      "2026-09-11": 2,
+      "2026-09-14": 16
     }
   },
   "goals": {
     "daily": {
-      "k": "2026-09-11",
+      "k": "2026-09-14",
       "target": 50,
-      "progress": 1,
+      "progress": 8,
       "claimed": false
     },
     "weekly": {
-      "k": "2026-W37",
+      "k": "2026-W38",
       "target": 200,
-      "progress": 2,
+      "progress": 16,
       "claimed": false
     }
   },
@@ -88,5 +101,8 @@
     "w1": "warn",
     "w2": "warn",
     "w3": "kick"
-  }
+  },
+  "memberCount": 4,
+  "adminCount": 1,
+  "metaAt": 1789377795601
 }

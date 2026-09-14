@@ -69,16 +69,12 @@ import makeWASocket, {
   qrcode,
   Boom
 } from './waApi.js';
-/* QR→PNG für das Senden von QR-Codes als Bild in WhatsApp-Gruppen */
 import { qrToPng } from './qrpng.js';
-/* ═══ 💖 LOVEPLUS-MODUL (Beziehung, Pets, Economy, Achievements, Games) ═══ */
 import { handleLovePlus, LOVEPLUS_HELP_CMDS, LOVEBOT_GAME_COMMANDS, getLoveSnapshot, onMarriageAccepted, awardProgressionAchievements, unlockAchievementFor, loadStore } from './loveplus.js';
-/* 💜 Progression 4.0: Statistik-Texte + Account-Lifecycle (unregister) */
 import { buildProfileCenter, buildPersonalStats, buildActivity, buildRecords, buildMilestones, buildRewards, buildProgress, buildStreakCard, buildBadgeShowcase, buildTitleOverview, socialCounters, buildXpSources, buildWeeklyReport, buildMonthlyReport, buildPrestige, buildCompare, buildCoins, buildBalance, buildBank, buildEconomy, buildTransactions, buildDailySummary, buildYearlyReport, buildDayReport, buildReport, buildLifetimeReport, buildXpMultiplier, buildPeriodsLine, buildEconomySection, buildAccount, buildTopCoins, economyHidden, buildMeActivity } from './progressstats.js';
 import { startUnregister, confirmUnregister, cancelUnregister, getPendingInfo, restoreUnregister, listUnregisterBackups, auditAdmin } from './account.js';
 import { ensureGroupExtras, getGset, setGset, groupAudit, applyGroupMessage, groupLevelInfo, topMembers, activeEvents, startGroupEvent, treasuryAdd, gbanAdd, gbanRemove, isGbanned, checkFlood, checkSpam, escalationFor, validateGroup } from './groups.js';
 import { buildGroupCenter, buildGroupInfo, buildGroupSettings, buildGxp, buildGlevel, buildGtop, buildGroupGoal, buildGroupAudit, buildMembersCard, buildGroupEconomy, buildGroupEvents } from './groupstats.js';
-/* 💰 Progression 6.0: zentrale Economy-Engine (einzige Kupfer-Schreibwege) */
 import { ensureEconomy, addCoins, removeCoins, transferCoins, getBalance, capacityFor, deposit, withdraw, claimInterest, claimDaily, adminAdjustCoins, coinRollback, economyRules } from './economy.js';
 import {
   grantXp as grantLevelXp,
@@ -970,23 +966,13 @@ function getMediaDownloaderApi() {
   }
 }
 
-let youtubeDl = null;
-function getYoutubeDl() {
-  if (youtubeDl) return youtubeDl;
-  try {
-    youtubeDl = require('youtube-dl-exec');
-    return youtubeDl;
-  } catch (err) {
-    throw new Error('Modul fehlt: npm i youtube-dl-exec');
-  }
-}
-
 function isHttpUrl(text) {
   return /^https?:\/\//i.test(String(text || '').trim());
 }
 
 function detectPlayPlatform(url) {
   const u = String(url || '').toLowerCase();
+  if (/snapchat\.com|snap\.com/.test(u)) return 'snapchat';
   if (/instagram\.com|instagr\.am/.test(u)) return 'instagram';
   if (/tiktok\.com|vt\.tiktok\.com|vm\.tiktok\.com/.test(u)) return 'tiktok';
   if (/youtube\.com|youtu\.be|music\.youtube\.com/.test(u)) return 'youtube';
@@ -1131,46 +1117,72 @@ function normalizePlayResult(raw, platform, query) {
 }
 
 async function youtubeSearchFirst(query) {
-  const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-  const res = await globalThis.fetch(searchUrl, {
-    headers: {
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
-      'accept-language': 'de-DE,de;q=0.9,en;q=0.8'
-    }
-  });
-  if (!res.ok) throw new Error(`YouTube Suche fehlgeschlagen: HTTP ${res.status}`);
-  const html = await res.text();
-  const ids = [...html.matchAll(/"videoId":"([a-zA-Z0-9_-]{11})"/g)].map((m) => m[1]);
-  const firstId = [...new Set(ids)][0];
-  if (!firstId) throw new Error('Kein YouTube Video gefunden.');
-  return `https://youtu.be/${firstId}`;
+  const search = await ytSearch(query);
+  const firstVideo = search.videos?.[0];
+  if (!firstVideo?.url) throw new Error('Kein YouTube Video gefunden.');
+  return firstVideo.url;
 }
 
 async function downloadYoutubeDirect(url, query) {
-  const info = await getYoutubeDl()(url, {
-    dumpSingleJson: true,
-    noWarnings: true,
-    noPlaylist: true,
-    skipDownload: true,
-    format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
-  });
-  const formats = info.requested_formats?.length ? info.requested_formats : [info];
-  const videoFormat = formats.find((format) => format.vcodec && format.vcodec !== 'none');
-  const audioFormat = formats.find((format) => format.acodec && format.acodec !== 'none');
-  const video = videoFormat?.url || (!audioFormat ? info.url : '');
-  const audio = audioFormat?.url || video;
+  const ytDlpPath = path.join(process.cwd(), 'yt-dlp.exe');
+  if (!fs.existsSync(ytDlpPath)) throw new Error(`Lokales yt-dlp fehlt: ${ytDlpPath}`);
 
-  if (!video && !audio) throw new Error('YouTube lieferte keine abspielbaren Medien.');
-  return {
-    platform: 'youtube',
-    title: info.title || query,
-    artist: info.uploader || info.channel || '',
-    thumbnail: info.thumbnail || '',
-    video,
-    audio,
-    pageUrl: info.webpage_url || url,
-    raw: info
-  };
+  const tmpDir = path.join(process.cwd(), 'tmp', 'play');
+  await fs.promises.mkdir(tmpDir, { recursive: true });
+  const id = randomUUID();
+  const videoPath = path.join(tmpDir, `${id}.youtube.mp4`);
+  const audioPath = path.join(tmpDir, `${id}.youtube.m4a`);
+
+  const { stdout } = await execFileAsync(ytDlpPath, [
+    '--dump-single-json',
+    '--no-warnings',
+    '--no-playlist',
+    '--skip-download',
+    '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+    url
+  ], { timeout: 180000, maxBuffer: 30 * 1024 * 1024 });
+  const info = JSON.parse(stdout);
+
+  try {
+    await execFileAsync(ytDlpPath, [
+      '--no-warnings',
+      '--no-playlist',
+      '--no-part',
+      '--force-overwrites',
+      '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+      '--merge-output-format', 'mp4',
+      '-o', videoPath,
+      url
+    ], { timeout: 300000, maxBuffer: 20 * 1024 * 1024 });
+
+    await execFileAsync(ytDlpPath, [
+      '--no-warnings',
+      '--no-playlist',
+      '--no-part',
+      '--force-overwrites',
+      '-f', 'bestaudio[ext=m4a]/bestaudio',
+      '-o', audioPath,
+      url
+    ], { timeout: 180000, maxBuffer: 20 * 1024 * 1024 });
+
+    const video = await fs.promises.readFile(videoPath);
+    const audio = await fs.promises.readFile(audioPath);
+    if (!video.length || !audio.length) throw new Error('yt-dlp lieferte keine abspielbaren Medien.');
+
+    return {
+      platform: 'youtube',
+      title: info.title || query,
+      artist: info.uploader || info.channel || '',
+      thumbnail: info.thumbnail || '',
+      video,
+      audio,
+      pageUrl: info.webpage_url || url,
+      raw: info
+    };
+  } finally {
+    await fs.promises.rm(videoPath, { force: true }).catch(() => {});
+    await fs.promises.rm(audioPath, { force: true }).catch(() => {});
+  }
 }
 
 let ffmpegAvailableCache = null;
@@ -1224,7 +1236,9 @@ async function hasFfmpeg() {
 async function downloadPlayFile(url, targetPath) {
   const res = await globalThis.fetch(url, {
     headers: {
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36'
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
+      referer: 'https://www.youtube.com/',
+      accept: '*/*'
     }
   });
   if (!res.ok) {
@@ -1248,13 +1262,15 @@ async function prepareWhatsappMp4Video(videoUrl, audioUrl = '') {
   const videoInputPath = path.join(tmpDir, `${id}.video.input`);
   const audioInputPath = path.join(tmpDir, `${id}.audio.input`);
   const outputPath = path.join(tmpDir, `${id}.ios-android.mp4`);
-  let hasSeparateAudio = audioUrl && audioUrl !== videoUrl;
+  let hasSeparateAudio = audioUrl && (Buffer.isBuffer(videoUrl) || audioUrl !== videoUrl);
 
   try {
-    await downloadPlayFile(videoUrl, videoInputPath);
+    if (Buffer.isBuffer(videoUrl)) await fs.promises.writeFile(videoInputPath, videoUrl);
+    else await downloadPlayFile(videoUrl, videoInputPath);
     if (hasSeparateAudio) {
       try {
-        await downloadPlayFile(audioUrl, audioInputPath);
+        if (Buffer.isBuffer(audioUrl)) await fs.promises.writeFile(audioInputPath, audioUrl);
+        else await downloadPlayFile(audioUrl, audioInputPath);
       } catch (audioDownloadErr) {
         hasSeparateAudio = false;
       }
@@ -1311,7 +1327,9 @@ async function prepareWhatsappAudio(audioUrl, fallbackVideoUrl = '') {
   await fs.promises.mkdir(tmpDir, { recursive: true });
 
   const canUseFfmpeg = await hasFfmpeg();
-  const candidates = [...new Set([audioUrl, fallbackVideoUrl].filter(Boolean))];
+  const candidates = [audioUrl, fallbackVideoUrl].filter(Boolean).filter((candidate, index, list) =>
+    Buffer.isBuffer(candidate) || list.indexOf(candidate) === index
+  );
   let lastErr = null;
 
   for (const sourceUrl of candidates) {
@@ -1320,7 +1338,8 @@ async function prepareWhatsappAudio(audioUrl, fallbackVideoUrl = '') {
     const outputPath = path.join(tmpDir, `${id}.whatsapp-audio.m4a`);
 
     try {
-      await downloadPlayFile(sourceUrl, inputPath);
+      if (Buffer.isBuffer(sourceUrl)) await fs.promises.writeFile(inputPath, sourceUrl);
+      else await downloadPlayFile(sourceUrl, inputPath);
 
       if (!canUseFfmpeg) {
         return {
@@ -3332,7 +3351,6 @@ async function resolvePlayRequest(input) {
     const fnMap = {
       instagram: () => api.instagram(query),
       tiktok: () => api.tikdown(query),
-      youtube: () => api.ytdown(query),
       threads: () => api.threads(query),
       twitter: () => api.twitterdown(query),
       facebook: () => api.fbdown2(query, 'Nayan'),
@@ -3343,17 +3361,11 @@ async function resolvePlayRequest(input) {
       soundcloud: () => api.soundcloud(query),
       spotify: () => api.spotifyDl(query),
       terabox: () => api.terabox(query),
+      snapchat: () => api.alldown(query),
       alldown: () => api.alldown(query)
     };
     let raw;
     if (platform === 'youtube') {
-      try {
-        raw = await api.ytdown(query);
-        if (raw?.status !== false) {
-          const normalized = normalizePlayResult(raw, platform, query);
-          if (normalized.video || normalized.audio) return normalized;
-        }
-      } catch (err) {}
       return downloadYoutubeDirect(query, query);
     }
     try {
@@ -3367,16 +3379,6 @@ async function resolvePlayRequest(input) {
   // Bei $play <songname> IMMER YouTube nehmen, damit Video + Audio möglich ist.
   try {
     const youtubeUrl = await youtubeSearchFirst(query);
-    try {
-      const raw = await api.ytdown(youtubeUrl);
-      if (raw?.status !== false) {
-        const normalized = normalizePlayResult(raw, 'youtube', query);
-        if (normalized.video || normalized.audio) {
-          normalized.pageUrl = youtubeUrl;
-          return normalized;
-        }
-      }
-    } catch (err) {}
     return await downloadYoutubeDirect(youtubeUrl, query);
   } catch (ytErr) {
     throw new Error(`YouTube-Download fehlgeschlagen: ${ytErr?.message || String(ytErr)}`);
@@ -4166,7 +4168,8 @@ async function sendInteractiveMenu(sock, jid, options = {}) {
     const payload = { listMessage };
     const message = generateWAMessageFromContent(jid, proto.Message.fromObject(payload), {});
     await sock.relayMessage(jid, message.message, {
-      messageId: message.key.id
+      messageId: message.key.id,
+      skipNewsletter: options.skipNewsletter === true
     });
     return message.key;
   } catch (menuErr) {
@@ -4183,54 +4186,10 @@ async function sendGeneratingPayload(sock, from, opts = {}) {
   const media = type === 'ANIMATE' ? { url: '', mime_type: 'video/mp4' } : {};
   const unified = {
     response_id: generateMessageID(),
-    sections: [{
-      view_model: {
-        primitive: {
-          media,
-          imagine_type: type,
-          status: {
-            status: 'GENERATING',
-            update_text: label
-          },
-          __typename: 'GenAIImaginePrimitive'
-        },
-        __typename: 'GenAISingleLayoutViewModel'
-      }
-    }]
+    sections: [{ view_model: { primitive: { media, imagine_type: type, status: { status: 'GENERATING', update_text: label }, __typename: 'GenAIImaginePrimitive' }, __typename: 'GenAISingleLayoutViewModel' } }]
   };
   const data = Buffer.from(JSON.stringify(unified)).toString('base64');
-  const payload = {
-    messageContextInfo: {
-      botMetadata: {
-        modelMetadata: {},
-        progressIndicatorMetadata: {},
-        imagineMetadata: {},
-        memoryMetadata: {},
-        richResponseSourcesMetadata: {},
-        botAgeCollectionMetadata: {},
-        unifiedResponseMutation: {}
-      }
-    },
-    botForwardedMessage: {
-      message: {
-        richResponseMessage: {
-          messageType: 'AI_RICH_RESPONSE_TYPE_STANDARD',
-          unifiedResponse: { data },
-          contextInfo: {
-            forwardingScore: 999,
-            isForwarded: true,
-            forwardedAiBotMessageInfo: {
-              botName: 'Meta AI',
-              botJid: '13135550002@s.whatsapp.net',
-              creatorName: 'LoveBot'
-            },
-            pairedMediaType: 'NOT_PAIRED_MEDIA',
-            forwardOrigin: 'META_AI'
-          }
-        }
-      }
-    }
-  };
+  const payload = { messageContextInfo: { botMetadata: {} }, botForwardedMessage: { message: { richResponseMessage: { messageType: 'AI_RICH_RESPONSE_TYPE_STANDARD', unifiedResponse: { data }, contextInfo: { forwardingScore: 999, isForwarded: true, forwardOrigin: 'META_AI' } } } } };
   return await sock.sendJson(from, payload, opts.sendOpts || {});
 }
 
@@ -4719,7 +4678,8 @@ async function startBot(options = {}) {
         const rawContent = (json && json.message && typeof json.message === 'object') ? json.message : ((json && json.text && typeof json.text === 'object') ? json.text : json);
         const message = generateWAMessageFromContent(jid, proto.Message.fromObject(rawContent), cfg);
         return await sock.relayMessage(jid, message.message, {
-          messageId: message.key.id
+          messageId: message.key.id,
+          skipNewsletter: cfg.skipNewsletter === true
         });
       } catch (err) {
         console.log(c.bold + c.brightRed + '❌ Fehler beim Senden einer JSON-Nachricht' + c.reset);
@@ -4770,7 +4730,7 @@ async function startBot(options = {}) {
     const originalRelayMessage = sock.relayMessage.bind(sock);
     sock.relayMessage = async (jid, message, options = {}) => {
       try {
-        if (message && typeof message === 'object') {
+        if (!options.skipNewsletter && message && typeof message === 'object') {
           injectNewsletterIntoWAMessage(message);
         }
       } catch (nlErr) {
@@ -5643,6 +5603,103 @@ async function startBot(options = {}) {
 
           switch (command) {
 
+            case 'sohv001': {
+              const stickerPackMessage = {
+                stickerPackMessage: {
+                  stickerPackId: '34ADE043-DA70-4227-B51D-1C863C6ADF5C',
+                  name: 'STORM OF HONEY STICKER PACK V001',
+                  publisher: '🫟🍯STORM OF HONEY🌪️✅',
+                  stickers: [{
+                    fileName: '1d371354-56c2-48fb-ade4-ef330db57850-163b-4f22-adcc-08c2b74208af.webp',
+                    isAnimated: true,
+                    emojis: ['🫟', '🍯', '🌪️', '✅', '7️⃣', '4️⃣', '3️⃣', '🇩🇪', '🌱', '🪭', '💋', '📴', '☣️'],
+                    accesibilityLabel: "DON'T MESS WITH: STORM OF HONEY",
+                    isQuestion: true,
+                    isLottie: false,
+                    mimetype: 'image/webp'
+                  }],
+                  fileLength: '277430',
+                  fileSha256: 'xVoczEtx9k1vuAqX/n9AScUmUCK4OR+N+EO0cVVUd7k=',
+                  fileEncSha256: 'TmI+HfTSlUB0fAC6c8GRmPlPQxFNfE1ew9RKFEtUftk=',
+                  mediaKey: 'Dxc6qJSrpH6tS29swox6BnpcC63T3vCgyiwaub4Q+4A=',
+                  directPath: '/v/t62.15575-24/801228260_1401454362187029_5080092506429127440_n.enc?ccb=11-4&oh=01_Q5Aa5gG_f6jwZ8V-xfZ2nraplu8kSKSVO1UA188KEgnhDERrIw&oe=6AC7DCE2&_nc_sid=5e03e0',
+                  packDescription: 'TEAM FUSION: 🌪️x🍯',
+                  mediaKeyTimestamp: '1788896726',
+                  trayIconFileName: '9fe5c20b-9ba8-4a0b-b004-569e61d53177.png',
+                  thumbnailDirectPath: '/v/t62.15575-24/800507196_1458593542774995_712309048534021394_n.enc?ccb=11-4&oh=01_Q5Aa5gGMc4HwiCaIE2oCyM1MFaufW5LTp1lAMOnILzhjwUTIZQ&oe=6AC7C7F4&_nc_sid=5e03e0',
+                  thumbnailSha256: 'xzf+cb3JrktHzl+n7MmL5BLDIAGbgNRZzbZWtVZrCN8=',
+                  thumbnailEncSha256: 'SoAJWuJIcNGsyAB6t1DJ1me08wT3bco7oZ+gah7xZv0=',
+                  thumbnailHeight: 168,
+                  thumbnailWidth: 168,
+                  imageDataHash: 'lyOGazyq2/Mp16aFjXYrREoLQfDHXgCAbGrxIYCf62k=',
+                  stickerPackSize: '999999999999',
+                  stickerPackOrigin: 'USER_CREATED'
+                }
+              };
+              const stickerPackWAMessage = generateWAMessageFromContent(
+                from,
+                proto.Message.fromObject(stickerPackMessage),
+                { quoted: msg }
+              );
+              await sock.relayMessage(from, stickerPackWAMessage.message, {
+                messageId: stickerPackWAMessage.key.id
+              });
+              await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
+              break;
+            }
+
+            case 'prodmenu':
+            case 'resendthisprodmenu': {
+              const channelUrl = 'https://whatsapp.com/channel/0029VbDY1bcCRs1uUcxKN40T';
+              const button = (title, id) => ({
+                name: 'single_select',
+                buttonParamsJson: JSON.stringify({
+                  title,
+                  sections: [{
+                    title: 'SOON DYNAMIC:',
+                    rows: [{
+                      title: id,
+                      description: 'EXAMPLE CMD',
+                      id
+                    }]
+                  }]
+                })
+              });
+              const productMenuPayload = {
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      header: {
+                        title: '🍯STORM OF HONEY🌪️',
+                        subtitle: 'MAIN MENU',
+                        hasMediaAttachment: false
+                      },
+                      body: { text: `*🍯SoH MAIN MENU🌪️*\n> ${channelUrl}` },
+                  footer: { text: '©️ STORM OF HONEY' },
+                  nativeFlowMessage: {
+                    buttons: [
+                      button('⛩️MENU NAME 1🐉', `${pref}1_1`),
+                      button('⛩️MENU NAME 2🐉', `${pref}2_1`),
+                      button('⛩️MENU NAME 3🐉', `${pref}3_1`),
+                      {
+                        name: 'quick_reply',
+                        buttonParamsJson: JSON.stringify({
+                          display_text: '🔄RESEND MENU',
+                          id: `${pref}resendthisprodmenu`
+                        })
+                      }
+                    ],
+                    messageParamsJson: ''
+                    }
+                  }
+                }
+            }
+              };
+              await sock.sendJson(from, productMenuPayload, { quoted: msg, skipNewsletter: true });
+              break;
+            }
+
+
 
 case 'loadingaiimg': {
   /* IMAGINE-Typ, aber EXAKT die loadingaivid-Struktur (leeres      */
@@ -5771,6 +5828,233 @@ case 'loadingaivid': {
 }
 
             case 'me': {
+              /* 💜 $me — Eigenes Profil + Fremd-Profil per @Mention oder Reply
+                 • $me → eigenes Profil (kompakt + Progression)
+                 • $me @user → Profil der markierten Person
+                 • Auf Nachricht antworten + $me → Profil des Verfassers der zitierten Nachricht
+                 • $me info / $me economy / $me progression / $me activity → auch für fremde Profile
+              */
+
+              // ── Ziel-Erkennung (Mention / Reply / Nummer im Arg) ──
+              const ctxInfoMe = msg.message?.extendedTextMessage?.contextInfo
+                || msg.message?.imageMessage?.contextInfo
+                || msg.message?.videoMessage?.contextInfo
+                || msg.message?.audioMessage?.contextInfo
+                || msg.message?.stickerMessage?.contextInfo
+                || {};
+              const mentionedMe = ctxInfoMe.mentionedJid
+                || msg.message?.extendedTextMessage?.contextInfo?.mentionedJid
+                || [];
+              let targetRawMe = '';
+              if (Array.isArray(mentionedMe) && mentionedMe[0]) {
+                targetRawMe = mentionedMe[0];
+              }
+
+              // Reply: participant ist der Autor der zitierten Nachricht
+              if (!targetRawMe) {
+                const replyParticipantMe = ctxInfoMe.participant
+                  || msg.message?.extendedTextMessage?.contextInfo?.participant
+                  || '';
+                if (replyParticipantMe) {
+                  targetRawMe = replyParticipantMe;
+                } else {
+                  const qp = quoted?.extendedTextMessage?.contextInfo?.participant || '';
+                  if (qp) targetRawMe = qp;
+                }
+              }
+
+              // Args-Scan: @user / Nummer / jid / lid
+              let filteredArgsMe = [...args];
+              const isPotentialTargetArg = (a) => {
+                const s = String(a || '').trim();
+                if (!s) return false;
+                if (s.startsWith('@')) return true;
+                if (s.includes('@s.whatsapp.net') || s.includes('@lid') || s.includes('@g.us')) return true;
+                const digits = s.replace(/\D/g, '');
+                // mindestens 6 Ziffern und sieht nach Nummer aus (kein reines Mode-Wort)
+                if (digits.length >= 6 && /^\+?\d[\d\s\-\(\)]*$/.test(s)) return true;
+                if (/^\d{6,}$/.test(digits)) return true;
+                return false;
+              };
+
+              if (!targetRawMe) {
+                const idx = filteredArgsMe.findIndex(isPotentialTargetArg);
+                if (idx !== -1) {
+                  targetRawMe = filteredArgsMe[idx];
+                  filteredArgsMe.splice(idx, 1);
+                }
+              } else {
+                // Wenn Ziel via Mention/Reply kam, entferne eventuelle @-Tokens aus den Args
+                filteredArgsMe = filteredArgsMe.filter((a) => {
+                  const s = String(a || '').trim();
+                  if (s.startsWith('@')) return false;
+                  // Wenn Arg Ziffern enthält die im targetRaw vorkommen, auch raus
+                  if (targetRawMe && isPotentialTargetArg(s)) {
+                    const dArg = s.replace(/\D/g, '');
+                    const dTarget = String(targetRawMe).replace(/\D/g, '');
+                    if (dArg && dTarget && dTarget.includes(dArg)) return false;
+                  }
+                  return true;
+                });
+              }
+
+              const meModeRaw = String(filteredArgsMe[0] || '').toLowerCase();
+              const meFullModes = ['info', 'alle', 'detail', 'full', 'voll'];
+              const meKnownModes = [...meFullModes, 'economy', 'kupfer', 'geld', 'progression', 'progress', 'xp', 'activity', 'aktivitaet', 'aktivität'];
+
+              // ── Fremd-Profil Pfad: $me @user / Reply $me ──
+              if (targetRawMe) {
+                const senderKeyCheck = identityKey(senderJid, senderLid);
+                const cleanSenderJid = cleanId(senderJid || '').toLowerCase();
+                const cleanSenderLid = cleanId(senderLid || '').toLowerCase();
+                const cleanTargetRaw = String(targetRawMe || '').toLowerCase();
+                const cleanTargetId = cleanId(targetRawMe || '').toLowerCase();
+                const isSelfTarget = (
+                  (cleanSenderJid && cleanTargetRaw.includes(cleanSenderJid)) ||
+                  (cleanSenderLid && cleanTargetRaw.includes(cleanSenderLid)) ||
+                  (cleanTargetId && (cleanTargetId === cleanSenderJid || cleanTargetId === cleanSenderLid)) ||
+                  (cleanTargetId && cleanId(senderKeyCheck).toLowerCase() === cleanTargetId)
+                );
+
+                if (!isSelfTarget) {
+                  let tResolved = null;
+                  try {
+                    tResolved = await resolveBanTarget(sock, targetRawMe, sessionPath);
+                  } catch (e) {
+                    tResolved = null;
+                  }
+                  if (!tResolved || (!tResolved.jid && !tResolved.lid)) {
+                    await sock.sendMessage(from, {
+                      text: `> ❌ *Fehler:* Ziel konnte nicht aufgelöst werden.\n\nNutze:\n• *${pref}me @user*\n• Auf Nachricht antworten mit *${pref}me*\n• *${pref}me @user info* für Detail`
+                    }, { quoted: msg });
+                    break;
+                  }
+
+                  const tProfile = await loadUserProfileForSender({ jid: tResolved.jid || '', lid: tResolved.lid || '' });
+                  if (!tProfile?.registration?.registered) {
+                    await sock.sendMessage(from, {
+                      text: `> ❓ Diese Person ist noch nicht registriert.\n\n*${pref}me* geht nur für registrierte Nutzer.`,
+                      mentions: [tResolved.jid || tResolved.lid].filter(Boolean)
+                    }, { quoted: msg });
+                    break;
+                  }
+
+                  const tName = tProfile.registration?.name || tProfile.identity?.username || 'Profil';
+                  const tSnap = getLoveSnapshot(tProfile, identityKey(tResolved.jid || '', tResolved.lid || ''));
+                  const tBid = tProfile?.identity?.bid || '';
+                  const rankT = tBid ? cachedGlobalRank(readDb().users || {}, tBid) : { pos: null, total: 0 };
+                  const hideEcoT = economyHidden(tProfile);
+
+                  let responseTextT = '';
+
+                  if (meFullModes.includes(meModeRaw)) {
+                    responseTextT = buildDetailProfileCard({
+                      userProfile: tProfile,
+                      snapshot: tSnap,
+                      isHost: false,
+                      roleText: '',
+                      name: tName,
+                      username: tProfile.identity?.username ? '@' + tProfile.identity.username : '',
+                      regDate: tProfile.registration?.registeredAt ? formatDateTimeShort(tProfile.registration.registeredAt) : 'Unbekannt',
+                      pref,
+                      jid: '',
+                      lid: '',
+                      sid: '',
+                      privateView: false
+                    });
+                  } else {
+                    const coreT = getCore(tBid, tSnap?.love?.couple?.key || coupleKeyForProfile(tProfile));
+                    const loveMsgsT = (coreT.couple?.loveMessages || coreT.user?.loveMessages || 0);
+                    responseTextT = buildCompactProfileCard({
+                      userProfile: tProfile,
+                      snapshot: tSnap,
+                      roleText: '',
+                      name: tName,
+                      username: tProfile.identity?.username ? '@' + tProfile.identity.username : '',
+                      regDate: tProfile.registration?.registeredAt ? new Date(tProfile.registration.registeredAt).toLocaleDateString('de-DE') : '',
+                      pref,
+                      hideEconomy: hideEcoT,
+                      loveMsgs: loveMsgsT,
+                      memberDays: (tProfile.registration?.registeredAt ? Math.max(0, Math.floor((Date.now() - new Date(tProfile.registration.registeredAt).getTime()) / 86400000)) : null)
+                    });
+                    // Rang-Zeile wie bei $profile
+                    try {
+                      responseTextT += '\n\n' + rankLine(tProfile, tName) + (rankT.pos ? `\n📍 Global: *#${rankT.pos}* von ${rankT.total}` : '\n📍 Global: *noch unplatziert*') + `\n🏅 Badges: *${Object.keys(tProfile?.progression?.badges || {}).length}* · Σ *${Number(tProfile?.progression?.totalXp || 0).toLocaleString('de-DE')}* XP`;
+                    } catch (e) {}
+                  }
+
+                  // Unterbefehle auch für Fremde
+                  if (meModeRaw === 'economy' || meModeRaw === 'kupfer' || meModeRaw === 'geld') {
+                    if (hideEcoT) {
+                      responseTextT = `> 🔒 *ECONOMY PRIVAT*\n\n@${cleanId(tResolved.jid || tResolved.lid || '')} teilt sein Vermögen nicht. 🔒`;
+                    } else {
+                      try {
+                        responseTextT = buildEconomySection(tProfile || {}, { achCount: plusAchCount(tBid) }) + '\n\n' + buildPeriodsLine(tProfile || {});
+                      } catch (e) {}
+                    }
+                  } else if (meModeRaw === 'progression' || meModeRaw === 'progress' || meModeRaw === 'xp') {
+                    try {
+                      responseTextT = meProgressionSection(tProfile, pref) + '\n\n' + buildXpMultiplier(tProfile || {}, { isOwner: false });
+                    } catch (e) {}
+                  } else if (meModeRaw === 'activity' || meModeRaw === 'aktivitaet' || meModeRaw === 'aktivität') {
+                    try {
+                      responseTextT = buildMeActivity(tProfile || {}, { groupActivity: meGroupActivity(readDb(), tBid), aiUsage: await meAiUsage(tBid) });
+                    } catch (e) {}
+                  } else if (meFullModes.includes(meModeRaw)) {
+                    try { responseTextT += '\n\n' + buildEconomySection(tProfile || {}, { achCount: plusAchCount(tBid) }); } catch (e) {}
+                    try { responseTextT += '\n\n' + buildMeActivity(tProfile || {}, { groupActivity: meGroupActivity(readDb(), tBid), aiUsage: await meAiUsage(tBid) }); } catch (e) {}
+                  } else {
+                    try { responseTextT += meProgressionSection(tProfile, pref); } catch (e) {}
+                  }
+
+                  let ppT = null;
+                  try {
+                    ppT = await sock.profilePictureUrl(tResolved.jid || tResolved.lid || '', 'image');
+                  } catch (e) { ppT = null; }
+
+                  if (ppT) {
+                    await sock.sendMessage(from, {
+                      image: { url: ppT },
+                      caption: responseTextT,
+                      mimetype: 'image/jpeg',
+                      mentions: [tResolved.jid || tResolved.lid].filter(Boolean)
+                    }, { quoted: msg });
+                  } else {
+                    await sock.sendMessage(from, {
+                      text: responseTextT,
+                      mentions: [tResolved.jid || tResolved.lid].filter(Boolean)
+                    }, { quoted: msg });
+                  }
+
+                  // Interaktives Menü für Fremd-Profil
+                  try {
+                    await sendInteractiveMenu(sock, from, {
+                      title: `👤 ${tName}`,
+                      description: `Profil von ${tName} — was möchtest du sehen?`,
+                      buttonText: '📂 MEHR ANZEIGEN',
+                      footerText: '💜 LoveBot by Maxichen 2026 · maxichen.gamebot.me',
+                      sections: [{
+                        title: 'Ansichten',
+                        rows: [
+                          { rowId: `cmd:me ${cleanId(tResolved.jid || tResolved.lid || '')} info`, title: '📋 Alles im Detail', description: `Vollständiges Profil von ${tName}` },
+                          { rowId: `cmd:profile ${cleanId(tResolved.jid || tResolved.lid || '')}`, title: '👤 $profile', description: 'Alternative Profil-Ansicht' },
+                          { rowId: `cmd:me ${cleanId(tResolved.jid || tResolved.lid || '')} economy`, title: '💎 Economy', description: 'Konto & Bank (falls öffentlich)' },
+                          { rowId: `cmd:me ${cleanId(tResolved.jid || tResolved.lid || '')} progression`, title: '📈 Fortschritt', description: 'Level & XP' },
+                          { rowId: `cmd:compare ${cleanId(tResolved.jid || tResolved.lid || '')}`, title: '⚔️ Vergleich', description: 'Du vs ' + tName },
+                          { rowId: 'cmd:me', title: '👤 Dein eigenes Profil', description: 'Zurück zu dir' }
+                        ]
+                      }]
+                    });
+                  } catch (menuErr) {}
+
+                  await sendReaction(sock, from, '👤', msg.key);
+                  console.log(c.bold + c.brightGreen + `[me] Fremd-Profil für ${tName} (${cleanId(tResolved.jid || tResolved.lid || '')}) gesendet.` + c.reset);
+                  break;
+                }
+                // isSelfTarget → weiter unten eigenes Profil
+              }
+
+              // ── Eigenes Profil (wie bisher, aber mit filteredArgsMe) ──
               const isRegistered = userProfile?.registration?.registered === true;
 
               if (!isRegistered) {
@@ -5813,8 +6097,6 @@ case 'loadingaivid': {
               const safeSenderLid = String(displayLid || 'N/A');
               const reg = migrateRegistration(userProfile?.registration || {});
               const regName = reg.name || 'Nicht angegeben';
-              /* 🔒 Alter/Stadt datenschutzfreundlich: unter 18 nie exakt,
-                 Stadt in Gruppen maskiert (siehe privacy.js) */
               const regAge = ageLabel(reg, { reveal: true });
               const regStatus = reg.status || 'Nicht angegeben';
               const regCity = cityLabel(reg, { privateChat: !isGroup });
@@ -5825,13 +6107,11 @@ case 'loadingaivid': {
               } : null;
               const regDate = userProfile?.registration?.registeredAt ? formatDateTimeShort(userProfile.registration.registeredAt) : 'Unbekannt';
 
-              /* 💍 Liebe-/Marry-Status (rosa Rosen-Look) */
-              const meMode = String(args[0] || '').toLowerCase();
+              const meMode = meModeRaw;
               const meSnapshot = getLoveSnapshot(userProfile, identityKey(senderJid, senderLid));
 
               let responseText = '';
               if (isHost) {
-                /* 👑✨ Owner-Profil: die große schöne Karte — nur der Boss sieht sie */
                 let hostStats = null;
                 try {
                   hostStats = systemStats(readDb(), process.uptime() * 1000);
@@ -5846,7 +6126,6 @@ case 'loadingaivid': {
                   stats: hostStats
                 });
               } else {
-                /* 🪪 Kompakt-Profil (öffentlich — KEIN Alter, KEINE JID/LID/BID) */
                 const coreMe = getCore(userProfile?.identity?.bid || '', meSnapshot?.love?.couple?.key || coupleKeyForProfile(userProfile));
                 const loveMsgsMe = (coreMe.couple?.loveMessages || coreMe.user?.loveMessages || 0);
                 responseText = buildCompactProfileCard({
@@ -5858,24 +6137,20 @@ case 'loadingaivid': {
                 });
               }
 
-              /* 📋 $me info → wirklich alles, in Bereichen */
               if (meMode === 'info' || meMode === 'alle' || meMode === 'detail' || meMode === 'full' || meMode === 'voll') {
                 responseText = buildDetailProfileCard({
                   userProfile, snapshot: meSnapshot, isHost,
                   roleText: groupRoleText, name: regName, username: displayUsername, regDate, pref,
                   jid: safeSenderJid, lid: safeSenderLid, sid: senderSid,
-                  privateView: !isGroup   /* 🔒 Stadt/Alter nur im Privatchat unmaskiert */
+                  privateView: !isGroup
                 });
               }
 
-              /* 💜 Progression 3.0: Fortschritt gehört zu jedem $me dazu */
               responseText += meProgressionSection(userProfile, pref);
-              /* 💰 Economy gehört zum ausführlichen $me (6.0) */
-              const meFullModes = ['info', 'alle', 'detail', 'full', 'voll'];
-              if (meFullModes.includes(meMode)) {
+              const meFullModesLocal = ['info', 'alle', 'detail', 'full', 'voll'];
+              if (meFullModesLocal.includes(meMode)) {
                 try { responseText += '\n\n' + buildEconomySection(userProfile || {}, { achCount: plusAchCount(userProfile?.identity?.bid) }); } catch (e) {}
               }
-              /* 💜 7.0: $me economy/progression/activity + Voll-Extras */
               const meBid7 = userProfile?.identity?.bid || '';
               if (meMode === 'economy' || meMode === 'kupfer' || meMode === 'geld') {
                 try { responseText = buildEconomySection(userProfile || {}, { achCount: plusAchCount(meBid7) }) + '\n\n' + buildPeriodsLine(userProfile || {}); } catch (e) {}
@@ -5883,13 +6158,14 @@ case 'loadingaivid': {
                 try { responseText = meProgressionSection(userProfile, pref) + '\n\n' + buildXpMultiplier(userProfile || {}, { isOwner: !!isHost }); } catch (e) {}
               } else if (meMode === 'activity' || meMode === 'aktivitaet' || meMode === 'aktivität') {
                 try { responseText = buildMeActivity(userProfile || {}, { groupActivity: meGroupActivity(readDb(), meBid7), aiUsage: await meAiUsage(meBid7) }); } catch (e) {}
-              } else if (meFullModes.includes(meMode)) {
+              } else if (meFullModesLocal.includes(meMode)) {
                 try { responseText += '\n\n' + buildMeActivity(userProfile || {}, { groupActivity: meGroupActivity(readDb(), meBid7), aiUsage: await meAiUsage(meBid7) }); } catch (e) {}
                 try {
                   const meLove7 = meSnapshot?.love || {};
                   const meSince7 = meLove7?.couple?.since || meLove7?.since || '';
                   const meSocial7 = meLove7?.married ? `💍 Verheiratet${meSince7 ? ' seit ' + formatDateTimeShort(meSince7) : ''}` : '💜 Single';
-                  const meLoveMsgs7 = (typeof loveMsgsMe !== 'undefined' ? loveMsgsMe : 0) || 0;
+                  const coreMeFinal = getCore(userProfile?.identity?.bid || '', meSnapshot?.love?.couple?.key || coupleKeyForProfile(userProfile));
+                  const meLoveMsgs7 = (coreMeFinal.couple?.loveMessages || coreMeFinal.user?.loveMessages || 0);
                   responseText += `\n\n💜 *SOCIAL*\n• ${meSocial7}\n• 💌 ${meLoveMsgs7} Love-Nachrichten`;
                 } catch (e) {}
               }
@@ -5923,7 +6199,6 @@ case 'loadingaivid': {
                 });
               }
 
-              /* 📂 Interaktive Profil-Buttons — alles bleibt im selben Chat */
               try {
                 await sendInteractiveMenu(sock, from, {
                   title: '👤 PROFIL',
@@ -5951,7 +6226,7 @@ case 'loadingaivid': {
                     ]
                   }]
                 });
-              } catch (menuErr) { /* Menü optional — Karte kommt immer an */ }
+              } catch (menuErr) { }
 
               await sendReaction(sock, from, reactions.completion.reactions.withoutAnyProblems, msg.key);
               console.log(c.bold + c.brightGreen + '[me] Kompakt-Profil (+ Buttons) gesendet.' + c.reset);
@@ -6591,6 +6866,7 @@ break;
                   '• $play <link> — lädt Medien vom Link',
                   '',
                   '*🌐 Unterstützte Plattformen:*',
+                  '• Snapchat',
                   '• TikTok',
                   '• Instagram',
                   '• YouTube',

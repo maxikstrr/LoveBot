@@ -9,18 +9,25 @@
     "cleanLid": "87089790083286"
   },
   "registration": {
-    "registered": false,
-    "name": "",
-    "age": "",
-    "status": "",
-    "city": "",
-    "value": "",
-    "registeredAt": null
+    "registered": true,
+    "name": "DoK",
+    "age": 24,
+    "ageBracket": "adult",
+    "status": "Single",
+    "city": "Recklinghausen",
+    "privacy": {
+      "hideCity": false,
+      "hideAge": false,
+      "publicProfile": false
+    },
+    "registeredAt": "2026-09-13T19:03:23.271Z",
+    "language": "de",
+    "value": "DoK.24.Single.Recklinghausen"
   },
   "status": {
     "dsgvo": {
-      "accepted": false,
-      "acceptedAt": null,
+      "accepted": true,
+      "acceptedAt": "2026-09-13T19:02:55.525Z",
       "rejected": false,
       "rejectedAt": null
     },
@@ -31,17 +38,177 @@
       "rejectedAt": null,
       "analytics": false
     },
-    "verified": false,
-    "verifiedAt": null,
-    "unverified": true,
+    "verified": true,
+    "verifiedAt": "2026-09-13T19:03:05.264Z",
+    "unverified": false,
     "unverifiedAt": null,
     "mappedAt": "2026-09-09T22:06:45.952Z"
   },
   "progression": {
     "level": 0,
     "prestige": 0,
-    "xp": 0,
-    "neededXpForLvOrPrestigeUp": 743
+    "xp": 34,
+    "neededXpForLvOrPrestigeUp": 743,
+    "totalXp": 34,
+    "lastMsgXpAt": 1789326628294,
+    "streak": 1,
+    "xpWindow": [
+      {
+        "t": 1789326628294,
+        "a": 4,
+        "s": "msg"
+      }
+    ],
+    "xpSources": {
+      "messages": 4,
+      "love": 0,
+      "commands": 0,
+      "games": 0,
+      "dailies": 0,
+      "work": 0,
+      "compliments": 0,
+      "media": 0,
+      "general": 25,
+      "achievements": 5
+    },
+    "streaks": {
+      "daily": {
+        "c": 1,
+        "last": "2026-09-13"
+      },
+      "chat": {
+        "c": 1,
+        "last": "2026-09-13"
+      },
+      "xp": {
+        "c": 1,
+        "last": "2026-09-13"
+      }
+    },
+    "xpLog": [
+      {
+        "s": "general",
+        "a": 25,
+        "t": 1789326203274
+      },
+      {
+        "s": "messages",
+        "a": 4,
+        "t": 1789326628294
+      },
+      {
+        "s": "achievements",
+        "a": 5,
+        "t": 1789326628301
+      }
+    ],
+    "xpDaily": [
+      {
+        "d": "2026-09-13",
+        "a": 34
+      }
+    ],
+    "xpMonthly": {
+      "2026-09": 34
+    },
+    "statsMonthly": {
+      "2026-09": {
+        "d": "2026-09",
+        "m": 1,
+        "c": 0,
+        "g": 0,
+        "w": 0
+      }
+    },
+    "recentMsgs": [
+      {
+        "h": "75e368e",
+        "t": 1789326628294
+      }
+    ],
+    "unlocks": {},
+    "title": {
+      "min": 0,
+      "emoji": "🌱",
+      "name": "Newcomer"
+    },
+    "titleLevel": 0,
+    "badges": {},
+    "bestStreak": 1,
+    "records": {
+      "highestLevel": 0,
+      "highestDailyXp": 34,
+      "mostXpOneAction": 25
+    },
+    "statsDaily": [
+      {
+        "d": "2026-09-13",
+        "m": 1,
+        "c": 0,
+        "g": 0,
+        "w": 0
+      }
+    ],
+    "rewardsClaimed": {
+      "copper": 0
+    },
+    "activeTitle": {
+      "min": 0,
+      "emoji": "🌱",
+      "name": "Newcomer"
+    },
+    "rewardsLog": [],
+    "pendingRewards": [],
+    "goalStreak": {
+      "c": 0,
+      "best": 0,
+      "last": ""
+    },
+    "hourActivity": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0
+    ],
+    "weekdayActivity": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3
+    ],
+    "rankHistory": [],
+    "rewardsLogMigrated": true,
+    "lastXpAt": 1789326628301,
+    "lastActiveDay": "2026-09-13",
+    "recentMsgsAllDay": [
+      {
+        "h": "75e368e",
+        "d": "2026-09-13"
+      }
+    ]
   },
   "games": {
     "gamesPlayed": 0,
@@ -64,7 +231,7 @@
     "highestLossStreakAt": null
   },
   "wallet": {
-    "copper": 0,
+    "copper": 500,
     "silver": 0,
     "gold": 0,
     "platin": 0
@@ -81,5 +248,93 @@
     "lastWeeklyAt": null,
     "lastMonthlyAt": null,
     "lastYearlyAt": null
+  },
+  "stats": {
+    "messages": 1,
+    "commands": 0,
+    "games": 0,
+    "gameWins": 0,
+    "gameLosses": 0,
+    "loveActions": 0,
+    "complimentsGiven": 0,
+    "dailiesClaimed": 0,
+    "workClaimed": 0,
+    "dailyloveClaimed": 0
+  },
+  "flags": {
+    "media": {
+      "first": null,
+      "providers": {},
+      "day": "",
+      "count": 0
+    }
+  },
+  "economy": {
+    "tx": [
+      {
+        "t": 1789326203272,
+        "v": "wallet",
+        "d": 500,
+        "s": "starter",
+        "r": "Willkommens-Bonus"
+      }
+    ],
+    "stats": {
+      "earned": 500,
+      "spent": 0,
+      "highBal": 500,
+      "highWallet": 500,
+      "highBank": 0
+    },
+    "periods": {
+      "day": {
+        "k": "2026-09-13",
+        "e": 500,
+        "s": 0
+      },
+      "week": {
+        "k": "2026-W37",
+        "e": 500,
+        "s": 0
+      },
+      "month": {
+        "k": "2026-09",
+        "e": 500,
+        "s": 0
+      },
+      "year": {
+        "k": "2026",
+        "e": 500,
+        "s": 0
+      }
+    },
+    "monthly": {
+      "2026-09": {
+        "e": 500,
+        "s": 0
+      }
+    },
+    "daily": {
+      "last": "",
+      "streak": 0,
+      "best": 0,
+      "history": [],
+      "lastWeekReward": "",
+      "lastMonthReward": "",
+      "lastYearReward": ""
+    },
+    "interest": {
+      "lastAt": 0
+    },
+    "transferDaily": {
+      "d": "",
+      "sum": 0
+    },
+    "lastAdminAdjust": null,
+    "starter": {
+      "at": 1789326203277,
+      "copper": 500,
+      "xp": 25
+    }
   }
 }

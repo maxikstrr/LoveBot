@@ -140,8 +140,8 @@
         },
         {
           "name": "me",
-          "usage": "$me / $me info|full",
-          "desc": "Dein Profil — kompakt + ausführlich mit Economy; „info“ zeigt alles",
+          "usage": "$me [@user] / $me info|economy|progression|activity",
+          "desc": "Dein Profil + fremde Profile per @Mention oder Reply — kompakt + ausführlich mit Economy, Progression, Activity; $me @user zeigt das Profil einer anderen Person",
           "aliases": [],
           "perms": "all",
           "cooldown": 3,

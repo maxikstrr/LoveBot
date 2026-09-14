@@ -13,7 +13,15 @@
   "setupBy": "4915155894714@s.whatsapp.net",
   "setupByName": "269574108926096",
   "setupDescription": "🖤 *LoveBot* ist in @Maxichen Dev gruppe aktiv 🤖\nNutze *$dsgvo* / *$verify* für weitere Infos.\n\n⏱️ *Setup gesetzt:* Fr., 04.09.2026, 00:13:34\n🎮 *von:* 269574108926096",
-  "warns": {},
+  "warns": {
+    "44582230311125": [
+      {
+        "reason": "Badword (s******)",
+        "by": "LoveBot Automod 🤖",
+        "at": "2026-09-13T15:43:09.692Z"
+      }
+    ]
+  },
   "autodl": true,
   "welcome": true,
   "goodbye": true,
@@ -24,13 +32,13 @@
   "fun": true,
   "media": true,
   "tools": true,
-  "badwords": true,
-  "antilink": false,
+  "badwords": false,
+  "antilink": true,
   "night": true,
   "afk": true,
-  "memberCount": 20,
+  "memberCount": 28,
   "adminCount": 4,
-  "metaAt": 1789288889916,
+  "metaAt": 1789386051496,
   "gset": {
     "welcome": true,
     "goodbye": true,
@@ -47,34 +55,28 @@
     "logsEnabled": true
   },
   "xp": {
-    "total": 322,
-    "level": 1,
-    "msgs": 161,
-    "games": 0,
+    "total": 2298,
+    "level": 5,
+    "msgs": 1149,
+    "games": 1,
     "members": {
-      "269724751503435": {
-        "m": 22,
-        "xp": 44,
-        "games": 0,
-        "last": 1789130904886
-      },
       "44582230311125": {
-        "m": 13,
-        "xp": 26,
+        "m": 98,
+        "xp": 196,
         "games": 0,
-        "last": 1789131639382
+        "last": 1789315493174
       },
       "257466679955665": {
-        "m": 8,
-        "xp": 16,
+        "m": 95,
+        "xp": 190,
         "games": 0,
-        "last": 1789126571957
+        "last": 1789409735010
       },
       "269574108926096": {
-        "m": 67,
-        "xp": 134,
-        "games": 0,
-        "last": 1789289146562
+        "m": 422,
+        "xp": 844,
+        "games": 1,
+        "last": 1789410241230
       },
       "31396361941215": {
         "m": 16,
@@ -83,71 +85,154 @@
         "last": 1789125789950
       },
       "57956708180043": {
-        "m": 25,
-        "xp": 50,
+        "m": 35,
+        "xp": 70,
         "games": 0,
-        "last": 1789194153946
+        "last": 1789405783316
       },
       "87089790083286": {
-        "m": 7,
-        "xp": 14,
+        "m": 11,
+        "xp": 22,
         "games": 0,
-        "last": 1789200562109
+        "last": 1789326628286
       },
       "9462232387698": {
+        "m": 8,
+        "xp": 16,
+        "games": 0,
+        "last": 1789409964326
+      },
+      "108813734645801": {
+        "m": 184,
+        "xp": 368,
+        "games": 0,
+        "last": 1789396525642
+      },
+      "269724751503435": {
+        "m": 12,
+        "xp": 24,
+        "games": 0,
+        "last": 1789392319626
+      },
+      "217875822411849": {
+        "m": 37,
+        "xp": 74,
+        "games": 0,
+        "last": 1789400606595
+      },
+      "27187981906063": {
+        "m": 54,
+        "xp": 108,
+        "games": 0,
+        "last": 1789409613860
+      },
+      "13504031494153": {
+        "m": 18,
+        "xp": 36,
+        "games": 0,
+        "last": 1789402118103
+      },
+      "133139926114502": {
+        "m": 41,
+        "xp": 82,
+        "games": 0,
+        "last": 1789399684183
+      },
+      "119864568102927": {
+        "m": 53,
+        "xp": 106,
+        "games": 0,
+        "last": 1789385401287
+      },
+      "60392088825948": {
+        "m": 9,
+        "xp": 18,
+        "games": 0,
+        "last": 1789314999541
+      },
+      "213215799677089": {
+        "m": 4,
+        "xp": 8,
+        "games": 0,
+        "last": 1789317739142
+      },
+      "null": {
         "m": 1,
         "xp": 2,
         "games": 0,
-        "last": 1789289116114
+        "last": 1789317108717
       },
-      "108813734645801": {
+      "69415898980503": {
+        "m": 9,
+        "xp": 18,
+        "games": 0,
+        "last": 1789326523951
+      },
+      "157205181517834": {
         "m": 2,
         "xp": 4,
         "games": 0,
-        "last": 1789289229372
+        "last": 1789330781852
+      },
+      "23365326762079": {
+        "m": 6,
+        "xp": 12,
+        "games": 0,
+        "last": 1789382048275
+      },
+      "63029366505685": {
+        "m": 8,
+        "xp": 16,
+        "games": 0,
+        "last": 1789407320356
       }
     },
     "week": {
       "k": "2026-W38",
-      "xp": 50
+      "xp": 2026
     },
     "month": {
       "k": "2026-09",
-      "xp": 322
+      "xp": 2298
     },
     "daily": {
-      "k": "2026-09-13",
-      "msgs": 12
+      "k": "2026-09-14",
+      "msgs": 170
     },
     "streak": {
-      "c": 4,
-      "last": "2026-09-13"
+      "c": 5,
+      "last": "2026-09-14"
     },
     "history": {
       "2026-09-10": 8,
       "2026-09-11": 264,
       "2026-09-12": 26,
-      "2026-09-13": 24
+      "2026-09-13": 1660,
+      "2026-09-14": 340
     }
   },
   "goals": {
     "daily": {
-      "k": "2026-09-13",
+      "k": "2026-09-14",
       "target": 50,
-      "progress": 12,
-      "claimed": false
+      "progress": 170,
+      "claimed": true
     },
     "weekly": {
       "k": "2026-W38",
       "target": 200,
-      "progress": 50,
-      "claimed": false
+      "progress": 2026,
+      "claimed": true
     }
   },
   "gach": {
-    "gmsg_100": 1789128759112
+    "gmsg_100": 1789128759112,
+    "gxp_1k": 1789314943086,
+    "gmsg_1k": 1789378752857
   },
-  "gbadges": {},
+  "gbadges": {
+    "g_love": 1789378752858
+  },
   "gevents": [],
   "gaudit": [
     {
@@ -167,10 +252,28 @@
       "actor": "269574108926096",
       "action": "setting",
       "detail": "aiEnabled → an"
+    },
+    {
+      "ts": 1789294909727,
+      "actor": "system",
+      "action": "goal",
+      "detail": "daily-Ziel (50) erreicht, +250 Treasury"
+    },
+    {
+      "ts": 1789307575295,
+      "actor": "system",
+      "action": "goal",
+      "detail": "weekly-Ziel (200) erreicht, +1000 Treasury"
+    },
+    {
+      "ts": 1789380922248,
+      "actor": "system",
+      "action": "goal",
+      "detail": "daily-Ziel (50) erreicht, +250 Treasury"
     }
   ],
   "gtreasury": {
-    "balance": 1510,
+    "balance": 3850,
     "log": [
       {
         "ts": 1789123704566,
@@ -191,6 +294,51 @@
         "ts": 1789288888708,
         "delta": 110,
         "reason": "Group-Level 1"
+      },
+      {
+        "ts": 1789294909727,
+        "delta": 250,
+        "reason": "daily-Ziel erreicht"
+      },
+      {
+        "ts": 1789307575295,
+        "delta": 1000,
+        "reason": "weekly-Ziel erreicht"
+      },
+      {
+        "ts": 1789313286021,
+        "delta": 120,
+        "reason": "Group-Level 2"
+      },
+      {
+        "ts": 1789314943086,
+        "delta": 150,
+        "reason": "Achievement Sammelphase"
+      },
+      {
+        "ts": 1789315298616,
+        "delta": 130,
+        "reason": "Group-Level 3"
+      },
+      {
+        "ts": 1789329239670,
+        "delta": 140,
+        "reason": "Group-Level 4"
+      },
+      {
+        "ts": 1789378752857,
+        "delta": 150,
+        "reason": "Group-Level 5"
+      },
+      {
+        "ts": 1789378752858,
+        "delta": 150,
+        "reason": "Achievement Redselig"
+      },
+      {
+        "ts": 1789380922248,
+        "delta": 250,
+        "reason": "daily-Ziel erreicht"
       }
     ]
   },

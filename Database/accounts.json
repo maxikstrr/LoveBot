@@ -27,7 +27,7 @@
       "id": "acc_602d9c6366fbfc2e",
       "username": "support_test",
       "number": "1",
-      "role": "supporter",
+      "role": "user",
       "scope": {
         "type": "global"
       },
@@ -42,6 +42,12 @@
           "role": "supporter",
           "at": "2026-09-03T22:28:09.588Z",
           "by": "system"
+        },
+        {
+          "role": "user",
+          "at": "2026-09-14T07:52:22.348Z",
+          "by": "web:910maxi",
+          "from": "supporter"
         }
       ],
       "statusHistory": [
@@ -226,6 +232,18 @@
           "role": "deputy",
           "at": "2026-09-13T08:45:15.348Z",
           "by": "system"
+        },
+        {
+          "role": "user",
+          "at": "2026-09-13T09:19:53.618Z",
+          "by": "owner",
+          "from": "deputy"
+        },
+        {
+          "role": "deputy",
+          "at": "2026-09-13T18:31:11.434Z",
+          "by": "owner",
+          "from": "user"
         }
       ]
     },
@@ -248,6 +266,18 @@
           "role": "deputy",
           "at": "2026-09-13T08:45:27.862Z",
           "by": "system"
+        },
+        {
+          "role": "user",
+          "at": "2026-09-13T09:20:07.080Z",
+          "by": "owner",
+          "from": "deputy"
+        },
+        {
+          "role": "deputy",
+          "at": "2026-09-13T19:03:37.348Z",
+          "by": "owner",
+          "from": "user"
         }
       ]
     },
@@ -261,7 +291,7 @@
       },
       "salt": "e01390692738aebceaa6686c2378a1e0",
       "hash": "ee91e7af70fc9ce1f09bdf383e7248726821b621cbb9692fc377adcd7793b05c",
-      "status": "active",
+      "status": "restricted",
       "mustChange": true,
       "createdAt": "2026-09-13T08:45:37.113Z",
       "lastLoginAt": null,
@@ -270,6 +300,27 @@
           "role": "deputy",
           "at": "2026-09-13T08:45:37.113Z",
           "by": "system"
+        },
+        {
+          "role": "user",
+          "at": "2026-09-13T09:20:15.450Z",
+          "by": "owner",
+          "from": "deputy"
+        },
+        {
+          "role": "deputy",
+          "at": "2026-09-13T19:05:47.834Z",
+          "by": "owner",
+          "from": "user"
+        }
+      ],
+      "statusHistory": [
+        {
+          "at": "2026-09-14T10:13:31.036Z",
+          "by": "910maxi",
+          "from": "active",
+          "to": "restricted",
+          "reason": "Banane"
         }
       ]
     }

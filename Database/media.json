@@ -4,13 +4,81 @@
   },
   "stats": {
     "sticker": {
+      "count": 4,
+      "ok": 4,
+      "fail": 0,
+      "msTotal": 5701
+    },
+    "tomp3": {
       "count": 1,
       "ok": 1,
       "fail": 0,
-      "msTotal": 1337
+      "msTotal": 6173
+    },
+    "tomp4": {
+      "count": 1,
+      "ok": 1,
+      "fail": 0,
+      "msTotal": 2353
     }
   },
   "logs": [
+    {
+      "ts": "2026-09-14T09:40:02.532Z",
+      "command": "sticker",
+      "user": "𓆩♡𓆪 910maxi 𓆩♡𓆪",
+      "group": "Privat",
+      "session": "main",
+      "input": "Sticker",
+      "output": "WebP 512×512",
+      "ms": 650,
+      "ok": true
+    },
+    {
+      "ts": "2026-09-13T20:40:07.849Z",
+      "command": "sticker",
+      "user": "𓆩♡𓆪 910maxi 𓆩♡𓆪",
+      "group": "120363411386930403@g.us",
+      "session": "main",
+      "input": "Sticker",
+      "output": "WebP 512×512",
+      "ms": 1921,
+      "ok": true
+    },
+    {
+      "ts": "2026-09-13T15:37:30.412Z",
+      "command": "tomp4",
+      "user": "𓆩♡𓆪 910maxi 𓆩♡𓆪",
+      "group": "120363411386930403@g.us",
+      "session": "main",
+      "input": "Audio 0.0 MB",
+      "output": "MP4 0.4 MB",
+      "ms": 2353,
+      "ok": true,
+      "note": "max.jpeg"
+    },
+    {
+      "ts": "2026-09-13T09:27:34.531Z",
+      "command": "tomp3",
+      "user": "𓆩♡𓆪 910maxi 𓆩♡𓆪",
+      "group": "120363411386930403@g.us",
+      "session": "main",
+      "input": "Video 17.5 MB",
+      "output": "MP3 4.1 MB",
+      "ms": 6173,
+      "ok": true
+    },
+    {
+      "ts": "2026-09-13T09:25:57.360Z",
+      "command": "sticker",
+      "user": "𓆩♡𓆪 910maxi 𓆩♡𓆪",
+      "group": "120363424524210962@g.us",
+      "session": "main",
+      "input": "Sticker",
+      "output": "WebP 512×512",
+      "ms": 1793,
+      "ok": true
+    },
     {
       "ts": "2026-09-08T10:23:22.262Z",
       "command": "sticker",
@@ -24,5 +92,5 @@
     }
   ],
   "live": [],
-  "updated": "2026-09-08T10:23:22.263Z"
+  "updated": "2026-09-14T09:40:02.532Z"
 }

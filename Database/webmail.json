@@ -363,6 +363,64 @@
       "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*904776*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
       "error": "Connection Closed",
       "finishedAt": "2026-09-12T04:29:10.834Z"
+    },
+    {
+      "id": "153e5a758b664315d94dc88b74fa560f578521424534e894",
+      "type": "sendcode",
+      "to": "420606990992",
+      "jid": "420606990992@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-13T19:25:19.228Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*570908*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-13T19:25:20.970Z"
+    },
+    {
+      "id": "6bff6f3197e94d822f4bd1a3a23efb0040ad2745a4207d7b",
+      "type": "sendcode",
+      "to": "420606990992",
+      "jid": "420606990992@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-13T19:26:40.033Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*322495*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-13T19:26:41.296Z"
+    },
+    {
+      "id": "df9a8e8c544e5b132c782a4d8fb4cec9938bfbef378decf4",
+      "type": "sendcode",
+      "to": "420606990992",
+      "jid": "420606990992@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-13T19:28:18.658Z",
+      "text": "> 💜 *LOVE BOT — VERIFIZIERUNG*\n\nDein Code für das LoveBot-Dashboard:\n\n*764193*\n\n⏳ Gültig für 5 Minuten.\n🔒 Teile diesen Code mit NIEMANDEM!\n☾ LoveBot fragt dich NIE von selbst nach Codes.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-13T19:28:19.670Z"
+    },
+    {
+      "id": "823950fcf3dc95dbb5f0b1806ef13724e6d15ba5e2f6da66",
+      "type": "broadcast",
+      "status": "sent",
+      "createdAt": "2026-09-14T08:43:34.642Z",
+      "text": "> 📢 *LOVE BOT — BROADCAST* 📢\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\nGuten morgen :)\n┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n_Über das LoveBot-Dashboard_ 🌹",
+      "result": {
+        "sent": 0,
+        "failed": 0,
+        "total": 0
+      },
+      "finishedAt": "2026-09-14T08:43:36.525Z"
+    },
+    {
+      "id": "4176621703582f9ea0f71757f8e86c735e9280e2409885fe",
+      "type": "security-owner-alert",
+      "to": "4915155894714@s.whatsapp.net",
+      "jid": "4915155894714@s.whatsapp.net",
+      "status": "error",
+      "createdAt": "2026-09-14T16:21:02.775Z",
+      "event": "ABUSE_AUTO_ESCALATED_BLOCK",
+      "text": "🛡️ LOVE BOT — SECURITY ALERT\n\nEreignis: ABUSE_AUTO_ESCALATED_BLOCK\nZeit: 2026-09-14T16:21:02.774Z\nip: 34.20.140.166\nreason: Eskalationsstufe TEMP_BLOCK\nblockDuration: 5 Minuten\nviolationCount: 2\naction: TEMP_BLOCK\nsource: web-protection\n\nHinweis: Zugangsdaten, 2FA-Codes und Session-Schlüssel werden nicht versendet.",
+      "error": "Connection Closed",
+      "finishedAt": "2026-09-14T16:21:04.010Z"
     }
   ]
 }

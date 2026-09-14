@@ -112,3 +112,127 @@
 [13.9.2026, 10:45:15] [rbac] setteam deputy → 108813734645801
 [13.9.2026, 10:45:28] [rbac] setteam deputy → 87089790083286
 [13.9.2026, 10:45:37] [rbac] setteam deputy → 69415898980503
+[13.9.2026, 11:19:26] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 11:19:28] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 11:19:30] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 11:19:30] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 11:19:53] [rbac] delrang deputy → user (love_5801)
+[13.9.2026, 11:20:07] [rbac] delrang deputy → user (love_3286)
+[13.9.2026, 11:20:15] [rbac] delrang deputy → user (love_0503)
+[13.9.2026, 11:21:19] [mute] unmute 269724751503435
+[13.9.2026, 11:39:56] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 11:39:58] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 11:40:00] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 11:40:00] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 11:43:21] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 11:43:23] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 11:43:23] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 11:43:23] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 11:54:27] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 11:54:29] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 11:54:29] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 11:54:36] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 11:55:37] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 11:57:41] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 11:58:25] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 11:58:27] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 11:58:28] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 11:58:28] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:04:30] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:04:31] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:04:32] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:04:32] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:06:01] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:06:02] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:06:04] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:06:04] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:08:40] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:08:41] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:08:42] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:08:42] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:12:29] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:12:31] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:12:31] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:12:31] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:16:11] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:16:13] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:16:13] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:16:13] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:21:30] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:21:32] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:21:33] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:21:33] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:23:11] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:23:13] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:23:16] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:23:16] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 12:33:00] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 12:33:01] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 12:33:01] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 12:33:01] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 17:19:51] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 17:29:26] [help] Help-Übersicht mit Kategorien-Menü gesendet.
+[13.9.2026, 17:43:10] [automod] 44582230311125 verwarnt (1/3) — Badword (s******).
+[13.9.2026, 17:43:18] [features] Alle Features deaktiviert in 120363411386930403@g.us.
+[13.9.2026, 18:27:14] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 20:31:11] [rbac] setteam deputy → 108813734645801
+[13.9.2026, 20:34:37] [addmeta] Meta AI (867051314767696@bot) zu 120363411386930403@g.us hinzugefügt.
+[13.9.2026, 21:03:37] [rbac] setteam deputy → 87089790083286
+[13.9.2026, 21:05:48] [rbac] setteam deputy → 69415898980503
+[13.9.2026, 22:50:31] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 22:50:32] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 22:50:32] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 22:50:32] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 22:51:29] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 22:51:31] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 22:51:32] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 22:51:32] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 22:53:52] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 22:53:53] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 22:53:54] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 22:53:54] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 22:57:33] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 22:57:34] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 22:57:35] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 22:57:35] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 23:02:37] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 23:02:39] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 23:02:39] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[13.9.2026, 23:02:39] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 23:04:45] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[13.9.2026, 23:04:46] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[13.9.2026, 23:04:48] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[13.9.2026, 23:04:48] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 00:16:21] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[14.9.2026, 00:16:23] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[14.9.2026, 00:16:24] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[14.9.2026, 00:16:24] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 00:16:46] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[14.9.2026, 00:16:54] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[14.9.2026, 00:16:55] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[14.9.2026, 00:16:56] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[14.9.2026, 00:16:56] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 00:25:01] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[14.9.2026, 00:25:02] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[14.9.2026, 00:25:03] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[14.9.2026, 00:25:03] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 00:28:19] [boot] LoveBot v2 gestartet — Node v26.8.2, 18 Hilfe-Kategorien geladen.
+[14.9.2026, 00:28:20] [ai] LoveAI bereit: LoveAI Core 💜 — LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+[14.9.2026, 00:28:21] [dashboard] Dashboard-Mailbox & Heartbeat aktiv (server.js Port 7777).
+[14.9.2026, 00:28:21] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 01:11:58] [features] play blockiert — Feature „Media & Play“ ist aus.
+[14.9.2026, 01:12:20] [features] Media & Play aktiviert in 120363411386930403@g.us.
+[14.9.2026, 01:42:29] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 05:29:32] [boot] LoveBot ist bereit und wartet auf Nachrichten.
+[14.9.2026, 11:51:42] [addmeta] Meta AI (867051314767696@bot) zu 120363430199290638@g.us hinzugefügt.
+[14.9.2026, 12:09:23] [features] slot blockiert — Feature „Fun & Spiele“ ist aus.
+[14.9.2026, 12:09:35] [features] Alle Features aktiviert in 120363411386930403@g.us.
+[14.9.2026, 13:17:15] [help] Help-Übersicht mit Kategorien-Menü gesendet.
+[14.9.2026, 13:28:34] [automod] 108813734645801 verwarnt (1/3) — Badword (s*******).
+[14.9.2026, 13:41:05] [automod] 108813734645801 verwarnt (2/3) — Badword (f*******).
+[14.9.2026, 13:51:42] [automod] 108813734645801 verwarnt (1/3) — Badword (f****).
+[14.9.2026, 13:57:32] [features] Alle Features aktiviert in 120363427483026291@g.us.
+[14.9.2026, 13:57:37] [features] Feature-Übersicht gesendet.
+[14.9.2026, 14:23:06] [addmeta] Meta AI (867051314767696@bot) zu 120363429318561750@g.us hinzugefügt.
+[14.9.2026, 15:03:59] [features] Badword-Filter deaktiviert in 120363411386930403@g.us.
+[14.9.2026, 17:25:09] [boot] LoveBot ist bereit und wartet auf Nachrichten.

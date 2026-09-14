@@ -9,3 +9,8 @@
 {"time":"2026-09-11T21:02:38.530Z","actor":"910maxi","action":"reauth.ok","target":"reauth.verify","ip":"193.111.•.•"}
 {"time":"2026-09-13T08:41:30.151Z","actor":"owner","action":"mute","detail":"269724751503435 · permanent"}
 {"time":"2026-09-13T08:44:12.382Z","actor":"269574108926096","action":"ai-group","group":"120363411386930403","detail":"an"}
+{"time":"2026-09-13T09:21:19.050Z","actor":"owner","action":"unmute","detail":"269724751503435"}
+{"time":"2026-09-13T09:22:42.673Z","actor":"self:491793904099jid269724751503435lid","action":"account.unregister","target":"491793904099jid269724751503435lid","backup":"491793904099jid269724751503435lid--2026-09-13T09-22-42-654Z.json","deleted":{"profile":1,"afk":0,"warns":0,"proposals":0,"plusUser":1,"plusCouples":0,"coreUser":0,"coreCouples":0,"sessions":0,"mails":0,"partnerFreed":false,"groupMembers":3,"eventsAnon":7},"reason":"self-service confirmed"}
+{"time":"2026-09-14T07:52:22.348Z","actor":"910maxi","action":"team.role","target":"support_test → user"}
+{"time":"2026-09-14T09:13:39.263Z","actor":"910maxi","action":"reauth.ok","target":"reauth.verify","ip":"185.47.•.•"}
+{"time":"14.9.2026, 11:13:49","actor":"910maxi","action":"download.zip","target":"LoveBot-All-in-One","files":8,"size":669500,"ip":"185.47.•.•"}

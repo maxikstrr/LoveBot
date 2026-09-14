@@ -25,65 +25,254 @@
     "logsEnabled": true
   },
   "xp": {
-    "total": 4,
-    "level": 0,
-    "msgs": 2,
+    "total": 1756,
+    "level": 4,
+    "msgs": 878,
     "games": 0,
     "members": {
       "269574108926096": {
-        "m": 1,
-        "xp": 2,
+        "m": 13,
+        "xp": 26,
         "games": 0,
-        "last": 1789288838849
+        "last": 1789382588975
       },
       "35635444367414": {
+        "m": 27,
+        "xp": 54,
+        "games": 0,
+        "last": 1789400601021
+      },
+      "220164352114797": {
+        "m": 23,
+        "xp": 46,
+        "games": 0,
+        "last": 1789407961962
+      },
+      "73298650079285": {
+        "m": 131,
+        "xp": 262,
+        "games": 0,
+        "last": 1789406980118
+      },
+      "65086387441724": {
         "m": 1,
         "xp": 2,
         "games": 0,
-        "last": 1789288885371
+        "last": 1789297022573
+      },
+      "1421768433698": {
+        "m": 76,
+        "xp": 152,
+        "games": 0,
+        "last": 1789408219719
+      },
+      "257565715894382": {
+        "m": 13,
+        "xp": 26,
+        "games": 0,
+        "last": 1789408746391
+      },
+      "242154869944323": {
+        "m": 213,
+        "xp": 426,
+        "games": 0,
+        "last": 1789409485131
+      },
+      "223738402480232": {
+        "m": 132,
+        "xp": 264,
+        "games": 0,
+        "last": 1789408864960
+      },
+      "51376684036218": {
+        "m": 3,
+        "xp": 6,
+        "games": 0,
+        "last": 1789326204021
+      },
+      "108719111196747": {
+        "m": 53,
+        "xp": 106,
+        "games": 0,
+        "last": 1789406541395
+      },
+      "52910373249205": {
+        "m": 128,
+        "xp": 256,
+        "games": 0,
+        "last": 1789406567162
+      },
+      "119864568102927": {
+        "m": 4,
+        "xp": 8,
+        "games": 0,
+        "last": 1789400587414
+      },
+      "85100901437449": {
+        "m": 6,
+        "xp": 12,
+        "games": 0,
+        "last": 1789375826130
+      },
+      "179826572976327": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789369562386
+      },
+      "153060101902507": {
+        "m": 2,
+        "xp": 4,
+        "games": 0,
+        "last": 1789397353450
+      },
+      "133139926114502": {
+        "m": 9,
+        "xp": 18,
+        "games": 0,
+        "last": 1789408743678
+      },
+      "57896360530065": {
+        "m": 28,
+        "xp": 56,
+        "games": 0,
+        "last": 1789394335612
+      },
+      "84237344616692": {
+        "m": 4,
+        "xp": 8,
+        "games": 0,
+        "last": 1789396820862
+      },
+      "64566310518786": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789397989862
+      },
+      "197598627553316": {
+        "m": 9,
+        "xp": 18,
+        "games": 0,
+        "last": 1789406829397
+      },
+      "109934519799877": {
+        "m": 1,
+        "xp": 2,
+        "games": 0,
+        "last": 1789406441234
       }
     },
     "week": {
       "k": "2026-W38",
-      "xp": 4
+      "xp": 1756
     },
     "month": {
       "k": "2026-09",
-      "xp": 4
+      "xp": 1756
     },
     "daily": {
-      "k": "2026-09-13",
-      "msgs": 2
+      "k": "2026-09-14",
+      "msgs": 769
     },
     "streak": {
-      "c": 1,
-      "last": "2026-09-13"
+      "c": 2,
+      "last": "2026-09-14"
     },
     "history": {
-      "2026-09-13": 4
+      "2026-09-13": 218,
+      "2026-09-14": 1538
     }
   },
   "goals": {
     "daily": {
-      "k": "2026-09-13",
+      "k": "2026-09-14",
       "target": 50,
-      "progress": 2,
-      "claimed": false
+      "progress": 769,
+      "claimed": true
     },
     "weekly": {
       "k": "2026-W38",
       "target": 200,
-      "progress": 4,
-      "claimed": false
+      "progress": 1756,
+      "claimed": true
     }
   },
-  "gach": {},
+  "gach": {
+    "gmsg_100": 1789328764051,
+    "gxp_1k": 1789405255920
+  },
   "gbadges": {},
   "gevents": [],
-  "gaudit": [],
+  "gaudit": [
+    {
+      "ts": 1789310278485,
+      "actor": "system",
+      "action": "goal",
+      "detail": "daily-Ziel (50) erreicht, +250 Treasury"
+    },
+    {
+      "ts": 1789328764051,
+      "actor": "system",
+      "action": "goal",
+      "detail": "weekly-Ziel (200) erreicht, +1000 Treasury"
+    },
+    {
+      "ts": 1789390627049,
+      "actor": "system",
+      "action": "goal",
+      "detail": "daily-Ziel (50) erreicht, +250 Treasury"
+    }
+  ],
   "gtreasury": {
-    "balance": 0,
-    "log": []
+    "balance": 2300,
+    "log": [
+      {
+        "ts": 1789310278485,
+        "delta": 250,
+        "reason": "daily-Ziel erreicht"
+      },
+      {
+        "ts": 1789328764051,
+        "delta": 1000,
+        "reason": "weekly-Ziel erreicht"
+      },
+      {
+        "ts": 1789328764051,
+        "delta": 150,
+        "reason": "Achievement Gesprächig"
+      },
+      {
+        "ts": 1789385693676,
+        "delta": 110,
+        "reason": "Group-Level 1"
+      },
+      {
+        "ts": 1789390627049,
+        "delta": 250,
+        "reason": "daily-Ziel erreicht"
+      },
+      {
+        "ts": 1789394590095,
+        "delta": 120,
+        "reason": "Group-Level 2"
+      },
+      {
+        "ts": 1789405255920,
+        "delta": 150,
+        "reason": "Achievement Sammelphase"
+      },
+      {
+        "ts": 1789405397431,
+        "delta": 130,
+        "reason": "Group-Level 3"
+      },
+      {
+        "ts": 1789407821114,
+        "delta": 140,
+        "reason": "Group-Level 4"
+      }
+    ]
   },
   "gbanned": {},
   "warnCfg": {
@@ -91,7 +280,21 @@
     "w2": "warn",
     "w3": "kick"
   },
-  "memberCount": 57,
+  "memberCount": 60,
   "adminCount": 12,
-  "metaAt": 1789288839052
+  "metaAt": 1789382589223,
+  "autodl": true,
+  "welcome": true,
+  "goodbye": true,
+  "kick": true,
+  "promote": true,
+  "demote": true,
+  "liebe": true,
+  "fun": true,
+  "media": true,
+  "tools": true,
+  "badwords": true,
+  "antilink": true,
+  "night": true,
+  "afk": true
 }

@@ -221,24 +221,6 @@
     "lastIp": "127.0.0.1",
     "userAgent": "curl/8.14.1"
   },
-  "29ce39ca5a8474187ba73a5ec9e0f88c3441c259004061eb": {
-    "number": "4915155894714",
-    "role": "owner",
-    "name": "Maxichen 👑",
-    "createdAt": "2026-09-07T20:43:24.533Z",
-    "lastIp": "193.111.249.189",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
-    "prevIp": "193.111.249.39",
-    "lastSeenAt": "2026-09-11T21:02:38.524Z",
-    "scope": {
-      "type": "global"
-    },
-    "username": "910maxi",
-    "mustChange": false,
-    "accountId": "acc_867efdf11ac19e00",
-    "restrictions": [],
-    "lastReauthAt": 1789160558526
-  },
   "46276dca7ae9268121d9ef05d0d7a0ad1f42ddfe918c4385": {
     "number": "4915155894714",
     "role": "owner",
@@ -252,6 +234,14 @@
     "role": "owner",
     "name": "Maxichen 👑",
     "createdAt": "2026-09-08T06:39:29.577Z",
+    "lastIp": "185.47.235.132",
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Safari/605.1.15"
+  },
+  "b195df5f414a30ec63a5be0a477df8c73b1bd7b17df71fd2": {
+    "number": "4915155894714",
+    "role": "owner",
+    "name": "Maxichen 👑",
+    "createdAt": "2026-09-14T12:19:44.789Z",
     "lastIp": "185.47.235.132",
     "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Safari/605.1.15"
   }

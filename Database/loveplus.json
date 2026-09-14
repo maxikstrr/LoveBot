@@ -22,7 +22,15 @@
         "level_5": 1789163264438,
         "badges_5": 1789163264443,
         "goal_weekly_1": 1789199805682,
-        "hours_12": 1789200269171
+        "hours_12": 1789200269171,
+        "goalstreak_3": 1789291175310,
+        "goals_daily_7": 1789291176040,
+        "cmd_100": 1789291759395,
+        "dailyxp_500": 1789323644515,
+        "msg_100": 1789324838245,
+        "hours_20": 1789340583267,
+        "first_game": 1789380562098,
+        "rich_10k": 1789380562101
       },
       "counters": {},
       "lovebonus": {
@@ -43,10 +51,55 @@
         "totalCare": 13
       },
       "inventory": {},
-      "cooldowns": {}
+      "cooldowns": {
+        "rob": 1789380512800
+      }
     },
     "420721199654jid155019043160306lid": {
-      "achievements": {},
+      "achievements": {
+        "first_cmd": 1789388053298
+      },
+      "counters": {},
+      "lovebonus": {
+        "lastAt": 0,
+        "streak": 0
+      },
+      "pet": null,
+      "inventory": {},
+      "cooldowns": {}
+    },
+    "420606990992jid108813734645801lid": {
+      "achievements": {
+        "first_msg": 1789324306595,
+        "goal_daily_1": 1789324658963,
+        "first_cmd": 1789327336568
+      },
+      "counters": {},
+      "lovebonus": {
+        "lastAt": 0,
+        "streak": 0
+      },
+      "pet": null,
+      "inventory": {},
+      "cooldowns": {}
+    },
+    "4555207028jid69415898980503lid": {
+      "achievements": {
+        "first_msg": 1789326332196
+      },
+      "counters": {},
+      "lovebonus": {
+        "lastAt": 0,
+        "streak": 0
+      },
+      "pet": null,
+      "inventory": {},
+      "cooldowns": {}
+    },
+    "41767076660jid87089790083286lid": {
+      "achievements": {
+        "first_msg": 1789326628297
+      },
       "counters": {},
       "lovebonus": {
         "lastAt": 0,

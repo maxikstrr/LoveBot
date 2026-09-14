@@ -19,16 +19,23 @@
   },
   "status": {
     "dsgvo": {
-      "accepted": true,
+      "accepted": false,
       "acceptedAt": null,
       "rejected": false,
       "rejectedAt": null
+    },
+    "cookie": {
+      "accepted": false,
+      "acceptedAt": null,
+      "rejected": false,
+      "rejectedAt": null,
+      "analytics": false
     },
     "verified": false,
     "verifiedAt": null,
     "unverified": true,
     "unverifiedAt": null,
-    "mappedAt": "2026-09-06T18:02:28.563Z"
+    "mappedAt": "2026-09-13T09:22:48.430Z"
   },
   "progression": {
     "level": 0,

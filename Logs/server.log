@@ -1476,3 +1476,768 @@ undefined  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingeba
 10:46:27  200 ✓ GET  /api/heartbeat  · 10 ms
 10:46:29  200 ✓ GET  /api/heartbeat  · 2 ms
 10:46:37  200 ✓ GET  /api/heartbeat  · 2 ms
+
+  ╭──────────────────────────────────────────────────────╮
+  │               ☾  L O V E B O T  ·  W E B│
+  │                        midnight control│
+  ├──────────────────────────────────────────────────────┤
+  │   💜  13.9.2026, 11:19:35       │
+  │   node v26.8.2 · win32 · dashboard│
+  ╰──────────────────────────────────────────────────────╯
+
+  🌐  http://localhost:7777
+  🔐  Login: erst WhatsApp-Code (2FA), dann Passwort · Gate: Admin-Passwort (getrennt)
+  👑  Owner: 4915155894714  ·  Panel-Accounts: 7  ·  Sessions live: 1/1
+  📋  Jede API-/Audit-/Security-Aktion wird hier & nach Logs/server.log geschrieben.
+
+  🤖  LoveAI startet … (Ollama 🦙 → Cloud-KI ☁️ → LoveAI Core 💜)
+11:19:35  BOOT       › Dashboard-Webserver gestartet (Port 7777).
+  🤖  LoveAI bereit: LoveAI Core 💜  ·  LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen
+11:19:37  BOOT       › LoveAI gestartet: LoveAI Core 💜 (LoveAI Core aktiv (eingebaut, immer verfügbar) — Ollama startet, wird automatisch übernommen).
+11:50:05  200 ✓ GET  /api/maintenance  · 10 ms
+11:50:06  200 ✓ GET  /api/commands  · 2 ms
+11:50:07  200 ✓ GET  /api/siteinfo  · 6 ms
+11:50:07  200 ✓ GET  /api/statistics  · 4 ms
+11:50:55  200 ✓ GET  /api/maintenance  · 1 ms
+11:50:57  200 ✓ GET  /api/commands  · 1 ms
+11:50:57  200 ✓ GET  /api/siteinfo  · 3 ms
+11:50:58  200 ✓ GET  /api/statistics  · 4 ms
+16:12:33  401 ✕ GET  /api/mcp  · 2 ms
+16:38:17  401 ✕ GET  /api/session/properties  · 1 ms
+16:38:17  401 ✕ GET  /api/session/properties  · 1 ms
+16:38:18  401 ✕ POST /api/session/reset_password  · 1 ms
+16:38:18  401 ✕ GET  /api/session/properties  · 1 ms
+16:38:18  401 ✕ GET  /api/session/properties  · 1 ms
+16:38:19  401 ✕ POST /api/session/reset_password  · 1 ms
+16:38:23  401 ✕ POST /api/session/reset_password  · 1 ms
+16:38:24  401 ✕ POST /api/session/reset_password  · 1 ms
+16:38:40  401 ✕ POST /api/session/reset_password  · 1 ms
+16:45:02  200 ✓ GET  /api/maintenance  · 1 ms
+16:45:03  200 ✓ GET  /api/commands  · 1 ms
+16:45:03  200 ✓ GET  /api/siteinfo  · 5 ms
+16:45:03  200 ✓ GET  /api/statistics  · 9 ms
+17:32:36  200 ✓ GET  /api/maintenance  · 1 ms
+21:18:45  200 ✓ GET  /api/maintenance  · 1 ms
+21:18:45  200 ✓ GET  /api/commands  · 1 ms
+21:18:45  200 ✓ GET  /api/siteinfo  · 4 ms
+21:18:45  200 ✓ GET  /api/statistics  · 8 ms
+21:18:51  200 ✓ GET  /api/heartbeat  · 1 ms
+21:19:00  200 ✓ POST /api/check-number  · 4 ms
+21:19:07  200 ✓ POST /api/check-number  · 3 ms
+21:19:13  200 ✓ POST /api/check-number  · 4 ms
+21:19:14  200 ✓ POST /api/check-number  · 4 ms
+21:19:15  200 ✓ POST /api/check-number  · 4 ms
+21:19:15  200 ✓ POST /api/check-number  · 4 ms
+21:19:15  200 ✓ POST /api/check-number  · 4 ms
+21:19:15  200 ✓ POST /api/check-number  · 4 ms
+21:19:15  200 ✓ POST /api/check-number  · 10 ms
+21:20:48  200 ✓ POST /api/check-number  · 4 ms
+21:20:49  200 ✓ POST /api/check-number  · 4 ms
+21:20:50  200 ✓ POST /api/check-number  · 4 ms
+21:20:50  200 ✓ POST /api/check-number  · 3 ms
+21:21:18  200 ✓ GET  /api/maintenance  · 1 ms
+21:21:18  200 ✓ GET  /api/commands  · 1 ms
+21:21:18  401 ✕ GET  /api/notifications  · 1 ms
+21:21:18  200 ✓ GET  /api/siteinfo  · 7 ms
+21:21:18  200 ✓ GET  /api/statistics  · 9 ms
+21:21:24  401 ✕ GET  /api/notifications  · 2 ms
+21:21:24  200 ✓ GET  /api/heartbeat  · 1 ms
+21:21:24  401 ✕ GET  /api/me  · 1 ms
+21:21:25  200 ✓ GET  /api/heartbeat  · 2 ms
+21:21:30  200 ✓ POST /api/check-number  · 4 ms
+21:21:33  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+21:21:33  AUTH_OWNER_LOGIN_NO2FA     193.111.249.189          risk 5
+21:21:33  200 ✓ POST /api/login  · 13 ms
+21:21:34  200 ✓ GET  /api/maintenance  · 1 ms
+21:21:34  200 ✓ GET  /api/heartbeat  · 2 ms
+21:21:35  200 ✓ GET  /api/me  · 7 ms
+21:21:35  200 ✓ GET  /api/me  · 10 ms
+21:21:35  200 ✓ GET  /api/stats  · 10 ms
+21:21:35  200 ✓ GET  /api/logs  · 7 ms
+21:21:35  200 ✓ GET  /api/sessions  · 9 ms
+21:21:38  200 ✓ POST /api/check-number  · 5 ms
+21:21:39  200 ✓ GET  /api/logs  · 6 ms
+21:21:42  200 ✓ GET  /api/accounts  · 6 ms
+21:21:43  200 ✓ GET  /api/heartbeat  · 1 ms
+21:21:51  200 ✓ GET  /api/heartbeat  · 2 ms
+21:21:54  200 ✓ POST /api/check-number  · 8 ms
+21:21:59  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:07  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:15  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:23  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:31  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:39  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:47  200 ✓ GET  /api/heartbeat  · 2 ms
+21:22:51  200 ✓ POST /api/check-number  · 3 ms
+21:22:55  200 ✓ GET  /api/heartbeat  · 4 ms
+21:23:03  200 ✓ GET  /api/heartbeat  · 2 ms
+21:23:11  200 ✓ GET  /api/heartbeat  · 2 ms
+21:23:18  200 ✓ POST /api/check-number  · 4 ms
+21:23:19  200 ✓ GET  /api/heartbeat  · 3 ms
+21:23:27  200 ✓ GET  /api/heartbeat  · 2 ms
+21:23:35  200 ✓ GET  /api/heartbeat  · 2 ms
+21:23:43  200 ✓ GET  /api/heartbeat  · 2 ms
+21:23:51  200 ✓ GET  /api/heartbeat  · 2 ms
+21:23:53  200 ✓ GET  /api/accounts/acc_f34f776af4bdf4b3/detail  · 8 ms
+21:23:53  200 ✓ GET  /api/permissions  · 10 ms
+21:23:54  200 ✓ POST /api/check-number  · 4 ms
+21:23:59  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:07  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:10  200 ✓ GET  /api/permissions  · 5 ms
+21:24:10  200 ✓ GET  /api/accounts/acc_31dac6824890c5ae/detail  · 5 ms
+21:24:15  200 ✓ GET  /api/heartbeat  · 1 ms
+21:24:19  200 ✓ GET  /api/maintenance  · 2 ms
+21:24:19  200 ✓ GET  /api/commands  · 2 ms
+21:24:19  200 ✓ GET  /api/notifications  · 8 ms
+21:24:19  200 ✓ GET  /api/siteinfo  · 7 ms
+21:24:19  200 ✓ GET  /api/statistics  · 14 ms
+21:24:24  200 ✓ GET  /api/heartbeat  · 1 ms
+21:24:26  200 ✓ GET  /api/notifications  · 5 ms
+21:24:26  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:26  200 ✓ GET  /api/me  · 10 ms
+21:24:26  200 ✓ GET  /api/maintenance  · 1 ms
+21:24:26  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:26  200 ✓ GET  /api/me  · 7 ms
+21:24:26  200 ✓ GET  /api/me  · 8 ms
+21:24:27  200 ✓ GET  /api/stats  · 21 ms
+21:24:27  200 ✓ GET  /api/logs  · 6 ms
+21:24:27  200 ✓ GET  /api/sessions  · 5 ms
+21:24:31  200 ✓ GET  /api/logs  · 5 ms
+21:24:31  200 ✓ POST /api/logout  · 5 ms
+21:24:31  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:32  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:33  200 ✓ POST /api/check-number  · 7 ms
+21:24:40  200 ✓ GET  /api/heartbeat  · 3 ms
+21:24:48  200 ✓ GET  /api/heartbeat  · 2 ms
+21:24:56  200 ✓ GET  /api/heartbeat  · 2 ms
+21:25:04  200 ✓ GET  /api/heartbeat  · 3 ms
+21:25:12  200 ✓ GET  /api/heartbeat  · 2 ms
+21:25:19  200 ✓ POST /api/request-code  · 11 ms
+21:25:21  404 ✕ GET  /api/mailbox/153e5a758b664315d94dc88b74fa560f578521424534e894  · 3 ms
+21:25:24  404 ✕ GET  /api/mailbox/153e5a758b664315d94dc88b74fa560f578521424534e894  · 2 ms
+21:25:26  404 ✕ GET  /api/mailbox/153e5a758b664315d94dc88b74fa560f578521424534e894  · 1 ms
+21:25:29  404 ✕ GET  /api/mailbox/153e5a758b664315d94dc88b74fa560f578521424534e894  · 2 ms
+21:25:31  404 ✕ GET  /api/mailbox/153e5a758b664315d94dc88b74fa560f578521424534e894  · 1 ms
+21:25:34  404 ✕ GET  /api/mailbox/153e5a758b664315d94dc88b74fa560f578521424534e894  · 2 ms
+21:25:36  200 ✓ GET  /api/heartbeat  · 2 ms
+21:25:44  200 ✓ GET  /api/heartbeat  · 2 ms
+21:25:52  200 ✓ GET  /api/heartbeat  · 2 ms
+21:26:00  200 ✓ GET  /api/heartbeat  · 2 ms
+21:26:08  200 ✓ GET  /api/heartbeat  · 1 ms
+21:26:16  200 ✓ GET  /api/heartbeat  · 3 ms
+21:26:24  200 ✓ GET  /api/heartbeat  · 1 ms
+21:26:32  200 ✓ GET  /api/heartbeat  · 2 ms
+21:26:40  200 ✓ POST /api/request-code  · 5 ms
+21:26:40  200 ✓ GET  /api/heartbeat  · 2 ms
+21:26:42  404 ✕ GET  /api/mailbox/6bff6f3197e94d822f4bd1a3a23efb0040ad2745a4207d7b  · 1 ms
+21:26:45  404 ✕ GET  /api/mailbox/6bff6f3197e94d822f4bd1a3a23efb0040ad2745a4207d7b  · 3 ms
+21:27:15  200 ✓ GET  /api/heartbeat  · 2 ms
+21:27:33  200 ✓ GET  /api/heartbeat  · 2 ms
+21:27:35  200 ✓ GET  /api/heartbeat  · 1 ms
+21:27:37  200 ✓ GET  /api/maintenance  · 1 ms
+21:27:37  200 ✓ GET  /api/heartbeat  · 2 ms
+21:27:37  200 ✓ GET  /api/me  · 7 ms
+21:27:37  200 ✓ GET  /api/me  · 7 ms
+21:27:37  200 ✓ GET  /api/accounts  · 7 ms
+21:27:45  200 ✓ GET  /api/heartbeat  · 2 ms
+21:27:54  200 ✓ GET  /api/heartbeat  · 2 ms
+21:28:02  200 ✓ GET  /api/heartbeat  · 2 ms
+21:28:10  200 ✓ GET  /api/heartbeat  · 1 ms
+21:28:17  404 ✕ GET  /api/mailbox/6bff6f3197e94d822f4bd1a3a23efb0040ad2745a4207d7b  · 3 ms
+21:28:18  200 ✓ GET  /api/heartbeat  · 5 ms
+21:28:18  200 ✓ POST /api/request-code  · 5 ms
+21:28:19  404 ✕ GET  /api/mailbox/df9a8e8c544e5b132c782a4d8fb4cec9938bfbef378decf4  · 2 ms
+21:28:21  404 ✕ GET  /api/mailbox/df9a8e8c544e5b132c782a4d8fb4cec9938bfbef378decf4  · 2 ms
+21:28:22  404 ✕ GET  /api/mailbox/df9a8e8c544e5b132c782a4d8fb4cec9938bfbef378decf4  · 2 ms
+21:28:26  200 ✓ GET  /api/heartbeat  · 3 ms
+21:28:34  200 ✓ GET  /api/heartbeat  · 1 ms
+21:28:42  200 ✓ GET  /api/heartbeat  · 2 ms
+21:28:49  200 ✓ GET  /api/heartbeat  · 13 ms
+21:28:57  200 ✓ GET  /api/heartbeat  · 3 ms
+21:29:05  200 ✓ GET  /api/heartbeat  · 2 ms
+21:29:07  200 ✓ GET  /api/maintenance  · 1 ms
+21:29:08  200 ✓ GET  /api/commands  · 3 ms
+21:29:08  200 ✓ GET  /api/siteinfo  · 4 ms
+21:29:08  200 ✓ GET  /api/statistics  · 9 ms
+21:29:12  200 ✓ GET  /api/heartbeat  · 2 ms
+21:29:13  200 ✓ GET  /api/heartbeat  · 1 ms
+21:29:14  400 ✕ POST /api/check-number  · 2 ms
+21:29:14  400 ✕ POST /api/request-code  · 1 ms
+21:29:21  200 ✓ GET  /api/heartbeat  · 2 ms
+21:29:29  200 ✓ GET  /api/heartbeat  · 3 ms
+21:29:37  200 ✓ GET  /api/heartbeat  · 2 ms
+21:29:45  200 ✓ GET  /api/heartbeat  · 3 ms
+21:29:53  200 ✓ GET  /api/heartbeat  · 2 ms
+21:30:01  200 ✓ GET  /api/heartbeat  · 3 ms
+21:30:09  200 ✓ GET  /api/heartbeat  · 2 ms
+21:30:09  200 ✓ GET  /api/heartbeat  · 6 ms
+21:30:17  200 ✓ GET  /api/heartbeat  · 2 ms
+21:30:25  200 ✓ GET  /api/heartbeat  · 2 ms
+21:30:27  200 ✓ POST /api/check-number  · 4 ms
+21:30:30  400 ✕ POST /api/check-number  · 1 ms
+21:30:30  400 ✕ POST /api/request-code  · 1 ms
+21:30:32  400 ✕ POST /api/check-number  · 1 ms
+21:30:32  400 ✕ POST /api/request-code  · 1 ms
+21:30:32  400 ✕ POST /api/check-number  · 1 ms
+21:30:32  400 ✕ POST /api/check-number  · 1 ms
+21:30:32  400 ✕ POST /api/request-code  · 1 ms
+21:30:32  400 ✕ POST /api/request-code  · 1 ms
+21:30:32  400 ✕ POST /api/check-number  · 1 ms
+21:30:32  400 ✕ POST /api/request-code  · 1 ms
+21:30:33  400 ✕ POST /api/check-number  · 1 ms
+21:30:33  400 ✕ POST /api/request-code  · 1 ms
+21:30:33  200 ✓ GET  /api/heartbeat  · 3 ms
+21:30:33  400 ✕ POST /api/check-number  · 1 ms
+21:30:33  400 ✕ POST /api/check-number  · 1 ms
+21:30:33  400 ✕ POST /api/request-code  · 1 ms
+21:30:34  400 ✕ POST /api/check-number  · 2 ms
+21:30:34  400 ✕ POST /api/request-code  · 1 ms
+21:30:34  400 ✕ POST /api/check-number  · 2 ms
+21:30:34  400 ✕ POST /api/request-code
+21:30:34  400 ✕ POST /api/check-number
+21:30:34  400 ✕ POST /api/request-code  · 1 ms
+21:30:34  400 ✕ POST /api/check-number  · 1 ms
+21:30:34  400 ✕ POST /api/request-code  · 3 ms
+21:30:35  400 ✕ POST /api/check-number  · 1 ms
+21:30:35  400 ✕ POST /api/request-code  · 3 ms
+21:30:35  400 ✕ POST /api/request-code  · 1 ms
+21:30:35  400 ✕ POST /api/check-number  · 1 ms
+21:30:35  400 ✕ POST /api/request-code  · 1 ms
+21:30:35  400 ✕ POST /api/check-number  · 1 ms
+21:30:35  400 ✕ POST /api/check-number  · 1 ms
+21:30:35  400 ✕ POST /api/request-code  · 1 ms
+21:30:36  400 ✕ POST /api/check-number  · 2 ms
+21:30:36  400 ✕ POST /api/request-code  · 1 ms
+21:30:36  400 ✕ POST /api/request-code  · 1 ms
+21:30:41  200 ✓ GET  /api/heartbeat  · 2 ms
+21:30:48  200 ✓ POST /api/logout  · 4 ms
+21:30:49  200 ✓ GET  /api/heartbeat  · 2 ms
+21:30:51  400 ✕ POST /api/check-number  · 1 ms
+21:30:51  400 ✕ POST /api/request-code  · 1 ms
+21:31:16  200 ✓ GET  /api/maintenance  · 1 ms
+21:31:17  200 ✓ GET  /api/commands  · 1 ms
+21:31:17  200 ✓ GET  /api/siteinfo  · 5 ms
+21:31:17  200 ✓ GET  /api/statistics  · 9 ms
+21:31:18  200 ✓ GET  /api/heartbeat  · 1 ms
+21:31:24  400 ✕ POST /api/check-number
+21:31:24  400 ✕ POST /api/request-code  · 1 ms
+21:31:25  400 ✕ POST /api/check-number  · 1 ms
+21:31:25  400 ✕ POST /api/request-code  · 1 ms
+21:31:25  400 ✕ POST /api/check-number  · 1 ms
+21:31:26  400 ✕ POST /api/request-code  · 1 ms
+21:31:30  200 ✓ GET  /api/maintenance
+21:31:30  200 ✓ GET  /api/commands  · 1 ms
+21:31:31  200 ✓ GET  /api/siteinfo  · 5 ms
+21:31:31  200 ✓ GET  /api/statistics  · 6 ms
+21:31:33  200 ✓ GET  /api/heartbeat  · 2 ms
+21:31:37  400 ✕ POST /api/check-number  · 1 ms
+21:31:37  400 ✕ POST /api/request-code  · 1 ms
+21:47:07  200 ✓ GET  /api/heartbeat  · 1 ms
+04:27:23  200 ✓ GET  /api/maintenance  · 2 ms
+04:27:23  200 ✓ GET  /api/commands  · 2 ms
+04:27:23  200 ✓ GET  /api/siteinfo  · 5 ms
+09:51:36  200 ✓ GET  /api/maintenance  · 2 ms
+09:51:37  200 ✓ GET  /api/commands  · 1 ms
+09:51:37  200 ✓ GET  /api/siteinfo  · 4 ms
+09:51:37  200 ✓ GET  /api/statistics  · 8 ms
+09:51:43  401 ✕ GET  /api/health  · 1 ms
+09:51:53  401 ✕ GET  /api/health  · 2 ms
+09:51:59  401 ✕ GET  /api/health  · 2 ms
+09:51:59  401 ✕ GET  /api/health  · 1 ms
+09:52:00  200 ✓ GET  /api/heartbeat  · 1 ms
+09:52:03  200 ✓ POST /api/check-number  · 2 ms
+09:52:07  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+09:52:07  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+09:52:07  200 ✓ POST /api/login  · 39 ms
+09:52:08  200 ✓ GET  /api/maintenance  · 1 ms
+09:52:09  200 ✓ GET  /api/heartbeat  · 2 ms
+09:52:09  200 ✓ GET  /api/me  · 5 ms
+09:52:09  200 ✓ GET  /api/me  · 5 ms
+09:52:09  200 ✓ GET  /api/stats  · 10 ms
+09:52:09  200 ✓ GET  /api/logs  · 7 ms
+09:52:09  200 ✓ GET  /api/sessions  · 4 ms
+09:52:11  200 ✓ GET  /api/tickets  · 6 ms
+09:52:13  200 ✓ GET  /api/team  · 5 ms
+09:52:17  200 ✓ GET  /api/heartbeat  · 1 ms
+09:52:22  ADMIN      › 910maxi › team.role · support_test → user
+09:52:22  200 ✓ POST /api/team/role  · 12 ms
+09:52:22  200 ✓ GET  /api/team  · 7 ms
+09:52:25  200 ✓ GET  /api/heartbeat  · 2 ms
+09:52:33  200 ✓ GET  /api/heartbeat  · 2 ms
+09:52:35  200 ✓ GET  /api/tickets  · 6 ms
+09:52:35  200 ✓ GET  /api/team  · 6 ms
+09:52:36  200 ✓ GET  /api/accounts  · 6 ms
+09:52:37  200 ✓ GET  /api/accounts  · 6 ms
+09:52:37  200 ✓ GET  /api/history  · 6 ms
+09:52:40  200 ✓ GET  /api/account  · 5 ms
+09:52:40  200 ✓ GET  /api/account/sessions  · 4 ms
+09:52:41  200 ✓ GET  /api/heartbeat  · 1 ms
+09:52:43  200 ✓ GET  /api/stats  · 9 ms
+09:52:43  200 ✓ GET  /api/system  · 135 ms
+09:52:43  200 ✓ GET  /api/logs  · 6 ms
+09:52:49  200 ✓ GET  /api/database  · 7 ms
+09:52:49  200 ✓ GET  /api/heartbeat  · 2 ms
+09:52:57  200 ✓ GET  /api/heartbeat  · 1 ms
+09:52:58  200 ✓ GET  /api/audit  · 6 ms
+09:52:58  200 ✓ GET  /api/maintenance  · 2 ms
+09:52:58  200 ✓ GET  /api/security/cases  · 8 ms
+09:52:58  200 ✓ GET  /api/security/overview  · 9 ms
+09:52:59  200 ✓ GET  /api/security  · 7 ms
+09:53:00  200 ✓ GET  /api/logs  · 5 ms
+09:53:03  200 ✓ GET  /api/maintenance  · 1 ms
+09:53:03  200 ✓ GET  /api/security/overview  · 8 ms
+09:53:03  200 ✓ GET  /api/security  · 5 ms
+09:53:03  200 ✓ GET  /api/security/cases  · 6 ms
+09:53:05  200 ✓ GET  /api/heartbeat  · 2 ms
+09:53:13  200 ✓ GET  /api/heartbeat  · 2 ms
+09:53:22  200 ✓ GET  /api/heartbeat  · 2 ms
+10:43:25  200 ✓ GET  /api/heartbeat  · 2 ms
+10:43:33  200 ✓ GET  /api/heartbeat  · 1 ms
+10:43:34  200 ✓ POST /api/broadcast  · 5 ms
+10:43:36  200 ✓ POST /api/logout  · 3 ms
+10:43:37  200 ✓ GET  /api/heartbeat  · 1 ms
+11:13:06  200 ✓ GET  /api/maintenance  · 2 ms
+11:13:06  200 ✓ GET  /api/commands  · 2 ms
+11:13:06  200 ✓ GET  /api/siteinfo  · 5 ms
+11:13:07  200 ✓ GET  /api/statistics  · 6 ms
+11:13:11  200 ✓ GET  /api/heartbeat  · 1 ms
+11:13:15  200 ✓ POST /api/check-number  · 3 ms
+11:13:19  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+11:13:19  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+11:13:19  200 ✓ POST /api/login  · 8 ms
+11:13:20  200 ✓ GET  /api/maintenance  · 2 ms
+11:13:20  200 ✓ GET  /api/heartbeat  · 2 ms
+11:13:20  200 ✓ GET  /api/me  · 7 ms
+11:13:20  200 ✓ GET  /api/me  · 6 ms
+11:13:20  200 ✓ GET  /api/stats  · 10 ms
+11:13:20  200 ✓ GET  /api/logs  · 5 ms
+11:13:20  200 ✓ GET  /api/sessions  · 4 ms
+11:13:24  200 ✓ GET  /api/logs  · 5 ms
+11:13:28  200 ✓ GET  /api/heartbeat  · 1 ms
+11:13:28  200 ✓ GET  /api/logs  · 5 ms
+11:13:32  200 ✓ GET  /api/logs  · 5 ms
+11:13:32  401 ✕ GET  /api/sessions/all  · 5 ms
+11:13:36  200 ✓ GET  /api/heartbeat  · 1 ms
+11:13:39  STEP_UP_REAUTH_OK          910maxi                  risk 5
+11:13:39  ADMIN      › 910maxi › reauth.ok · reauth.verify
+11:13:39  200 ✓ POST /api/reauth/verify  · 10 ms
+11:13:39  200 ✓ GET  /api/sessions/all  · 7 ms
+11:13:39  200 ✓ GET  /api/stats  · 11 ms
+11:13:39  200 ✓ GET  /api/groups  · 9 ms
+11:13:39  200 ✓ GET  /api/sessions  · 4 ms
+11:13:39  200 ✓ GET  /api/admin-actions  · 5 ms
+11:13:39  200 ✓ GET  /api/accounts  · 5 ms
+11:13:41  200 ✓ GET  /api/downloads/list  · 7 ms
+11:13:44  200 ✓ GET  /api/heartbeat  · 1 ms
+11:13:50  AUDIT      › 910maxi › download.zip · all-in-one → success
+11:13:50  ADMIN      › 910maxi › download.zip · LoveBot-All-in-One
+11:13:50  200 ✓ POST /api/downloads/zip  · 338 ms
+11:13:52  200 ✓ GET  /api/heartbeat  · 1 ms
+11:15:05  200 ✓ GET  /api/maintenance  · 1 ms
+11:15:05  200 ✓ GET  /api/heartbeat  · 2 ms
+11:15:05  200 ✓ GET  /api/me  · 6 ms
+11:15:05  200 ✓ GET  /api/me  · 7 ms
+11:15:05  200 ✓ GET  /api/downloads/list  · 7 ms
+11:15:13  200 ✓ GET  /api/heartbeat  · 2 ms
+11:15:21  200 ✓ GET  /api/heartbeat  · 2 ms
+11:15:31  200 ✓ GET  /api/heartbeat  · 2 ms
+11:15:37  200 ✓ GET  /api/heartbeat  · 1 ms
+11:15:45  200 ✓ GET  /api/heartbeat  · 1 ms
+11:15:53  200 ✓ GET  /api/heartbeat  · 1 ms
+11:16:02  200 ✓ GET  /api/heartbeat  · 2 ms
+11:16:11  200 ✓ GET  /api/heartbeat  · 2 ms
+11:16:20  200 ✓ GET  /api/heartbeat  · 1 ms
+11:16:29  200 ✓ GET  /api/heartbeat  · 1 ms
+11:16:38  200 ✓ GET  /api/heartbeat  · 2 ms
+11:16:47  200 ✓ GET  /api/heartbeat  · 1 ms
+11:16:56  200 ✓ GET  /api/heartbeat  · 1 ms
+11:17:05  200 ✓ GET  /api/heartbeat  · 2 ms
+11:17:14  200 ✓ GET  /api/heartbeat  · 2 ms
+11:17:23  200 ✓ GET  /api/heartbeat  · 2 ms
+11:17:32  200 ✓ GET  /api/heartbeat  · 1 ms
+11:17:41  200 ✓ GET  /api/heartbeat  · 1 ms
+11:17:50  200 ✓ GET  /api/heartbeat  · 1 ms
+11:17:59  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:08  200 ✓ GET  /api/heartbeat  · 2 ms
+11:18:17  200 ✓ GET  /api/heartbeat  · 2 ms
+11:18:26  200 ✓ GET  /api/heartbeat  · 1 ms
+11:18:35  200 ✓ GET  /api/heartbeat  · 2 ms
+11:18:44  200 ✓ GET  /api/heartbeat  · 2 ms
+11:23:24  200 ✓ GET  /api/maintenance  · 1 ms
+11:23:24  200 ✓ GET  /api/heartbeat  · 2 ms
+11:23:24  200 ✓ GET  /api/me  · 6 ms
+11:23:25  200 ✓ GET  /api/me  · 6 ms
+11:23:25  200 ✓ GET  /api/downloads/list  · 6 ms
+11:27:07  200 ✓ GET  /api/maintenance  · 1 ms
+11:27:07  200 ✓ GET  /api/heartbeat  · 1 ms
+11:27:07  200 ✓ GET  /api/me  · 7 ms
+11:27:07  200 ✓ GET  /api/me  · 6 ms
+11:27:07  200 ✓ GET  /api/downloads/list  · 5 ms
+11:27:15  200 ✓ GET  /api/heartbeat  · 2 ms
+11:27:23  200 ✓ GET  /api/heartbeat  · 2 ms
+11:27:31  200 ✓ GET  /api/heartbeat  · 1 ms
+11:27:39  200 ✓ GET  /api/heartbeat  · 2 ms
+11:27:47  200 ✓ GET  /api/heartbeat  · 1 ms
+11:28:47  200 ✓ GET  /api/heartbeat  · 2 ms
+11:28:49  200 ✓ POST /api/logout  · 4 ms
+11:28:49  200 ✓ GET  /api/heartbeat  · 2 ms
+12:04:11  200 ✓ GET  /api/maintenance  · 1 ms
+12:04:11  200 ✓ GET  /api/commands  · 2 ms
+12:04:11  200 ✓ GET  /api/siteinfo  · 5 ms
+12:04:11  200 ✓ GET  /api/statistics  · 7 ms
+12:04:16  200 ✓ GET  /api/maintenance  · 1 ms
+12:04:16  200 ✓ GET  /api/commands  · 2 ms
+12:04:16  200 ✓ GET  /api/siteinfo  · 5 ms
+12:12:08  200 ✓ GET  /api/heartbeat  · 1 ms
+12:12:15  200 ✓ POST /api/check-number  · 3 ms
+12:12:20  AUTH_FAILURE               185.47.235.132           risk 30
+12:12:20  DENIED     › owner › login.failed · web → denied
+12:12:20  401 ✕ POST /api/login  · 9 ms
+12:12:28  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+12:12:28  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+12:12:28  200 ✓ POST /api/login  · 8 ms
+12:12:29  200 ✓ GET  /api/maintenance  · 1 ms
+12:12:29  200 ✓ GET  /api/heartbeat  · 1 ms
+12:12:29  200 ✓ GET  /api/me  · 6 ms
+12:12:29  200 ✓ GET  /api/me  · 5 ms
+12:12:29  200 ✓ GET  /api/stats  · 10 ms
+12:12:29  200 ✓ GET  /api/logs  · 6 ms
+12:12:29  200 ✓ GET  /api/sessions  · 4 ms
+12:12:33  200 ✓ GET  /api/logs  · 5 ms
+12:12:37  200 ✓ GET  /api/heartbeat  · 1 ms
+12:12:39  200 ✓ GET  /api/system  · 131 ms
+12:12:40  200 ✓ GET  /api/team  · 6 ms
+12:12:41  200 ✓ GET  /api/account  · 7 ms
+12:12:41  200 ✓ GET  /api/account/sessions  · 4 ms
+12:12:43  200 ✓ GET  /api/accounts  · 5 ms
+12:12:43  200 ✓ GET  /api/history  · 6 ms
+12:12:45  200 ✓ GET  /api/heartbeat  · 2 ms
+12:12:46  200 ✓ GET  /api/accounts  · 6 ms
+12:12:47  200 ✓ GET  /api/accounts/acc_867efdf11ac19e00/detail  · 6 ms
+12:12:47  200 ✓ GET  /api/permissions  · 3 ms
+12:12:53  200 ✓ GET  /api/heartbeat  · 2 ms
+12:13:01  200 ✓ GET  /api/heartbeat  · 1 ms
+12:13:09  200 ✓ GET  /api/heartbeat  · 1 ms
+12:13:13  200 ✓ GET  /api/permissions  · 5 ms
+12:13:13  200 ✓ GET  /api/accounts/acc_602d9c6366fbfc2e/detail  · 4 ms
+12:13:17  200 ✓ GET  /api/heartbeat  · 2 ms
+12:13:18  200 ✓ GET  /api/accounts/acc_f34f776af4bdf4b3/detail  · 8 ms
+12:13:18  200 ✓ GET  /api/permissions  · 5 ms
+12:13:25  200 ✓ GET  /api/heartbeat  · 2 ms
+12:13:31  AUDIT      › 910maxi › account.status.restricted · love_0503 — Banane → success
+12:13:31  ACCOUNT_STATUS_CHANGED     910maxi                  risk 10
+12:13:31  200 ✓ POST /api/accounts/status  · 13 ms
+12:13:31  200 ✓ GET  /api/accounts  · 6 ms
+12:13:33  200 ✓ GET  /api/heartbeat  · 2 ms
+12:13:36  200 ✓ GET  /api/tickets  · 5 ms
+12:13:39  200 ✓ GET  /api/stats  · 9 ms
+12:13:40  200 ✓ GET  /api/system  · 140 ms
+12:13:40  200 ✓ GET  /api/logs  · 5 ms
+12:13:41  200 ✓ GET  /api/heartbeat  · 2 ms
+12:13:44  200 ✓ POST /api/logout  · 5 ms
+12:13:45  200 ✓ GET  /api/heartbeat  · 1 ms
+12:13:46  200 ✓ GET  /api/maintenance  · 1 ms
+12:13:46  200 ✓ GET  /api/commands  · 2 ms
+12:13:46  200 ✓ GET  /api/leaderboard  · 58 ms
+12:13:46  200 ✓ GET  /api/siteinfo  · 4 ms
+12:13:46  200 ✓ GET  /api/statistics  · 9 ms
+12:14:35  200 ✓ GET  /api/maintenance  · 1 ms
+12:14:38  200 ✓ GET  /api/commands  · 2 ms
+12:14:38  200 ✓ GET  /api/siteinfo  · 4 ms
+12:14:39  200 ✓ GET  /api/statistics  · 7 ms
+13:22:40  200 ✓ GET  /api/maintenance  · 1 ms
+13:22:40  200 ✓ GET  /api/commands  · 2 ms
+13:22:41  200 ✓ GET  /api/siteinfo  · 5 ms
+13:22:41  200 ✓ GET  /api/statistics  · 7 ms
+13:23:07  200 ✓ GET  /api/heartbeat  · 2 ms
+13:26:25  200 ✓ GET  /api/maintenance  · 1 ms
+13:26:26  200 ✓ GET  /api/maintenance  · 2 ms
+13:26:26  200 ✓ GET  /api/maintenance  · 1 ms
+13:26:27  200 ✓ GET  /api/commands  · 1 ms
+13:26:27  200 ✓ GET  /api/commands  · 2 ms
+13:26:27  200 ✓ GET  /api/siteinfo  · 4 ms
+13:26:27  200 ✓ GET  /api/commands  · 2 ms
+13:26:28  200 ✓ GET  /api/statistics  · 6 ms
+13:26:28  200 ✓ GET  /api/siteinfo  · 5 ms
+13:26:28  200 ✓ GET  /api/siteinfo  · 5 ms
+13:26:28  200 ✓ GET  /api/statistics  · 6 ms
+13:26:29  200 ✓ GET  /api/statistics  · 5 ms
+13:27:42  200 ✓ GET  /api/maintenance  · 2 ms
+13:27:42  200 ✓ GET  /api/commands  · 2 ms
+13:27:43  200 ✓ GET  /api/siteinfo  · 4 ms
+13:27:43  200 ✓ GET  /api/statistics  · 6 ms
+14:03:35  200 ✓ GET  /api/maintenance  · 2 ms
+14:03:35  200 ✓ GET  /api/commands  · 29 ms
+14:03:35  200 ✓ GET  /api/siteinfo  · 5 ms
+14:03:35  200 ✓ GET  /api/statistics  · 7 ms
+14:07:05  200 ✓ GET  /api/maintenance  · 2 ms
+14:07:05  200 ✓ GET  /api/commands  · 2 ms
+14:07:05  200 ✓ GET  /api/siteinfo  · 4 ms
+14:07:06  200 ✓ GET  /api/statistics  · 8 ms
+14:07:55  200 ✓ GET  /api/maintenance  · 2 ms
+14:07:56  200 ✓ GET  /api/commands  · 2 ms
+14:07:56  200 ✓ GET  /api/siteinfo  · 5 ms
+14:07:56  200 ✓ GET  /api/statistics  · 8 ms
+14:08:13  200 ✓ GET  /api/maintenance  · 1 ms
+14:08:13  200 ✓ GET  /api/commands  · 1 ms
+14:08:13  200 ✓ GET  /api/siteinfo  · 5 ms
+14:08:26  200 ✓ GET  /api/heartbeat  · 2 ms
+14:08:43  200 ✓ GET  /api/maintenance  · 2 ms
+14:08:43  200 ✓ GET  /api/commands  · 1 ms
+14:08:43  200 ✓ GET  /api/siteinfo  · 5 ms
+14:08:44  200 ✓ GET  /api/statistics  · 8 ms
+14:08:53  200 ✓ GET  /api/maintenance  · 2 ms
+14:08:53  200 ✓ GET  /api/commands  · 1 ms
+14:08:54  200 ✓ GET  /api/siteinfo  · 5 ms
+14:09:45  200 ✓ GET  /api/maintenance  · 1 ms
+14:09:45  200 ✓ GET  /api/commands  · 2 ms
+14:09:45  200 ✓ GET  /api/siteinfo  · 5 ms
+14:19:00  200 ✓ GET  /api/maintenance  · 1 ms
+14:19:00  200 ✓ GET  /api/commands  · 1 ms
+14:19:00  200 ✓ GET  /api/siteinfo  · 5 ms
+14:19:19  200 ✓ GET  /api/maintenance  · 1 ms
+14:19:19  200 ✓ GET  /api/commands  · 2 ms
+14:19:19  200 ✓ GET  /api/leaderboard  · 54 ms
+14:19:19  200 ✓ GET  /api/siteinfo  · 5 ms
+14:19:19  200 ✓ GET  /api/statistics  · 7 ms
+14:19:25  200 ✓ GET  /api/maintenance  · 1 ms
+14:19:25  401 ✕ GET  /api/profile/me  · 2 ms
+14:19:26  200 ✓ GET  /api/leaderboard  · 62 ms
+14:19:28  200 ✓ GET  /api/maintenance  · 1 ms
+14:19:29  200 ✓ GET  /api/heartbeat  · 1 ms
+14:19:36  200 ✓ POST /api/check-number  · 2 ms
+14:19:39  AUTH_FAILURE               185.47.235.132           risk 30
+14:19:39  DENIED     › owner › login.failed · web → denied
+14:19:39  401 ✕ POST /api/login  · 7 ms
+14:19:44  AUDIT      › 49•••••••4714 › login.owner_no2fa · web → success
+14:19:44  AUTH_OWNER_LOGIN_NO2FA     185.47.235.132           risk 5
+14:19:44  200 ✓ POST /api/login  · 8 ms
+14:19:45  200 ✓ GET  /api/maintenance  · 1 ms
+14:19:45  200 ✓ GET  /api/heartbeat  · 2 ms
+14:19:45  200 ✓ GET  /api/me  · 6 ms
+14:19:46  200 ✓ GET  /api/me  · 7 ms
+14:19:46  200 ✓ GET  /api/stats  · 16 ms
+14:19:46  200 ✓ GET  /api/logs  · 8 ms
+14:19:46  200 ✓ GET  /api/sessions  · 4 ms
+14:19:50  200 ✓ GET  /api/logs  · 5 ms
+14:19:54  200 ✓ GET  /api/heartbeat  · 1 ms
+14:19:54  200 ✓ GET  /api/logs  · 5 ms
+14:19:57  200 ✓ GET  /api/maintenance  · 1 ms
+14:19:57  200 ✓ GET  /api/ai/memory  · 7 ms
+14:19:57  200 ✓ GET  /api/ai/memory  · 6 ms
+14:19:58  200 ✓ GET  /api/ai/status  · 193 ms
+14:20:01  200 ✓ POST /api/ai/chat  · 20 ms
+14:20:03  200 ✓ POST /api/ai/chat  · 14 ms
+14:20:05  200 ✓ POST /api/ai/chat  · 20 ms
+14:20:06  200 ✓ POST /api/ai/chat  · 14 ms
+14:20:07  200 ✓ POST /api/ai/chat  · 16 ms
+14:20:07  200 ✓ POST /api/ai/chat  · 14 ms
+14:20:07  200 ✓ POST /api/ai/chat  · 8 ms
+15:53:21  200 ✓ GET  /api/maintenance  · 2 ms
+15:53:21  200 ✓ GET  /api/commands  · 1 ms
+15:53:21  200 ✓ GET  /api/siteinfo  · 4 ms
+16:50:32  401 ✕ GET  /api/mcp  · 1 ms
+17:09:40  200 ✓ GET  /api/maintenance  · 1 ms
+17:09:40  200 ✓ GET  /api/maintenance  · 2 ms
+17:09:40  200 ✓ GET  /api/commands  · 1 ms
+17:09:40  200 ✓ GET  /api/commands  · 1 ms
+17:09:41  200 ✓ GET  /api/siteinfo  · 5 ms
+17:09:41  200 ✓ GET  /api/siteinfo  · 5 ms
+17:09:41  200 ✓ GET  /api/statistics  · 8 ms
+17:09:41  200 ✓ GET  /api/statistics  · 7 ms
+17:19:32  401 ✕ GET  /api/mcp  · 2 ms
+17:30:32  200 ✓ GET  /api/maintenance  · 2 ms
+17:43:50  401 ✕ GET  /api/mcp  · 1 ms
+17:47:48  401 ✕ GET  /api/session/properties  · 1 ms
+17:47:48  401 ✕ GET  /api/session/properties  · 1 ms
+17:47:49  401 ✕ GET  /api/session/properties  · 1 ms
+17:47:49  401 ✕ POST /api/session/reset_password  · 1 ms
+17:47:50  401 ✕ GET  /api/session/properties  · 2 ms
+17:47:51  401 ✕ POST /api/session/reset_password  · 2 ms
+17:47:51  401 ✕ POST /api/session/reset_password  · 2 ms
+17:47:51  401 ✕ POST /api/session/reset_password  · 2 ms
+17:47:53  401 ✕ POST /api/session/reset_password  · 2 ms
+17:47:54  401 ✕ POST /api/session/reset_password  · 1 ms
+18:20:50  401 ✕ GET  /api/.env  · 1 ms
+18:20:52  ABUSE_BURST_DETECTED       34.20.140.166            risk 35
+18:21:00  401 ✕ GET  /api/v1/.env  · 2 ms
+18:21:00  401 ✕ GET  /api/v2/.env  · 2 ms
+18:21:01  401 ✕ GET  /api/v3/.env  · 1 ms
+18:21:01  401 ✕ GET  /api/dev/.env  · 2 ms
+18:21:01  401 ✕ GET  /api/staging/.env  · 2 ms
+18:21:02  ABUSE_BURST_DETECTED       34.20.140.166            risk 45
+18:21:02  ABUSE_AUTO_ESCALATED_BLOCK 34.20.140.166            risk 60
+18:21:02  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:02  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:03  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:03  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:03  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:03  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:03  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:04  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:04  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:04  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:04  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:04  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:05  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:05  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:05  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:05  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:05  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:05  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:06  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:06  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:06  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:06  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:06  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:07  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:07  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:07  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:07  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:07  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:08  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:08  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:08  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:08  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:08  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:08  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:09  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:09  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:09  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:09  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:10  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:10  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:10  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:10  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:10  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:10  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:11  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:11  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:11  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:11  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:11  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:12  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:12  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:12  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:12  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:12  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:13  ABUSE_BURST_DETECTED       34.20.140.166            risk 55
+18:21:13  ABUSE_AUTO_ESCALATED_BLOCK 34.20.140.166            risk 65
+18:21:13  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:13  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:13  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:13  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:13  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:13  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:14  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:14  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:14  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:14  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:14  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:15  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:15  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:15  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:15  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:15  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:16  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:16  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:16  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:16  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:16  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:17  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:17  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:17  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:17  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:17  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:18  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:18  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:18  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:18  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:19  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:19  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:19  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:19  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:19  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:20  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:20  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:20  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:20  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:20  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:21  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:21  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:21  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:21  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:21  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:22  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:22  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:22  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:22  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:22  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:23  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:23  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:23  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:23  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:23  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:24  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:24  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:24  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:24  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:24  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:25  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:25  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:25  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:26  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:26  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:26  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:26  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:26  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:27  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:27  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:27  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:27  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:28  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:28  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:28  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:28  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:28  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:28  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:29  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:29  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:29  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:29  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:30  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:30  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:30  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:30  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:30  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:31  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:31  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:31  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:31  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:31  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:32  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:32  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:32  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:32  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:33  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:33  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:33  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:33  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:33  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:34  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:34  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:34  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:34  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:34  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:35  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:35  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:35  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:35  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:35  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:35  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:36  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:36  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:36  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:36  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:37  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
+18:21:37  IP_BLOCKED_STATIC_DENIED   34.20.140.166            risk 55
